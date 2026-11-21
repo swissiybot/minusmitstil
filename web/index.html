@@ -1228,7 +1228,7 @@ function sucheRechnen(){
   TREFFER.forEach((t, i) => {
     if (t.art === "seite" && (i === 0 || TREFFER[i-1].art !== "seite")) html.push(`<div class="suche-gruppe">Seiten</div>`);
     html.push(t.art === "wert"
-      ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${t.w.gruppe === "Nasdaq" ? "Aktie (Nasdaq)" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
+      ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${["Nasdaq","NYSE"].includes(t.w.gruppe) ? "Aktie (" + t.w.gruppe + ")" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
       : `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><span class="t-ikon">→</span><div class="t-n"><b>${t.s[1]}</b><span>${t.s[2]}</span></div></div>`);
   });
   $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel oder einen Teil des Namens probieren.</div>`;
@@ -1652,7 +1652,7 @@ async function zeige(id, opt={}){
       <div style="min-width:0">
         <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
           <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
-        <div class="wk-meta">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie (Nasdaq)" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
+        <div class="wk-meta">${esc(w.symbol)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
         <p class="klartext" data-e="klartext">${klartext(w)}</p>
         <div class="grund-chips">${umlaut(w.grund).split(" · ").map(g => `<span>${grundMitErklaerung(g)}</span>`).join("")}</div>
       </div>
@@ -2269,8 +2269,27 @@ const INDEX_NAMEN = [
   [/russell\s*2000/i, "IWM", "gleicher Index (Name)"],
   [/dow\s*jones\s*industrial/i, "DIA", "gleicher Index (Name)"],
 ];
-const INDEX_AUSNAHMEN = /small|mid\s*cap|equal|\bex[\s-]|ohne|lever|hebel|short|daily|\b[23]x\b|momentum|quality|value|growth|min(imum)?\s*vol|dividend|covered|\bcall\b|sector|mdax|sdax|tecdax|hedged/i;
+const INDEX_AUSNAHMEN = /small|mid\s*cap|equal|\bex[\s-]|ohne|lever|hebel|short|daily|\b[23]x\b|momentum|quality|value|growth|min(imum)?\s*vol|dividend|covered|\bcall\b|sector|mdax|sdax|tecdax|hedged|information\s*tech|health|financ|energy|industrial|consumer|utilit|materials|real\s*estate|semiconductor|bank|bond|anleihe|govern|treasury/i;
 // Letzter Schritt: automatischer Ersatz, damit keine Position offen bleibt. Klar als Annäherung markiert, jederzeit änderbar.
+// Themen-, Branchen-, Faktor-, Länder- und Anleihen-Fonds am Namen erkennen → passender US-ETF im Tool (gleiches Thema, anderer Anbieter)
+const THEMEN_NAMEN = [
+  [/uran/i, "URA"], [/lithium|batter/i, "LIT"], [/solar/i, "TAN"], [/clean\s*energy|saubere\s*energie|renewable|erneuerbar|hydrogen|wasserstoff/i, "ICLN"],
+  [/semiconductor|halbleiter|chip/i, "SMH"], [/cyber|security/i, "CIBR"], [/cloud/i, "SKYY"], [/robot|automation|artificial\s*intel|\bai\b|künstliche/i, "BOTZ"],
+  [/software/i, "IGV"], [/china\s*internet|kweb/i, "KWEB"], [/biotech/i, "IBB"], [/health\s*care|healthcare|gesundheit|pharma/i, "XLV"],
+  [/defen[cs]e|rüstung|aerospace|luft.*raumfahrt/i, "ITA"], [/gold\s*min/i, "GDX"], [/copper\s*min|kupfer\s*min/i, "COPX"], [/rare\s*earth|seltene/i, "REMX"],
+  [/water|wasser/i, "PHO"], [/infrastru/i, "IGF"], [/real\s*estate|reit|immobilien|property/i, "VNQ"],
+  [/information\s*tech|technology|technologie/i, "XLK"], [/financ|finanz/i, "XLF"], [/\bbank/i, "KBE"], [/energy|energie|oil\s*&?\s*gas/i, "XLE"],
+  [/industrial|industrie/i, "XLI"], [/consumer\s*staples|basiskonsum/i, "XLP"], [/consumer\s*discr|zyklisch/i, "XLY"], [/utilit|versorger/i, "XLU"], [/materials|grundstoff/i, "XLB"],
+  [/equal\s*weight|gleichgewicht/i, "RSP"], [/momentum/i, "MTUM"], [/quality|qualität/i, "QUAL"], [/min(imum)?\s*vol/i, "USMV"],
+  [/value/i, "IWD"], [/growth/i, "IWF"], [/dividend\s*(growth|aristocrat)|dividendenwachstum/i, "VIG"], [/dividend|dividende/i, "VYM"],
+  [/world\s*small|global\s*small|small\s*cap.*(world|global)|ex[\s-]*us(a)?\s*small/i, "VSS"], [/small\s*cap|russell\s*2000/i, "IWM"], [/mid\s*cap|s&p\s*400/i, "IJH"],
+  [/eafe|world\s*ex[\s-]*us|developed\s*ex[\s-]*us/i, "EFA"], [/europe|europa|stoxx\s*600/i, "VGK"],
+  [/msci\s*china|china/i, "MCHI"], [/india|indien/i, "INDA"], [/brazil|brasilien/i, "EWZ"], [/germany|deutschland/i, "EWG"], [/\buk\b|united\s*kingdom|großbritannien/i, "EWU"],
+  [/taiwan/i, "EWT"], [/korea/i, "EWY"], [/canada|kanada/i, "EWC"], [/australia|australien/i, "EWA"], [/switzerland|schweiz/i, "EWL"], [/japan/i, "EWJ"],
+  [/high\s*yield|hochzins/i, "HYG"], [/emerging.*(bond|anleihe)|(bond|anleihe).*emerging|schwellenl.*anleihe/i, "EMB"], [/inflation|tips\b/i, "TIP"],
+  [/corporate|unternehmensanleihe/i, "LQD"], [/(treasury|staatsanleihe|government).*(20|25|long)|long.*treasury/i, "TLT"], [/(treasury|staatsanleihe|government).*(1-3|short|kurz)/i, "SHY"],
+  [/treasury|staatsanleihe|government\s*bond/i, "IEF"], [/global\s*(aggregate|bond)|anleihen\s*welt/i, "BNDX"], [/aggregate|bond|anleihe|\brenten?/i, "AGG"],
+];
 const FONDS_WORT = /\b(etf|etc|etp|etn|ucits|fonds|fund|index|trust|sicav)\b|\((acc|dist|thes|aussch)\.?\)|\b(acc|dist)\b/i;
 const FONDS_ROHSTOFF = [[/bitcoin|\bbtc\b/i, "BTC", "Bitcoin"], [/ethereum|\beth\b/i, "ETH-USD", "Ethereum"], [/solana/i, "SOL-USD", "Solana"],
   [/\bgold\b/i, "GOLD", "Gold"], [/silber|silver/i, "SILBER", "Silber"], [/platin/i, "PLATIN", "Platin"], [/kupfer|copper/i, "KUPFER", "Kupfer"],
@@ -2335,13 +2354,17 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
     const tr = ALLE.filter(w => w.name && nameKern(w.name) === kern);
     if (tr.length === 1) return {id:tr[0].id, quelle:"Firmenname – bitte prüfen"};
   }
+  if (name && (FONDS_WORT.test(name) || /^(IE|LU)/.test(isin))) {   // Themen-/Branchen-/Anleihen-Fonds
+    for (const [re, id] of THEMEN_NAMEN) if (re.test(name) && gibt(id)) return {id, quelle:`gleiches Thema (${ALLE.find(w => w.id === id)?.name || id}) – bitte prüfen`};
+  }
   return autoErsatz(pos, name, isin, junger);
   return {id:null, quelle:""};
 }
 function autoErsatz(pos, name, isin, junger){
   const gibt = id => ALLE.some(w => w.id === id), w_ = id => ALLE.find(w => w.id === id);
   const raus = (id, text) => gibt(id) ? {id, quelle:`automatischer Ersatz: ${text} – Annäherung, bitte prüfen`, ersatz:true} : null;
-  if (junger) return raus("QQQ", `${junger} ist erkannt, hat aber unter 10 Jahre Kurse → Nasdaq-100`) || {id:null, quelle:""};
+  if (junger && /^US/.test(isin)) return raus("QQQ", `${junger} ist erkannt, hat im Tool aber (noch) keine 10 Jahre Kurse → Nasdaq-100`) || {id:null, quelle:""};
+  if (junger) for (const [re, id, t] of LAND_ERSATZ) if (re.test(isin)) { const r = raus(id, `${junger} ist erkannt, hat im Tool aber (noch) keine 10 Jahre Kurse → ${t}`); if (r) return r; }
   const fonds = FONDS_WORT.test(name) || /^(IE|LU)/.test(isin);
   if (fonds) {
     for (const [re, id, t] of FONDS_ROHSTOFF) if (re.test(name)) { const r = raus(id, `${t} (Fonds/ETC auf ${t})`); if (r) return r; }
@@ -3229,7 +3252,7 @@ function zeigeUmfeld(){
 const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
 const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
 function geschaeftKarte(w){
-  if (SONDERGRUPPE(w) || !String(w.gruppe).includes("Nasdaq")) return "";
+  if (SONDERGRUPPE(w) || !/Nasdaq|NYSE/.test(String(w.gruppe))) return "";
   const f = w.f;
   const kopf = `<div class="karte-kopf"><span data-e="f_sec" tabindex="0">Geschäft (SEC)</span><span>${f ? `${f.art} bis ${datumDe(f.stand)}` : ""}</span></div>`;
   if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen der US-Börsenaufsicht – meist ausländische Firmen (Bilanz nach IFRS) oder sehr junge Börsengänge." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
