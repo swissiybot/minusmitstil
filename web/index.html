@@ -85,6 +85,12 @@ td .sym{color:var(--muted);font-size:11px}
 h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
 #chart3{height:220px;margin:0 12px 12px;border:1px solid var(--line);border-radius:4px}
 .mini{height:150px;margin:0 12px 6px;border:1px solid var(--line);border-radius:4px}
+#tip{position:fixed;z-index:1000;display:none;max-width:min(340px,calc(100vw - 16px),calc(100dvw - 16px));background:#2a2e39;color:var(--text);border:1px solid #4a4e5a;border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.45;box-shadow:0 6px 20px #0009;pointer-events:none}
+#tip b{display:block;margin-bottom:3px;color:#fff;font-size:12px}
+[data-e]{cursor:help}
+span[data-e],th[data-e]{text-decoration:underline dotted #6b6f7a;text-underline-offset:3px;text-decoration-thickness:1px}
+span[data-e]:focus{outline:1px solid var(--blau);outline-offset:1px}
+.i{color:#6b6f7a;font-size:10px;margin-left:3px;vertical-align:super}
 </style>
 </head>
 <body>
@@ -97,19 +103,19 @@ h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
   <section class="box">
     <div class="filter">
       <input id="suche" placeholder="Suche Name oder Kürzel" size="18">
-      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Rohstoffe</option><option>Nasdaq</option><option>FTSE All-World</option></select>
-      <label>min. Jahre <input id="minj" type="number" value="10" min="0" style="width:52px"></label>
-      <label><input id="nurq" type="checkbox" checked> nur stabiler Aufwärtstrend</label>
-      <label>min. Umsatz/Tag <select id="minu"><option value="0">egal</option><option value="1e6">1 Mio $</option><option value="1e7" selected>10 Mio $</option><option value="1e8">100 Mio $</option></select></label>
+      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Rohstoffe</option><option>Nasdaq</option><option>FTSE All-World</option></select><span class="i" data-e="f_gruppe" tabindex="0">ⓘ</span>
+      <label><span data-e="f_minj" tabindex="0">min. Jahre</span> <input id="minj" type="number" value="10" min="0" style="width:52px"></label>
+      <label><input id="nurq" type="checkbox" checked> <span data-e="f_stabil" tabindex="0">nur stabiler Aufwärtstrend</span></label>
+      <label><span data-e="f_umsatz" tabindex="0">min. Umsatz/Tag</span> <select id="minu"><option value="0">egal</option><option value="1e6">1 Mio $</option><option value="1e7" selected>10 Mio $</option><option value="1e8">100 Mio $</option></select></label>
     </div>
     <div class="tabelle"><table>
       <thead><tr>
-        <th data-s="name">Wert</th><th data-s="score" title="0-100: hoch = historisch günstig">Ampel ▼</th>
-        <th data-s="cagr20" title="Durchschnittliche Jahresrendite über 20 Jahre (oder verfügbare Jahre)">Ø Jahr</th>
-        <th data-s="p3" title="Anteil früherer ähnlicher Lagen mit höherem Kurs nach 3 Jahren">3J höher</th>
-        <th data-s="vorteil" title="Trefferquote ähnlicher Lagen minus Trefferquote an allen Tagen">Vorteil</th>
-        <th data-s="rueck" title="So oft fiel der Kurs danach noch mind. 10 % tiefer (innerhalb 1 Jahr)">Rückschlag</th>
-        <th data-s="dd">vom Hoch</th><th data-s="delta" title="Änderung der Ampel in 4 Wochen">4W</th>
+        <th data-s="name">Wert</th><th data-s="score" data-e="ampel">Ampel ▼</th>
+        <th data-s="cagr20" data-e="cagr20">Ø Jahr</th>
+        <th data-s="p3" data-e="p3">3J höher</th>
+        <th data-s="vorteil" data-e="vorteil">Vorteil</th>
+        <th data-s="rueck" data-e="rueckschlag">Rückschlag</th>
+        <th data-s="dd" data-e="vom_hoch">vom Hoch</th><th data-s="delta" data-e="w4">4W</th>
       </tr></thead><tbody id="zeilen"></tbody></table>
       <div class="mehr"><button id="mehr">mehr anzeigen</button> <span id="anzahl" class="stand"></span></div>
     </div>
@@ -133,6 +139,140 @@ const geld = x => x==null ? "–" : Math.round(x).toLocaleString("de-DE");
 const vz = (x, n=1, suf="") => x==null ? "–" : (x>0?"+":"") + fmt(x,n,suf);
 const klasse = x => x==null ? "" : x>0 ? "pos" : x<0 ? "neg" : "";
 
+// ------------------------------------------------------------ Erklärungen (zentral gepflegt)
+// Schlüssel -> {titel, text}. text darf eine Funktion sein (dann mit aktuellen Prüfergebnissen).
+const pruefSatz = () => {
+  const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
+  if (!e || !s) return "Ob die Ampel früher gestimmt hätte, zeigt die Kachel „Prüfung der Ampel“.";
+  return `Ehrlich: In der Prüfung ohne Zukunftswissen hat die Ampel bei ETFs ${e.skill > 2 ? "etwas besser" : e.skill < -2 ? "schlechter" : "nicht besser"} vorhergesagt als die einfache Basis-Quote, und Kaufen nur bei hoher Ampel brachte bei ETFs im Mittel ${s.median_diff_staffel > 0 ? "nur wenig mehr" : "nicht mehr"} als ein gleichmäßiger Sparplan (${vz(s.median_diff_staffel,2)} Prozentpunkte pro Jahr).`;
+};
+const ERKLAERUNG = {
+  // --- Liste und Filter
+  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. ${pruefSatz()}`},
+  zonen: {titel:"Ampel-Zonen", text:"Ab 80: historisch sehr günstig. 60–80: günstig. 40–60: neutral. 15–40: teuer. Bis 15: historisch sehr teuer. Die Grenzen sind eine feste Einteilung, keine Kaufempfehlung; „günstig“ heißt nur, dass der Kurs gemessen an seiner eigenen Geschichte tief steht."},
+  cagr20: {titel:"Ø Jahresrendite", text:"Durchschnittlicher jährlicher Zuwachs (mit Zinseszins) über die letzten 20 Jahre, bei kürzerer Historie über die verfügbare Zeit. „Mit Dividenden“ heißt: ausgeschüttete Dividenden stecken im bereinigten Kurs, als wären sie wieder angelegt. Reine Kursindizes und Rohstoffe haben keine Dividenden. Vor Steuern und Kosten; die Vergangenheit garantiert nichts."},
+  cagr_max: {titel:"Ø seit Beginn", text:"Durchschnittlicher jährlicher Zuwachs über die gesamte vorhandene Historie. Bei ETFs zählt die vorgeschaltete Index-Historie mit. Sehr lange Zeiträume glätten Krisen, sehr kurze (z. B. junge Kryptowährungen) sind kaum aussagekräftig."},
+  p3: {titel:"3J höher", text:"In wie viel Prozent der früheren Wochen mit ähnlicher Ampel (±7,5 Punkte) stand der Kurs 3 Jahre später höher. Gezählt werden nur Wochen, deren Ergebnis heute bekannt ist. Aufeinanderfolgende Wochen hängen zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner. Die Prüfung ohne Zukunftswissen zeigt: diese Quote hat früher nicht besser vorhergesagt als die einfache Basis-Quote."},
+  vorteil: {titel:"Vorteil", text:"Quote der ähnlichen Lagen minus Quote an allen Tagen, in Prozentpunkten. +10 heißt: ähnliche Lagen gingen 10 Punkte öfter gut aus als ein beliebiger Kauftag. Bei wenigen Phasen ist das oft Zufall."},
+  rueckschlag: {titel:"Rückschlagrisiko", text:"So oft fiel der Kurs nach einer ähnlichen Lage innerhalb eines Jahres noch mindestens 10 % unter den damaligen Kaufkurs. Dazu der typische (Median-)Tiefpunkt. Zeigt, wie viel Geduld man nach einem „günstigen“ Kauf früher brauchte."},
+  vom_hoch: {titel:"Abstand zum Allzeithoch", text:"Wie weit der Kurs unter seinem bisher höchsten Wochenschluss liegt. −30 % heißt: 30 % unter dem Hoch. Ein großer Abstand kann günstig sein, aber auch ein Zeichen, dass das Geschäft dauerhaft schlechter läuft (bei Einzelaktien besonders)."},
+  w4: {titel:"Änderung in 4 Wochen", text:"Um wie viele Punkte sich die Ampel in den letzten 4 Wochen verändert hat. Plus heißt: der Wert ist günstiger geworden (meist weil der Kurs gefallen ist)."},
+  f_minj: {titel:"min. Jahre", text:"Zeigt nur Werte mit mindestens so vielen Jahren Kursdaten. Je länger die Historie, desto mehr Vergleichsphasen hat die Ampel. Unter 10 Jahren sind die Quoten sehr unsicher."},
+  f_stabil: {titel:"Nur stabiler Aufwärtstrend", text:"Zeigt nur Aktien mit Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahren Daten. Achtung: Dieser Filter nutzt den ganzen Kursverlauf bis heute, er kennt also die Zukunft der Vergangenheit. ETFs, Krypto und Rohstoffe sind ausgenommen."},
+  f_umsatz: {titel:"min. Umsatz pro Tag", text:"Durchschnittlicher Handelsumsatz der letzten 3 Monate in US-Dollar. Kleine, wenig gehandelte Aktien haben große Kurssprünge und hohe Handelskosten. ETFs, Krypto und Rohstoffe sind ausgenommen."},
+  f_gruppe: {titel:"Gruppe", text:"Nasdaq: alle an der Nasdaq gelisteten Aktien. ETF: große Index-ETFs mit Index-Historie davor. Krypto: Bitcoin, Ethereum, Solana, Chainlink, Stellar. Rohstoffe: Endlos-Futures und ein Rohstoff-Korb. FTSE All-World erscheint, sobald die Vanguard-Liste da ist."},
+  // --- Detail
+  grund: {titel:"Begründung", text:"Die Messgrößen hinter der Ampel in Worten. „So tief nur in X % der Wochen“ heißt: gemessen an der eigenen Geschichte bis heute war dieser Wert nur selten so niedrig."},
+  zu200w: {titel:"Kurs zur 200-Wochen-Linie", text:"Die 200-Wochen-Linie ist der Durchschnitt der letzten 200 Wochenschlüsse (knapp 4 Jahre). Liegt der Kurs darunter, ist er gemessen am langen Durchschnitt tief. Bei stark wachsenden Werten kommt das selten vor; bei schwachen Werten kann der Kurs auch lange darunter bleiben."},
+  r2: {titel:"Trendgüte (R²)", text:"Wie gut der Kurs der letzten 20 Jahre auf einer gleichmäßig steigenden Linie (logarithmisch) liegt. 1 = perfekt gleichmäßig, 0 = kein Zusammenhang. Hohe Werte machen Trendkanal und Ampel verlässlicher; bei Rohstoffen und jungen Werten ist sie meist niedrig."},
+  stabil: {titel:"Stabiler Aufwärtstrend", text:"Erfüllt, wenn Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahre Daten. Ohne stabilen Trend ist „historisch günstig“ wenig wert: ein fallender Wert ist immer wieder „günstig“."},
+  rsi: {titel:"Wochen-RSI (14)", text:"Relative Stärke der letzten 14 Wochen: Verhältnis der Aufwärts- zu den Abwärtsbewegungen, Skala 0–100. Unter 30 gilt als „überverkauft“, über 70 als „überkauft“. Allein ist der RSI ein schwaches Signal; er fließt mit einem Viertel in die Ampel ein."},
+  trend_z: {titel:"Abweichung vom Langfristtrend", text:"Abstand des Kurses zur langfristigen Trendlinie (logarithmisch, nur mit Daten bis zu diesem Tag berechnet), gemessen in Standardabweichungen. −2 heißt: ungewöhnlich weit unter dem Trend. Setzt voraus, dass es überhaupt einen stabilen Trend gibt."},
+  mayer: {titel:"Mayer Multiple", text:"Kurs geteilt durch den Durchschnitt der letzten 200 Tage. Unter 1: Kurs unter dem 200-Tage-Schnitt; bei Bitcoin galt unter etwa 0,8 früher als tief, über 2,4 als überhitzt. Für Kryptowährungen außer Bitcoin gibt es dafür keine erprobten Grenzen."},
+  pi_bottom: {titel:"Pi Cycle Bottom", text:"Vergleicht die 150-Tage-EMA mit der 471-Tage-SMA × 0,745. Fällt die EMA unter diese Linie, beginnt die Bodenbildungszone; steigt sie wieder darüber, ist das das Boden-Signal. Der Boden lag bisher zwischen beiden Kreuzungen. Nur für Bitcoin geeicht und mit Yahoo-Daten erst zweimal aufgetreten (2018/19, 2022/23) – statistisch kaum belastbar."},
+  pi_top: {titel:"Pi Cycle Top", text:"Steigt die 111-Tage-Linie über das Doppelte der 350-Tage-Linie, galt das bei Bitcoin früher als Zeichen für ein Zyklushoch. Nur für Bitcoin geeicht, sehr wenige Fälle."},
+  pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
+  // --- Chart-Legende
+  l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Durchschnitt der letzten 200 Wochenschlüsse. Langfristige Unterstützung bei starken Werten; der Kurs fällt selten darunter."},
+  l_trend: {titel:"Langfristtrend ±2 Standardabw. (blau)", text:"Gerade durch den ganzen Kursverlauf auf logarithmischer Skala, dazu ein Band von ±2 Standardabweichungen. Achtung: Diese Linie im Chart nutzt die ganze Historie bis heute (Rückblick). Die Ampel rechnet dagegen nur mit dem jeweils damals bekannten Trend."},
+  l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
+  l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
+  l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
+  l_pfeile: {titel:"Pfeile im Chart", text:"Grüner Pfeil mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Roter Pfeil: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
+  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Grün = günstig, rot = teuer. Die gestrichelten Linien markieren 80 und 15."},
+  l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 12 Monate: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
+  // --- Wahrscheinlichkeitstabelle
+  t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel höchstens 7,5 Punkte vom heutigen Wert entfernt war. Für jede wird geschaut, wie der Kurs nach 1, 3 und 5 Jahren stand."},
+  t_hoeher: {titel:"Kurs höher", text:"Anteil der ähnlichen Wochen, nach denen der Kurs am Ende des Zeitraums höher stand. Das ist eine Häufigkeit aus der Vergangenheit, keine Zusage. In der Prüfung ohne Zukunftswissen war diese Quote nicht treffsicherer als die Quote „an allen Tagen“."},
+  t_alle: {titel:"An allen Tagen", text:"Basis-Quote: Anteil aller Wochen (egal welche Ampel), nach denen der Kurs höher stand. Das ist der Vergleichsmaßstab für einen beliebigen Kauftag."},
+  t_median: {titel:"Median p.a.", text:"Typische Jahresrendite nach ähnlichen Lagen gegenüber allen Wochen. Median heißt: die Hälfte der Fälle lag darüber, die Hälfte darunter. Ausreißer verzerren ihn weniger als einen Durchschnitt."},
+  t_phasen: {titel:"Phasen und Wochen", text:"Wochen: Zahl der ähnlichen Wochen. Phasen: wie viele getrennte Zeitabschnitte das waren (Lücke über 13 Wochen = neue Phase). Benachbarte Wochen sind fast derselbe Fall – entscheidend ist die Zahl der Phasen. Unter 3 Phasen ist die Quote kaum aussagekräftig."},
+  // --- Datenquelle
+  quelle: {titel:"Datenquelle und Segmente", text:"Index-Vorlauf: Vor dem Start eines ETFs wird die Historie des zugrunde liegenden Index davor gehängt und angepasst; reine Kursindizes enthalten keine Dividenden. Endlos-Future (Rohstoffe): Kurs des jeweils vordersten Terminkontrakts mit Sprüngen beim Kontraktwechsel; Anleger zahlen zusätzlich Rollkosten. Kurse von Yahoo, bereinigt um Splits und Dividenden."},
+  // --- Reiter
+  r_kennzahlen: {titel:"Kennzahlen", text:"Ampel-Bausteine, Renditen und die Häufigkeiten aus ähnlichen früheren Lagen."},
+  r_rechner: {titel:"Kurs-Rechner (Monte Carlo)", text:"Wie wahrscheinlich erreicht der Kurs ein Kauflimit oder Verkaufsziel in einem Zeitraum? Simuliert aus echten Wochenrenditen, keine Vorhersage."},
+  r_pruefung: {titel:"Prüfung (Walk-forward)", text:"Hätten die angezeigten Quoten für diesen Wert früher gestimmt, wenn man sie nur mit dem damaligen Wissen berechnet hätte?"},
+  r_strategie: {titel:"Strategie-Vergleich", text:"Gleicher Monatsbetrag: Sparplan gegen Kaufen nach Ampel, mit Kosten, Steuer und Zins auf wartendes Geld, über die echte Vergangenheit dieses Werts."},
+  // --- Monte Carlo
+  mc_limit: {titel:"Kauflimit", text:"Preis unter dem heutigen Kurs, zu dem du kaufen würdest. Berechnet wird, wie oft der Kurs ihn im Zeitraum mindestens einmal erreicht (auch kurz innerhalb einer Woche)."},
+  mc_ziel: {titel:"Verkaufsziel", text:"Preis über dem heutigen Kurs. Berechnet wird, wie oft der Kurs ihn im Zeitraum mindestens einmal erreicht."},
+  mc_wochen: {titel:"Zeitraum", text:"Wie viele Wochen in die Zukunft simuliert wird (52 = 1 Jahr). Je länger, desto breiter der Kegel."},
+  mc_jahre: {titel:"Historie", text:"Aus wie vielen vergangenen Jahren die Wochenrenditen gezogen werden. Die Durchschnittsrendite und die Schwankung dieser Jahre stecken in allen Wegen; ein sehr guter oder schlechter Zeitraum färbt das Ergebnis."},
+  mc_erreicht: {titel:"Wird erreicht", text:"Anteil der simulierten Wege, auf denen der Kurs die Marke irgendwann im Zeitraum berührt – gemessen am Wochentief bzw. Wochenhoch. Das entspricht der Chance, dass ein Limit ausgeführt würde."},
+  mc_ende: {titel:"Steht am Ende jenseits", text:"Anteil der Wege, auf denen der Kurs am Ende des Zeitraums unter dem Kauflimit bzw. über dem Verkaufsziel steht. Immer kleiner als „wird erreicht“, weil der Kurs auch zurückkommen kann."},
+  mc_median: {titel:"Median-Kurs", text:"Mittlerer Kurs am Ende aller simulierten Wege: die Hälfte endet darüber, die Hälfte darunter. Er spiegelt die Durchschnittsrendite der gewählten Jahre."},
+  mc_minus: {titel:"Am Ende im Minus", text:"Anteil der Wege, die am Ende des Zeitraums unter dem heutigen Kurs liegen."},
+  mc_grundlage: {titel:"Block-Bootstrap", text:"Aus den echten Wochenrenditen werden zufällig zusammenhängende Stücke (13 Wochen) gezogen und aneinandergehängt – 10.000 Mal. So bleiben Crashs, Erholungen und ruhige Phasen erhalten, statt eine Normalverteilung anzunehmen. Grenze: Was in der gewählten Historie nicht vorkam, kommt auch in der Simulation nicht vor."},
+  // --- Prüfung
+  walkforward: {titel:"Walk-forward-Prüfung", text:"Für jedes Jahr X wird die Wahrscheinlichkeit nur aus Fällen berechnet, deren Ergebnis Ende X−1 schon feststand – genau so, wie man sie damals hätte sehen können. Danach wird verglichen, was wirklich passierte. So fällt auf, ob eine Regel nur im Rückblick gut aussieht (Überanpassung)."},
+  kalibrierung: {titel:"Kalibrierungskurve", text:"Waagerecht: die damals angezeigte Quote (in 10er-Gruppen). Senkrecht: wie oft es tatsächlich so kam. Auf der gestrichelten Linie stimmt die Anzeige; darunter war sie zu optimistisch, darüber zu vorsichtig. Punktgröße = Anzahl Wochen. Orange: nur Vorhersagen aus mindestens 52 ähnlichen Wochen."},
+  brier: {titel:"Brier-Wert und Skill", text:"Brier = mittlerer quadratischer Fehler der Vorhersage (0 = perfekt). Skill vergleicht mit der einfachen Basis-Quote „so oft stieg der Kurs bisher insgesamt“: positiv = Ampel besser, negativ = Ampel schlechter als diese einfache Regel."},
+  zonen_damals: {titel:"Ergebnis je Ampel-Stufe", text:"Alle Prüfwochen nach der damaligen Ampel gruppiert: wie oft der Kurs danach höher stand und welche Jahresrendite (geometrisch) folgte. Hätte die Ampel funktioniert, stünden die hohen Stufen deutlich besser da als „alle Wochen“."},
+  // --- Strategie
+  s_spar: {titel:"Sparplan", text:"Jeden Monat wird der ganze Betrag gekauft, egal wie der Kurs steht. Einfach, keine Entscheidung nötig – und in der Prüfung schwer zu schlagen."},
+  s_staffel: {titel:"Staffelkauf 60/75/90", text:"Der Monatsbetrag wartet auf dem Tagesgeld. Gekauft wird nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles. Risiko: Steigt der Kurs lange, wartet das Geld und verpasst den Anstieg."},
+  s_staffel_vk: {titel:"Staffelkauf + Teilverkauf", text:"Wie Staffelkauf, zusätzlich: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase). Jeder Verkauf löst Abgeltungssteuer auf den Gewinn aus; das kostet oft mehr, als das Ausweichen bringt."},
+  s_brutto: {titel:"Endvermögen", text:"Wert von Depot plus wartendem Bargeld am Ende, noch ohne Steuer auf nicht verkaufte Gewinne."},
+  s_netto: {titel:"Nach Steuer, alles verkauft", text:"Was übrig bliebe, wenn am Ende alles verkauft und 26,375 % Abgeltungssteuer (25 % + Soli) auf den Gewinn bezahlt würde. Die fairste Vergleichszahl zwischen den Strategien."},
+  s_irr: {titel:"Interner Zinsfuß", text:"Die jährliche Verzinsung, die alle Einzahlungen zusammen nach Kosten und Steuern erreicht haben. Berücksichtigt, dass spätere Einzahlungen kürzer arbeiten. Gut vergleichbar mit einem Sparzins."},
+  s_rueckgang: {titel:"Größter Rückgang", text:"Stärkster Fall des Vermögens (Depot + Bargeld) vom bisherigen Höchststand, in Prozent. Zeigt, welchen Einbruch man aushalten musste."},
+  s_unter: {titel:"Zeitweise unter Einzahlungen", text:"Wie weit das Vermögen schlimmstenfalls unter der Summe des bis dahin eingezahlten Geldes lag. „Nie“ = man war zu keinem Zeitpunkt im Minus."},
+  s_steuer: {titel:"Steuern", text:"Unterwegs: Abgeltungssteuer auf Zinsen und auf Gewinne aus Teilverkäufen (zuerst gekaufte Stücke zuerst, Verluste werden verrechnet). Am Ende: Steuer beim gedachten Verkauf von allem. Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung, Vorabpauschale."},
+  s_kosten: {titel:"Kosten", text:"Summe der Ordergebühren (fester Betrag plus Prozent je Order). Staffelkauf hat weniger, aber größere Orders."},
+  s_bar: {titel:"Bargeld am Ende", text:"Anteil des Vermögens, der am Ende noch auf dem Tagesgeld auf eine hohe Ampel wartete. Ein hoher Anteil heißt: viel Geld lag lange ungenutzt."},
+  s_zins: {titel:"Zins auf wartendes Geld", text:"„Echt“ nimmt den tatsächlichen US-Geldmarktzins 3 Monate (FRED TB3MS) des jeweiligen Monats, versteuert. Für Euro-Anleger lag der Tagesgeldzins oft niedriger; zum Vergleich lassen sich feste Sätze wählen."},
+  s_kfix: {titel:"Kosten je Order", text:"Fester Betrag und Prozentsatz, die bei jedem Kauf und Verkauf anfallen (z. B. 1 je Sparplan-Ausführung). Kosten erhöhen die Anschaffungskosten und mindern so auch die Steuer."},
+  // --- Marktumfeld
+  u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
+  u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
+  u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
+  u_zins3m: {titel:"3-Monats-Zins", text:"US-Geldmarktzins für 3 Monate (Treasury Bill, FRED TB3MS). Wird im Strategie-Vergleich als Zins auf wartendes Geld genutzt."},
+  k_pruefung: {titel:"Prüfung der Ampel", text:"Übersicht über alle Werte: Walk-forward-Kalibrierung, Strategie-Vergleich und Signal-Tagebuch. Zeigt ehrlich, ob die Ampel früher etwas gebracht hätte."},
+  // --- Gesamtprüfung
+  g_strategie: {titel:"Strategie über viele Werte", text:"Für jeden Wert derselbe Vergleich (500 je Monat, bis 20 Jahre). „Besser“ = Anteil der Werte, bei denen die Strategie einen höheren internen Zinsfuß hatte als der Sparplan; „±“ = Median-Unterschied in Prozentpunkten pro Jahr. Aktien enthalten nur heute noch gelistete Firmen."},
+  tagebuch: {titel:"Signal-Tagebuch", text:"Jeden Tag wird festgehalten, was das Tool anzeigt, und nie geändert. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen. Das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet."},
+};
+const ek = (k, html) => `<span data-e="${k}" tabindex="0">${html}</span>`;
+
+// ------------------------------------------------------------ Tooltip (Maus: Hovern, Handy: Antippen)
+const TIP = document.createElement("div"); TIP.id = "tip"; TIP.setAttribute("role", "tooltip"); document.body.appendChild(TIP);
+let tipZiel = null, letzterZeiger = "mouse", zeigerZeit = 0;
+function tipZeigen(el){
+  const e = ERKLAERUNG[el.dataset.e]; if (!e) return;
+  TIP.innerHTML = `<b>${e.titel}</b>${typeof e.text === "function" ? e.text() : e.text}`;
+  TIP.style.display = "block"; TIP.style.left = "0px"; TIP.style.top = "0px";
+  // sichtbarer Bereich (auf dem Handy kann die Seite breiter sein als der Bildschirm)
+  const vv = window.visualViewport, bx = vv ? vv.offsetLeft : 0, by = vv ? vv.offsetTop : 0;
+  const bw = vv ? vv.width : document.documentElement.clientWidth, bh = vv ? vv.height : innerHeight;
+  const r = el.getBoundingClientRect(), t = TIP.getBoundingClientRect(), m = 8;
+  let x = r.left + r.width/2 - t.width/2; x = Math.max(bx + m, Math.min(x, bx + bw - t.width - m));
+  let y = r.bottom + 6; if (y + t.height > by + bh - m) y = r.top - t.height - 6; if (y < by + m) y = Math.max(by + m, by + bh - t.height - m);
+  TIP.style.left = x + "px"; TIP.style.top = y + "px"; tipZiel = el;
+}
+function tipWeg(){ TIP.style.display = "none"; tipZiel = null; }
+document.addEventListener("pointerdown", ev => { letzterZeiger = ev.pointerType || "mouse"; zeigerZeit = Date.now(); }, true);
+document.addEventListener("pointerover", ev => {
+  if (ev.pointerType !== "mouse") return;
+  const el = ev.target.closest("[data-e]"); if (el && el !== tipZiel) tipZeigen(el);
+});
+document.addEventListener("pointerout", ev => {
+  if (ev.pointerType !== "mouse" || !tipZiel) return;
+  if (!ev.relatedTarget || !tipZiel.contains(ev.relatedTarget)) tipWeg();
+});
+document.addEventListener("click", ev => {
+  if (letzterZeiger === "mouse") return;               // Maus nutzt Hovern
+  const el = ev.target.closest("[data-e]");
+  if (!el && ev.target.closest("input,select,textarea")) return;   // Label-Klick leitet an das Feld weiter
+  if (!el) { if (!TIP.contains(ev.target)) tipWeg(); return; }
+  if (el === tipZiel) tipWeg(); else tipZeigen(el);
+});
+// Tastatur: Fokus zeigt die Erklärung (Fokus durch Maus/Finger wird von Hovern/Antippen behandelt)
+document.addEventListener("focusin", ev => { if (Date.now() - zeigerZeit < 600) return; const el = ev.target.closest?.("[data-e]"); if (el) tipZeigen(el); });
+document.addEventListener("focusout", () => { if (Date.now() - zeigerZeit < 600) return; tipWeg(); });
+addEventListener("scroll", () => { if (letzterZeiger === "mouse") tipWeg(); else if (tipZiel) tipZeigen(tipZiel); }, true);
+addEventListener("keydown", ev => { if (ev.key === "Escape") tipWeg(); });
+
 async function start(){
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
@@ -150,18 +290,18 @@ function kacheln(){
   let sonder = "";
   if (UMFELD) {
     const b = UMFELD.breite, v = UMFELD.vix, z = UMFELD.zinskurve;
-    sonder += `<div class="kachel breit sonder" id="k-umfeld" title="Marktumfeld anzeigen">
+    sonder += `<div class="kachel breit sonder" id="k-umfeld">
       <div class="n">Marktumfeld · Stand ${(v||b||z||{}).datum||""}</div>
       <div class="drei">
-        <div title="Anteil der Aktien über ihrer 40-Wochen-Linie"><b>${b?fmt(b.wert,0,"%"):"–"}</b><span>Marktbreite · ${b?breiteWort(b.wert):""}</span></div>
-        <div title="Erwartete Schwankung des S&P 500 (Angstbarometer)"><b style="color:${v&&v.wert>=25?"var(--rot)":"inherit"}">${v?fmt(v.wert,1):"–"}</b><span>VIX · ${v?vixWort(v.wert):""}</span></div>
-        <div title="Zinsdifferenz 10 Jahre minus 2 Jahre (US)"><b style="color:${z&&z.invertiert?"var(--rot)":"inherit"}">${z?vz(z.wert,2):"–"}</b><span>Zinskurve · ${z?(z.invertiert?"invertiert":"normal"):""}</span></div>
+        <div><b>${b?fmt(b.wert,0,"%"):"–"}</b><span data-e="u_breite">Marktbreite · ${b?breiteWort(b.wert):""}</span></div>
+        <div><b style="color:${v&&v.wert>=25?"var(--rot)":"inherit"}">${v?fmt(v.wert,1):"–"}</b><span data-e="u_vix">VIX · ${v?vixWort(v.wert):""}</span></div>
+        <div><b style="color:${z&&z.invertiert?"var(--rot)":"inherit"}">${z?vz(z.wert,2):"–"}</b><span data-e="u_zinskurve">Zinskurve · ${z?(z.invertiert?"invertiert":"normal"):""}</span></div>
       </div></div>`;
   }
   if (PRUEF) {
     const e = PRUEF.kalibrierung?.etf?.["3"], s = PRUEF.strategie?.zusammen?.etf;
-    sonder += `<div class="kachel sonder" id="k-pruefung" title="Walk-forward-Prüfung, Strategie-Vergleich, Tagebuch">
-      <div class="n">Prüfung der Ampel</div>
+    sonder += `<div class="kachel sonder" id="k-pruefung">
+      <div class="n">${ek("k_pruefung","Prüfung der Ampel")}</div>
       <div class="s" style="font-size:15px;margin-top:3px">${e && e.skill!=null ? (e.skill>0?"hilft etwas":"kein Vorteil") : "–"}</div>
       <div class="z" style="color:var(--muted)">ETFs, 3 J., außerhalb der Lernzeit${s?` · Staffel besser bei ${fmt(s.staffel_besser,0)} %`:""}</div></div>`;
   }
@@ -233,26 +373,37 @@ async function zeige(id){
   const btc = !!w.pi;   // Pi Cycle nur fuer Bitcoin
   $("#detail").innerHTML = `
     <div id="kopf"><h2>${umlaut(w.name)} <span class="sym">${w.symbol}</span>
-      <span class="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
-      <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${zonen[w.zone]}</span></h2>
-      <div class="grund">${umlaut(w.grund)}</div></div>
+      <span class="ampel" data-e="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
+      <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${ek("zonen", zonen[w.zone])}</span></h2>
+      <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div></div>
     <div id="chart"></div><div id="chart2"></div>
     <div class="legende">
-      <span><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
-      <span><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
-      ${btc?'<span><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span style="color:#e040fb">● Bodenbildung beginnt</span><span style="color:#00e676">▲ Pi Boden-Signal</span>':''}
-      <span><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
-      <span>▲ Ampel ≥ 80 · ▼ Ampel ≤ 15 · unten: Ampel im Zeitverlauf</span>
+      <span data-e="l_200w"><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
+      <span data-e="l_trend"><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
+      ${btc?'<span data-e="l_ema150"><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span data-e="l_sma471"><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▲ Pi Boden-Signal</span>':''}
+      <span data-e="l_kegel"><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
+      <span data-e="l_pfeile">▲ Ampel ≥ 80 · ▼ Ampel ≤ 15</span> · <span data-e="l_ampelverlauf">unten: Ampel im Zeitverlauf</span>
     </div>
     <div class="reiter">
-      <button data-r="kennzahlen">Kennzahlen</button><button data-r="rechner">Kurs-Rechner</button>
-      <button data-r="pruefung">Prüfung</button><button data-r="strategie">Strategie-Vergleich</button>
+      <button data-r="kennzahlen" data-e="r_kennzahlen">Kennzahlen</button><button data-r="rechner" data-e="r_rechner">Kurs-Rechner</button>
+      <button data-r="pruefung" data-e="r_pruefung">Prüfung</button><button data-r="strategie" data-e="r_strategie">Strategie-Vergleich</button>
     </div>
     <div id="tab"></div>`;
   document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
   zeichne(c, btc);
   reiter(REITER);
   ladeKegel(52, 20, []);
+}
+
+function grundMitErklaerung(g){
+  return umlaut(g)
+    .replace(/(\d+ % unter Allzeithoch)/, (m) => ek("vom_hoch", m))
+    .replace(/(zur 200-Wochen-Linie)/, (m) => ek("zu200w", m))
+    .replace(/(Standardabw\. zum Langfristtrend)/, (m) => ek("trend_z", m))
+    .replace(/(Wochen-RSI \d+)/, (m) => ek("rsi", m))
+    .replace(/(Mayer Multiple [\d.,]+)/, (m) => ek("mayer", m))
+    .replace(/(Pi Cycle: [^·]+)/, (m) => ek("pi_bottom", m.trim()) + " ")
+    .replace(/(Pi Cycle Top AKTIV)/, (m) => ek("pi_top", m));
 }
 
 function reiter(name){
@@ -279,17 +430,17 @@ function tabKennzahlen(w){
   if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");
   $("#tab").innerHTML = (hinweise.length ? `<div class="merke" style="margin-top:12px">${hinweise.join("<br>")}</div>` : "") + `
     <div class="werte">
-      <div class="wert"><div class="k">Ø Jahresrendite</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
-      <div class="wert"><div class="k">Ø seit Beginn</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
-      <div class="wert"><div class="k">Abstand zum Hoch</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">zur 200-Wochen-Linie ${fmt(w.zu200w,0,"%")}</div></div>
-      <div class="wert"><div class="k">Rückschlagrisiko</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
-      <div class="wert"><div class="k">Trendgüte (R²)</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher"}</div></div>
-      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`${umlaut(w.pi_status).replace("Pi Cycle: ","Pi Cycle Bottom: ")} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
+      <div class="wert"><div class="k">${ek("cagr20","Ø Jahresrendite")}</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
+      <div class="wert"><div class="k">${ek("cagr_max","Ø seit Beginn")}</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
+      <div class="wert"><div class="k">${ek("vom_hoch","Abstand zum Hoch")}</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">${ek("zu200w","zur 200-Wochen-Linie")} ${fmt(w.zu200w,0,"%")}</div></div>
+      <div class="wert"><div class="k">${ek("rueckschlag","Rückschlagrisiko")}</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
+      <div class="wert"><div class="k">${ek("r2","Trendgüte (R²)")}</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${ek("stabil", w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher")}</div></div>
+      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">${ek("mayer","Mayer")} ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`${ek("pi_bottom", umlaut(w.pi_status).replace("Pi Cycle: ","Pi Cycle Bottom: "))} · ${ek("pi_top","Pi Top")} ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
     </div>
-    <table class="wtab"><thead><tr><th style="text-align:left">Ähnliche Lage früher (Ampel ±7,5)</th><th>Kurs höher</th><th>an allen Tagen</th><th>Vorteil</th><th>Median p.a. (ähnlich / alle)</th><th>Phasen</th></tr></thead>
+    <table class="wtab"><thead><tr><th style="text-align:left" data-e="t_aehnlich">Ähnliche Lage früher (Ampel ±7,5)</th><th data-e="t_hoeher">Kurs höher</th><th data-e="t_alle">an allen Tagen</th><th data-e="vorteil">Vorteil</th><th data-e="t_median">Median p.a. (ähnlich / alle)</th><th data-e="t_phasen">Phasen</th></tr></thead>
     <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
     ${w.pi ? piRueckblick(w) : ""}
-    <div class="text">Datenquelle: ${seg}. Jede Kennzahl wird nur mit der Historie bis zum jeweiligen Zeitpunkt verglichen (kein Blick in die Zukunft).
+    <div class="text">${ek("quelle","Datenquelle")}: ${seg}. Jede Kennzahl wird nur mit der Historie bis zum jeweiligen Zeitpunkt verglichen (kein Blick in die Zukunft).
     „Vorteil“ = wie viel öfter ähnliche Lagen gut ausgingen als ein beliebiger Kauftag. Wenige Phasen = wenig aussagekräftig.
     Ob diese Quoten früher gestimmt hätten, zeigt der Reiter „Prüfung“.
     Heutige Indexmitglieder haben überlebt (Pleitefirmen fehlen) – historische Quoten bei Einzelaktien wirken deshalb zu gut.</div>`;
@@ -298,7 +449,7 @@ function tabKennzahlen(w){
 function piRueckblick(w){
   const d = s => s ? s.split("-").reverse().join(".") : "–";
   const rb = w.pi_rueckblick || [];
-  return `<h3>Pi Cycle Bottom: Kurs nach jedem Boden-Signal</h3>
+  return `<h3>${ek("pi_bottom","Pi Cycle Bottom")}: Kurs nach jedem ${ek("pi_signal","Boden-Signal")}</h3>
     <div class="text" style="padding-bottom:6px">Fällt die 150-Tage-EMA unter die 471-Tage-SMA × 0,745, beginnt die Bodenbildungszone (lila Fläche im Chart). Steigt sie wieder darüber, ist das das Boden-Signal; der Boden liegt laut Indikator zwischen beiden Kreuzungen. Liegt die EMA über der Linie, ist der Markt im Aufwärtstrend oder die Bodenbildung hat noch nicht begonnen.
     <b>Heute: ${umlaut(w.pi_status).replace("Pi Cycle: ","")}.</b></div>
     <table class="wtab"><thead><tr><th style="text-align:left">Boden-Signal</th><th>Zone ab</th><th>Kurs</th><th>nach 1 Jahr</th><th>nach 2 Jahren</th><th>nach 3 Jahren</th></tr></thead><tbody>${
@@ -322,17 +473,17 @@ async function ladeKegel(wochen, jahre, preise){
   return m;
 }
 function wTabelle(liste){
-  return `<table class="wtab"><thead><tr><th style="text-align:left">Kurs</th><th>Abstand</th><th>Art</th><th title="Wird der Kurs irgendwann im Zeitraum (auch kurz innerhalb einer Woche) erreicht?">wird erreicht</th><th title="Steht der Kurs am Ende des Zeitraums jenseits dieser Marke?">steht am Ende jenseits</th></tr></thead><tbody>${
+  return `<table class="wtab"><thead><tr><th style="text-align:left">Kurs</th><th>Abstand</th><th>Art</th><th data-e="mc_erreicht">wird erreicht</th><th data-e="mc_ende">steht am Ende jenseits</th></tr></thead><tbody>${
     liste.map(x => `<tr><td style="text-align:left">${fmt(x.preis, x.preis>=100?0:2)}</td><td class="${klasse(x.abstand)}">${vz(x.abstand,0,"%")}</td><td>${x.art}</td><td><b>${fmt(x.beruehrt,0,"%")}</b></td><td>${fmt(x.ende,0,"%")}</td></tr>`).join("")}</tbody></table>`;
 }
 function tabRechner(w){
   const k = w.kurs, nk = k>=100 ? 0 : 2;
   $("#tab").innerHTML = `
     <div class="eingabe">
-      <label>Kauflimit<input id="mc-limit" type="number" step="any" value="${(k*0.9).toFixed(nk)}"></label>
-      <label>Verkaufsziel<input id="mc-ziel" type="number" step="any" value="${(k*1.2).toFixed(nk)}"></label>
-      <label>Zeitraum (Wochen)<input id="mc-wochen" type="number" value="52" min="4" max="260"></label>
-      <label>Historie (Jahre)<input id="mc-jahre" type="number" value="20" min="3" max="100"></label>
+      <label>${ek("mc_limit","Kauflimit")}<input id="mc-limit" type="number" step="any" value="${(k*0.9).toFixed(nk)}"></label>
+      <label>${ek("mc_ziel","Verkaufsziel")}<input id="mc-ziel" type="number" step="any" value="${(k*1.2).toFixed(nk)}"></label>
+      <label>${ek("mc_wochen","Zeitraum (Wochen)")}<input id="mc-wochen" type="number" value="52" min="4" max="260"></label>
+      <label>${ek("mc_jahre","Historie (Jahre)")}<input id="mc-jahre" type="number" value="20" min="3" max="100"></label>
       <button id="mc-los">Berechnen</button>
     </div>
     <div id="mc-erg"><div class="text">rechnet …</div></div>`;
@@ -349,9 +500,9 @@ function tabRechner(w){
     $("#mc-erg").innerHTML = `
       <h3>Deine Marken (${monate} Monate)</h3>${wTabelle(m.eigene)}
       <div class="werte">
-        <div class="wert"><div class="k">Median-Kurs in ${monate} Monaten</div><div class="v">${fmt(m.ende_median, m.ende_median>=100?0:2)}</div><div class="u">${vz((m.ende_median/m.kurs-1)*100,0,"%")} zu heute (${fmt(m.kurs, nk)})</div></div>
-        <div class="wert"><div class="k">Am Ende im Minus</div><div class="v">${fmt(m.verlust_wahrsch,0,"%")}</div><div class="u">der simulierten Wege</div></div>
-        <div class="wert"><div class="k">Grundlage</div><div class="v">${m.pfade.toLocaleString("de-DE")} Wege</div><div class="u">${fmt(m.hist_jahre,0)} Jahre echte Wochen seit ${m.hist_von.slice(0,4)}, Blöcke à ${m.block} Wochen</div></div>
+        <div class="wert"><div class="k">${ek("mc_median",`Median-Kurs in ${monate} Monaten`)}</div><div class="v">${fmt(m.ende_median, m.ende_median>=100?0:2)}</div><div class="u">${vz((m.ende_median/m.kurs-1)*100,0,"%")} zu heute (${fmt(m.kurs, nk)})</div></div>
+        <div class="wert"><div class="k">${ek("mc_minus","Am Ende im Minus")}</div><div class="v">${fmt(m.verlust_wahrsch,0,"%")}</div><div class="u">der simulierten Wege</div></div>
+        <div class="wert"><div class="k">${ek("mc_grundlage","Grundlage")}</div><div class="v">${m.pfade.toLocaleString("de-DE")} Wege</div><div class="u">${fmt(m.hist_jahre,0)} Jahre echte Wochen seit ${m.hist_von.slice(0,4)}, Blöcke à ${m.block} Wochen</div></div>
       </div>
       <h3>Übliche Abstände</h3>${wTabelle(m.standard)}
       <div class="text">So gerechnet: Aus den echten Wochenkursen der gewählten Jahre werden zufällig zusammenhängende Stücke von ${m.block} Wochen gezogen und zu ${m.pfade.toLocaleString("de-DE")} möglichen Wegen aneinandergehängt (Block-Bootstrap, keine Normalverteilung). Crashs und ruhige Phasen kommen also so oft vor wie früher.
@@ -383,12 +534,12 @@ function skillMerke(e){
   if (!e || e.skill==null) return `<div class="merke">Zu wenig Prüffälle für ein Urteil.</div>`;
   const gut = e.skill > 2, schlecht = e.skill < -2;
   return `<div class="merke ${gut?"gut":schlecht?"schlecht":""}"><b>${gut?"Die Ampel-Quote hat außerhalb der Lernzeit besser vorhergesagt als die einfache Basis-Quote.":schlecht?"Die Ampel-Quote hat außerhalb der Lernzeit schlechter vorhergesagt als die einfache Basis-Quote „so oft stieg der Kurs bisher insgesamt“.":"Die Ampel-Quote war außerhalb der Lernzeit etwa so gut wie die einfache Basis-Quote."}</b>
-    Fehlermaß (Brier) ${fmt(e.brier_modell,3)} gegen ${fmt(e.brier_basis,3)} → ${vz(e.skill,0," %")} (positiv = besser).
+    ${ek("brier","Fehlermaß (Brier)")} ${fmt(e.brier_modell,3)} gegen ${fmt(e.brier_basis,3)} → ${vz(e.skill,0," %")} (positiv = besser).
     Nur Vorhersagen aus mindestens 52 ähnlichen Wochen: ${e.skill_viele==null?"–":vz(e.skill_viele,0," %")}.
     Geprüft: ${e.vorhersagen.toLocaleString("de-DE")} Wochen der Jahre ${e.jahr_von}–${e.jahr_bis}${e.werte>1?`, ${e.werte.toLocaleString("de-DE")} Werte`:""}.</div>`;
 }
 function zonenTabelle(e){
-  return `<table class="wtab"><thead><tr><th style="text-align:left">Ampel damals</th><th>Wochen</th><th>Kurs danach höher</th><th>Ø Rendite p.a. danach</th></tr></thead><tbody>${
+  return `<table class="wtab"><thead><tr><th style="text-align:left" data-e="zonen_damals">Ampel damals</th><th>Wochen</th><th>Kurs danach höher</th><th>Ø Rendite p.a. danach</th></tr></thead><tbody>${
     e.zonen.map(z => `<tr><td style="text-align:left">${z.zone}</td><td>${z.n.toLocaleString("de-DE")}</td><td><b>${fmt(z.quote,0,"%")}</b></td><td class="${klasse(z.rendite_pa)}">${fmt(z.rendite_pa,1,"%")}</td></tr>`).join("")}
     <tr><td style="text-align:left;color:var(--muted)">alle Wochen</td><td>${e.alle.n.toLocaleString("de-DE")}</td><td>${fmt(e.alle.quote,0,"%")}</td><td>${fmt(e.alle.rendite_pa,1,"%")}</td></tr></tbody></table>`;
 }
@@ -396,12 +547,12 @@ function kalBlock(e, titel){
   if (!e) return `<div class="text">Für diesen Horizont gibt es noch zu wenig Jahre mit bekanntem Ergebnis.</div>`;
   return `${skillMerke(e)}
     <div class="zweispaltig">
-      <div>${svgKal([{name:"alle Vorhersagen",farbe:"#2962ff",bins:e.bins},{name:"aus ≥ 52 ähnlichen Wochen",farbe:"#ff9800",bins:e.bins_viele||[]}])}
+      <div data-e="kalibrierung">${svgKal([{name:"alle Vorhersagen",farbe:"#2962ff",bins:e.bins},{name:"aus ≥ 52 ähnlichen Wochen",farbe:"#ff9800",bins:e.bins_viele||[]}])}
         <div class="legende" style="border:none;padding:4px 0"><span><i style="background:#2962ff"></i>alle Vorhersagen</span><span><i style="background:#ff9800"></i>nur aus ≥ 52 ähnlichen Wochen</span></div></div>
       <div><b>${titel}</b>${zonenTabelle(e)}</div>
     </div>`;
 }
-const PR_TEXT = `So geprüft (Walk-forward): Für jedes Jahr X wurde die Wahrscheinlichkeit nur aus Fällen berechnet, deren Ergebnis Ende X−1 schon feststand – wie man sie damals hätte sehen können. Danach wurde verglichen, was wirklich passierte.
+const PR_TEXT = () => `So geprüft (${ek("walkforward","Walk-forward")}): Für jedes Jahr X wurde die Wahrscheinlichkeit nur aus Fällen berechnet, deren Ergebnis Ende X−1 schon feststand – wie man sie damals hätte sehen können. Danach wurde verglichen, was wirklich passierte.
   Liegt ein Punkt auf der gestrichelten Linie, stimmte die angezeigte Quote. Darunter: zu optimistisch, darüber: zu vorsichtig. Punktgröße = Anzahl Wochen.
   Achtung: Aufeinanderfolgende Wochen hängen stark zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner als die Wochenzahl.`;
 async function tabPruefung(w, h="3"){
@@ -413,7 +564,7 @@ async function tabPruefung(w, h="3"){
   const d = await r.json();
   const male = h => {
     $("#tab").innerHTML = `<div class="eingabe">${["1","3","5"].map(k => `<button class="knopf leise ${k===h?"an":""}" data-h="${k}">nach ${k} Jahr${k==="1"?"":"en"}</button>`).join("")}</div>
-      ${kalBlock(d[h], "Ergebnis je Ampel-Stufe (außerhalb der Lernzeit)")}<div class="text">${PR_TEXT}</div>`;
+      ${kalBlock(d[h], "Ergebnis je Ampel-Stufe (außerhalb der Lernzeit)")}<div class="text">${PR_TEXT()}</div>`;
     document.querySelectorAll("#tab [data-h]").forEach(b => b.onclick = () => male(b.dataset.h));
   };
   male(h);
@@ -425,9 +576,9 @@ function tabStrategie(w){
     <div class="eingabe">
       <label>Betrag je Monat<input id="st-betrag" type="number" value="500" min="10"></label>
       <label>Jahre (höchstens)<input id="st-jahre" type="number" value="20" min="3" max="60"></label>
-      <label>Kosten je Order fest<input id="st-kfix" type="number" step="0.5" value="1" min="0"></label>
-      <label>Kosten je Order %<input id="st-kproz" type="number" step="0.05" value="0" min="0"></label>
-      <label>Zins auf wartendes Geld<select id="st-zins"><option value="echt">echt (US-Geldmarkt)</option><option value="0">0 %</option><option value="2">fest 2 %</option><option value="3">fest 3 %</option></select></label>
+      <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="1" min="0"></label>
+      <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="0" min="0"></label>
+      <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins"><option value="echt">echt (US-Geldmarkt)</option><option value="0">0 %</option><option value="2">fest 2 %</option><option value="3">fest 3 %</option></select></label>
       <button id="st-los">Berechnen</button>
     </div><div id="st-erg"><div class="text">rechnet …</div></div>`;
   const los = async () => {
@@ -440,21 +591,21 @@ function tabStrategie(w){
     if (d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d.fehler}</div>`; return; }
     const ks = ["spar","staffel","staffel_vk"], e = d.ergebnis;
     const best = ks.reduce((a,b) => (e[b].netto > e[a].netto ? b : a), "spar");
-    const zeile = (t, f, tip="") => `<tr><td style="text-align:left" title="${tip}">${t}</td>${ks.map(k => `<td class="${k===best?"":""}">${f(e[k])}</td>`).join("")}</tr>`;
+    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td class="${k===best?"":""}">${f(e[k])}</td>`).join("")}</tr>`;
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     $("#st-erg").innerHTML = `
       <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}).
         Am meisten nach Steuer: <b>${e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
-      <table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th style="${k===best?"color:var(--text)":""}">${e[k].name}</th>`).join("")}</tr></thead><tbody>
-        ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto))}
-        ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "Am Ende alles verkauft, Abgeltungssteuer 26,375 % auf den Gewinn abgezogen")}
-        ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "Jährliche Verzinsung aller Einzahlungen nach Kosten und Steuern")}
-        ${zeile("Größter Rückgang des Vermögens", x => `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "Stärkster Fall vom bisherigen Höchststand (Depot + Bargeld)")}
-        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "So weit lag das Vermögen schlimmstenfalls unter dem bis dahin eingezahlten Geld")}
-        ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "Unterwegs: auf Zinsen und Teilverkäufe")}
-        ${zeile("Kosten gesamt", x => geld(x.kosten))}
+      <table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${e[k].name}</th>`).join("")}</tr></thead><tbody>
+        ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto), "s_brutto")}
+        ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")}
+        ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "s_irr")}
+        ${zeile("Größter Rückgang des Vermögens", x => `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
+        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
+        ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "s_steuer")}
+        ${zeile("Kosten gesamt", x => geld(x.kosten), "s_kosten")}
         ${zeile("Käufe / Verkäufe", x => `${x.kaeufe} / ${x.verkaeufe}`)}
-        ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "Anteil, der am Ende noch auf günstige Kurse wartete")}
+        ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "s_bar")}
       </tbody></table>
       <div id="chart3"></div>
       <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:#868993"></i>eingezahlt</span><span><i style="background:#2962ff"></i>Sparplan</span><span><i style="background:#26a69a"></i>Staffelkauf</span><span><i style="background:#ff9800"></i>Staffel + Teilverkauf</span></div>
@@ -526,10 +677,10 @@ function zeigeUmfeld(){
   const teil = (titel, x, wert, wort, text, id, nk=1) => x ? `<h3>${titel}: ${wert} <span style="font-weight:400;color:var(--muted)">· ${wort} · Stand ${x.datum.split("-").reverse().join(".")} · vor 4 Wochen ${x.vor4w==null?"–":fmt(x.vor4w, nk)}</span></h3>
       <div class="mini" id="${id}"></div><div class="text">${text} Quelle: ${x.quelle}.</div>` : `<h3>${titel}: keine Daten</h3>`;
   $("#detail").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
-    ${teil("Marktbreite", b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
-    ${teil("VIX", v, v?fmt(v.wert,1):"", v?vixWort(v.wert):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). Median seit 1990: ${fmt(v.median,1)}; höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
-    ${teil("Zinskurve 10 J. – 2 J.", z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
-    ${u.zins3m?`<div class="text">US-Geldmarkt 3 Monate (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
+    ${teil(ek("u_breite","Marktbreite"), b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
+    ${teil(ek("u_vix","VIX"), v, v?fmt(v.wert,1):"", v?vixWort(v.wert):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). Median seit 1990: ${fmt(v.median,1)}; höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
+    ${teil(ek("u_zinskurve","Zinskurve 10 J. – 2 J."), z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
+    ${u.zins3m?`<div class="text">${ek("u_zins3m","US-Geldmarkt 3 Monate")} (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
   if (b) miniChart($("#m-breite"), b.reihe, "#26a69a", [[50,"#868993",""],[30,"#ef5350",""]]);
   if (v) miniChart($("#m-vix"), v.reihe, "#ef5350", [[v.median,"#868993","Median"]]);
   if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,"#ef5350",""]]);
@@ -550,20 +701,20 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
       ${["1","3","5"].map(j => (erg[j]?.zonen||[]).length ? `<h3>Nach ${j} Jahr${j==="1"?"":"en"} je Zone</h3><table class="wtab"><thead><tr><th style="text-align:left">Zone</th><th>Signale</th><th>Werte</th><th>Kurs höher</th><th>Median</th></tr></thead><tbody>${erg[j].zonen.map(z => `<tr><td style="text-align:left">${zonen[z.zone]||z.zone}</td><td>${z.signale}</td><td>${z.werte}</td><td>${fmt(z.quote,0,"%")}</td><td>${fmt(z.median,1,"%")}</td></tr>`).join("")}</tbody></table>${(erg[j].kalibrierung||[]).length?`<div style="padding:0 12px">${svgKal([{name:"Tagebuch",farbe:"#26a69a",bins:erg[j].kalibrierung}])}</div>`:""}` : "").join("")}`;
   }
   $("#detail").innerHTML = `<div id="kopf"><h2>Prüfung der Ampel</h2><div class="grund">Hätte die Ampel früher gestimmt? Rückblick ohne Zukunftswissen über alle Werte, Strategie-Vergleich und Signal-Tagebuch. Stand ${PRUEF.stand}.</div></div>
-    <h3>1. Walk-forward-Kalibrierung über viele Werte</h3>
+    <h3>1. ${ek("walkforward","Walk-forward-Kalibrierung")} über viele Werte</h3>
     <div class="eingabe">${Object.entries(k).map(([g,x]) => `<button class="knopf leise ${g===gruppe?"an":""}" data-g="${g}">${x.name.replace(" (Auswahl mit Rückblick!)","*")}</button>`).join("")}
       <span style="width:16px"></span>${["1","3","5"].map(j => `<button class="knopf leise ${j===h?"an":""}" data-h="${j}">${j} J.</button>`).join("")}</div>
     ${kalBlock(e, `${k[gruppe].name}, nach ${h} Jahr${h==="1"?"":"en"}`)}
-    <div class="text">${PR_TEXT} ${gruppe==="aktien_stabil"?"* Die Auswahl „stabiler Aufwärtstrend“ nutzt den ganzen Kursverlauf bis heute – sie kennt also die Zukunft und ist deshalb zu günstig.":""}
+    <div class="text">${PR_TEXT()} ${gruppe==="aktien_stabil"?"* Die Auswahl „stabiler Aufwärtstrend“ nutzt den ganzen Kursverlauf bis heute – sie kennt also die Zukunft und ist deshalb zu günstig.":""}
       Bei Aktien fehlen Firmen, die pleite gingen oder übernommen wurden; die Quoten sind dadurch zu gut.</div>
-    <h3>2. Strategie-Vergleich über viele Werte</h3>
+    <h3>2. ${ek("g_strategie","Strategie-Vergleich über viele Werte")}</h3>
     <div class="text">${s.annahmen}. Unterschied im internen Zinsfuß in Prozentpunkten gegenüber dem Sparplan (Median).</div>
-    <table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th>Sparplan p.a.</th><th>Staffel besser</th><th>Staffel ±</th><th>+ Teilverkauf besser</th><th>+ Teilverkauf ±</th></tr></thead><tbody>
+    <table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th data-e="s_spar">Sparplan p.a.</th><th data-e="s_staffel">Staffel besser</th><th data-e="s_staffel">Staffel ±</th><th data-e="s_staffel_vk">+ Teilverkauf besser</th><th data-e="s_staffel_vk">+ Teilverkauf ±</th></tr></thead><tbody>
       ${zus("ETFs / Indizes", s.zusammen.etf)}${zus("Rohstoffe", s.zusammen.rohstoffe)}${zus("Aktien (alle)", s.zusammen.aktien)}${zus("Aktien mit 20 Jahren Vergleich", s.zusammen.aktien_20j)}${zus("Aktien stabiler Trend*", s.zusammen.aktien_stabil)}</tbody></table>
-    <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th>Sparplan</th><th>Staffel</th><th>+ Teilverkauf</th><th>größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
+    <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th data-e="s_irr">Sparplan</th><th data-e="s_staffel">Staffel</th><th data-e="s_staffel_vk">+ Teilverkauf</th><th data-e="s_rueckgang">größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
       s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
-    <h3>3. Signal-Tagebuch</h3>${tbHtml}`;
+    <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}`;
   document.querySelectorAll("#detail [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
   document.querySelectorAll("#detail [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
   document.querySelectorAll("#detail tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
