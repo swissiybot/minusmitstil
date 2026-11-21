@@ -50,6 +50,7 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/nasdaq100.json
             daten/isin
             daten/btc_alt
           key: kurse-${{ github.run_id }}
@@ -78,11 +79,9 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
         run: python fundamente.py
 
-      - name: Branchen (SEC-Stammdaten, für die Heatmap)
+      - name: Nasdaq-100-Mitglieder (Wikipedia, für die Heatmap)
         continue-on-error: true
-        env:
-          SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
-        run: python branchen.py
+        run: python nasdaq100.py
 
       - name: ISIN-Liste für den Depot-Import (SEC)
         continue-on-error: true
@@ -100,6 +99,7 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/nasdaq100.json
             daten/isin
             daten/btc_alt
           key: kurse-${{ github.run_id }}

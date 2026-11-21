@@ -554,16 +554,19 @@ def main(argv):
         print(f"Geschäftszahlen nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
         fund = {}
     try:
-        import branchen
-        br = branchen.zuordnung()   # Symbol -> Branche aus SEC-Stammdaten (leer ohne Datei)
+        import nasdaq100
+        n100 = nasdaq100.mitglieder()   # Symbol -> {branche, untersektor} laut Wikipedia-Liste (leer ohne Datei)
     except Exception as ex:
-        print(f"Branchen nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
-        br = {}
+        print(f"Nasdaq-100-Liste nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+        n100 = {}
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
-            if erg is not None and br.get(z["symbol"]) and not erg[0].get("branche"):
-                erg[0]["branche"] = br[z["symbol"]]
+            if erg is not None and "Nasdaq" in z["gruppe"] and z["symbol"] in n100:
+                m = n100[z["symbol"]]
+                erg[0]["n100"] = True
+                erg[0]["branche"] = erg[0].get("branche") or m["branche"]
+                erg[0]["untersektor"] = m.get("untersektor", "")
             if erg is not None:
                 f = fund.get(z["symbol"]) if "Nasdaq" in z["gruppe"] else None
                 if f is not None:
