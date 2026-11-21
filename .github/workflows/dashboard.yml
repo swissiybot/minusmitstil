@@ -52,9 +52,15 @@ jobs:
             daten/sec
             daten/nasdaq100.json
             daten/isin
+            daten/welt
+            daten/welt.csv
             daten/btc_alt
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
+
+      - name: Auslandsaktien (Wikidata, höchstens wöchentlich neu)
+        continue-on-error: true
+        run: python welt.py
 
       - name: Werteliste
         run: python universum.py || { echo "::warning::Werteliste nicht ladbar – nutze die zwischengespeicherte"; test -f daten/universum.csv; }
@@ -101,6 +107,8 @@ jobs:
             daten/sec
             daten/nasdaq100.json
             daten/isin
+            daten/welt
+            daten/welt.csv
             daten/btc_alt
           key: kurse-${{ github.run_id }}
 

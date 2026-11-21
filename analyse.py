@@ -681,7 +681,7 @@ def main(argv):
                 erg[0]["branche"] = erg[0].get("branche") or m["branche"]
                 erg[0]["untersektor"] = m.get("untersektor", "")
             if erg is not None:
-                f = fund.get(z["symbol"]) if "Nasdaq" in z["gruppe"] else None
+                f = fund.get(z["symbol"]) if ("Nasdaq" in z["gruppe"] or "NYSE" in z["gruppe"]) else None   # SEC-Zahlen für US-Firmen beider Börsen
                 if f is not None:
                     try:
                         erg[0]["f"] = fundamente.fuer_zeile(f, erg[0].get("kurs"), erg[0].get("score")) or None

@@ -1,4 +1,4 @@
-"""Baut die Liste aller Werte: Nasdaq-Aktien, FTSE All-World (aus Vanguard-Excel), ETFs, Krypto, Rohstoffe.
+"""Baut die Liste aller Werte: Nasdaq- und NYSE-Aktien, wichtige Auslandsaktien (welt.py), FTSE All-World (aus Vanguard-Excel), ETFs, Krypto, Rohstoffe.
 
 Ergebnis: daten/universum.csv mit Spalten
     id, symbol, name, gruppe, land, branche
@@ -45,6 +45,34 @@ def nasdaq() -> pd.DataFrame:
     return out
 
 
+def nyse() -> pd.DataFrame:
+    """Stammaktien und ADRs der New York Stock Exchange (ohne ETFs, Vorzüge, Fonds, Anleihen, Optionsscheine)."""
+    t = requests.get("https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt", headers=UA, timeout=60).text
+    df = pd.read_csv(io.StringIO(t), sep="|")
+    df = df[df["ACT Symbol"].notna() & ~df["ACT Symbol"].astype(str).str.startswith("File Creation")]
+    df = df[(df["Exchange"] == "N") & (df["ETF"] == "N") & (df["Test Issue"] == "N") & ~df["ACT Symbol"].astype(str).str.contains(r"\$")]
+    raus = r"Warrant|Right|Unit|Preferred|Depositary Shares? representing|Notes due|Debenture|% |Pfd|Fund|Trust Units|Senior|Subordinated|Perpetual"
+    df = df[~df["Security Name"].str.contains(raus, case=False, regex=True)]
+    sym = df["ACT Symbol"].astype(str).str.replace(".", "-", regex=False)
+    name = df["Security Name"].str.replace(r" (New )?Common Stock.*$| Ordinary Shares.*$| American [Dd]epositary.*$| \(The\)", "", regex=True)
+    out = pd.DataFrame({"id": sym, "symbol": sym, "name": name.str.strip(), "gruppe": "NYSE", "land": "US", "branche": ""})
+    print(f"NYSE: {len(out)} Werte")
+    return out
+
+
+def welt() -> pd.DataFrame:
+    """Wichtige Aktien außerhalb der USA an ihrer Heimatbörse (aus welt.py / Wikidata, daten/welt.csv)."""
+    datei = E.DATEN / "welt.csv"
+    if not datei.exists():
+        print("Hinweis: keine daten/welt.csv (welt.py) – Auslandsaktien werden übersprungen.")
+        return pd.DataFrame(columns=["id", "symbol", "name", "gruppe", "land", "branche"])
+    d = pd.read_csv(datei, dtype=str).dropna(subset=["symbol"])
+    d = d[d["symbol"].str.len() > 0].drop_duplicates("symbol")
+    out = pd.DataFrame({"id": d["symbol"], "symbol": d["symbol"], "name": d["name"], "gruppe": "Welt", "land": d["land"], "branche": ""})
+    print(f"Welt: {len(out)} Werte")
+    return out
+
+
 def _yahoo_symbol(ticker: str, land: str) -> str | None:
     t = str(ticker).strip().upper().replace("/", "-").replace(" ", "-")
     if land not in ENDUNG or not t or t == "NAN":
@@ -87,7 +115,7 @@ def ftse_all_world() -> pd.DataFrame:
 
 
 def etfs_und_bitcoin() -> pd.DataFrame:
-    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + " (ETF)", "gruppe": "ETF", "land": "", "branche": "Index"} for e in E.ETFS]
+    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + " (ETF)", "gruppe": "ETF", "land": "", "branche": e.get("branche", "Index")} for e in E.ETFS]
     for k in E.KRYPTO:
         zeilen.append({"id": k["id"], "symbol": k["symbol"], "name": k["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
     for r in E.ROHSTOFFE:
@@ -97,7 +125,7 @@ def etfs_und_bitcoin() -> pd.DataFrame:
 
 
 def main():
-    teile = [etfs_und_bitcoin(), nasdaq(), ftse_all_world()]
+    teile = [etfs_und_bitcoin(), nasdaq(), nyse(), welt(), ftse_all_world()]
     df = pd.concat(teile, ignore_index=True)
     # Doppelte (z. B. Apple in Nasdaq und FTSE) zusammenfassen, Gruppen merken
     df["gruppe"] = df.groupby("symbol")["gruppe"].transform(lambda g: " + ".join(dict.fromkeys(g)))

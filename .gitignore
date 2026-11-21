@@ -25,3 +25,5 @@ daten/eingang/*
 
 # Signal-Tagebuch wird bewusst MITGESICHERT (nicht neu erzeugbar)
 daten/isin/
+daten/welt/
+daten/welt.csv

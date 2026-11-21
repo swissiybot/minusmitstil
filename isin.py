@@ -7,7 +7,8 @@ Quelle: SEC "Fails-to-Deliver"-Daten (gemeinfrei, zweimal im Monat, je Datei ca.
 fast alle in den USA gehandelten Aktien und ETFs CUSIP und Kuerzel. Eine US-ISIN ist "US" + CUSIP + Pruefziffer,
 die Pruefziffer wird berechnet. (Kanadische Firmen haben "CA" statt "US" – beide Varianten kommen in die Liste;
 eine Variante, die es nicht gibt, schadet nicht, weil keine echte ISIN darauf passt.)
-Auslaendische Heimat-ISINs (z. B. NL... fuer ASML in Amsterdam) lassen sich so nicht bilden; die bleiben offen.
+Auslaendische Heimat-ISINs (z. B. NL... fuer ASML in Amsterdam) lassen sich so nicht bilden; die kommen aus welt.py
+(Wikidata): Heimatboerse im Tool oder, falls dort zu wenig Kurse, das US-Kuerzel (ADR).
 
 Damit ein spaeter neu vergebenes Kuerzel keine falsche Firma bekommt: je Kuerzel zaehlen nur die CUSIPs aus der
 neuesten Datei, in der es vorkommt, und aeltere nur, wenn die Firmenbezeichnung mit demselben Wort beginnt.
@@ -111,7 +112,14 @@ def bauen() -> dict:
         print("ISIN: keine SEC-Dateien vorhanden – keine ISIN-Liste.")
         return {}
     uni = pd.read_csv(E.DATEN / "universum.csv")
-    sym_zu_id = {str(s).upper(): str(i) for s, i in zip(uni["symbol"], uni["id"]) if "." not in str(s) and "-" not in str(s) and "=" not in str(s)}
+    sym_zu_id = {}
+    for s, i, g in zip(uni["symbol"].astype(str).str.upper(), uni["id"].astype(str), uni["gruppe"].astype(str)):
+        if "." in s or "=" in s or g in ("Krypto", "Rohstoffe", "Welt"):
+            continue
+        sym_zu_id[s] = i
+        if "-" in s:   # Gattungen: Tool „BRK-B“, SEC „BRK.B“ oder „BRKB“
+            sym_zu_id[s.replace("-", ".")] = i
+            sym_zu_id[s.replace("-", "")] = i
     erstes_wort = lambda t: (str(t).split() or [""])[0].upper()
     gefunden: dict[str, dict] = {}   # symbol -> {"wort": ..., "cusips": set}
     for f in dateien:
@@ -130,9 +138,34 @@ def bauen() -> dict:
             for land in ("US", "CA") if c[0].isdigit() else ("US",):
                 rumpf = land + c
                 tabelle[rumpf + pruefziffer(rumpf)] = sym_zu_id[s]
+    # Auslandsaktien (welt.py, Wikidata): Heimat-ISIN -> Heimatboerse, sonst US-Kuerzel (ADR), je nachdem, wofuer
+    # genug Kurse (MIN_JAHRE_RANGLISTE) vorliegen; sonst das erste Kuerzel im Tool (dann „erkannt, aber zu jung“)
+    welt_n = 0
+    welt_datei = E.DATEN / "welt.csv"
+    if welt_datei.exists():
+        try:
+            from kurse import lade_lokal
+        except Exception:
+            lade_lokal = None
+        ids = set(uni["id"].astype(str))
+        def jahre(sym):
+            if lade_lokal is None:
+                return 0
+            k = lade_lokal(sym)
+            return 0 if k is None or k.empty else (k.index.max() - k.index.min()).days / 365.25
+        w = pd.read_csv(welt_datei, dtype=str).fillna("")
+        for isin_, sym, us in zip(w["isin"], w["symbol"], w["us"]):
+            if isin_ in tabelle:
+                continue
+            kand = [s for s in (sym, us) if s and s in ids]
+            if not kand:
+                continue
+            gut = [s for s in kand if jahre(s) >= E.MIN_JAHRE_RANGLISTE]
+            tabelle[isin_] = (gut or kand)[0]
+            welt_n += 1
     E.WEB_DATEN.mkdir(parents=True, exist_ok=True)
     ZIEL.write_text(json.dumps(tabelle, separators=(",", ":"), sort_keys=True))
-    print(f"ISIN: {len(gefunden)} von {len(sym_zu_id)} US-Werten im Tool mit ISIN ({len(dateien)} SEC-Dateien) -> {ZIEL.name}")
+    print(f"ISIN: {len({sym_zu_id[s] for s in gefunden})} von {len(set(sym_zu_id.values()))} US-Werten im Tool mit ISIN ({len(dateien)} SEC-Dateien), {welt_n} Auslands-ISINs (Wikidata) -> {ZIEL.name}")
     return tabelle
 
 

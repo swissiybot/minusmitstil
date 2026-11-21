@@ -17,7 +17,9 @@ import einstellungen as E
 
 FRED = E.DATEN / "fred"
 FRED_REIHEN = {"T10Y2Y": "Zinskurve 10 Jahre minus 2 Jahre (US-Staatsanleihen)",
-               "TB3MS": "US-Geldmarkt 3 Monate (Treasury Bill)"}
+               "TB3MS": "US-Geldmarkt 3 Monate (Treasury Bill)",
+               "NCBEILQ027S": "Börsenwert der US-Unternehmen (Fed Z.1, für den Buffett-Indikator)",
+               "GDP": "US-Bruttoinlandsprodukt (nominal, für den Buffett-Indikator)"}
 START_BREITE = pd.Timestamp("1985-01-04")   # Freitag
 
 

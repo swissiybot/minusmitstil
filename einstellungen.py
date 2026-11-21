@@ -37,6 +37,36 @@ ETFS = [
     {"id": "EWJ",  "name": "Japan (Nikkei 225)", "etf": "EWJ",      "index": "^N225",     "index_tr": None},
 ]
 
+# Themen-, Branchen-, Länder- und Anleihen-ETFs (US-gelistet, lange Historie). Dienen vor allem als echter Wert bzw.
+# passender Ersatz beim Depot-Import (z. B. Uran-ETF aus Europa -> URA). Kein Index-Vorlauf.
+_T = lambda i, n, b: {"id": i, "name": n, "etf": i, "index": None, "index_tr": None, "branche": b}
+THEMEN_ETFS = [
+    _T("URA", "Uran", "Thema"), _T("LIT", "Lithium & Batterien", "Thema"), _T("TAN", "Solar", "Thema"),
+    _T("ICLN", "Saubere Energie", "Thema"), _T("SMH", "Halbleiter", "Branche"), _T("SOXX", "Halbleiter (iShares)", "Branche"),
+    _T("IGV", "Software", "Branche"), _T("SKYY", "Cloud Computing", "Thema"), _T("CIBR", "Cybersicherheit", "Thema"),
+    _T("BOTZ", "Robotik & KI", "Thema"), _T("ARKK", "Disruptive Innovation (ARK)", "Thema"), _T("KWEB", "China Internet", "Thema"),
+    _T("IBB", "Biotechnologie", "Branche"), _T("XBI", "Biotechnologie (gleichgewichtet)", "Branche"),
+    _T("ITA", "Luft- und Raumfahrt, Rüstung", "Branche"), _T("GDX", "Goldminen", "Branche"), _T("COPX", "Kupferminen", "Branche"),
+    _T("REMX", "Seltene Erden", "Thema"), _T("PHO", "Wasser", "Thema"), _T("IGF", "Infrastruktur weltweit", "Thema"),
+    _T("VNQ", "Immobilien (REITs USA)", "Branche"), _T("XLK", "Technologie (S&P 500)", "Branche"), _T("XLF", "Finanzen (S&P 500)", "Branche"),
+    _T("XLE", "Energie (S&P 500)", "Branche"), _T("XLV", "Gesundheit (S&P 500)", "Branche"), _T("XLI", "Industrie (S&P 500)", "Branche"),
+    _T("XLP", "Basiskonsum (S&P 500)", "Branche"), _T("XLY", "Zyklischer Konsum (S&P 500)", "Branche"), _T("XLU", "Versorger (S&P 500)", "Branche"),
+    _T("XLB", "Rohstoffe/Grundstoffe (S&P 500)", "Branche"), _T("KBE", "Banken USA", "Branche"),
+    _T("RSP", "S&P 500 gleichgewichtet", "Faktor"), _T("MTUM", "Momentum (MSCI USA)", "Faktor"), _T("QUAL", "Qualität (MSCI USA)", "Faktor"),
+    _T("USMV", "Minimum Volatility (MSCI USA)", "Faktor"), _T("IWD", "Value (Russell 1000)", "Faktor"), _T("IWF", "Growth (Russell 1000)", "Faktor"),
+    _T("VYM", "Hohe Dividende (USA)", "Faktor"), _T("VIG", "Dividendenwachstum (USA)", "Faktor"), _T("IJH", "Mid Caps USA (S&P 400)", "Faktor"),
+    _T("VSS", "Small Caps weltweit ohne USA", "Faktor"), _T("EFA", "Industrieländer ohne USA (MSCI EAFE)", "Region"),
+    _T("VGK", "Europa (FTSE Developed Europe)", "Region"), _T("MCHI", "China (MSCI China)", "Land"), _T("FXI", "China Large Caps", "Land"),
+    _T("INDA", "Indien (MSCI India)", "Land"), _T("EWZ", "Brasilien", "Land"), _T("EWG", "Deutschland (MSCI)", "Land"),
+    _T("EWU", "Großbritannien (MSCI)", "Land"), _T("EWT", "Taiwan", "Land"), _T("EWY", "Südkorea", "Land"), _T("EWC", "Kanada", "Land"),
+    _T("EWA", "Australien", "Land"), _T("EWL", "Schweiz", "Land"),
+    _T("AGG", "Anleihen USA gesamt", "Anleihen"), _T("IEF", "US-Staatsanleihen 7-10 Jahre", "Anleihen"), _T("TLT", "US-Staatsanleihen 20+ Jahre", "Anleihen"),
+    _T("SHY", "US-Staatsanleihen 1-3 Jahre", "Anleihen"), _T("LQD", "Unternehmensanleihen USA", "Anleihen"), _T("HYG", "Hochzinsanleihen USA", "Anleihen"),
+    _T("EMB", "Schwellenländer-Anleihen", "Anleihen"), _T("TIP", "Inflationsgeschützte US-Anleihen", "Anleihen"), _T("BNDX", "Anleihen weltweit ohne USA", "Anleihen"),
+    _T("SLV", "Silber (ETF)", "Rohstoff"), _T("GLD", "Gold (ETF)", "Rohstoff"),
+]
+ETFS = ETFS + THEMEN_ETFS
+
 # Kryptowaehrungen (Yahoo, Kurse in USD). Pi Cycle ist nur fuer Bitcoin geeicht und wird nur dort berechnet.
 # Daten bei Yahoo: BTC ab 2014, ETH/LINK/XLM ab 11/2017, SOL ab 04/2020 (Ampel braucht 5 Jahre Vorlauf).
 KRYPTO = [

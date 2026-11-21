@@ -167,7 +167,43 @@ def walk_forward(log_cape: np.ndarray, fwd: np.ndarray, h: int, index: pd.Dateti
                 "fehler_basis": round(float(np.abs(wahr[m] - pb[m]).mean()) * 100, 1),
                 "n": int(m.sum()), "von": index[monat[m][0]].strftime("%Y-%m"), "bis": index[monat[m][-1]].strftime("%Y-%m")}
     jahre = index.year.values[monat]
-    return {"alle": kennzahlen(np.ones(len(pm), bool)), "ab1990": kennzahlen(jahre >= 1990), "bis1989": kennzahlen(jahre < 1990)}
+    return {"alle": kennzahlen(np.ones(len(pm), bool)), "ab1990": kennzahlen(jahre >= 1990), "bis1989": kennzahlen(jahre < 1990),
+            "_fehler": wahr - pm}
+
+
+def buffett_monatlich(index: pd.DatetimeIndex) -> pd.Series | None:
+    """Buffett-Indikator: Boersenwert der US-Unternehmen (FRED NCBEILQ027S, Mio. $) / BIP (FRED GDP, Mrd. $), in %.
+    Quartalswerte erscheinen erst Monate spaeter: fuer die Pruefung gilt ein Quartal erst 3 Monate nach Quartalsende als bekannt."""
+    import umfeld
+    mw, bip = umfeld.fred_reihe("NCBEILQ027S"), umfeld.fred_reihe("GDP")
+    if mw is None or bip is None or mw.empty or bip.empty:
+        return None
+    q = (mw / (bip * 1000) * 100).dropna()
+    q.index = q.index + pd.DateOffset(months=6)   # Quartalsanfang + 3 Monate Quartal + 3 Monate Veroeffentlichung
+    return q.reindex(q.index.union(index)).ffill().reindex(index)
+
+
+def erwartung(name: str, x: np.ndarray, fwd10: np.ndarray, fwd1: np.ndarray, index: pd.DatetimeIndex, log: bool) -> dict | None:
+    """Erwartete reale Rendite p.a. der naechsten 10 Jahre aus einer Bewertungskennzahl (Gerade ueber alle bekannten Jahre),
+    Spanne aus den Fehlern der Pruefung ohne Zukunftswissen (10.–90. Perzentil), dazu deren R2."""
+    xx = np.log(x) if log else x.copy()
+    ok = ~np.isnan(xx) & ~np.isnan(fwd10)
+    jetzt_i = np.flatnonzero(~np.isnan(xx))
+    if ok.sum() < LERN_MIN or len(jetzt_i) == 0:
+        return None
+    b, a = np.polyfit(xx[ok], fwd10[ok], 1)
+    i = int(jetzt_i[-1])
+    pred = a + b * xx[i]
+    wf10, wf1 = walk_forward(xx, fwd10, 120, index), walk_forward(xx, fwd1, 12, index)
+    fe = wf10["_fehler"] if wf10 else np.array([])
+    r = lambda v: round(float(v) * 100, 1)
+    return {"name": name, "wert": round(float(x[i]), 3 if not log else 1), "datum": index[i].strftime("%Y-%m"),
+            "perzentil": round(float((x[~np.isnan(x)] < x[i]).mean()) * 100, 0),
+            "erwartet": r(pred), "von": r(pred + np.percentile(fe, 10)) if len(fe) else None, "bis": r(pred + np.percentile(fe, 90)) if len(fe) else None,
+            "r2_10": (wf10 or {}).get("alle", {}).get("r2") if wf10 and wf10.get("alle") else None,
+            "r2_10_ab1990": wf10["ab1990"]["r2"] if wf10 and wf10.get("ab1990") else None,
+            "r2_1": wf1["alle"]["r2"] if wf1 and wf1.get("alle") else None,
+            "ab": index[int(np.flatnonzero(ok)[0])].strftime("%Y")}
 
 
 def strategie(df: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, schwelle: float) -> dict | None:
@@ -235,6 +271,15 @@ def auswerten(df: pd.DataFrame, zins: pd.Series | None) -> dict:
 
     logc = np.log(cape)
     wf = {"10": walk_forward(logc, f10, 120, df.index), "1": walk_forward(logc, f1, 12, df.index)}
+    for v in wf.values():
+        if v:
+            v.pop("_fehler", None)
+    # Erwartete Rendite der naechsten 10 Jahre aus drei Bewertungskennzahlen (jede ehrlich geprueft)
+    bu = buffett_monatlich(df.index)
+    modelle = [erwartung("Shiller-CAPE", cape, f10, f1, df.index, log=True),
+               erwartung("Excess CAPE Yield", df["ecy"].values.astype(float) * 100, f10, f1, df.index, log=False)]
+    if bu is not None:
+        modelle.append(erwartung("Buffett-Indikator", bu.values.astype(float), f10, f1, df.index, log=True))
     gueltig_s = ~np.isnan(score)
     t = [int(x) for x in (df.index[ok] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)]
     ecy = df["ecy"].values.astype(float)
@@ -256,6 +301,7 @@ def auswerten(df: pd.DataFrame, zins: pd.Series | None) -> dict:
         "basis": {"r10": _spanne(f10[~np.isnan(f10) & ok]), "r1": _spanne(f1[~np.isnan(f1) & ok])},
         "zonen": zonen,
         "walk_forward": wf,
+        "erwartung": [m for m in modelle if m],
         "strategie": [x for x in (strategie(df, score, zins, s) for s in (60, 80)) if x],
         "reihe": {"t": t, "cape": [round(float(v), 2) for v in cape[ok]],
                   "score": [None if math.isnan(v) else round(float(v), 1) for v in score[ok]]},
