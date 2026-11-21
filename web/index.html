@@ -59,6 +59,31 @@ td .sym{color:var(--muted);font-size:11px}
 .text{padding:0 12px 12px;color:var(--muted);font-size:12px}
 .pos{color:var(--gruen)} .neg{color:var(--rot)}
 .leer{padding:40px;text-align:center;color:var(--muted)}
+.kachel.breit{grid-column:span 2}
+.kachel.sonder{border-color:#2962ff66}
+.kachel .drei{display:flex;gap:12px;margin-top:2px}
+.kachel .drei div{flex:1;min-width:0}
+.kachel .drei b{font-size:17px;display:block}
+.kachel .drei span{font-size:11px;color:var(--muted)}
+.reiter{display:flex;gap:2px;padding:0 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
+.reiter button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 12px;cursor:pointer;font:inherit}
+.reiter button.an{color:var(--text);border-bottom-color:var(--blau)}
+.eingabe{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:10px 12px}
+.eingabe label{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:11px}
+.eingabe input,.eingabe select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:inherit;width:110px}
+.eingabe button,.knopf{background:var(--blau);color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font:inherit}
+.knopf.leise{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
+.knopf.an{background:var(--blau);color:#fff}
+.zweispaltig{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:0 12px 12px;align-items:start}
+@media (max-width:1300px){.zweispaltig{grid-template-columns:1fr}}
+.kal{background:var(--panel2);border-radius:4px}
+.kal text{fill:var(--muted);font-size:10px}
+.merke{margin:0 12px 12px;padding:8px 10px;border-left:3px solid var(--gelb);background:#f0b90b14;font-size:12px}
+.merke.gut{border-left-color:var(--gruen);background:#26a69a14}
+.merke.schlecht{border-left-color:var(--rot);background:#ef535014}
+h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
+#chart3{height:220px;margin:0 12px 12px;border:1px solid var(--line);border-radius:4px}
+.mini{height:150px;margin:0 12px 6px;border:1px solid var(--line);border-radius:4px}
 </style>
 </head>
 <body>
@@ -101,21 +126,52 @@ const p3 = w => w.p && w.p["3"] ? w.p["3"] : null;
 const wert = (w,k) => ({score:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
   rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:w.name})[k];
 
+let UMFELD = null, PRUEF = null, TAGEBUCH = null;
+const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
+const geld = x => x==null ? "–" : Math.round(x).toLocaleString("de-DE");
+const vz = (x, n=1, suf="") => x==null ? "–" : (x>0?"+":"") + fmt(x,n,suf);
+const klasse = x => x==null ? "" : x>0 ? "pos" : x<0 ? "neg" : "";
+
 async function start(){
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
+  [UMFELD, PRUEF, TAGEBUCH] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json"].map(holeJson));
   ALLE = d.werte; $("#stand").textContent = "Stand " + d.stand + " · " + ALLE.length + " Werte";
   kacheln(); liste();
-  const erster = new URLSearchParams(location.hash.slice(1)).get("w") || "SPY";
-  zeige(erster);
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (h.get("seite") === "umfeld") zeigeUmfeld();
+  else if (h.get("seite") === "pruefung") zeigePruefungGesamt();
+  else zeige(h.get("w") || "SPY");
 }
+function vixWort(v){ return v==null ? "" : v<15 ? "ruhig" : v<25 ? "normal" : v<35 ? "nervös" : "Panik"; }
+function breiteWort(b){ return b==null ? "" : b<30 ? "schwach" : b<70 ? "gemischt" : "breit"; }
 function kacheln(){
   const k = ALLE.filter(w => w.gruppe==="ETF" || w.gruppe==="Krypto");
-  $("#kacheln").innerHTML = k.map(w => `<div class="kachel" data-id="${w.id}">
+  let sonder = "";
+  if (UMFELD) {
+    const b = UMFELD.breite, v = UMFELD.vix, z = UMFELD.zinskurve;
+    sonder += `<div class="kachel breit sonder" id="k-umfeld" title="Marktumfeld anzeigen">
+      <div class="n">Marktumfeld · Stand ${(v||b||z||{}).datum||""}</div>
+      <div class="drei">
+        <div title="Anteil der Aktien über ihrer 40-Wochen-Linie"><b>${b?fmt(b.wert,0,"%"):"–"}</b><span>Marktbreite · ${b?breiteWort(b.wert):""}</span></div>
+        <div title="Erwartete Schwankung des S&P 500 (Angstbarometer)"><b style="color:${v&&v.wert>=25?"var(--rot)":"inherit"}">${v?fmt(v.wert,1):"–"}</b><span>VIX · ${v?vixWort(v.wert):""}</span></div>
+        <div title="Zinsdifferenz 10 Jahre minus 2 Jahre (US)"><b style="color:${z&&z.invertiert?"var(--rot)":"inherit"}">${z?vz(z.wert,2):"–"}</b><span>Zinskurve · ${z?(z.invertiert?"invertiert":"normal"):""}</span></div>
+      </div></div>`;
+  }
+  if (PRUEF) {
+    const e = PRUEF.kalibrierung?.etf?.["3"], s = PRUEF.strategie?.zusammen?.etf;
+    sonder += `<div class="kachel sonder" id="k-pruefung" title="Walk-forward-Prüfung, Strategie-Vergleich, Tagebuch">
+      <div class="n">Prüfung der Ampel</div>
+      <div class="s" style="font-size:15px;margin-top:3px">${e && e.skill!=null ? (e.skill>0?"hilft etwas":"kein Vorteil") : "–"}</div>
+      <div class="z" style="color:var(--muted)">ETFs, 3 J., außerhalb der Lernzeit${s?` · Staffel besser bei ${fmt(s.staffel_besser,0)} %`:""}</div></div>`;
+  }
+  $("#kacheln").innerHTML = sonder + k.map(w => `<div class="kachel" data-id="${w.id}">
     <div class="n">${w.name.replace(" (ETF)","")}</div>
     <div class="s" style="color:${farbe(w.score)}">${fmt(w.score,0)}</div>
     <div class="z">${zonen[w.zone]} · Ø ${fmt(w.cagr20,1,"%")}/J</div></div>`).join("");
-  document.querySelectorAll(".kachel").forEach(e => e.onclick = () => zeige(e.dataset.id));
+  document.querySelectorAll(".kachel[data-id]").forEach(e => e.onclick = () => zeige(e.dataset.id));
+  if ($("#k-umfeld")) $("#k-umfeld").onclick = () => zeigeUmfeld();
+  if ($("#k-pruefung")) $("#k-pruefung").onclick = () => zeigePruefungGesamt();
 }
 function gefiltert(){
   const q = $("#suche").value.trim().toLowerCase(), g = $("#gruppe").value, mj = +$("#minj").value||0,
@@ -157,20 +213,20 @@ document.querySelectorAll("th[data-s]").forEach(th => th.onclick = () => {
   th.textContent += SORT.dir<0 ? " ▼" : " ▲"; liste();
 });
 
-let charts = [];
+let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, KEGEL = [], LIMITLINIEN = [], INFO = null, REITER = "kennzahlen";
+const chartBasis = () => ({autoSize:true, layout:{background:{color:"#1e222d"},textColor:"#d1d4dc"},grid:{vertLines:{color:"#2a2e39"},horzLines:{color:"#2a2e39"}},
+  timeScale:{borderColor:"#363a45",minBarSpacing:0.02},rightPriceScale:{borderColor:"#363a45"},crosshair:{mode:0},
+  localization:{locale:"de-DE",priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}});
+function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; LIMITLINIEN = []; KERZEN = null; HAUPT = null; }
+
 async function zeige(id){
   AKTIV = id; location.hash = "w=" + encodeURIComponent(id);
   document.querySelectorAll("#zeilen tr").forEach(e => e.classList.toggle("aktiv", e.dataset.id===id));
   const r = await fetch("api/wert?id=" + encodeURIComponent(id));
   if (!r.ok) { $("#detail").innerHTML = '<div class="leer">Keine Daten für ' + id + '</div>'; return; }
   const {info:w, chart:c} = await r.json();
-  charts.forEach(ch => ch.remove()); charts = [];
-  const pz = k => w.p && w.p[k] ? w.p[k] : null;
-  const zeileP = (k, txt) => { const p = pz(k); if (!p) return `<tr><td style="text-align:left">${txt}</td><td colspan="5">zu wenig ähnliche Fälle</td></tr>`;
-    const v = p.quote - p.basis;
-    return `<tr><td style="text-align:left">${txt}</td><td><b>${fmt(p.quote,0,"%")}</b></td><td>${fmt(p.basis,0,"%")}</td>
-      <td class="${v>0?"pos":v<0?"neg":""}">${v>0?"+":""}${fmt(v,0)}</td><td>${fmt(p.median_pa,1,"%")} / ${fmt(p.basis_median_pa,1,"%")}</td><td>${p.episoden} (${p.wochen} Wo.)</td></tr>`; };
-  const seg = w.segmente.map(s => `ab ${s.ab.slice(0,4)}: ${umlaut(s.art)} (${s.symbol})`).join(" → ");
+  if (AKTIV !== id) return;
+  alleChartsWeg(); INFO = w;
   const btc = w.gruppe === "Krypto";
   $("#detail").innerHTML = `
     <div id="kopf"><h2>${w.name} <span class="sym">${w.symbol}</span>
@@ -182,9 +238,36 @@ async function zeige(id){
       <span><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
       <span><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
       ${btc?'<span><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span>':''}
-      <span>▲ Ampel ≥ 80 (Kaufzone) · ▼ Ampel ≤ 15 (teuer)</span>
-      <span>Unten: Ampel 0–100 im Zeitverlauf</span>
+      <span><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
+      <span>▲ Ampel ≥ 80 · ▼ Ampel ≤ 15 · unten: Ampel im Zeitverlauf</span>
     </div>
+    <div class="reiter">
+      <button data-r="kennzahlen">Kennzahlen</button><button data-r="rechner">Kurs-Rechner</button>
+      <button data-r="pruefung">Prüfung</button><button data-r="strategie">Strategie-Vergleich</button>
+    </div>
+    <div id="tab"></div>`;
+  document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
+  zeichne(c, btc);
+  reiter(REITER);
+  ladeKegel(52, 20, []);
+}
+
+function reiter(name){
+  REITER = name;
+  tabCharts.forEach(ch => { try { ch.remove(); } catch(e){} }); tabCharts = [];
+  document.querySelectorAll(".reiter button").forEach(b => b.classList.toggle("an", b.dataset.r===name));
+  ({kennzahlen:tabKennzahlen, rechner:tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
+}
+
+function tabKennzahlen(w){
+  const pz = k => w.p && w.p[k] ? w.p[k] : null;
+  const zeileP = (k, txt) => { const p = pz(k); if (!p) return `<tr><td style="text-align:left">${txt}</td><td colspan="5">zu wenig ähnliche Fälle</td></tr>`;
+    const v = p.quote - p.basis;
+    return `<tr><td style="text-align:left">${txt}</td><td><b>${fmt(p.quote,0,"%")}</b></td><td>${fmt(p.basis,0,"%")}</td>
+      <td class="${klasse(v)}">${vz(v,0)}</td><td>${fmt(p.median_pa,1,"%")} / ${fmt(p.basis_median_pa,1,"%")}</td><td>${p.episoden} (${p.wochen} Wo.)</td></tr>`; };
+  const seg = w.segmente.map(s => `ab ${s.ab.slice(0,4)}: ${umlaut(s.art)} (${s.symbol})`).join(" → ");
+  const btc = w.gruppe === "Krypto";
+  $("#tab").innerHTML = `
     <div class="werte">
       <div class="wert"><div class="k">Ø Jahresrendite</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
       <div class="wert"><div class="k">Ø seit Beginn</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
@@ -197,13 +280,181 @@ async function zeige(id){
     <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
     <div class="text">Datenquelle: ${seg}. Jede Kennzahl wird nur mit der Historie bis zum jeweiligen Zeitpunkt verglichen (kein Blick in die Zukunft).
     „Vorteil“ = wie viel öfter ähnliche Lagen gut ausgingen als ein beliebiger Kauftag. Wenige Phasen = wenig aussagekräftig.
+    Ob diese Quoten früher gestimmt hätten, zeigt der Reiter „Prüfung“.
     Heutige Indexmitglieder haben überlebt (Pleitefirmen fehlen) – historische Quoten bei Einzelaktien wirken deshalb zu gut.</div>`;
-  zeichne(c, btc);
 }
+
+// ------------------------------------------------------------ Monte Carlo
+async function ladeKegel(wochen, jahre, preise){
+  const id = AKTIV;
+  const r = await fetch(`api/mc?id=${encodeURIComponent(id)}&wochen=${wochen}&jahre=${jahre}&preise=${preise.join(",")}`);
+  if (!r.ok || AKTIV !== id || !HAUPT) return null;
+  const m = await r.json();
+  if (m.fehler) return m;
+  KEGEL.forEach(s => HAUPT.removeSeries(s)); KEGEL = [];
+  [["q5","#b39ddb88",2],["q25","#b39ddb",0],["q50","#b39ddb",0],["q75","#b39ddb",0],["q95","#b39ddb88",2]].forEach(([k,f,st]) => {
+    const s = HAUPT.addLineSeries({color:f,lineWidth:k==="q50"?2:1,lineStyle:st,priceLineVisible:false,lastValueVisible:k==="q50",crosshairMarkerVisible:false,title:k==="q50"?"Median":""});
+    s.setData(m.t.map((t,i)=>({time:t,value:m.kegel[k][i]}))); KEGEL.push(s);
+  });
+  return m;
+}
+function wTabelle(liste){
+  return `<table class="wtab"><thead><tr><th style="text-align:left">Kurs</th><th>Abstand</th><th>Art</th><th title="Wird der Kurs irgendwann im Zeitraum (auch kurz innerhalb einer Woche) erreicht?">wird erreicht</th><th title="Steht der Kurs am Ende des Zeitraums jenseits dieser Marke?">steht am Ende jenseits</th></tr></thead><tbody>${
+    liste.map(x => `<tr><td style="text-align:left">${fmt(x.preis, x.preis>=100?0:2)}</td><td class="${klasse(x.abstand)}">${vz(x.abstand,0,"%")}</td><td>${x.art}</td><td><b>${fmt(x.beruehrt,0,"%")}</b></td><td>${fmt(x.ende,0,"%")}</td></tr>`).join("")}</tbody></table>`;
+}
+function tabRechner(w){
+  const k = w.kurs, nk = k>=100 ? 0 : 2;
+  $("#tab").innerHTML = `
+    <div class="eingabe">
+      <label>Kauflimit<input id="mc-limit" type="number" step="any" value="${(k*0.9).toFixed(nk)}"></label>
+      <label>Verkaufsziel<input id="mc-ziel" type="number" step="any" value="${(k*1.2).toFixed(nk)}"></label>
+      <label>Zeitraum (Wochen)<input id="mc-wochen" type="number" value="52" min="4" max="260"></label>
+      <label>Historie (Jahre)<input id="mc-jahre" type="number" value="20" min="3" max="100"></label>
+      <button id="mc-los">Berechnen</button>
+    </div>
+    <div id="mc-erg"><div class="text">rechnet …</div></div>`;
+  const los = async () => {
+    const lim = +$("#mc-limit").value, ziel = +$("#mc-ziel").value, wo = +$("#mc-wochen").value || 52, ja = +$("#mc-jahre").value || 20;
+    $("#mc-erg").innerHTML = '<div class="text">rechnet …</div>';
+    const m = await ladeKegel(wo, ja, [lim, ziel].filter(x => x > 0));
+    if (!m) return;
+    if (m.fehler) { $("#mc-erg").innerHTML = `<div class="text">${m.fehler}</div>`; return; }
+    LIMITLINIEN.forEach(l => KERZEN.removePriceLine(l)); LIMITLINIEN = [];
+    m.eigene.forEach(x => LIMITLINIEN.push(KERZEN.createPriceLine({price:x.preis,color:x.art==="Kauflimit"?"#26a69a":"#ef5350",lineWidth:1,lineStyle:1,axisLabelVisible:true,title:x.art})));
+    const monate = Math.round(m.wochen/4.345);
+    HAUPT.timeScale().setVisibleRange({from: m.t[0] - 5*365*86400, to: m.t[m.t.length-1]});   // Kegel sichtbar machen
+    $("#mc-erg").innerHTML = `
+      <h3>Deine Marken (${monate} Monate)</h3>${wTabelle(m.eigene)}
+      <div class="werte">
+        <div class="wert"><div class="k">Median-Kurs in ${monate} Monaten</div><div class="v">${fmt(m.ende_median, m.ende_median>=100?0:2)}</div><div class="u">${vz((m.ende_median/m.kurs-1)*100,0,"%")} zu heute (${fmt(m.kurs, nk)})</div></div>
+        <div class="wert"><div class="k">Am Ende im Minus</div><div class="v">${fmt(m.verlust_wahrsch,0,"%")}</div><div class="u">der simulierten Wege</div></div>
+        <div class="wert"><div class="k">Grundlage</div><div class="v">${m.pfade.toLocaleString("de-DE")} Wege</div><div class="u">${fmt(m.hist_jahre,0)} Jahre echte Wochen seit ${m.hist_von.slice(0,4)}, Blöcke à ${m.block} Wochen</div></div>
+      </div>
+      <h3>Übliche Abstände</h3>${wTabelle(m.standard)}
+      <div class="text">So gerechnet: Aus den echten Wochenkursen der gewählten Jahre werden zufällig zusammenhängende Stücke von ${m.block} Wochen gezogen und zu ${m.pfade.toLocaleString("de-DE")} möglichen Wegen aneinandergehängt (Block-Bootstrap, keine Normalverteilung). Crashs und ruhige Phasen kommen also so oft vor wie früher.
+      „Wird erreicht“ zählt auch, wenn der Kurs die Marke nur kurz innerhalb einer Woche berührt (Wochentief/-hoch) – das ist die Chance, dass ein Limit ausgeführt wird.
+      Grenze: Die Durchschnittsrendite der gewählten Jahre steckt in den Wegen; die Zukunft muss der Vergangenheit nicht ähneln. Die heutige Ampel fließt nicht ein.</div>`;
+  };
+  $("#mc-los").onclick = los;
+  los();
+}
+
+// ------------------------------------------------------------ Kalibrierung
+function svgKal(kurven){
+  const W=290, H=270, L=38, B=32, R=10, T=10;
+  const x = v => L + v/100*(W-L-R), y = v => H-B - v/100*(H-B-T);
+  const maxN = Math.max(1, ...kurven.flatMap(k => k.bins.map(b => b.n)));
+  let s = `<svg class="kal" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
+  for (const v of [0,25,50,75,100]) s += `<line x1="${x(0)}" y1="${y(v)}" x2="${x(100)}" y2="${y(v)}" stroke="#363a45"/><line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(100)}" stroke="#363a45"/>
+    <text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text><text x="${x(v)}" y="${H-B+13}" text-anchor="middle">${v}</text>`;
+  s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(100)}" y2="${y(100)}" stroke="#868993" stroke-dasharray="4 3"/>
+    <text x="${x(50)}" y="${H-4}" text-anchor="middle">angezeigt (%)</text><text x="11" y="${y(50)}" text-anchor="middle" transform="rotate(-90 11 ${y(50)})">eingetreten (%)</text>`;
+  for (const k of kurven) {
+    const pk = k.bins.filter(b => b.angezeigt!=null);
+    s += `<polyline fill="none" stroke="${k.farbe}" stroke-width="1.5" points="${pk.map(b => x(b.angezeigt)+","+y(b.eingetreten)).join(" ")}"/>`;
+    s += pk.map(b => `<circle cx="${x(b.angezeigt)}" cy="${y(b.eingetreten)}" r="${2.5+Math.sqrt(b.n/maxN)*6}" fill="${k.farbe}" fill-opacity=".75"><title>${k.name}: angezeigt ${fmt(b.angezeigt,0)} %, eingetreten ${fmt(b.eingetreten,0)} % (${b.n.toLocaleString("de-DE")} Wochen)</title></circle>`).join("");
+  }
+  return s + `</svg>`;
+}
+function skillMerke(e){
+  if (!e || e.skill==null) return `<div class="merke">Zu wenig Prüffälle für ein Urteil.</div>`;
+  const gut = e.skill > 2, schlecht = e.skill < -2;
+  return `<div class="merke ${gut?"gut":schlecht?"schlecht":""}"><b>${gut?"Die Ampel-Quote hat außerhalb der Lernzeit besser vorhergesagt als die einfache Basis-Quote.":schlecht?"Die Ampel-Quote hat außerhalb der Lernzeit schlechter vorhergesagt als die einfache Basis-Quote „so oft stieg der Kurs bisher insgesamt“.":"Die Ampel-Quote war außerhalb der Lernzeit etwa so gut wie die einfache Basis-Quote."}</b>
+    Fehlermaß (Brier) ${fmt(e.brier_modell,3)} gegen ${fmt(e.brier_basis,3)} → ${vz(e.skill,0," %")} (positiv = besser).
+    Nur Vorhersagen aus mindestens 52 ähnlichen Wochen: ${e.skill_viele==null?"–":vz(e.skill_viele,0," %")}.
+    Geprüft: ${e.vorhersagen.toLocaleString("de-DE")} Wochen der Jahre ${e.jahr_von}–${e.jahr_bis}${e.werte>1?`, ${e.werte.toLocaleString("de-DE")} Werte`:""}.</div>`;
+}
+function zonenTabelle(e){
+  return `<table class="wtab"><thead><tr><th style="text-align:left">Ampel damals</th><th>Wochen</th><th>Kurs danach höher</th><th>Ø Rendite p.a. danach</th></tr></thead><tbody>${
+    e.zonen.map(z => `<tr><td style="text-align:left">${z.zone}</td><td>${z.n.toLocaleString("de-DE")}</td><td><b>${fmt(z.quote,0,"%")}</b></td><td class="${klasse(z.rendite_pa)}">${fmt(z.rendite_pa,1,"%")}</td></tr>`).join("")}
+    <tr><td style="text-align:left;color:var(--muted)">alle Wochen</td><td>${e.alle.n.toLocaleString("de-DE")}</td><td>${fmt(e.alle.quote,0,"%")}</td><td>${fmt(e.alle.rendite_pa,1,"%")}</td></tr></tbody></table>`;
+}
+function kalBlock(e, titel){
+  if (!e) return `<div class="text">Für diesen Horizont gibt es noch zu wenig Jahre mit bekanntem Ergebnis.</div>`;
+  return `${skillMerke(e)}
+    <div class="zweispaltig">
+      <div>${svgKal([{name:"alle Vorhersagen",farbe:"#2962ff",bins:e.bins},{name:"aus ≥ 52 ähnlichen Wochen",farbe:"#ff9800",bins:e.bins_viele||[]}])}
+        <div class="legende" style="border:none;padding:4px 0"><span><i style="background:#2962ff"></i>alle Vorhersagen</span><span><i style="background:#ff9800"></i>nur aus ≥ 52 ähnlichen Wochen</span></div></div>
+      <div><b>${titel}</b>${zonenTabelle(e)}</div>
+    </div>`;
+}
+const PR_TEXT = `So geprüft (Walk-forward): Für jedes Jahr X wurde die Wahrscheinlichkeit nur aus Fällen berechnet, deren Ergebnis Ende X−1 schon feststand – wie man sie damals hätte sehen können. Danach wurde verglichen, was wirklich passierte.
+  Liegt ein Punkt auf der gestrichelten Linie, stimmte die angezeigte Quote. Darunter: zu optimistisch, darüber: zu vorsichtig. Punktgröße = Anzahl Wochen.
+  Achtung: Aufeinanderfolgende Wochen hängen stark zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner als die Wochenzahl.`;
+async function tabPruefung(w, h="3"){
+  const id = AKTIV;
+  $("#tab").innerHTML = '<div class="text" style="padding-top:12px">rechnet …</div>';
+  const r = await fetch("api/pruefung?id=" + encodeURIComponent(id));
+  if (AKTIV !== id || REITER !== "pruefung") return;
+  if (!r.ok) { $("#tab").innerHTML = '<div class="text" style="padding-top:12px">Keine Prüfung möglich (zu wenig Daten).</div>'; return; }
+  const d = await r.json();
+  const male = h => {
+    $("#tab").innerHTML = `<div class="eingabe">${["1","3","5"].map(k => `<button class="knopf leise ${k===h?"an":""}" data-h="${k}">nach ${k} Jahr${k==="1"?"":"en"}</button>`).join("")}</div>
+      ${kalBlock(d[h], "Ergebnis je Ampel-Stufe (außerhalb der Lernzeit)")}<div class="text">${PR_TEXT}</div>`;
+    document.querySelectorAll("#tab [data-h]").forEach(b => b.onclick = () => male(b.dataset.h));
+  };
+  male(h);
+}
+
+// ------------------------------------------------------------ Strategie
+function tabStrategie(w){
+  $("#tab").innerHTML = `
+    <div class="eingabe">
+      <label>Betrag je Monat<input id="st-betrag" type="number" value="500" min="10"></label>
+      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="20" min="3" max="60"></label>
+      <label>Kosten je Order fest<input id="st-kfix" type="number" step="0.5" value="1" min="0"></label>
+      <label>Kosten je Order %<input id="st-kproz" type="number" step="0.05" value="0" min="0"></label>
+      <label>Zins auf wartendes Geld<select id="st-zins"><option value="echt">echt (US-Geldmarkt)</option><option value="0">0 %</option><option value="2">fest 2 %</option><option value="3">fest 3 %</option></select></label>
+      <button id="st-los">Berechnen</button>
+    </div><div id="st-erg"><div class="text">rechnet …</div></div>`;
+  const los = async () => {
+    const id = AKTIV;
+    const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
+    const r = await fetch(`api/strategie?id=${encodeURIComponent(id)}&${q}`);
+    if (AKTIV !== id || REITER !== "strategie") return;
+    if (!r.ok) { $("#st-erg").innerHTML = '<div class="text">Kein Vergleich möglich (zu wenig Daten).</div>'; return; }
+    const d = await r.json();
+    if (d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d.fehler}</div>`; return; }
+    const ks = ["spar","staffel","staffel_vk"], e = d.ergebnis;
+    const best = ks.reduce((a,b) => (e[b].netto > e[a].netto ? b : a), "spar");
+    const zeile = (t, f, tip="") => `<tr><td style="text-align:left" title="${tip}">${t}</td>${ks.map(k => `<td class="${k===best?"":""}">${f(e[k])}</td>`).join("")}</tr>`;
+    tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
+    $("#st-erg").innerHTML = `
+      <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}).
+        Am meisten nach Steuer: <b>${e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
+      <table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th style="${k===best?"color:var(--text)":""}">${e[k].name}</th>`).join("")}</tr></thead><tbody>
+        ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto))}
+        ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "Am Ende alles verkauft, Abgeltungssteuer 26,375 % auf den Gewinn abgezogen")}
+        ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "Jährliche Verzinsung aller Einzahlungen nach Kosten und Steuern")}
+        ${zeile("Größter Rückgang des Vermögens", x => `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "Stärkster Fall vom bisherigen Höchststand (Depot + Bargeld)")}
+        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "So weit lag das Vermögen schlimmstenfalls unter dem bis dahin eingezahlten Geld")}
+        ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "Unterwegs: auf Zinsen und Teilverkäufe")}
+        ${zeile("Kosten gesamt", x => geld(x.kosten))}
+        ${zeile("Käufe / Verkäufe", x => `${x.kaeufe} / ${x.verkaeufe}`)}
+        ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "Anteil, der am Ende noch auf günstige Kurse wartete")}
+      </tbody></table>
+      <div id="chart3"></div>
+      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:#868993"></i>eingezahlt</span><span><i style="background:#2962ff"></i>Sparplan</span><span><i style="background:#26a69a"></i>Staffelkauf</span><span><i style="background:#ff9800"></i>Staffel + Teilverkauf</span></div>
+      <div class="text">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
+      <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
+      Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
+      Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts). Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
+      Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
+    const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:"#363a45"}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
+    [["ein","#868993",2],["spar","#2962ff",0],["staffel","#26a69a",0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {
+      const s = ch.addLineSeries({color:f,lineWidth:k==="ein"?1:2,lineStyle:st,priceLineVisible:false,lastValueVisible:false});
+      s.setData(d.reihe.t.map((t,i) => ({time:t,value:d.reihe[k][i]})));
+    });
+    setTimeout(() => ch.timeScale().fitContent(), 50);
+    tabCharts.push(ch);
+  };
+  $("#st-los").onclick = los;
+  los();
+}
+
+// ------------------------------------------------------------ Hauptchart
 function zeichne(c, btc){
-  const basis = {autoSize:true, layout:{background:{color:"#1e222d"},textColor:"#d1d4dc"},grid:{vertLines:{color:"#2a2e39"},horzLines:{color:"#2a2e39"}},
-    timeScale:{borderColor:"#363a45",minBarSpacing:0.02},rightPriceScale:{borderColor:"#363a45"},crosshair:{mode:0},
-    localization:{locale:"de-DE",priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}};
+  const basis = chartBasis();
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:1}});
   const linie = (werte, farbe, breite=1, stil=0) => { const s = ch.addLineSeries({color:farbe,lineWidth:breite,lineStyle:stil,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
     s.setData(c.t.map((t,i)=>({time:t,value:werte[i]})).filter(p=>p.value!=null)); return s; };
@@ -222,9 +473,69 @@ function zeichne(c, btc){
   let sperre = false;
   const sync = (a,b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (sperre||!r) return; sperre = true; b.timeScale().setVisibleLogicalRange(r); sperre = false; });
   sync(ch,ch2); sync(ch2,ch);
-  // erst nach dem Layout einpassen, sonst ist die Breite noch 0
   setTimeout(() => ch.timeScale().fitContent(), 50);
-  charts = [ch, ch2];
+  charts = [ch, ch2]; KERZEN = kerzen; HAUPT = ch;
+}
+
+// ------------------------------------------------------------ Seiten: Marktumfeld und Gesamtprüfung
+function miniChart(el, reihe, farbe, linien=[]){
+  const ch = LightweightCharts.createChart(el, {...chartBasis(), timeScale:{borderColor:"#363a45",minBarSpacing:0.01}});
+  const s = ch.addAreaSeries({lineColor:farbe, topColor:farbe+"55", bottomColor:farbe+"05", lineWidth:1, priceLineVisible:false});
+  s.setData(reihe.t.map((t,i) => ({time:t, value:reihe.v[i]})));
+  linien.forEach(([p,f,txt]) => s.createPriceLine({price:p,color:f,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:txt}));
+  setTimeout(() => ch.timeScale().fitContent(), 50);
+  charts.push(ch);
+}
+function zeigeUmfeld(){
+  AKTIV = null; location.hash = "seite=umfeld"; alleChartsWeg();
+  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.remove("aktiv"));
+  const u = UMFELD;
+  if (!u) { $("#detail").innerHTML = '<div class="leer">Marktumfeld noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
+  const b = u.breite, v = u.vix, z = u.zinskurve;
+  const teil = (titel, x, wert, wort, text, id, nk=1) => x ? `<h3>${titel}: ${wert} <span style="font-weight:400;color:var(--muted)">· ${wort} · Stand ${x.datum.split("-").reverse().join(".")} · vor 4 Wochen ${x.vor4w==null?"–":fmt(x.vor4w, nk)}</span></h3>
+      <div class="mini" id="${id}"></div><div class="text">${text} Quelle: ${x.quelle}.</div>` : `<h3>${titel}: keine Daten</h3>`;
+  $("#detail").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
+    ${teil("Marktbreite", b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
+    ${teil("VIX", v, v?fmt(v.wert,1):"", v?vixWort(v.wert):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). Median seit 1990: ${fmt(v.median,1)}; höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
+    ${teil("Zinskurve 10 J. – 2 J.", z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
+    ${u.zins3m?`<div class="text">US-Geldmarkt 3 Monate (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
+  if (b) miniChart($("#m-breite"), b.reihe, "#26a69a", [[50,"#868993",""],[30,"#ef5350",""]]);
+  if (v) miniChart($("#m-vix"), v.reihe, "#ef5350", [[v.median,"#868993","Median"]]);
+  if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,"#ef5350",""]]);
+}
+function zeigePruefungGesamt(gruppe="etf", h="3"){
+  AKTIV = null; location.hash = "seite=pruefung"; alleChartsWeg();
+  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.remove("aktiv"));
+  if (!PRUEF) { $("#detail").innerHTML = '<div class="leer">Prüfung noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
+  const k = PRUEF.kalibrierung, s = PRUEF.strategie, e = k[gruppe]?.[h];
+  const zus = (t, x) => x ? `<tr><td style="text-align:left">${t}</td><td>${x.werte.toLocaleString("de-DE")}</td><td>${fmt(x.median_irr_spar,1,"%")}</td><td>${fmt(x.staffel_besser,0,"%")}</td><td class="${klasse(x.median_diff_staffel)}">${vz(x.median_diff_staffel,2)}</td><td>${fmt(x.staffel_vk_besser,0,"%")}</td><td class="${klasse(x.median_diff_staffel_vk)}">${vz(x.median_diff_staffel_vk,2)}</td></tr>` : "";
+  const tb = TAGEBUCH;
+  let tbHtml = '<div class="text">Noch keine Auswertung des Tagebuchs.</div>';
+  if (tb) {
+    const erg = tb.ergebnisse || {};
+    tbHtml = `<div class="text">Seit ${tb.erster_tag?tb.erster_tag.split("-").reverse().join("."):"–"} hält das Tool jeden Tag fest, was es angezeigt hat (${tb.tage} Tage, ${tb.signale.toLocaleString("de-DE")} Signale, ${tb.werte||0} Werte). Diese Einträge werden nie geändert und später mit dem echten Kursverlauf verglichen – das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet.</div>
+      <table class="wtab"><thead><tr><th style="text-align:left">Nachprüfung</th><th>erste fällig ab</th><th>fällig</th><th>geprüft</th><th>Kurs höher</th></tr></thead><tbody>${
+      ["1","3","5"].map(j => { const x = erg[j] || {}; return `<tr><td style="text-align:left">nach ${j} Jahr${j==="1"?"":"en"}</td><td>${(tb.faellig_ab||{})[j]?.split("-").reverse().join(".")||"–"}</td><td>${x.faellig||0}</td><td>${x.geprueft||0}</td><td>${x.quote==null?"–":fmt(x.quote,0,"%")}</td></tr>`; }).join("")}</tbody></table>
+      ${["1","3","5"].map(j => (erg[j]?.zonen||[]).length ? `<h3>Nach ${j} Jahr${j==="1"?"":"en"} je Zone</h3><table class="wtab"><thead><tr><th style="text-align:left">Zone</th><th>Signale</th><th>Werte</th><th>Kurs höher</th><th>Median</th></tr></thead><tbody>${erg[j].zonen.map(z => `<tr><td style="text-align:left">${zonen[z.zone]||z.zone}</td><td>${z.signale}</td><td>${z.werte}</td><td>${fmt(z.quote,0,"%")}</td><td>${fmt(z.median,1,"%")}</td></tr>`).join("")}</tbody></table>${(erg[j].kalibrierung||[]).length?`<div style="padding:0 12px">${svgKal([{name:"Tagebuch",farbe:"#26a69a",bins:erg[j].kalibrierung}])}</div>`:""}` : "").join("")}`;
+  }
+  $("#detail").innerHTML = `<div id="kopf"><h2>Prüfung der Ampel</h2><div class="grund">Hätte die Ampel früher gestimmt? Rückblick ohne Zukunftswissen über alle Werte, Strategie-Vergleich und Signal-Tagebuch. Stand ${PRUEF.stand}.</div></div>
+    <h3>1. Walk-forward-Kalibrierung über viele Werte</h3>
+    <div class="eingabe">${Object.entries(k).map(([g,x]) => `<button class="knopf leise ${g===gruppe?"an":""}" data-g="${g}">${x.name.replace(" (Auswahl mit Rückblick!)","*")}</button>`).join("")}
+      <span style="width:16px"></span>${["1","3","5"].map(j => `<button class="knopf leise ${j===h?"an":""}" data-h="${j}">${j} J.</button>`).join("")}</div>
+    ${kalBlock(e, `${k[gruppe].name}, nach ${h} Jahr${h==="1"?"":"en"}`)}
+    <div class="text">${PR_TEXT} ${gruppe==="aktien_stabil"?"* Die Auswahl „stabiler Aufwärtstrend“ nutzt den ganzen Kursverlauf bis heute – sie kennt also die Zukunft und ist deshalb zu günstig.":""}
+      Bei Aktien fehlen Firmen, die pleite gingen oder übernommen wurden; die Quoten sind dadurch zu gut.</div>
+    <h3>2. Strategie-Vergleich über viele Werte</h3>
+    <div class="text">${s.annahmen}. Unterschied im internen Zinsfuß in Prozentpunkten gegenüber dem Sparplan (Median).</div>
+    <table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th>Sparplan p.a.</th><th>Staffel besser</th><th>Staffel ±</th><th>+ Teilverkauf besser</th><th>+ Teilverkauf ±</th></tr></thead><tbody>
+      ${zus("ETFs / Indizes", s.zusammen.etf)}${zus("Aktien (alle)", s.zusammen.aktien)}${zus("Aktien mit 20 Jahren Vergleich", s.zusammen.aktien_20j)}${zus("Aktien stabiler Trend*", s.zusammen.aktien_stabil)}</tbody></table>
+    <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto</th><th>ab</th><th>Sparplan</th><th>Staffel</th><th>+ Teilverkauf</th><th>größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
+      s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${r.name.replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
+    <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
+    <h3>3. Signal-Tagebuch</h3>${tbHtml}`;
+  document.querySelectorAll("#detail [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
+  document.querySelectorAll("#detail [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
+  document.querySelectorAll("#detail tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
 }
 start();
 </script>

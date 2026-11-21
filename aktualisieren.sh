@@ -3,7 +3,9 @@
 cd "$(dirname "$0")"
 {
   echo "=== $(date '+%F %T') Start"
-  .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python analyse.py
+  # umfeld.py (FRED-Zinsdaten) bricht bei Netzfehlern nicht ab, sondern nutzt die letzten Dateien
+  .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python umfeld.py \
+    && .venv/bin/python analyse.py && .venv/bin/python tagebuch_pruefung.py
   rc=$?
   # Signal-Tagebuch lokal in Git festhalten (macht nachtraegliche Aenderungen sichtbar)
   if [ $rc -eq 0 ] && [ -n "$(git status --porcelain daten/tagebuch)" ]; then

@@ -312,7 +312,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     }
     if krypto:
         chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
-    return zeile_out, chart
+    return zeile_out, chart, {"w": w, "score": score}
 
 
 def tagebuch(zeilen):
@@ -324,7 +324,7 @@ def tagebuch(zeilen):
         return
     eintraege = [
         {k: z.get(k) for k in ("id", "symbol", "datum", "kurs", "score", "zone", "qualitaet")}
-        | {"p3": (z["p"].get("3") or {}).get("quote") if z.get("p") else None}
+        | {f"p{h}": (z["p"].get(h) or {}).get("quote") if z.get("p") else None for h in ("1", "3", "5")}
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
@@ -352,6 +352,71 @@ def universum() -> pd.DataFrame:
     return pd.read_csv(E.DATEN / "universum.csv").fillna("")
 
 
+PRUEF_GRUPPEN = {"etf": "ETFs / Indizes", "krypto": "Bitcoin", "aktien": "Aktien (alle)",
+                 "aktien_stabil": "Aktien mit stabilem Aufwärtstrend (Auswahl mit Rückblick!)"}
+
+
+class Stufe2:
+    """Sammelt beim Durchlauf ueber alle Werte: Walk-forward-Pruefung, Strategie-Vergleich, Marktbreite."""
+
+    def __init__(self):
+        import pruefung, umfeld
+        self.sammler = {k: pruefung.Sammler() for k in PRUEF_GRUPPEN}
+        self.breite = umfeld.Breite()
+        self.zins = umfeld.zins_monatlich()
+        self.strat_einzeln, self.strat_aktien = [], []
+
+    def add(self, z: dict, zeile: dict, roh: dict):
+        import strategie
+        w, score = roh["w"], roh["score"]
+        c = w["Close"].values.astype(float)
+        aktie = z["gruppe"] not in ("ETF", "Krypto")
+        if aktie:
+            self.breite.add(w["Close"])
+        if zeile["score"] is None:
+            return
+        gruppen = ["etf"] if z["gruppe"] == "ETF" else ["krypto"] if z["gruppe"] == "Krypto" else \
+            ["aktien"] + (["aktien_stabil"] if zeile.get("qualitaet") else [])
+        for g in gruppen:
+            self.sammler[g].add(c, score, w.index.year.values)
+        st = strategie.vergleich(w, score, self.zins, reihe=False)
+        if st is None:
+            return
+        e = st["ergebnis"]
+        kurz = {"id": z["id"], "name": z["name"], "gruppe": z["gruppe"], "von": st["von"], "jahre": st["jahre"],
+                "eingezahlt": st["eingezahlt"], "qualitaet": bool(zeile.get("qualitaet")),
+                **{f"{k}_{f}": e[k][f] for k in e for f in ("netto", "irr", "max_verlust")}}
+        (self.strat_aktien if aktie else self.strat_einzeln).append(kurz)
+
+    def schreiben(self):
+        import umfeld
+        def zus(rows):
+            rows = [r for r in rows if r["spar_irr"] is not None and r["staffel_irr"] is not None and r["staffel_vk_irr"] is not None]
+            if not rows:
+                return None
+            d1 = np.array([r["staffel_irr"] - r["spar_irr"] for r in rows])
+            d2 = np.array([r["staffel_vk_irr"] - r["spar_irr"] for r in rows])
+            return {"werte": len(rows),
+                    "staffel_besser": round(float((d1 > 0).mean()) * 100, 1), "staffel_vk_besser": round(float((d2 > 0).mean()) * 100, 1),
+                    "median_diff_staffel": round(float(np.median(d1)), 2), "median_diff_staffel_vk": round(float(np.median(d2)), 2),
+                    "median_irr_spar": round(float(np.median([r["spar_irr"] for r in rows])), 2)}
+        out = {
+            "stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "kalibrierung": {k: {"name": PRUEF_GRUPPEN[k], **s.ergebnis()} for k, s in self.sammler.items()},
+            "strategie": {
+                "annahmen": "500 je Monat, bis 20 Jahre (ab erster gültiger Ampel), 1 je Order, Abgeltungssteuer 26,375 %, Zins US-Geldmarkt 3 Monate",
+                "einzeln": self.strat_einzeln,
+                "zusammen": {"etf": zus([r for r in self.strat_einzeln if r["gruppe"] == "ETF"]),
+                             "aktien": zus(self.strat_aktien), "aktien_stabil": zus([r for r in self.strat_aktien if r["qualitaet"]]),
+                             "aktien_20j": zus([r for r in self.strat_aktien if r["jahre"] >= 19.5])},
+            },
+        }
+        tmp = E.WEB_DATEN / "pruefung.tmp"
+        tmp.write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False))
+        tmp.replace(E.WEB_DATEN / "pruefung.json")
+        umfeld.schreiben(self.breite)
+
+
 def main(argv):
     uni = universum()
     if argv:
@@ -359,11 +424,17 @@ def main(argv):
     else:
         alle_laden()   # einmal alles in den Arbeitsspeicher, dann geht es schnell
     zeilen, fehler = [], 0
+    s2 = None if argv else Stufe2()
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
             if erg is not None:
                 zeilen.append(erg[0])
+                if s2 is not None:
+                    try:
+                        s2.add(z, erg[0], erg[2])
+                    except Exception as ex:
+                        print(f"Stufe-2-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
         except Exception as ex:
             fehler += 1
             print(f"Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
@@ -375,6 +446,7 @@ def main(argv):
         tmp.write_text(json.dumps(out, separators=(",", ":")))
         tmp.replace(E.WEB_DATEN / "rangliste.json")
         tagebuch(zeilen)
+        s2.schreiben()
     print(f"Fertig: {len(zeilen)} Werte ausgewertet, {fehler} Fehler")
     return zeilen
 
