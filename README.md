@@ -11,6 +11,7 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 
 - **Ampel 0–100** aus Abstand zum Allzeithoch, 200-Wochen-Linie, Langfristtrend und Wochen-RSI – jeweils nur mit den Daten verglichen, die es zum jeweiligen Zeitpunkt schon gab (kein Blick in die Zukunft).
 - **Ø Jahresrendite** über 20 Jahre (oder so viele, wie es Daten gibt), ETFs mit Index-Historie davor.
+- **Wann hat sich Kaufen gelohnt?** Je Wert alle günstigen Phasen (Ampel ab 60) mit dem Ergebnis eines Kaufs zu Phasenbeginn nach 1/3/5 Jahren, im Vergleich zu beliebigen Wochen; im Chart als Punkt mit dem 1-Jahres-Ergebnis, günstige Phasen hellgrün (ab 80 kräftiger).
 - **Trefferquote**: Wie oft stand der Kurs nach 1/3/5 Jahren höher, wenn die Lage früher ähnlich war – im Vergleich zu einem beliebigen Kauftag.
 - **Bitcoin**: Pi Cycle Bottom (Bodenbildungszone und Boden-Signal), Pi Cycle Top, Mayer Multiple.
 - **Bewertung S&P 500 (Shiller-CAPE)**: wie teuer der US-Markt gemessen an seinen **Gewinnen** ist (die Ampel schaut nur auf den Kurs). Getrennt von der Ampel, mit eigener ehrlicher Prüfung: Auf teure Phasen folgten im Mittel schwächere 10 Jahre, als Echtzeit-Vorhersage war das CAPE aber kaum besser als der einfache Durchschnitt (seit 1990 schlechter), und Warten auf günstige Bewertung schlug den Sparplan meist nicht. Nur für den S&P 500 gibt es eine so lange freie Reihe.

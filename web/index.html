@@ -779,6 +779,8 @@ const ERKLAERUNG = {
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
+  l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60): Was hätte ein Kauf in der ersten Woche der Phase gebracht? Im Chart als Punkt am Phasenbeginn mit dem Ergebnis nach 1 Jahr (grün = höher, orange = tiefer, grau = noch kein Jahr vergangen), in der Karte zusätzlich nach 3 und 5 Jahren und im Vergleich zu beliebigen Wochen. Rückblick ohne Kosten und Steuern."},
+  l_tief: {titel:"Noch tiefer in der Phase", text:"Wie weit der Kurs nach Beginn der günstigen Phase noch fiel, bevor sie endete (mit Monat des Tiefpunkts). Zeigt, dass „günstig“ nicht „ganz unten“ heißt – den Tiefpunkt kennt man erst im Nachhinein."},
   f_sec: {titel:"Geschäft (SEC)", text:"Gewinn, Umsatz und Aktienzahl aus den Pflichtberichten an die US-Börsenaufsicht SEC (EDGAR, gemeinfrei). „12 Monate“ = die letzten vier Quartale, sonst das letzte Geschäftsjahr. Nur Firmen, die nach US-Regeln in Dollar berichten; ausländische Firmen fehlen. Kurs und Aktienzahl ergeben den Börsenwert."},
   f_kgv: {titel:"KGV", text:"Kurs-Gewinn-Verhältnis: Börsenwert geteilt durch den Gewinn der letzten 12 Monate. 20 heißt: Man zahlt das 20-Fache des Jahresgewinns. Niedrig ist nicht automatisch billig (Gewinn kann fallen), hoch nicht automatisch teuer (Gewinn kann stark wachsen). Bei Verlust gibt es kein KGV."},
   f_kuv: {titel:"KUV", text:"Kurs-Umsatz-Verhältnis: Börsenwert geteilt durch den Umsatz der letzten 12 Monate. Hilft bei Firmen ohne Gewinn. Je nach Branche sehr unterschiedlich (Software hoch, Handel niedrig)."},
@@ -1352,7 +1354,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, bb:false, fib:false, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, bb:false, fib:false, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [];
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1465,6 +1467,7 @@ async function zeige(id, opt={}){
     ["kegel", "Prognose-Kegel", `<i class="flaeche" style="color:var(--kegel)"></i>`, "l_kegel", eigen],
     ["pfeile", "Pfeile günstig/teuer", `<i class="pfeil"><span style="color:var(--guenstig)">▲</span><span style="color:var(--teuer)">▼</span></i>`, "l_pfeile", true],
     ["phasen", "Günstig-/Teuer-Phasen", `<i class="flaeche" style="color:var(--guenstig);opacity:.5"></i>`, "l_phasen", eigen],
+    ["ergebnis", "Kauf-Ergebnis", `<i class="pfeil"><span style="color:var(--guenstig)">●</span></i>`, "l_ergebnis", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
@@ -1509,6 +1512,7 @@ async function zeige(id, opt={}){
     <div id="hinweise"></div>
     <div class="raster">
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
+      ${phasenKarte(c)}
       <section class="karte" id="wahr">${wahrKarte(w)}</section>
       <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
       <section class="karte"><div class="karte-kopf"><span data-e="rueckschlag" tabindex="0">Rückschlagrisiko</span><span>1 Jahr</span></div>
@@ -1561,7 +1565,7 @@ async function prognoseOnline(id){   // reduzierter Export ohne Kurse: Prognose 
 function chipUmschalten(k, b){
   CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
-  if (k === "pfeile" || k === "pi" || k === "pitop") markenSetzen();
+  if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis") markenSetzen();
   if (k === "fib") fibAktualisieren();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
@@ -1674,7 +1678,13 @@ function markenSetzen(){
   if (!KERZEN || !CD) return;
   const f = F();
   const m = CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
-  KERZEN.setMarkers(m.map(([t, art, s]) => ({
+  // Kauf-Ergebnis je günstiger Phase (Beginn der Phase, Kurs 1 Jahr später) – an die nächste Kerze der aktuellen Ansicht gelegt
+  const naechste = tt => { const a = CD.t; let lo = 0, hi = a.length - 1; while (lo < hi) { const mi = (lo + hi) >> 1; if (a[mi] < tt) lo = mi + 1; else hi = mi; } return a[lo]; };
+  const erg = CHIPS.ergebnis && CDATA?.c ? kaufPhasen(CDATA).phasen.map(p => [naechste(p.t0), "ergebnis", p]) : [];
+  const alle = [...m, ...erg].sort((a, b) => a[0] - b[0]);
+  KERZEN.setMarkers(alle.map(([t, art, s]) => ({
+    ergebnis: art === "ergebnis" ? {time:t, position:"belowBar", color:s.r1 == null ? f.muted : s.r1 > 0 ? f.guenstig : f.teuer, shape:"circle",
+      text:s.r1 == null ? "läuft" : `1J ${s.r1 > 0 ? "+" : "−"}${Math.abs(Math.round(s.r1))} %`} : null,
     kauf:     {time:t, position:"belowBar", color:f.guenstig, shape:"arrowUp", text:String(s)},
     teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
     pi_beginn:{time:t, position:"aboveBar", color:f.lila, shape:"circle", text:"Bodenbildung beginnt"},
@@ -1682,6 +1692,48 @@ function markenSetzen(){
     pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
   })[art]));
   if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CD.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
+}
+// ------------------------------------------------------------ Wann hat sich Kaufen gelohnt? (günstige Phasen und was danach kam)
+const PHASE_AB = 60;
+function kaufPhasen(c){   // Wochen mit Ampel ≥ 60 zu Phasen (Lücken bis 4 Wochen werden überbrückt)
+  const n = c.t.length, phasen = [];
+  let s = -1, e = -1;
+  const ab = i => c.score[i] != null && c.score[i] >= PHASE_AB;
+  const schliessen = () => {
+    if (s < 0) return;
+    let hoch = 0, tief = s;
+    for (let i = s; i <= e; i++) { if ((c.score[i] ?? 0) > hoch) hoch = c.score[i]; if (c.c[i] < c.c[tief]) tief = i; }
+    const r = w => s + w < n && c.c[s] > 0 ? (c.c[s + w] / c.c[s] - 1) * 100 : null;
+    phasen.push({t0:c.t[s], t1:c.t[e], wochen:e - s + 1, hoch, r1:r(52), r3:r(156), r5:r(260),
+      tief:(c.c[tief] / c.c[s] - 1) * 100, tTief:c.t[tief], laeuft:e >= n - 2});
+  };
+  for (let i = 0; i < n; i++) {
+    if (ab(i)) { if (s < 0 || i - e > 5) { schliessen(); s = i; } e = i; }
+  }
+  schliessen();
+  // Vergleich: alle Wochen mit Ampel (gleicher Zeitraum)
+  const alleR = h => { const x = []; for (let i = 0; i + h < n; i++) if (c.score[i] != null && c.c[i] > 0) x.push((c.c[i + h] / c.c[i] - 1) * 100); return x; };
+  const med = a => { if (!a.length) return null; const s2 = [...a].sort((x, y) => x - y); return s2[Math.floor(s2.length / 2)]; };
+  const vergleich = h => { const a = alleR(h); return a.length ? {hoeher:a.filter(x => x > 0).length / a.length * 100, median:med(a)} : null; };
+  const zus = k => { const a = phasen.map(p => p[k]).filter(x => x != null); return a.length ? {n:a.length, hoeher:a.filter(x => x > 0).length, median:med(a)} : null; };
+  return {phasen, zus:{r1:zus("r1"), r3:zus("r3"), r5:zus("r5")}, alle:{r1:vergleich(52), r3:vergleich(156), r5:vergleich(260)}};
+}
+function phasenKarte(c){
+  if (!c?.c || !c.score) return "";
+  const {phasen, zus, alle} = kaufPhasen(c);
+  const kopf = `<div class="karte-kopf"><span data-e="l_ergebnis" tabindex="0">Wann hat sich Kaufen gelohnt?</span><span>günstige Phasen (Ampel ab ${PHASE_AB})</span></div>`;
+  if (!phasen.length) return `<section class="karte breit2" id="phasen-karte">${kopf}<p>Die Ampel stand bisher nie bei ${PHASE_AB} oder höher – es gab keine günstige Phase.</p></section>`;
+  const tM = t => { const d = new Date(t * 1000); return String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + d.getUTCFullYear(); };
+  const zelle = x => x == null ? `<td class="klein">noch offen</td>` : `<td class="${klasse(x)}"><b>${vz(x,0," %")}</b></td>`;
+  const satz = (k, txt) => { const z = zus[k], a = alle[k]; return z ? `${txt}: in <b>${z.hoeher} von ${z.n}</b> Phasen höher (Median ${vz(z.median,0," %")})${a ? `; an beliebigen Wochen ${fmt(a.hoeher,0)} % höher, Median ${vz(a.median,0," %")}` : ""}.` : ""; };
+  const zeilen = [...phasen].reverse().slice(0, 15).map(p => `<tr><td style="text-align:left">${p.laeuft ? `seit ${tM(p.t0)} <span class="klein">läuft</span>` : tM(p.t0) + (tM(p.t1) !== tM(p.t0) ? "–" + tM(p.t1) : "")} <span class="klein">${p.wochen} Wo.</span></td>
+    <td>${pille(p.hoch)}</td>${zelle(p.r1)}${zelle(p.r3)}${zelle(p.r5)}<td class="klein">${p.tief < -0.5 ? `${vz(p.tief,0," %")} (${tM(p.tTief)})` : "–"}</td></tr>`).join("");
+  return `<section class="karte breit2" id="phasen-karte">${kopf}
+    <p style="margin:0 0 8px">Wer zu <b>Beginn</b> einer günstigen Phase gekauft hätte – so stand der Kurs danach:</p>
+    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Günstige Phase</th><th>höchste Ampel</th><th>nach 1 Jahr</th><th>nach 3 Jahren</th><th>nach 5 Jahren</th><th data-e="l_tief">noch tiefer in der Phase</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    ${phasen.length > 15 ? `<p class="klein">Die neuesten 15 von ${phasen.length} Phasen; die Zusammenfassung zählt alle.</p>` : ""}
+    <p class="klein" style="margin-top:8px">${satz("r1","Nach 1 Jahr")} ${satz("r3","Nach 3 Jahren")} ${satz("r5","Nach 5 Jahren")}</p>
+    <p class="klein">Rückblick ab dem Wochenschluss der ersten Woche mit Ampel ab ${PHASE_AB} (Lücken bis 4 Wochen zählen zur selben Phase), ohne Kosten und Steuern. „Noch tiefer“ zeigt, wie weit der Kurs in der Phase noch fiel – das wusste damals niemand. Vergangene Phasen sagen nichts Sicheres über die nächste.</p></section>`;
 }
 function zeichne(c, w){
   const f = F(), basis = chartBasis();
