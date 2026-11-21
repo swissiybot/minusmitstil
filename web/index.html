@@ -1225,6 +1225,10 @@ function sucheRechnen(){
   let werte = [];
   if (q) werte = ALLE.map(w => [suchPunkte(w, q, qw), w]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(x => x[1]);
   else werte = [...ALLE.filter(w => FAV.has(w.id)), ...["SPY","QQQ","EXS1","URTH","BTC","GOLD"].map(id => ALLE.find(w => w.id === id))].filter(Boolean).filter((w, i, a) => a.indexOf(w) === i).slice(0, 8);
+  {   // Suche per ISIN (z. B. aus dem Depotauszug): Zuordnung aus der ISIN-Liste bzw. den bekannten ETF-ISINs
+    const roh = $("#suche-eingabe").value.trim().toUpperCase().replace(/\s+/g, "");
+    if (istIsin(roh)) { const id = ISIN_TABELLE[roh]?.[0] || ISIN_SEC?.[roh]; const w = id && ALLE.find(x => x.id === id); if (w) werte = [w, ...werte.filter(x => x !== w)]; else if (!ISIN_SEC) isinListeLaden().then(() => { if ($("#suche-dlg").open) sucheRechnen(); }); }
+  }
   const seiten = ERSATZ_FUER != null ? [] : SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
   TREFFER = [...werte.map(w => ({art:"wert", w})), ...seiten.map(s => ({art:"seite", s}))]; TREFFER_I = 0;
   const html = [];
@@ -1235,7 +1239,7 @@ function sucheRechnen(){
       ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${["Nasdaq","NYSE"].includes(t.w.gruppe) ? "Aktie (" + t.w.gruppe + ")" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
       : `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><span class="t-ikon">→</span><div class="t-n"><b>${t.s[1]}</b><span>${t.s[2]}</span></div></div>`);
   });
-  $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel oder einen Teil des Namens probieren.</div>`;
+  $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel, ISIN oder einen Teil des Namens probieren.${ERSATZ_FUER != null ? " Ist der Wert nicht im Tool, wähle einen ähnlichen (z. B. den Markt seines Landes oder ein ETF auf das Thema)." : ""}</div>`;
 }
 function trefferOeffnen(i){
   const t = TREFFER[i]; if (!t) return;
@@ -2814,8 +2818,10 @@ async function naechstePdf(){
 function ersatzWaehlen(i){   // Suche im Auswahl-Modus: der gewählte Wert wird der Position zugeordnet
   sucheOeffnen(); ERSATZ_FUER = i;
   $("#suche-eingabe").placeholder = "Ersatz für „" + DEPOT.positionen[i].name.slice(0, 40) + "“ wählen …";
-  $("#suche-eingabe").value = DEPOT.positionen[i].name.replace(/\b(ucits|etf|acc|dist|thes|aussch|usd|eur|\(.*?\))\b/gi, " ").replace(/\s+/g, " ").trim().slice(0, 40);
-  sucheRechnen();
+  // kurzer Suchbegriff (Kern des Namens, z. B. „byd“), markiert: Tippen ersetzt ihn sofort (vorher stand der volle PDF-Name drin und fand nichts)
+  const kern = nameKern(DEPOT.positionen[i].name.replace(/\b(ucits|etf|acc|dist|thes|aussch|usd|eur)\b/gi, " ")).split(" ").filter(s => s.length > 1).slice(0, 2).join(" ");
+  const e = $("#suche-eingabe"); e.value = kern || DEPOT.positionen[i].isin || "";
+  sucheRechnen(); setTimeout(() => { try { e.focus(); e.select(); } catch(_) {} }, 30);
 }
 
 // ------------------------------------------------------------ Monte Carlo fürs Depot (Marktfaktor/Beta + Einzelschwankung)
