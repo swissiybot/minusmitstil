@@ -21,7 +21,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
   --pos:#3fd0b2; --neg:#ff9a57;
   --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff;
-  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a;
+  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --marke-gut:#9ff5e2;
   --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
   --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
   --r:14px; --r-klein:9px;
@@ -35,7 +35,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
   --pos:#0b8a73; --neg:#c4530a;
   --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad;
-  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a;
+  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --marke-gut:#06604f;
   --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
   --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
 }
@@ -539,7 +539,7 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib"), gut:g("marke-gut")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -784,7 +784,8 @@ const ERKLAERUNG = {
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
-  l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60): Was hätte ein Kauf in der ersten Woche der Phase gebracht? Im Chart als Punkt am Phasenbeginn mit dem Ergebnis nach 1 Jahr (grün = höher, orange = tiefer, grau = noch kein Jahr vergangen), in der Karte zusätzlich nach 3 und 5 Jahren und im Vergleich zu beliebigen Wochen. Rückblick ohne Kosten und Steuern."},
+  l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60): Kreis = Einstieg, also der Schlusskurs der ersten Woche mit Ampel ab 60 (Datum und Kurs stehen daneben). Gestrichelte Linie bis zum Quadrat = derselbe Wert genau 52 Wochen später, dort steht das Ergebnis in Prozent (grün = höher, orange = tiefer, grau = noch kein Jahr vergangen). Der Einstieg ist der Phasenbeginn, nicht der Tiefpunkt – der tiefste Kurs kam oft erst später (siehe „Tief-/Hochpunkte“). Rückblick ohne Kosten und Steuern."},
+  l_tiefhoch: {titel:"Tief-/Hochpunkte (Rückblick)", text:"Grüner Kreis: die Woche mit dem tiefsten Schlusskurs in jeder günstigen Phase (Ampel ab 60), mit der Ampel dieser Woche. Orange: die Woche mit dem höchsten Schlusskurs in jeder teuren Phase (Ampel bis 15). Achtung: Den Tief- oder Hochpunkt kennt man immer erst hinterher – damals wusste niemand, dass es der tiefste Kurs war. Die Pfeile dagegen erscheinen in der Woche, in der die Ampel die Grenze überschreitet, und waren damals schon sichtbar."},
   l_tief: {titel:"Noch tiefer in der Phase", text:"Wie weit der Kurs nach Beginn der günstigen Phase noch fiel, bevor sie endete (mit Monat des Tiefpunkts). Zeigt, dass „günstig“ nicht „ganz unten“ heißt – den Tiefpunkt kennt man erst im Nachhinein."},
   f_sec: {titel:"Geschäft (SEC)", text:"Gewinn, Umsatz und Aktienzahl aus den Pflichtberichten an die US-Börsenaufsicht SEC (EDGAR, gemeinfrei). „12 Monate“ = die letzten vier Quartale, sonst das letzte Geschäftsjahr. Nur Firmen, die nach US-Regeln in Dollar berichten; ausländische Firmen fehlen. Kurs und Aktienzahl ergeben den Börsenwert."},
   f_kgv: {titel:"KGV", text:"Kurs-Gewinn-Verhältnis: Börsenwert geteilt durch den Gewinn der letzten 12 Monate. 20 heißt: Man zahlt das 20-Fache des Jahresgewinns. Niedrig ist nicht automatisch billig (Gewinn kann fallen), hoch nicht automatisch teuer (Gewinn kann stark wachsen). Bei Verlust gibt es kein KGV."},
@@ -1375,7 +1376,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, bb:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1489,6 +1490,7 @@ async function zeige(id, opt={}){
     ["pfeile", "Pfeile günstig/teuer", `<i class="pfeil"><span style="color:var(--guenstig)">▲</span><span style="color:var(--teuer)">▼</span></i>`, "l_pfeile", true],
     ["phasen", "Günstig-/Teuer-Phasen", `<i class="flaeche" style="color:var(--guenstig);opacity:.5"></i>`, "l_phasen", eigen],
     ["ergebnis", "Kauf-Ergebnis", `<i class="pfeil"><span style="color:var(--guenstig)">●</span></i>`, "l_ergebnis", eigen && !!c.c],
+    ["tiefhoch", "Tief-/Hochpunkte", `<i class="pfeil"><span style="color:var(--guenstig)">●</span><span style="color:var(--teuer)">●</span></i>`, "l_tiefhoch", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["gp", "Golden Pocket", `<i class="flaeche" style="color:var(--fib)"></i>`, "l_gp", eigen],
@@ -1588,7 +1590,7 @@ async function prognoseOnline(id){   // reduzierter Export ohne Kurse: Prognose 
 function chipUmschalten(k, b){
   CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
-  if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis") markenSetzen();
+  if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
@@ -1703,18 +1705,50 @@ function markenSetzen(){
   const m = CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
   // Kauf-Ergebnis je günstiger Phase (Beginn der Phase, Kurs 1 Jahr später) – an die nächste Kerze der aktuellen Ansicht gelegt
   const naechste = tt => { const a = CD.t; let lo = 0, hi = a.length - 1; while (lo < hi) { const mi = (lo + hi) >> 1; if (a[mi] < tt) lo = mi + 1; else hi = mi; } return a[lo]; };
-  const erg = CHIPS.ergebnis && CDATA?.c ? kaufPhasen(CDATA).phasen.map(p => [naechste(p.t0), "ergebnis", p]) : [];
-  const alle = [...m, ...erg].sort((a, b) => a[0] - b[0]);
+  const kp = CDATA?.c ? kaufPhasen(CDATA).phasen : [];
+  ergebnisLinien(kp, naechste);
+  // Tief-/Hochpunkte je Phase (Rückblick: erst hinterher bekannt)
+  const tiefHoch = !CHIPS.tiefhoch || !CDATA?.c ? [] : [
+    ...kp.map(p => [naechste(p.tTief), "tief", p]),
+    ...teuerPhasen(CDATA).map(p => [naechste(p.tHoch), "hoch", p])];
+  const alle = [...m, ...tiefHoch].sort((a, b) => a[0] - b[0]);
   KERZEN.setMarkers(alle.map(([t, art, s]) => ({
-    ergebnis: art === "ergebnis" ? {time:t, position:"belowBar", color:s.r1 == null ? f.muted : s.r1 > 0 ? f.guenstig : f.teuer, shape:"circle",
-      text:s.r1 == null ? "läuft" : `1J ${s.r1 > 0 ? "+" : "−"}${Math.abs(Math.round(s.r1))} %`} : null,
-    kauf:     {time:t, position:"belowBar", color:f.guenstig, shape:"arrowUp", text:String(s)},
+    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:`${s.laeuft ? "Tief bisher" : "Tief"} · Ampel ${fmt(s.aTief,0)}`} : null,
+    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:`${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel ${fmt(s.aHoch,0)}`} : null,
+    kauf:     {time:t, position:"belowBar", color:f.gut, shape:"arrowUp", text:String(s)},
     teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
     pi_beginn:{time:t, position:"aboveBar", color:f.lila, shape:"circle", text:"Bodenbildung beginnt"},
     pi_boden: {time:t, position:"belowBar", color:f.lila, shape:"arrowUp", text:"Pi Boden-Signal"},
     pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
   })[art]));
   if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CD.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
+}
+// Kauf-Ergebnis: Einstieg (Schlusskurs der ersten günstigen Woche) → gestrichelte Linie → Kurs 52 Wochen später
+let ERG_SERIEN = [], ERG_CHART = null;
+const kursKurz = x => x == null ? "–" : x >= 1000 ? fmt(x,0) : x >= 10 ? fmt(x,1) : fmt(x,2);
+function ergebnisLinien(kp, naechste){
+  if (ERG_CHART === HAUPT) ERG_SERIEN.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} });
+  ERG_SERIEN = []; ERG_CHART = HAUPT;
+  if (!CHIPS.ergebnis || !HAUPT || !CDATA?.c || !kp.length) return;
+  const f = F(), c = CDATA, n = c.t.length, iVon = new Map(c.t.map((t, i) => [t, i]));
+  kp.forEach(p => {
+    const i0 = iVon.get(p.t0); if (i0 == null) return;
+    const i1 = Math.min(i0 + 52, n - 1), fertig = i0 + 52 <= n - 1;
+    const r = (c.c[i1] / c.c[i0] - 1) * 100, farbe = !fertig ? f.muted : r > 0 ? f.gut : f.teuer;
+    const ta = naechste(c.t[i0]), tb = naechste(c.t[i1]); if (ta == null || tb == null || tb <= ta) return;
+    const s = HAUPT.addLineSeries({color:farbe, lineWidth:2, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, autoscaleInfoProvider:() => null});
+    s.setData([{time:ta, value:c.c[i0]}, {time:tb, value:c.c[i1]}]);
+    s.setMarkers([
+      {time:ta, position:"inBar", color:farbe, shape:"circle", text:`Kauf ${tDe(c.t[i0])} · ${kursKurz(c.c[i0])}`},
+      {time:tb, position:"inBar", color:farbe, shape:"square", text:`${fertig ? "1 Jahr später" : "bis heute"} ${kursKurz(c.c[i1])} = ${r > 0 ? "+" : "−"}${fmt(Math.abs(r),0)} %`}]);
+    ERG_SERIEN.push(s);
+  });
+}
+function teuerPhasen(c){   // Wochen mit Ampel ≤ 15 zu Phasen (Lücken bis 4 Wochen überbrückt), je Phase der höchste Schlusskurs
+  const n = c.t.length, out = []; let s = -1, e = -1;
+  const zu = () => { if (s < 0) return; let h = s; for (let i = s; i <= e; i++) if (c.c[i] > c.c[h]) h = i; out.push({tHoch:c.t[h], aHoch:c.score[h], laeuft:e >= n - 2}); };
+  for (let i = 0; i < n; i++) if (c.score[i] != null && c.score[i] <= 15) { if (s < 0 || i - e > 5) { zu(); s = i; } e = i; }
+  zu(); return out;
 }
 // ------------------------------------------------------------ Wann hat sich Kaufen gelohnt? (günstige Phasen und was danach kam)
 const PHASE_AB = 60;
@@ -1728,7 +1762,7 @@ function kaufPhasen(c){   // Wochen mit Ampel ≥ 60 zu Phasen (Lücken bis 4 Wo
     for (let i = s; i <= e; i++) { if ((c.score[i] ?? 0) > hoch) hoch = c.score[i]; if (c.c[i] < c.c[tief]) tief = i; }
     const r = w => s + w < n && c.c[s] > 0 ? (c.c[s + w] / c.c[s] - 1) * 100 : null;
     phasen.push({t0:c.t[s], t1:c.t[e], wochen:e - s + 1, hoch, r1:r(52), r3:r(156), r5:r(260),
-      tief:(c.c[tief] / c.c[s] - 1) * 100, tTief:c.t[tief], laeuft:e >= n - 2});
+      tief:(c.c[tief] / c.c[s] - 1) * 100, tTief:c.t[tief], aTief:c.score[tief], laeuft:e >= n - 2});
   };
   for (let i = 0; i < n; i++) {
     if (ab(i)) { if (s < 0 || i - e > 5) { schliessen(); s = i; } e = i; }
@@ -1821,7 +1855,7 @@ function zeichne(c, w){
   {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 (kräftig), 60–80 (hell) bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
     const ph = ch.addHistogramSeries({priceScaleId:"phasen", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.phasen});
     ch.priceScale("phasen").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
-    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "40"} : s >= 60 ? {time:t, value:1, color:f.guenstig + "1f"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
+    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "2e"} : s >= 60 ? {time:t, value:1, color:f.guenstig + "14"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
     SERIEN.phasen.push(ph);
   }
   const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
