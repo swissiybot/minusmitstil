@@ -307,6 +307,15 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         if extra.get("pi_status"): grund.append(extra["pi_status"])
         if extra.get("pi_top_aktiv"): grund.append("Pi Cycle Top AKTIV")
     vor4 = score[-5] if len(score) > 5 else np.nan
+    # Kursveraenderung fuer die Heatmap: letzter Handelstag, 1 Woche, 1 Monat, 1 Jahr (Schlusskurs gegen Schlusskurs davor)
+    def perf_seit(versatz):
+        t0 = tag_c.index[-1] - versatz
+        if t0 < tag_c.index[0]:
+            return None
+        k0 = float(tag_c.asof(t0))
+        return r((float(tag_c.iloc[-1]) / k0 - 1) * 100, 1) if k0 > 0 else None
+    perf = [r((float(tag_c.iloc[-1]) / float(tag_c.iloc[-2]) - 1) * 100, 2) if len(tag_c) > 1 else None,
+            perf_seit(pd.Timedelta(days=7)), perf_seit(pd.DateOffset(months=1)), perf_seit(pd.DateOffset(years=1))]
     import marktphase
     mp = marktphase.fuer_wert(w)
     mp_arr = mp.pop("_phase_arr") if mp else None
@@ -329,6 +338,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         # Ampel des letzten Jahres alle 4 Wochen (Sparkline in der Liste)
         "sv": [None if math.isnan(x) else int(round(x)) for x in score[-53::4]],
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
+        "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -543,9 +553,17 @@ def main(argv):
     except Exception as ex:
         print(f"Geschäftszahlen nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
         fund = {}
+    try:
+        import branchen
+        br = branchen.zuordnung()   # Symbol -> Branche aus SEC-Stammdaten (leer ohne Datei)
+    except Exception as ex:
+        print(f"Branchen nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+        br = {}
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
+            if erg is not None and br.get(z["symbol"]) and not erg[0].get("branche"):
+                erg[0]["branche"] = br[z["symbol"]]
             if erg is not None:
                 f = fund.get(z["symbol"]) if "Nasdaq" in z["gruppe"] else None
                 if f is not None:

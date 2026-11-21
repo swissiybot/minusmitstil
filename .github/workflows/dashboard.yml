@@ -78,6 +78,12 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
         run: python fundamente.py
 
+      - name: Branchen (SEC-Stammdaten, für die Heatmap)
+        continue-on-error: true
+        env:
+          SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
+        run: python branchen.py
+
       - name: ISIN-Liste für den Depot-Import (SEC)
         continue-on-error: true
         env:

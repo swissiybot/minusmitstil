@@ -292,6 +292,7 @@ def fuer_zeile(f: dict, kurs: float | None, score: float | None) -> dict:
     return {
         "stand": stand.strftime("%Y-%m-%d") if stand is not None else None, "art": art, "veraltet": bool(alt),
         "gewinn": r(ni / 1e6, 1), "umsatz": r(rv / 1e6, 1) if rv else None,
+        "mw": r(mw / 1e6, 0) if mw else None,   # Boersenwert in Mio. USD (Kurs x Aktienzahl laut SEC), Groesse der Heatmap-Kacheln
         "kgv": r(kgv, 1) if kgv is not None and kgv < 1000 else None, "kuv": r(kuv, 2) if kuv is not None and kuv < 1000 else None,
         "d_gewinn": r(d_ni, 0), "d_umsatz": r(d_rv, 0), "verlust": bool(ni <= 0),
         "jahre_gewinn": sum(1 for _, v in jahre if v > 0), "jahre": len(jahre),

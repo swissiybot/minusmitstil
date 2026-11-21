@@ -41,6 +41,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.hm-stufe{display:inline-block;min-width:46px;padding:3px 6px;border-radius:4px;color:#fff;font-size:11.5px;font-weight:600;text-align:center}
 .karte-tip{position:absolute;z-index:5;max-width:250px;padding:8px 10px;border-radius:8px;background:var(--panel2);color:var(--text);border:1px solid var(--rand);font-size:12px;line-height:1.45;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .mp-kopf{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .mp-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px 18px;margin-top:6px}
@@ -423,8 +424,8 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   </button>
   <div class="kopf-rechts">
     <span id="stand" class="plakette" data-e="datenstand" tabindex="0"><i></i><span>lädt …</span></span>
-    <button class="knopf-ikon" id="k-karte" aria-label="Aktien-Karte: alle Aktien als Kacheln">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="10" height="11" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="15" y="11" width="6" height="10" rx="1"/><rect x="3" y="16" width="10" height="5" rx="1"/></svg><span class="txt">Aktien-Karte</span></button>
+    <button class="knopf-ikon" id="k-karte" aria-label="Heatmap: alle Titel nach Kursveränderung">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="10" height="11" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="15" y="11" width="6" height="10" rx="1"/><rect x="3" y="16" width="10" height="5" rx="1"/></svg><span class="txt">Heatmap</span></button>
     <button class="knopf-ikon" id="k-depot" aria-label="Mein Depot">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg><span class="txt">Mein Depot</span></button>
     <button class="knopf-ikon" id="k-lesen" aria-pressed="false" aria-controls="lese-bereich">
@@ -937,7 +938,7 @@ function datenstand(stand){
 
 // ------------------------------------------------------------ zusätzliche Erklärungen der neuen Oberfläche
 const ERKLAERUNG_NEU = {
-  karte: {titel:"Aktien-Karte", text:"Jede Kachel ist eine Aktie. Die Größe zeigt den Börsenwert (online aus den SEC-Geschäftszahlen) oder, wo der fehlt, den mittleren Handelsumsatz pro Tag. Die Farbe zeigt wahlweise die Ampel (blaugrün = gemessen an der eigenen Geschichte günstig, orange = teuer), die Veränderung der Ampel in 4 Wochen oder die Marktphase. Antippen öffnet die Aktie. Beschreibung der Lage, keine Empfehlung."},
+  karte: {titel:"Heatmap", text:"Jede Kachel ist ein Titel. Farbe: Kursveränderung am letzten Handelstag, über 1 Woche, 1 Monat oder 1 Jahr (blaugrün = gestiegen, orange = gefallen, grau = kaum verändert; die Skala steht über der Karte) – wahlweise auch Ampel oder Trend. Größe der Aktien-Kacheln: Börsenwert (online aus den SEC-Geschäftszahlen), sonst der mittlere Handelsumsatz; ETFs, Krypto und Rohstoffe sind gleich groß. Aktien sind nach Branche gruppiert (SIC-Code der SEC). Antippen öffnet den Titel."},
   mp_karte: {titel:"Marktphase", text:"Beschreibt, ob der Kurs gerade im Aufwärts- oder Abwärtstrend ist – nur mit dem Wissen von heute. Regel: Aufwärtstrend, solange die 20-Wochen-Linie (Durchschnitt der letzten 20 Wochenschlusskurse, etwa 100 Tage) über der 50-Wochen-Linie (etwa 250 Tage) liegt, sonst Abwärtstrend. Diese Regel hat in der Trendstudie (23 Indikatoren, Prüfung ab 2005, siehe Prüfungsseite) über alle Gruppen am besten abgeschnitten und wechselt nur etwa einmal im Jahr. Sie sagt nicht voraus, wohin es geht; ihr Nutzen liegt vor allem in kleineren Abstürzen."},
   mp_baer: {titel:"Bärenmarkt (klassisch)", text:"Übliche Faustregel: ab 20 % unter dem bisherigen Hoch spricht man von Bärenmarkt, ab 20 % über dem Tief von Bullenmarkt. Das steht immer erst fest, wenn ein großer Teil der Bewegung schon vorbei ist – zur Vorhersage taugt es nicht."},
   mp_tabelle: {titel:"Was danach kam", text:"Rückblick über alle Wochen dieses Werts: Wie oft stand der Kurs 3 Monate bzw. 1 Jahr später höher, wie groß war die mittlere Veränderung (Median), und wie oft fiel er im folgenden Jahr irgendwann um 20 % oder mehr unter den Kurs der Woche? Die Zeile „alle Wochen“ ist die Grundquote zum Vergleich. Benachbarte Wochen sind fast derselbe Fall, die echte Zahl unabhängiger Fälle ist viel kleiner."},
@@ -1202,7 +1203,7 @@ function suchPunkte(w, q, qw){
   if (SONDERGRUPPE(w)) p += 60;
   return p + Math.min(40, Math.log10((w.umsatz_usd || 1)) * 3);
 }
-const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["karte","Aktien-Karte","alle Aktien als Kacheln, Heatmap"],["depot","Mein Depot","Vermögensübersicht laden, Sparplan, Prognose"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
+const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["karte","Heatmap","Tag, Woche, Monat, Jahr – alle Titel als Kacheln"],["depot","Mein Depot","Vermögensübersicht laden, Sparplan, Prognose"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
 let TREFFER = [], TREFFER_I = 0, ERSATZ_FUER = null;
 function sucheOeffnen(){ const d = $("#suche-dlg"); if (d.open) return; d.showModal(); $("#suche-eingabe").value = ""; sucheRechnen(); $("#suche-eingabe").focus(); }
 function sucheRechnen(){
@@ -1302,7 +1303,7 @@ function mpKachel(){
     <p class="klein" style="margin:8px 0 0">Beschreibt den Trend, keine Vorhersage.</p></div>`;
 }
 // ------------------------------------------------------------ Aktien-Karte: alle Aktien als Kacheln (Treemap)
-let KARTE = {farbe:"ampel", groesse:"auto", gruppe:"zone", ...lade("karte", {})}, KARTE_KACHELN = [], KARTE_RO = null;
+let KARTE = {farbe:"t", titel:"aktien", gruppe:"branche", ...lade("karte", {})}, KARTE_KACHELN = [], KARTE_RO = null;
 function quadrate(werte, x, y, w, h){   // „Squarified Treemap“: Kacheln möglichst quadratisch
   const summe = werte.reduce((a, b) => a + b, 0), out = new Array(werte.length);
   if (!summe || w <= 0 || h <= 0) return werte.map(() => ({x, y, w:0, h:0}));
@@ -1322,72 +1323,100 @@ function quadrate(werte, x, y, w, h){   // „Squarified Treemap“: Kacheln mö
 }
 function zeigeKarte(){
   seiteAnfang("karte"); hashSetzen("seite=karte");
-  const aktien = ALLE.filter(w => !SONDERGRUPPE(w) && w.score != null);
-  const mitMw = aktien.filter(w => w.f?.mw > 0).length;
-  const nachMw = KARTE.groesse === "mw" || (KARTE.groesse === "auto" && mitMw >= aktien.length * 0.5);
+  if (!["t","w","m","j","ampel","mp"].includes(KARTE.farbe)) KARTE.farbe = "t";
+  if (!["aktien","ETF","Krypto","Rohstoffe","alle"].includes(KARTE.titel)) KARTE.titel = "aktien";
+  if (!["branche","zone","keine"].includes(KARTE.gruppe)) KARTE.gruppe = "branche";
+  const PI = {t:0, w:1, m:2, j:3}, GRENZE = {t:3, w:6, m:10, j:30}, ZEIT = {t:"Tag", w:"Woche", m:"Monat", j:"Jahr"};
+  const perfModus = KARTE.farbe in PI;
+  const istAktie = w => !SONDERGRUPPE(w);
+  const titelOk = w => KARTE.titel === "alle" || (KARTE.titel === "aktien" ? istAktie(w) : w.gruppe === KARTE.titel);
+  const werte = ALLE.filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
+  const aktien = werte.filter(istAktie), mitMw = aktien.filter(w => w.f?.mw > 0).length, nachMw = mitMw >= aktien.length * 0.5 && mitMw > 0;
+  const mitBranche = aktien.filter(w => w.branche).length;
+  const stand = werte.reduce((a, w) => w.datum > a ? w.datum : a, "");
   const knopf = (k, v, t) => `<button data-k="${k}" data-v="${v}" aria-pressed="${KARTE[k] === v}">${t}</button>`;
-  $("#haupt").innerHTML = `
-    <h1 class="seiten-titel">Aktien-Karte</h1>
-    <p class="seiten-unter"><span data-e="karte" tabindex="0">${aktien.length.toLocaleString("de-DE")} Nasdaq-Aktien als Kacheln</span> – Größe: ${nachMw ? "Börsenwert" : "Handelsumsatz pro Tag"}${nachMw && mitMw < aktien.length ? ` (bei ${aktien.length - mitMw} ohne Börsenwert: Umsatz)` : ""}. Antippen öffnet die Aktie.</p>
-    <div class="chart-leiste" style="margin-bottom:10px">
-      <div class="segment" role="group" aria-label="Farbe">${knopf("farbe","ampel","Ampel")}${knopf("farbe","delta","Ampel 4 W.")}${knopf("farbe","mp","Trend")}</div>
-      <div class="segment" role="group" aria-label="Größe">${knopf("groesse","auto","Größe automatisch")}${knopf("groesse","mw","Börsenwert")}${knopf("groesse","umsatz","Umsatz")}</div>
-      <div class="segment" role="group" aria-label="Gruppen">${knopf("gruppe","zone","nach Ampel-Zone")}${knopf("gruppe","keine","ohne Gruppen")}</div>
-    </div>
-    <div id="karte-legende" class="skala-legende"></div>
-    <div id="karte-box" style="position:relative;height:max(420px, calc(100vh - 260px));border-radius:10px;overflow:hidden;background:var(--panel)">
-      <canvas id="karte-cv" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer" role="img" aria-label="Kachel-Karte aller Aktien"></canvas>
-      <div id="karte-tip" class="karte-tip" hidden></div>
-    </div>
-    <div class="fussnote">Ampel = Lage gemessen an der eigenen Kursgeschichte, keine Kaufempfehlung. Bei Einzelaktien fehlen Firmen, die pleite gingen. ${STAND_TEXT}</div>`;
-  $$("#haupt [data-k]").forEach(b => b.onclick = () => { KARTE[b.dataset.k] = b.dataset.v; sichere("karte", KARTE); zeigeKarte(); });
+  // Farbskala: 7 Stufen von stark fallend (orange) über unverändert (grau) bis stark steigend (blaugrün)
+  const SKALA = ["#c2410c", "#e0703a", "#a5705c", "#4a505e", "#3f8578", "#14a085", "#0b7a64"];
+  const stufePerf = v => { const x = v / (GRENZE[KARTE.farbe] / 3); return Math.max(-3, Math.min(3, Math.round(x))) + 3; };
   const f = F();
   const farbeVon = w => {
-    if (KARTE.farbe === "mp") return w.mp == null ? f.muted : {2:f.cyan, 1:f.neutral, 0:f.teuer}[w.mp];
-    if (KARTE.farbe === "delta") { const d = wert(w, "delta"); if (d == null) return f.muted; const i = d >= 15 ? 4 : d >= 5 ? 3 : d > -5 ? 2 : d > -15 ? 1 : 0; return AMPEL_FARBEN[i]; }
+    if (perfModus) return SKALA[stufePerf(w.perf[PI[KARTE.farbe]])];
+    if (KARTE.farbe === "mp") return {2:f.cyan, 1:f.neutral, 0:f.teuer}[w.mp] || f.muted;
     return farbe(w.score);
   };
-  $("#karte-legende").innerHTML = (KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"], ...(aktien.some(w => w.mp === 1) ? [[f.neutral,"↔ gemischt"]] : []), [f.teuer,"↘ Abwärtstrend"]]
-    : KARTE.farbe === "delta" ? [[AMPEL_FARBEN[4],"Ampel +15 oder mehr (günstiger geworden)"],[AMPEL_FARBEN[3],"+5 bis +15"],[AMPEL_FARBEN[2],"kaum verändert"],[AMPEL_FARBEN[1],"−5 bis −15"],[AMPEL_FARBEN[0],"−15 oder weniger (teurer geworden)"]]
-    : [[AMPEL_FARBEN[4],"ab 80 historisch sehr günstig"],[AMPEL_FARBEN[3],"60–80 günstig"],[AMPEL_FARBEN[2],"40–60 neutral"],[AMPEL_FARBEN[1],"15–40 teuer"],[AMPEL_FARBEN[0],"bis 15 historisch sehr teuer"]])
-    .map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("");
-  const groesse = w => Math.max((nachMw && w.f?.mw > 0 ? w.f.mw * 1e6 : (w.umsatz_usd || 0) * 250), 1);   // Umsatz/Tag × 250 Handelstage ≈ Jahresumsatz als Ersatzgröße
+  const textVon = w => perfModus ? vz(w.perf[PI[KARTE.farbe]], KARTE.farbe === "t" ? 2 : 1, " %") : KARTE.farbe === "mp" ? (MP_KURZ[w.mp] ?? "–") : fmt(w.score, 0);
+  const g3 = GRENZE[KARTE.farbe] / 3;
+  const legende = perfModus
+    ? SKALA.map((c, i) => `<span class="hm-stufe" style="background:${c}">${i === 3 ? "0 %" : (i < 3 ? "−" : "+") + fmt(Math.abs(i - 3) * g3, g3 < 1 ? 1 : 0) + " %"}${i === 0 || i === 6 ? "+" : ""}</span>`).join("")
+    : KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"],[f.teuer,"↘ Abwärtstrend"]].map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("")
+    : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("");
+  $("#haupt").innerHTML = `
+    <h1 class="seiten-titel">Heatmap</h1>
+    <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
+    <div class="chart-leiste" style="margin-bottom:8px">
+      <div class="segment" role="group" aria-label="Zeitraum">${knopf("farbe","t","Tag")}${knopf("farbe","w","Woche")}${knopf("farbe","m","Monat")}${knopf("farbe","j","Jahr")}${knopf("farbe","ampel","Ampel")}${knopf("farbe","mp","Trend")}</div>
+      <div class="segment" role="group" aria-label="Titel">${knopf("titel","aktien","Aktien")}${knopf("titel","ETF","Index-ETFs")}${knopf("titel","Krypto","Krypto")}${knopf("titel","Rohstoffe","Rohstoffe")}${knopf("titel","alle","Alle")}</div>
+      ${KARTE.titel === "aktien" || KARTE.titel === "alle" ? `<div class="segment" role="group" aria-label="Gruppen">${knopf("gruppe","branche","nach Branche")}${knopf("gruppe","zone","nach Ampel")}${knopf("gruppe","keine","ohne Gruppen")}</div>` : ""}
+    </div>
+    <div id="karte-legende" class="skala-legende">${legende}</div>
+    ${KARTE.gruppe === "branche" && aktien.length && mitBranche < aktien.length * 0.5 ? `<p class="klein" style="margin:4px 0 8px">Branchen fehlen noch (sie kommen aus den SEC-Stammdaten und werden im Online-Lauf geladen) – Aktien stehen deshalb in einem Block.</p>` : ""}
+    <div id="karte-box" style="position:relative;height:max(440px, calc(100vh - 250px));border-radius:10px;overflow:hidden;background:#11141b">
+      <canvas id="karte-cv" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer" role="img" aria-label="Heatmap aller gewählten Titel"></canvas>
+      <div id="karte-tip" class="karte-tip" hidden></div>
+    </div>
+    <div class="fussnote">Kursveränderung Schluss gegen Schluss (Tag: letzter Handelstag, Krypto auch am Wochenende), ohne Dividenden bei Indizes und Rohstoffen. Ampel = Lage gemessen an der eigenen Geschichte. Keine Anlageberatung. ${STAND_TEXT}</div>`;
+  $$("#haupt [data-k]").forEach(b => b.onclick = () => { KARTE[b.dataset.k] = b.dataset.v; sichere("karte", KARTE); zeigeKarte(); });
+  const groesse = w => istAktie(w) ? Math.max(nachMw && w.f?.mw > 0 ? w.f.mw * 1e6 : (w.umsatz_usd || 0) * 250, 1) : 1;
+  // Gruppen: Aktien nach Branche / Ampel-Zone, die anderen nach ihrer Gruppe; bei „Alle“ feste Flächenanteile
+  const ZONEN_N = ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"];
+  const gruppenName = w => !istAktie(w) ? ({ETF:"Index-ETFs", Krypto:"Krypto", Rohstoffe:"Rohstoffe"})[w.gruppe]
+    : KARTE.gruppe === "branche" ? (w.branche || "Aktien") : KARTE.gruppe === "zone" ? (w.score == null ? "keine Ampel" : ZONEN_N[stufe(w.score)]) : "Aktien";
+  const karteGruppen = () => {
+    const m = new Map(); werte.forEach(w => { const n = gruppenName(w); if (!m.has(n)) m.set(n, []); m.get(n).push(w); });
+    let gr = [...m].map(([titel, liste]) => ({titel, liste, aktie:istAktie(liste[0]), summe:liste.reduce((a, w) => a + groesse(w), 0)}));
+    if (KARTE.titel === "alle") {   // Anteile: Aktien 70 %, ETFs 12 %, Rohstoffe 10 %, Krypto 8 %
+      const anteil = {"Index-ETFs":.12, "Rohstoffe":.10, "Krypto":.08}, akt = gr.filter(g => g.aktie), sAkt = akt.reduce((a, g) => a + g.summe, 0) || 1;
+      gr.forEach(g => g.gewicht = g.aktie ? .70 * g.summe / sAkt : (anteil[g.titel] || .05));
+    } else gr.forEach(g => g.gewicht = g.summe);
+    return gr.sort((a, b) => b.gewicht - a.gewicht);
+  };
   const cv = $("#karte-cv"), box = $("#karte-box"), tip = $("#karte-tip");
   const zeichnen = () => {
     const W = box.clientWidth, H = box.clientHeight, dpr = devicePixelRatio || 1;
     cv.width = W * dpr; cv.height = H * dpr;
     const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
     KARTE_KACHELN = [];
-    const gruppen = KARTE.gruppe === "zone"
-      ? [4,3,2,1,0].map(st => ({titel:["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"][st], liste:aktien.filter(w => stufe(w.score) === st)})).filter(x => x.liste.length)
-      : [{titel:"", liste:aktien}];
-    const gr = quadrate(gruppen.map(x => x.liste.reduce((a, w) => a + groesse(w), 0)), 0, 0, W, H);
-    g.font = "600 11px system-ui, sans-serif"; g.textBaseline = "top";
+    const gruppen = karteGruppen(), mehrere = gruppen.length > 1;
+    const gr = quadrate(gruppen.map(x => x.gewicht), 0, 0, W, H);
     gruppen.forEach((grp, gi) => {
-      const R = gr[gi], kopf = grp.titel && R.h > 40 ? 16 : 0;
+      const R = gr[gi], kopf = mehrere && R.h > 36 && R.w > 50 ? 15 : 0;
       const kr = quadrate(grp.liste.map(groesse), R.x + 1, R.y + kopf + 1, R.w - 2, R.h - kopf - 2);
       grp.liste.forEach((w, i) => {
         const k = kr[i]; if (!k || k.w < .5 || k.h < .5) return;
         g.fillStyle = farbeVon(w); g.fillRect(k.x, k.y, k.w, k.h);
-        g.strokeStyle = f.panel; g.lineWidth = k.w > 6 && k.h > 6 ? 1 : .4; g.strokeRect(k.x, k.y, k.w, k.h);
-        if (k.w > 30 && k.h > 15) {
-          g.fillStyle = "#0b0f16";
-          const fs = Math.max(9, Math.min(22, Math.min(k.w / (w.symbol.length * .62 + 1), k.h / 2.6)));
-          g.font = `600 ${fs.toFixed(0)}px system-ui, sans-serif`; g.textAlign = "center";
-          g.fillText(w.symbol, k.x + k.w / 2, k.y + k.h / 2 - fs * (k.h > fs * 2.4 ? .9 : .5));
-          if (k.h > fs * 2.4) { g.font = `400 ${Math.max(9, fs * .7).toFixed(0)}px system-ui, sans-serif`; g.fillText(KARTE.farbe === "delta" ? vz(wert(w, "delta"), 0) : KARTE.farbe === "mp" ? MP_KURZ[w.mp] ?? "–" : fmt(w.score, 0), k.x + k.w / 2, k.y + k.h / 2 + fs * .15); }
+        g.strokeStyle = "#11141b"; g.lineWidth = k.w > 6 && k.h > 6 ? 1 : .4; g.strokeRect(k.x, k.y, k.w, k.h);
+        const name = istAktie(w) ? w.symbol : kurzname(w).replace(/ \(.*\)$/, "");
+        if (k.w > 28 && k.h > 14) {
+          g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
+          const fs = Math.max(9, Math.min(26, Math.min(k.w / (name.length * .6 + 1), k.h / 2.6)));
+          const zwei = k.h > fs * 2.5;
+          g.font = `600 ${fs.toFixed(0)}px system-ui, sans-serif`;
+          g.fillText(name, k.x + k.w / 2, k.y + k.h / 2 - (zwei ? fs * .45 : 0), k.w - 4);
+          if (zwei) { g.font = `400 ${Math.max(9, fs * .72).toFixed(0)}px system-ui, sans-serif`; g.fillText(textVon(w), k.x + k.w / 2, k.y + k.h / 2 + fs * .6, k.w - 4); }
         }
         KARTE_KACHELN.push({...k, w_:w});
       });
-      if (kopf) { g.fillStyle = f.text; g.font = "600 11px system-ui, sans-serif"; g.textAlign = "left"; g.fillText(`${grp.titel} · ${grp.liste.length}`, R.x + 4, R.y + 2); }
+      if (kopf) { g.fillStyle = "#e7e9ee"; g.font = "600 11px system-ui, sans-serif"; g.textAlign = "left"; g.textBaseline = "top"; g.fillText(`${grp.titel} ›`, R.x + 4, R.y + 2, R.w - 8); }
     });
   };
   const finde = ev => { const r = cv.getBoundingClientRect(), x = ev.clientX - r.left, y = ev.clientY - r.top;
     return KARTE_KACHELN.find(k => x >= k.x && x < k.x + k.w && y >= k.y && y < k.y + k.h); };
-  cv.onmousemove = ev => { const k = finde(ev); if (!k) { tip.hidden = true; return; } const w = k.w_, r = box.getBoundingClientRect();
-    tip.innerHTML = `<b>${esc(kurzname(w))}</b> <span class="klein">${esc(w.symbol)}</span><br>Ampel <b>${fmt(w.score,0)}</b> · ${zonenWort(w.score)} · 4W ${vz(wert(w, "delta"),0)}<br>Trend ${w.mp != null ? MP_PFEIL[w.mp] + " " + MP_KURZ[w.mp] : "–"}${w.f?.mw ? ` · Börsenwert ${fmt(w.f.mw / 1000, 1)} Mrd $` : ""}${w.f?.falle ? "<br>⚠ Fallen-Warnung: Geschäft schwach" : ""}`;
+  cv.onmousemove = ev => { const k = finde(ev); if (!k) { tip.hidden = true; return; } const w = k.w_, r = box.getBoundingClientRect(), p = w.perf || [];
+    tip.innerHTML = `<b>${esc(kurzname(w))}</b> <span class="klein">${esc(w.symbol)}${w.branche ? " · " + esc(w.branche) : ""}</span><br>
+      Tag <b class="${klasse(p[0])}">${vz(p[0],2," %")}</b> · Woche <b class="${klasse(p[1])}">${vz(p[1],1," %")}</b><br>Monat <b class="${klasse(p[2])}">${vz(p[2],1," %")}</b> · Jahr <b class="${klasse(p[3])}">${vz(p[3],1," %")}</b><br>
+      Ampel <b>${fmt(w.score,0)}</b> · ${zonenWort(w.score)} · Trend ${w.mp != null ? MP_PFEIL[w.mp] + " " + MP_KURZ[w.mp] : "–"}${w.f?.mw ? `<br>Börsenwert ${fmt(w.f.mw / 1000, 1)} Mrd $` : ""}${w.f?.falle ? "<br>⚠ Fallen-Warnung: Geschäft schwach" : ""}`;
     tip.hidden = false; const tx = ev.clientX - r.left + 14, ty = ev.clientY - r.top + 14;
-    tip.style.left = Math.min(tx, r.width - 250) + "px"; tip.style.top = Math.min(ty, r.height - 90) + "px"; };
+    tip.style.left = Math.min(tx, r.width - 255) + "px"; tip.style.top = Math.min(ty, r.height - 120) + "px"; };
   cv.onmouseleave = () => { tip.hidden = true; };
   cv.onclick = ev => { const k = finde(ev); if (k) zeige(k.w_.id); };
   KARTE_RO?.disconnect(); KARTE_RO = new ResizeObserver(() => { if (SEITE === "karte" && $("#karte-cv")) zeichnen(); }); KARTE_RO.observe(box);
@@ -1433,7 +1462,7 @@ function zeigeUebersicht(){
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
     <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
     ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
-    <p class="klein" style="margin:6px 0 0"><button class="linkknopf" id="zu-karte">Alle ${ALLE.filter(w => !SONDERGRUPPE(w)).length.toLocaleString("de-DE")} Aktien als Kachel-Karte ansehen</button></p>
+    <p class="klein" style="margin:6px 0 0"><button class="linkknopf" id="zu-karte">Alle ${ALLE.filter(w => !SONDERGRUPPE(w)).length.toLocaleString("de-DE")} Titel als Heatmap (Tag, Woche, Monat, Jahr)</button></p>
     <h2 class="abschnitt-titel"><span data-e="auffaellig">Heute auffällig</span><span class="klein">auffällig heißt nicht kaufenswert</span></h2>
     <div class="auffaellig">
       ${afKarte("Größte Bewegung in 4 Wochen", mitD, w => { const d = wert(w, "delta"); return `<span class="w4">${w4Html(d)}</span>`; }, "keine Daten")}
@@ -3173,6 +3202,19 @@ function fallenHtml(fa){
     <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">danach</th><th style="text-align:left">Geschäft damals</th><th>Aktien</th><th>Fälle</th><th>Kurs höher</th><th>Median</th><th data-e="f_absturz">Absturz ≥ 50 %</th></tr></thead><tbody>${zeilen.join("")}</tbody></table></div>
     <div class="text">${s1 && o1 ? `Nach einem Jahr stand der Kurs bei schwachem Geschäft in ${fmt(s1.hoeher,0)} % der Fälle höher, bei solidem in ${fmt(o1.hoeher,0)} %; um die Hälfte oder mehr abgestürzt sind ${fmt(s1.absturz,0)} % gegen ${fmt(o1.absturz,0)} %. ` : ""}${esc(fa.hinweis)}. Firmen, die pleite gingen oder von der Börse verschwanden, fehlen – sie wären fast alle „schwach“ gewesen, der Unterschied ist in Wirklichkeit also eher größer. Ausländische Firmen ohne SEC-Zahlen fehlen ganz. Die Warnung sagt nichts darüber, ob eine solide Aktie steigt.</div>`;
 }
+let TRENDSTUDIE = undefined;
+async function trendstudieZeigen(){
+  const el = $("#trendstudie"); if (!el) return;
+  if (TRENDSTUDIE === undefined) { try { const a = await fetch("daten/trendstudie.json", {cache:"no-cache"}); TRENDSTUDIE = a.ok ? await a.json() : null; } catch(e) { TRENDSTUDIE = null; } }
+  const d = TRENDSTUDIE; if (!d || !$("#trendstudie")) return;
+  const g = d.gesamt || [], pz = x => x == null ? "–" : fmt(x * 100, 0, " %");
+  const zeilen = g.map((z, i) => `<tr${z.name === d.gewaehlt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${i + 1}. ${esc(z.name)}${z.name === d.gewaehlt ? ' <span class="klein">im Tool</span>' : ""}</td><td>${fmt(z.rang,1)}</td>
+    <td class="${klasse(z.etf)}">${z.etf == null ? "–" : vz(z.etf,2)}</td><td class="${klasse(z.aktien)}">${z.aktien == null ? "–" : vz(z.aktien,2)}</td><td>${z.dd == null ? "–" : fmt(z.dd * 100,0," Pp.")}</td><td>${fmt(z.wechsel,1)}</td><td>${pz(z.zufall)}</td></tr>`).join("");
+  el.innerHTML = `<h3>5. ${ek("ts_studie","Trendstudie: welcher Indikator bestimmt den Trend am verlässlichsten?")}</h3>
+    <div class="text">${esc(d.fazit || "")} Werte: ${Object.entries(d.werte).map(([k, v]) => `${v} ${({etf:"ETFs",krypto:"Krypto",rohstoffe:"Rohstoffe",aktien:"Aktien (Stichprobe)"})[k] || k}`).join(", ")}. Prüfzeit ab ${datumDe(d.pruef_ab)}, Stand ${d.stand}.</div>
+    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Indikator</th><th>Rang Ø</th><th>ΔSharpe ETFs</th><th>ΔSharpe Aktien</th><th>Rückgang kleiner</th><th>Wechsel/Jahr</th><th>besser als Zufall</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <div class="text">Lernzeit-Falle: Wer vor 2005 einfach den damals besten Indikator genommen hätte (ETFs: ${esc(d.sieger_lern?.etf || "–")}), hätte danach zu den schlechtesten gehört. Deshalb zählt hier, was über alle Gruppen und Zeiten stabil war – nicht der Sieger einer Rückschau.</div>`;
+}
 function mpPruefHtml(mp){
   if (!mp) return "";
   const zeilen = Object.values(mp).filter(x => x["3m"] || x["1"]).map(x => {
@@ -3220,19 +3262,6 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
   document.querySelectorAll("#haupt [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
   document.querySelectorAll("#haupt [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
   document.querySelectorAll("#haupt tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
-let TRENDSTUDIE = undefined;
-async function trendstudieZeigen(){
-  const el = $("#trendstudie"); if (!el) return;
-  if (TRENDSTUDIE === undefined) { try { const a = await fetch("daten/trendstudie.json", {cache:"no-cache"}); TRENDSTUDIE = a.ok ? await a.json() : null; } catch(e) { TRENDSTUDIE = null; } }
-  const d = TRENDSTUDIE; if (!d || !$("#trendstudie")) return;
-  const g = d.gesamt || [], pz = x => x == null ? "–" : fmt(x * 100, 0, " %");
-  const zeilen = g.map((z, i) => `<tr${z.name === d.gewaehlt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${i + 1}. ${esc(z.name)}${z.name === d.gewaehlt ? ' <span class="klein">im Tool</span>' : ""}</td><td>${fmt(z.rang,1)}</td>
-    <td class="${klasse(z.etf)}">${z.etf == null ? "–" : vz(z.etf,2)}</td><td class="${klasse(z.aktien)}">${z.aktien == null ? "–" : vz(z.aktien,2)}</td><td>${z.dd == null ? "–" : fmt(z.dd * 100,0," Pp.")}</td><td>${fmt(z.wechsel,1)}</td><td>${pz(z.zufall)}</td></tr>`).join("");
-  el.innerHTML = `<h3>5. ${ek("ts_studie","Trendstudie: welcher Indikator bestimmt den Trend am verlässlichsten?")}</h3>
-    <div class="text">${esc(d.fazit || "")} Werte: ${Object.entries(d.werte).map(([k, v]) => `${v} ${({etf:"ETFs",krypto:"Krypto",rohstoffe:"Rohstoffe",aktien:"Aktien (Stichprobe)"})[k] || k}`).join(", ")}. Prüfzeit ab ${datumDe(d.pruef_ab)}, Stand ${d.stand}.</div>
-    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Indikator</th><th>Rang Ø</th><th>ΔSharpe ETFs</th><th>ΔSharpe Aktien</th><th>Rückgang kleiner</th><th>Wechsel/Jahr</th><th>besser als Zufall</th></tr></thead><tbody>${zeilen}</tbody></table></div>
-    <div class="text">Lernzeit-Falle: Wer vor 2005 einfach den damals besten Indikator genommen hätte (ETFs: ${esc(d.sieger_lern?.etf || "–")}), hätte danach zu den schlechtesten gehört. Deshalb zählt hier, was über alle Gruppen und Zeiten stabil war – nicht der Sieger einer Rückschau.</div>`;
-}
 }
 start();
 </script>
