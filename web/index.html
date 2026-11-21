@@ -260,6 +260,7 @@ table{border-collapse:collapse;width:100%}
 .wtab th{color:var(--muted);font-weight:550;font-size:12px}
 .wtab th:first-child,.wtab td:first-child{text-align:left}
 .wtab tbody tr:hover td{background:var(--hover)}
+.wtab tr.depot-zeile td{background:var(--panel2);white-space:normal;padding-top:10px}
 .tab-scroll{overflow-x:auto}
 .text{padding:0 14px 12px;color:var(--muted);font-size:12.5px;line-height:1.55}
 .merke{margin:12px 14px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--gelb) 40%,transparent);background:color-mix(in srgb,var(--gelb) 9%,transparent);font-size:13px;color:var(--text)}
@@ -1851,16 +1852,19 @@ const ISIN_TABELLE = {
   IE00B53SZB19:["QQQ","iShares Nasdaq 100"], US46090E1038:["QQQ","Invesco QQQ Trust"], DE0005933931:["EXS1","iShares Core DAX"],
   DE0005933956:["SX5E","iShares Core EURO STOXX 50"], IE00B0M63177:["EEM","iShares MSCI Emerging Markets"], DE000A0S9GB0:["GOLD","Xetra-Gold"],
 };
-const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000};
-let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar}], e:{…Einstellungen}, merken:bool}
+const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:""};
+let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar, depot}], e:{…Einstellungen}, zuordnungen:{Spaltenköpfe → Spalten}, merken:bool}
+const DEPOT_NAME_STD = "Depot 1";
+const depotName = p => p.depot || DEPOT_NAME_STD;
+const depotNamen = () => [...new Set(DEPOT.positionen.map(depotName))];
 function depotLaden(){
   const d = lade(DEPOT_SCHLUESSEL, null);
-  DEPOT = d && Array.isArray(d.positionen) ? {...d, e:{...DEPOT_STD, ...(d.e || {}), ...(d.e?.rendite === "markt" ? {rendite:"deckel"} : {})}, merken:true} : {positionen:[], e:{...DEPOT_STD}, merken:false};
+  DEPOT = d && Array.isArray(d.positionen) ? {...d, e:{...DEPOT_STD, ...(d.e || {}), ...(d.e?.rendite === "markt" ? {rendite:"deckel"} : {})}, zuordnungen:d.zuordnungen || {}, merken:true} : {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false};
 }
-function depotSichern(){ if (DEPOT.merken) sichere(DEPOT_SCHLUESSEL, {positionen:DEPOT.positionen, e:DEPOT.e}); }
+function depotSichern(){ if (DEPOT.merken) sichere(DEPOT_SCHLUESSEL, {positionen:DEPOT.positionen, e:DEPOT.e, zuordnungen:DEPOT.zuordnungen}); }
 function depotVergessen(){
   try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(e) {}
-  DEPOT = {positionen:[], e:{...DEPOT_STD}, merken:false}; DEPOT_ERG = null; zeigeDepot();
+  DEPOT = {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false}; DEPOT_ERG = null; CSV_WARTESCHLANGE = []; zeigeDepot();
 }
 const zahlDe = s => {   // "1.234,56 €" / "1,234.56" / "1234.5" → Zahl
   if (typeof s === "number") return s;
@@ -1902,21 +1906,42 @@ function spalteRaten(kopf, art){   // nur Vorschlag – der Nutzer sieht und än
     wert:/(marktwert|kurswert|wert|value|betrag|summe|position)/i, anzahl:/(anzahl|stück|stueck|menge|quantity|shares|nominal)/i, kurs:/(kurs|preis|price)/i};
   return kopf.findIndex(k => muster[art].test(k) && !(art === "wert" && /(kurs|einstand|kauf)/i.test(k) && !/kurswert|marktwert/i.test(k)));
 }
-let CSV = null;
-function csvVorschau(text){
+let CSV = null, CSV_WARTESCHLANGE = [], CSV_GESAMT = 0;
+const kopfSignatur = kopf => kopf.map(k => String(k).trim().toLowerCase()).join("|");
+function naechsteDatei(){   // mehrere Dateien: eine nach der anderen zuordnen
+  const d = CSV_WARTESCHLANGE.shift();
+  if (d) csvVorschau(d.text, d.name);
+}
+function neuerDepotName(){ const n = depotNamen(); let i = n.length + 1; while (n.includes("Depot " + i)) i++; return "Depot " + i; }
+function csvVorschau(text, vorschlag){
   CSV = csvLesen(text);
   const ziel = $("#csv-zuordnung");
-  if (!CSV || !CSV.daten.length) { ziel.innerHTML = `<p class="neg">Keine Datenzeilen erkannt. Erste Zeile muss die Spaltenköpfe enthalten.</p>`; return; }
+  const nr = CSV_GESAMT > 1 ? `<b>Datei ${CSV_GESAMT - CSV_WARTESCHLANGE.length} von ${CSV_GESAMT}${vorschlag ? ` („${esc(vorschlag)}“)` : ""}:</b> ` : "";
+  if (!CSV || !CSV.daten.length) { ziel.innerHTML = `<p class="neg">${nr}Keine Datenzeilen erkannt. Erste Zeile muss die Spaltenköpfe enthalten.</p>${CSV_WARTESCHLANGE.length ? `<button class="knopf leise" id="csv-weiter">Nächste Datei</button>` : ""}`; if ($("#csv-weiter")) $("#csv-weiter").onclick = naechsteDatei; return; }
+  const sig = kopfSignatur(CSV.kopf), gemerkt = DEPOT.zuordnungen?.[sig];
+  const vorwahl = k => gemerkt && gemerkt[k] != null && gemerkt[k] < CSV.kopf.length ? gemerkt[k] : spalteRaten(CSV.kopf, k);
   const opt = sel => `<option value="-1">– nicht vorhanden –</option>` + CSV.kopf.map((k, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${esc(k || "Spalte " + (i + 1))}</option>`).join("");
+  const namen = depotNamen().filter(() => DEPOT.positionen.length);
+  const vorName = (vorschlag || "").replace(/\.(csv|txt)$/i, "").trim() || neuerDepotName();
   ziel.innerHTML = `
-    <p class="klein">Erkannt: ${CSV.daten.length} Zeilen, Trennzeichen „${CSV.trenner === "\t" ? "Tab" : CSV.trenner}“. Bitte prüfen, welche Spalte was enthält:</p>
-    <div class="eingabe" style="padding:4px 0 10px">${SPALTEN.map(([k, t]) => `<label>${t}<select data-sp="${k}">${opt(spalteRaten(CSV.kopf, k))}</select></label>`).join("")}</div>
+    <p class="klein">${nr}Erkannt: ${CSV.daten.length} Zeilen, Trennzeichen „${CSV.trenner === "\t" ? "Tab" : CSV.trenner}“. ${gemerkt ? "<b>Spalten wie beim letzten Mal zugeordnet</b> (gleicher Aufbau) – bitte kurz prüfen:" : "Bitte prüfen, welche Spalte was enthält:"}</p>
+    <div class="eingabe" style="padding:4px 0 6px">
+      <label>${ek("d_depotname","Depot-Name")}<input id="csv-depot" list="csv-depots" value="${esc(vorName)}" style="width:200px"><datalist id="csv-depots">${namen.map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
+      <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px;align-self:flex-end;padding-bottom:8px"><input type="checkbox" id="csv-ersetzen" checked> <span id="csv-ersetzen-text">gleichnamiges Depot ersetzen</span></label>
+    </div>
+    <div class="eingabe" style="padding:0 0 10px">${SPALTEN.map(([k, t]) => `<label>${t}<select data-sp="${k}">${opt(vorwahl(k))}</select></label>`).join("")}</div>
     <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr>${CSV.kopf.map(k => `<th style="text-align:left">${esc(k)}</th>`).join("")}</tr></thead>
       <tbody>${CSV.daten.slice(0, 5).map(r => `<tr>${CSV.kopf.map((_, i) => `<td style="text-align:left">${esc(r[i] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
     <p class="klein">Wert fehlt? Dann wird Anzahl × Kurs gerechnet. Zeilen ohne Wert (z. B. Summenzeilen) werden übersprungen.</p>
-    <button class="knopf" id="csv-uebernehmen">Positionen übernehmen</button> <span class="klein" id="csv-info"></span>`;
+    <button class="knopf" id="csv-uebernehmen">Positionen übernehmen</button> ${CSV_WARTESCHLANGE.length ? `<button class="knopf leise" id="csv-weiter">Diese Datei überspringen</button>` : ""} <span class="klein" id="csv-info"></span>`;
+  const ersetzenText = () => { const n = $("#csv-depot").value.trim(), vorhanden = DEPOT.positionen.filter(p => depotName(p) === n).length;
+    $("#csv-ersetzen").parentElement.style.visibility = vorhanden ? "visible" : "hidden";
+    $("#csv-ersetzen-text").textContent = vorhanden ? `vorhandenes Depot „${n}“ ersetzen (${vorhanden} Position${vorhanden === 1 ? "" : "en"}) – sonst dazulegen` : ""; };
+  $("#csv-depot").oninput = ersetzenText; ersetzenText();
+  if ($("#csv-weiter")) $("#csv-weiter").onclick = naechsteDatei;
   $("#csv-uebernehmen").onclick = () => {
     const sp = Object.fromEntries($$("#csv-zuordnung [data-sp]").map(s => [s.dataset.sp, +s.value]));
+    const depot = $("#csv-depot").value.trim() || DEPOT_NAME_STD;
     if (sp.wert < 0 && (sp.anzahl < 0 || sp.kurs < 0)) { $("#csv-info").textContent = "Bitte die Spalte „Wert“ oder „Anzahl“ und „Kurs“ wählen."; return; }
     const neu = [];
     for (const r of CSV.daten) {
@@ -1926,10 +1951,16 @@ function csvVorschau(text){
       const name = g("name") || g("isin") || g("kuerzel");
       if (!(wert > 0) || !name || /^(summe|gesamt|total)/i.test(name)) continue;
       let isin = g("isin"); if (!isin && istIsin(g("kuerzel"))) isin = g("kuerzel");
-      const pos = {name, isin:isin.toUpperCase(), kuerzel:istIsin(g("kuerzel")) ? "" : g("kuerzel"), wert:Math.round(wert * 100) / 100};
+      const pos = {name, isin:isin.toUpperCase(), kuerzel:istIsin(g("kuerzel")) ? "" : g("kuerzel"), wert:Math.round(wert * 100) / 100, depot};
       neu.push({...pos, ...zuordnen(pos)});
     }
     if (!neu.length) { $("#csv-info").textContent = "Keine Zeile mit gültigem Wert gefunden."; return; }
+    if ($("#csv-ersetzen").checked) {   // gleichnamiges Depot ersetzen: bisherige Zuordnungen (Ersatzwerte) wiederverwenden
+      const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
+      neu.forEach(n => { if (!n.id) { const a = alt.find(x => x.id && ((n.isin && x.isin === n.isin) || x.name === n.name)); if (a) { n.id = a.id; n.quelle = a.quelle; } } });
+      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
+    }
+    DEPOT.zuordnungen = {...(DEPOT.zuordnungen || {}), [sig]:sp};
     DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
   };
 }
@@ -1972,17 +2003,20 @@ function zeigeDepot(){
     <section class="karte seite-karte">
       <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;padding:12px 14px 0">
         <h2 style="margin:0;font-size:16px">Positionen</h2>
-        <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
+        <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
       ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>Wert €</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
-        P.map((p, i) => { const w = ALLE.find(x => x.id === p.id);
+        depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
+          return `<tr class="depot-zeile"><td colspan="6" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
+            <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
+          teil.map(([p, i]) => { const w = ALLE.find(x => x.id === p.id);
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
             <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro"></td>
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
             <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")} · ${fmt(w.jahre_daten,0)} J. Daten</div>` : `<span class="neg">noch offen</span>`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
             <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
-            <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join("")}</tbody></table></div>
+            <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
         ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
       : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
     </section>
@@ -1995,6 +2029,7 @@ function zeigeDepot(){
         ${feld("dynamik","jährliche Erhöhung %","d_dynamik",'min="0" max="20" step="0.5"')}
         ${feld("jahre","Laufzeit Jahre","d_jahre",'min="1" max="40" step="1"')}
         ${feld("ziel","Ziel € (heutige Kaufkraft)","d_ziel",'min="0" step="1000"')}
+        ${depotNamen().length > 1 ? `<label>${ek("d_nurdepot","Prognose für")}<select data-e2="nurDepot"><option value="">alle Depots zusammen</option>${depotNamen().map(n => `<option value="${esc(n)}" ${e.nurDepot === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>` : ""}
       </div>
       <div class="eingabe" style="padding-top:0">
         ${feld("kfix","Kosten je Kauf €","d_kosten",'min="0" step="0.5"')}
@@ -2029,6 +2064,14 @@ function zeigeDepot(){
   $$("#haupt [data-ps]").forEach(inp => inp.onchange = () => { DEPOT.positionen[+inp.dataset.ps].spar = Math.max(0, zahlDe(inp.value) || 0); DEPOT.e.verteilung = "eigen"; depotSichern(); zeigeDepot(); });
   $$("#haupt [data-pl]").forEach(b => b.onclick = () => { DEPOT.positionen.splice(+b.dataset.pl, 1); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
   $$("#haupt [data-pz]").forEach(b => b.onclick = () => ersatzWaehlen(+b.dataset.pz));
+  $$("#haupt [data-dx]").forEach(b => b.onclick = () => { const dn = b.dataset.dx, n = DEPOT.positionen.filter(p => depotName(p) === dn).length;
+    if (!confirm(`Depot „${dn}“ mit ${n} Position${n === 1 ? "" : "en"} aus der Liste entfernen?`)) return;
+    DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== dn); if (DEPOT.e.nurDepot === dn) DEPOT.e.nurDepot = "";
+    sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
+  $$("#haupt [data-dn]").forEach(b => b.onclick = () => { const alt = b.dataset.dn, neu = (prompt(`Neuer Name für „${alt}“:`, alt) || "").trim();
+    if (!neu || neu === alt) return;
+    DEPOT.positionen.forEach(p => { if (depotName(p) === alt) p.depot = neu; }); if (DEPOT.e.nurDepot === alt) DEPOT.e.nurDepot = neu;
+    depotSichern(); zeigeDepot(); });
   $$("#haupt [data-e2]").forEach(inp => inp.onchange = () => {
     const k = inp.dataset.e2; DEPOT.e[k] = inp.type === "checkbox" ? inp.checked : inp.tagName === "SELECT" ? inp.value : (zahlDe(inp.value) || 0);
     if (k === "verteilung" && inp.value !== "eigen") { sparAnteileSetzen(inp.value); depotSichern(); zeigeDepot(); return; }
@@ -2038,6 +2081,10 @@ function zeigeDepot(){
   $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
   $("#d-rechnen").onclick = depotRechnen;
   if (DEPOT_ERG) depotErgebnisZeigen(DEPOT_ERG);
+  if (CSV_WARTESCHLANGE.length) {   // mehrere Dateien: mit der nächsten weitermachen
+    $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x.dataset.imp === "csv")); depotImport("csv"); naechsteDatei();
+    $("#d-import").scrollIntoView({block:"start"});
+  }
 }
 function depotImport(art){
   const z = $("#d-import");
@@ -2046,13 +2093,14 @@ function depotImport(art){
       <label>Name oder Kürzel<input id="dm-name" placeholder="z. B. MSCI World" style="width:220px"></label>
       <label>ISIN (optional)<input id="dm-isin" placeholder="IE00B4L5Y983" style="width:150px"></label>
       <label>Wert in €<input id="dm-wert" placeholder="10.000" style="width:120px"></label>
+      <label>${ek("d_depotname","Depot")}<input id="dm-depot" list="dm-depots" value="${esc(DEPOT.positionen.length ? depotName(DEPOT.positionen[DEPOT.positionen.length - 1]) : DEPOT_NAME_STD)}" style="width:150px"><datalist id="dm-depots">${depotNamen().map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
       <button class="knopf" id="dm-plus">Hinzufügen</button></div>
       <p class="klein" style="margin:8px 0 0">Bekannte Kürzel (z. B. SPY, BTC, AAPL) und die ISINs großer Index-ETFs werden automatisch zugeordnet; sonst wählst du danach einen Ersatz.</p>`;
     $("#dm-plus").onclick = () => {
       const name = $("#dm-name").value.trim(), isin = $("#dm-isin").value.trim().toUpperCase(), wert = zahlDe($("#dm-wert").value);
       if (!name && !isin) return $("#dm-name").focus();
       if (!(wert > 0)) return $("#dm-wert").focus();
-      const pos = {name:name || isin, isin, kuerzel:istIsin(name) ? "" : name.split(/\s+/)[0], wert};
+      const pos = {name:name || isin, isin, kuerzel:istIsin(name) ? "" : name.split(/\s+/)[0], wert, depot:$("#dm-depot").value.trim() || DEPOT_NAME_STD};
       let z0 = zuordnen(pos);
       if (!z0.id && istIsin(name)) z0 = zuordnen({isin:name});
       for (const wort of name.split(/\s+/)) if (!z0.id && wort.length > 1) z0 = zuordnen({kuerzel:wort});   // jedes Wort als Kürzel
@@ -2063,18 +2111,20 @@ function depotImport(art){
       DEPOT.positionen.push({...pos, ...z0}); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
     };
   } else if (art === "csv") {
-    z.innerHTML = `<p style="margin:0 0 8px">Exportiere die Depot- bzw. Vermögensübersicht bei deiner Bank als CSV und wähle die Datei hier aus. Sie wird nur in diesem Browser gelesen.</p>
-      <input type="file" id="d-datei" accept=".csv,.txt,text/csv"><div id="csv-zuordnung" style="margin-top:10px"></div>
-      <p class="klein">Feste Vorlagen für einzelne Banken gibt es noch nicht – die Spalten ordnest du einmal selbst zu.</p>`;
-    $("#d-datei").onchange = ev => { const f = ev.target.files[0]; if (!f) return;
-      const r = new FileReader();
-      r.onload = () => { let t = r.result; if (t.includes("�")) { const r2 = new FileReader(); r2.onload = () => csvVorschau(r2.result); r2.readAsText(f, "windows-1252"); } else csvVorschau(t); };
-      r.readAsText(f, "utf-8"); };
+    z.innerHTML = `<p style="margin:0 0 8px">Exportiere die Depot- bzw. Vermögensübersicht bei deiner Bank als CSV und wähle die Datei hier aus – <b>bei mehreren Depots gern mehrere Dateien auf einmal</b>. Sie werden nur in diesem Browser gelesen.</p>
+      <input type="file" id="d-datei" accept=".csv,.txt,text/csv" multiple><div id="csv-zuordnung" style="margin-top:10px"></div>
+      <p class="klein">Jede Datei wird ein eigenes Depot (Name änderbar). Die Spalten ordnest du einmal zu; Dateien mit gleichem Aufbau (gleiche Bank) werden danach automatisch so zugeordnet. Feste Vorlagen für einzelne Banken gibt es noch nicht.</p>`;
+    const lesen = f => new Promise(ok => { const r = new FileReader();
+      r.onload = () => { const t = r.result; if (t.includes("�")) { const r2 = new FileReader(); r2.onload = () => ok(r2.result); r2.readAsText(f, "windows-1252"); } else ok(t); };
+      r.onerror = () => ok(""); r.readAsText(f, "utf-8"); });
+    $("#d-datei").onchange = async ev => { const fs = [...ev.target.files]; if (!fs.length) return;
+      CSV_WARTESCHLANGE = await Promise.all(fs.map(async f => ({name:f.name, text:await lesen(f)}))); CSV_GESAMT = CSV_WARTESCHLANGE.length;
+      naechsteDatei(); };
   } else {
     z.innerHTML = `<p style="margin:0 0 8px">Tabelle aus Excel oder der Bank-Webseite kopieren und hier einfügen (erste Zeile = Spaltenköpfe).</p>
       <textarea id="d-text" rows="6" style="width:100%;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);padding:10px;font:12.5px/1.45 ui-monospace,monospace;color:var(--text)" placeholder="Name;ISIN;Wert&#10;iShares Core MSCI World;IE00B4L5Y983;12.345,67"></textarea>
       <button class="knopf leise" id="d-text-los" style="margin-top:8px">Spalten zuordnen</button><div id="csv-zuordnung" style="margin-top:10px"></div>`;
-    $("#d-text-los").onclick = () => csvVorschau($("#d-text").value);
+    $("#d-text-los").onclick = () => { CSV_WARTESCHLANGE = []; CSV_GESAMT = 1; csvVorschau($("#d-text").value); };
   }
 }
 function ersatzWaehlen(i){   // Suche im Auswahl-Modus: der gewählte Wert wird der Position zugeordnet
@@ -2102,7 +2152,17 @@ async function depotRechnen(){
   if (DEPOT_LAEUFT) return; DEPOT_LAEUFT = true;
   const st = $("#d-status"); const knopf = $("#d-rechnen"); knopf.disabled = true;
   try {
-    const P = DEPOT.positionen.filter(p => p.id && (p.wert > 0 || (p.spar || 0) > 0)), e = DEPOT.e;
+    const e = DEPOT.e, nur = e.nurDepot && depotNamen().includes(e.nurDepot) ? e.nurDepot : "";
+    const auswahl = DEPOT.positionen.filter(p => !nur || depotName(p) === nur);
+    // gleiche Werte (z. B. derselbe ETF in zwei Depots) zu einer Position zusammenfassen – sonst schwankten sie in der Simulation unabhängig voneinander
+    const gruppen = new Map();
+    for (const p of auswahl.filter(p => p.id && (p.wert > 0 || (p.spar || 0) > 0))) {
+      const g = gruppen.get(p.id);
+      if (!g) gruppen.set(p.id, {...p, namen:[p.name], depots:[depotName(p)], teile:1});
+      else { g.wert += p.wert || 0; g.spar = (g.spar || 0) + (p.spar || 0); g.teile++; if (!g.namen.includes(p.name)) g.namen.push(p.name); if (!g.depots.includes(depotName(p))) g.depots.push(depotName(p)); }
+    }
+    const P = [...gruppen.values()].map(g => ({...g, name:g.namen.join(" / ")}));
+    const zusammengefasst = P.filter(g => g.teile > 1).length;
     st.textContent = "lädt Kursreihen …";
     const ids = [...new Set(["SPY", ...P.map(p => p.id)])];
     const reihen = Object.fromEntries(await Promise.all(ids.map(async id => [id, await reiheHolen(id)])));
@@ -2188,8 +2248,9 @@ async function depotRechnen(){
       eingezahlt:Array.from(eingezahltPunkte), eingezahltEnde, kostenEnde, start:startSumme, jahre:e.jahre, pfade:PF,
       netto:{q5:q(endNetto, 5), q50:q(endNetto, 50), q95:q(endNetto, 95)}, brutto50:q(endBrutto, 50), real50:q(real, 50), real5:q(real, 5), real95:q(real, 95),
       verlust:ant(endNetto, x => x < eingezahltEnde), ziel:e.ziel > 0 ? ant(real, x => x >= e.ziel) : null, rueck50:q(maxRueck, 50), rueck95:q(maxRueck, 95),
-      modelle:gut.map(m => ({name:m.p.name, id:m.p.id, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
-      offenWert:DEPOT.positionen.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
+      depotText:nur ? `Depot „${nur}“` : depotNamen().length > 1 ? `alle ${depotNamen().length} Depots zusammen` : "", zusammengefasst,
+      modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
+      offenWert:auswahl.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
     };
     depotErgebnisZeigen(DEPOT_ERG);
     st.textContent = `fertig: ${PF.toLocaleString("de-DE")} Wege über ${e.jahre} Jahre`;
@@ -2200,7 +2261,7 @@ function depotErgebnisZeigen(r){
   const el = $("#d-ergebnis"); if (!el) return;
   const e = r.e;
   el.innerHTML = `
-    <h2 class="abschnitt-titel" style="margin-top:0">Prognose in ${r.jahre} Jahren <span class="klein">Simulation, ${r.pfade.toLocaleString("de-DE")} Wege</span></h2>
+    <h2 class="abschnitt-titel" style="margin-top:0">Prognose in ${r.jahre} Jahren${r.depotText ? ` · ${esc(r.depotText)}` : ""} <span class="klein">Simulation, ${r.pfade.toLocaleString("de-DE")} Wege</span></h2>
     <div class="raster">
       <section class="karte breit2"><div class="karte-kopf"><span data-e="d_faecher" tabindex="0">Depotwert über die Zeit</span>
           <div class="segment" role="group" aria-label="Skala" data-e="skala" style="text-transform:none;letter-spacing:0"><button data-dsk="0" aria-pressed="${DEPOT_SKALA === 0}">Linear</button><button data-dsk="1" aria-pressed="${DEPOT_SKALA === 1}">Log</button></div></div>
@@ -2222,11 +2283,12 @@ function depotErgebnisZeigen(r){
     <div class="abstand"></div>
     <section class="karte seite-karte"><h3>So wurde gerechnet</h3>
       <div class="tab-scroll"><table class="wtab"><thead><tr><th>Position</th><th>gerechnet mit</th><th data-e="d_beta">Beta zum Markt</th><th data-e="d_korr">Gleichlauf</th><th>Ø p.a. (Historie)</th><th data-e="d_simpa">Ø p.a. (Simulation)</th><th>gemeinsame Jahre</th></tr></thead><tbody>${
-        r.modelle.map(m => { const w = ALLE.find(x => x.id === m.id); return `<tr><td style="text-align:left">${esc(m.name)}</td><td style="text-align:left">${esc(w ? kurzname(w) : m.id)}</td><td>${fmt(m.beta,2)}</td><td>${fmt(m.korr,2)}</td><td>${fmt(m.eigenPa,1," %")}</td><td>${fmt(m.simPa,1," %")}${m.gedeckelt ? ' <span class="klein">gedeckelt</span>' : ""}</td><td>${fmt(m.jahre,0)}${m.jahre < 10 ? ' <span class="neg">kurz!</span>' : ""}</td></tr>`; }).join("")}</tbody></table></div>
+        r.modelle.map(m => { const w = ALLE.find(x => x.id === m.id); return `<tr><td style="text-align:left">${esc(m.name)}${m.depots?.length > 1 || (r.depotText && m.depots) ? `<div class="klein">${m.depots.map(esc).join(" + ")}</div>` : ""}</td><td style="text-align:left">${esc(w ? kurzname(w) : m.id)}</td><td>${fmt(m.beta,2)}</td><td>${fmt(m.korr,2)}</td><td>${fmt(m.eigenPa,1," %")}</td><td>${fmt(m.simPa,1," %")}${m.gedeckelt ? ' <span class="klein">gedeckelt</span>' : ""}</td><td>${fmt(m.jahre,0)}${m.jahre < 10 ? ' <span class="neg">kurz!</span>' : ""}</td></tr>`; }).join("")}</tbody></table></div>
       <div class="text">Jede Woche wird ein Stück echter Marktgeschichte (S&P 500, Blöcke à 13 Wochen aus den letzten 20 Jahren seit ${new Date(r.mVon * 1000).getFullYear()}) gezogen. Jede Position bewegt sich mit ihrem <b>Beta</b> zum Markt plus einer eigenen, zufällig gezogenen Schwankung aus ihrer Vergangenheit; so fallen in Krisen alle Positionen gemeinsam, wie früher. Achtung: Die letzten 20 Jahre waren für US-Aktien überdurchschnittlich gut; andere Märkte und Jahrzehnte liefen deutlich schlechter (z. B. Japan ab 1990, Europa 2000–2013). Eine Zeit wie diese kommt in der Simulation nur vor, soweit sie in den gezogenen Wochen steckt.
         ${e.rendite === "eigen" ? "Rendite-Annahme „eigene Historie“: der frühere Vorsprung einzelner Werte vor dem Markt wird fortgeschrieben – bei Überfliegern wie großen Tech-Aktien wirkt das meist viel zu gut." : "Rendite-Annahme „vorsichtig“: kein Wert wird besser angenommen als der Markt (S&P 500) in den letzten 20 Jahren; Werte, die früher schwächer waren, behalten ihre schwächere Rendite."}
         Sparplan monatlich${e.dynamik ? `, jährlich +${fmt(e.dynamik,1," %")}` : ""}, Kosten je Kauf ${fmt(e.kfix,2)} € + ${fmt(e.kproz,2," %")}, laufende Kosten ${fmt(e.ter,2," %")} p.a.
         ${e.steuer ? `Abgeltungssteuer 26,375 % auf den Gewinn beim gedachten Verkauf am Ende, abzüglich Sparerpauschbetrag ${geld(e.pausch)} €${e.teilfrei ? ", Teilfreistellung 30 %" : ""}; Vorabpauschale, Kirchensteuer und Steuern unterwegs sind vereinfacht weggelassen.` : "Ohne Steuer."}
+        ${r.zusammengefasst ? `<br>${r.zusammengefasst} Wert${r.zusammengefasst === 1 ? "" : "e"} lag${r.zusammengefasst === 1 ? "" : "en"} in mehreren Depots oder mehrfach in der Liste und wurde${r.zusammengefasst === 1 ? "" : "n"} zu einer Position zusammengefasst, damit sie gemeinsam schwanken.` : ""}
         ${r.ohne.length ? `<br><b>Nicht gerechnet</b> (zu wenig gemeinsame Daten): ${r.ohne.map(esc).join(", ")}.` : ""}
         ${r.offenWert > 0 ? `<br><b>Ohne Zuordnung</b> und deshalb nicht enthalten: ${geld(r.offenWert)} €.` : ""}
         <br>Das ist eine Simulation aus der Vergangenheit, keine Vorhersage und keine Anlageberatung. Renditen in der Währung der Werte (meist US-Dollar), ohne Wechselkurs.</div></section>`;
@@ -2242,6 +2304,8 @@ function depotErgebnisZeigen(r){
     $$("#d-ergebnis [data-dsk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
 }
 const ERKLAERUNG_DEPOT = {
+  d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
+  d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch nur über sicher bekannte ISINs großer Index-ETFs (gleicher Index) und exakte Kürzel. Bei allem anderen wählst du einen Ersatz, z. B. den passenden Index-ETF für einen Fonds. Ein Ersatz ist eine Annäherung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},

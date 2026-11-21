@@ -29,6 +29,7 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 
 ## Mein Depot
 Vermögensübersicht laden (von Hand, CSV-Datei oder kopierte Tabelle mit Spalten-Zuordnung) und eine Prognose fürs ganze Depot rechnen – **nur im Browser**: die Datei wird nie hochgeladen, es gibt keine Broker-Logins, gespeichert wird nur auf Wunsch („In diesem Browser merken“), „Depot vergessen“ löscht alles.
+- **Mehrere Depots:** mehrere CSV-Dateien auf einmal wählen; jede Datei wird ein eigenes Depot mit Namen (umbenennen, entfernen, mit neuer Datei gleichen Namens ersetzen). Die Spaltenzuordnung wird für Dateien mit gleichem Aufbau gemerkt (nur Spaltenköpfe, im Browser). Prognose für alle Depots zusammen oder für eines; derselbe Wert in mehreren Depots wird dafür zu einer Position zusammengefasst, damit er gemeinsam schwankt.
 - Zuordnung automatisch nur über sicher bekannte ISINs großer Index-ETFs/ETCs (gleicher Index), exakte Kürzel und exakte Namen; für alles andere wählt man einen Ersatz. Der Anteil ohne Zuordnung wird angezeigt.
 - Sparplan individuell: Betrag (0 = keiner), Verteilung, jährliche Erhöhung, Laufzeit, Einmalbeträge/Entnahmen, Kosten je Kauf, laufende Kosten, Abgeltungssteuer mit Sparerpauschbetrag und Teilfreistellung, Inflation, Zielbetrag.
 - Monte Carlo: Marktwochen (S&P 500, Blöcke à 13 Wochen, letzte 20 Jahre) mal Beta je Position plus eigene, zufällig gezogene Einzelschwankung; Fächer 5–95 %, Verlust- und Ziel-Wahrscheinlichkeit, größter Rückgang. Standard „vorsichtig“: kein Wert wird besser als der Markt angenommen.
