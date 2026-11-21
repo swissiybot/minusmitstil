@@ -2166,7 +2166,42 @@ const ISIN_TABELLE = {
   IE00B6R52259:["ACWI","iShares MSCI ACWI"], IE00B5BMR087:["SPY","iShares Core S&P 500"], US78462F1030:["SPY","SPDR S&P 500 ETF Trust"],
   IE00B53SZB19:["QQQ","iShares Nasdaq 100"], US46090E1038:["QQQ","Invesco QQQ Trust"], DE0005933931:["EXS1","iShares Core DAX"],
   DE0005933956:["SX5E","iShares Core EURO STOXX 50"], IE00B0M63177:["EEM","iShares MSCI Emerging Markets"], DE000A0S9GB0:["GOLD","Xetra-Gold"],
+  IE000BI8OT95:["IWDA","Amundi Core MSCI World"], IE00BFY0GT14:["IWDA","SPDR MSCI World"], IE00BFZXGZ54:["QQQ","Invesco EQQQ Nasdaq-100 (thes.)"], IE0032077012:["QQQ","Invesco EQQQ Nasdaq-100 (aussch.)"],
 };
+// Breite Indizes am Fondsnamen erkennen (wenn die ISIN unbekannt ist). Reihenfolge zählt: Spezielles vor Allgemeinem.
+// Varianten wie Small Cap, Equal Weight, ex …, Hebel/Short werden bewusst NICHT zugeordnet.
+const INDEX_NAMEN = [
+  [/ftse\s*global\s*all[\s-]*cap/i, "VWRL", "ähnlicher Index (FTSE All-World statt Global All Cap)"],
+  [/ftse\s*all[\s-]*world/i, "VWRL", "gleicher Index (Name)"],
+  [/msci\s*acwi|msci\s*all\s*country\s*world/i, "ACWI", "gleicher Index (Name)"],
+  [/msci\s*world/i, "IWDA", "gleicher Index (Name)"],
+  [/nasdaq[\s-]*100/i, "QQQ", "gleicher Index (Name)"],
+  [/nasdaq\s*composite/i, "ONEQ", "gleicher Index (Name)"],
+  [/s\s*&\s*p\s*500|\bsp\s*500\b/i, "SPY", "gleicher Index (Name)"],
+  [/msci\s*emerging\s*markets|\bmsci\s*em\b/i, "EEM", "gleicher Index (Name)"],
+  [/euro\s*stoxx\s*50/i, "SX5E", "gleicher Index (Name)"],
+  [/(^|[^a-z])dax([^a-z]|$)/i, "EXS1", "gleicher Index (Name)"],
+  [/ftse\s*100/i, "ISF", "gleicher Index (Name)"],
+  [/nikkei\s*225/i, "EWJ", "gleicher Index (Name)"],
+  [/russell\s*2000/i, "IWM", "gleicher Index (Name)"],
+  [/dow\s*jones\s*industrial/i, "DIA", "gleicher Index (Name)"],
+];
+const INDEX_AUSNAHMEN = /small|mid\s*cap|equal|\bex[\s-]|ohne|lever|hebel|short|daily|\b[23]x\b|momentum|quality|value|growth|min(imum)?\s*vol|dividend|covered|\bcall\b|sector|mdax|sdax|tecdax|hedged/i;
+// ISIN → Wert im Tool für alle US-Aktien/ETFs im Tool (aus SEC-Daten gebaut, isin.py). Wird beim Öffnen von „Mein Depot“ geladen.
+let ISIN_SEC = null, ISIN_SEC_LAEDT = null;
+function isinListeLaden(){
+  if (ISIN_SEC_LAEDT) return ISIN_SEC_LAEDT;
+  ISIN_SEC_LAEDT = holeJson("daten/isin.json").then(d => {
+    ISIN_SEC = d || {};
+    // offene Positionen (nicht von Hand gewählt) neu zuordnen
+    let geaendert = false;
+    if (DEPOT) DEPOT.positionen.forEach(p => { if (!p.id) { const z = zuordnen(p); if (z.id || (z.hinweis && z.hinweis !== p.hinweis)) { Object.assign(p, z); geaendert = true; } } });
+    if (geaendert) { depotSichern(); DEPOT_ERG = null; if (SEITE === "depot") zeigeDepot(); }
+  });
+  return ISIN_SEC_LAEDT;
+}
+const NAME_REST = /\b(inc|corp|corporation|co|company|ltd|limited|plc|ag|se|sa|nv|holdings?|group|the|registered|reg|shares?|shs|cl|class|[abch]|yc|o\.?n|dl|adrs?|sp|ord|ordinary|common|stock|cap|stk)\b\.?/gi;
+const nameKern = s => String(s || "").toLowerCase().replace(/\s+-\s+.*$/, "").replace(/\(.*?\)/g, " ").replace(/\b([a-z])\.(?=[a-z]\.)/g, "$1").replace(/\b([a-z]{2,4})\.(\s|$)/g, "$1 ").replace(/[-,.]*\d[\d,.]*/g, " ").replace(NAME_REST, " ").replace(/[^a-z0-9äöüß&]+/g, " ").replace(/\s+/g, " ").trim();
 const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:""};
 let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar, depot}], e:{…Einstellungen}, zuordnungen:{Spaltenköpfe → Spalten}, merken:bool}
 const DEPOT_NAME_STD = "Depot 1";
@@ -2192,10 +2227,21 @@ const zahlDe = s => {   // "1.234,56 €" / "1,234.56" / "1234.5" → Zahl
   return parseFloat(t);
 };
 const istIsin = s => /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(String(s || "").trim().toUpperCase());
-function zuordnen(pos){   // ISIN-Tabelle, dann exaktes Kürzel/ID im Tool; sonst offen
+function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürzel, Indexname im Fondsnamen, eindeutiger Firmenname; sonst offen
   const isin = String(pos.isin || "").trim().toUpperCase(), k = String(pos.kuerzel || "").trim().toUpperCase();
-  if (isin && ISIN_TABELLE[isin] && ALLE.some(w => w.id === ISIN_TABELLE[isin][0])) return {id:ISIN_TABELLE[isin][0], quelle:"ISIN (gleicher Index)"};
+  const gibt = id => ALLE.some(w => w.id === id);
+  if (isin && ISIN_TABELLE[isin] && gibt(ISIN_TABELLE[isin][0])) return {id:ISIN_TABELLE[isin][0], quelle:"ISIN (gleicher Index)"};
+  if (isin && ISIN_SEC?.[isin] && gibt(ISIN_SEC[isin])) return {id:ISIN_SEC[isin], quelle:"ISIN"};
+  // erkannt, aber ohne Ampel (unter 10 Jahre Kursgeschichte, z. B. junge Börsengänge) → offen mit Grund
+  if (isin && ISIN_SEC?.[isin]) return {id:null, quelle:"", hinweis:`erkannt als ${ISIN_SEC[isin]}, aber im Tool erst ab 10 Jahren Kursgeschichte – bitte Ersatz wählen`};
   if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k || w.id.toUpperCase() === k); if (w) return {id:w.id, quelle:"Kürzel"}; }
+  const name = String(pos.name || "");
+  if (name && !INDEX_AUSNAHMEN.test(name)) for (const [re, id, q] of INDEX_NAMEN) if (re.test(name) && gibt(id)) return {id, quelle:q + " – bitte prüfen"};
+  const kern = nameKern(name);
+  if (kern.length >= 4) {   // Firmenname: nur wenn genau EIN Wert im Tool denselben Namenskern hat (z. B. ausländische ISIN einer an der Nasdaq gehandelten Firma)
+    const tr = ALLE.filter(w => w.name && nameKern(w.name) === kern);
+    if (tr.length === 1) return {id:tr[0].id, quelle:"Firmenname – bitte prüfen"};
+  }
   return {id:null, quelle:""};
 }
 
@@ -2294,6 +2340,7 @@ function feld(k, titel, e, attr="", art="number"){
 }
 function zeigeDepot(){
   if (!DEPOT) depotLaden();
+  isinListeLaden();   // einmalig; ordnet danach offene Positionen neu zu
   seiteAnfang("depot"); hashSetzen("seite=depot");
   const P = DEPOT.positionen, summe = depotSumme(), offen = P.filter(p => !p.id), offenWert = offen.reduce((a, p) => a + p.wert, 0);
   const e = DEPOT.e;
@@ -2328,7 +2375,7 @@ function zeigeDepot(){
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
             <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro"></td>
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
-            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")} · ${fmt(w.jahre_daten,0)} J. Daten</div>` : `<span class="neg">noch offen</span>`}
+            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")} · ${fmt(w.jahre_daten,0)} J. Daten</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
             <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
@@ -2413,7 +2460,7 @@ function depotImport(art){
       <label>Wert in €<input id="dm-wert" placeholder="10.000" style="width:120px"></label>
       <label>${ek("d_depotname","Depot")}<input id="dm-depot" list="dm-depots" value="${esc(DEPOT.positionen.length ? depotName(DEPOT.positionen[DEPOT.positionen.length - 1]) : DEPOT_NAME_STD)}" style="width:150px"><datalist id="dm-depots">${depotNamen().map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
       <button class="knopf" id="dm-plus">Hinzufügen</button></div>
-      <p class="klein" style="margin:8px 0 0">Bekannte Kürzel (z. B. SPY, BTC, AAPL) und die ISINs großer Index-ETFs werden automatisch zugeordnet; sonst wählst du danach einen Ersatz.</p>`;
+      <p class="klein" style="margin:8px 0 0">Automatisch zugeordnet werden: die ISIN jeder US-Aktie bzw. jedes US-ETFs im Tool, ISINs großer Index-ETFs, Kürzel (z. B. SPY, BTC, AAPL) und breite Indizes im Fondsnamen (z. B. „MSCI World“). Sonst wählst du danach einen Ersatz.</p>`;
     $("#dm-plus").onclick = () => {
       const name = $("#dm-name").value.trim(), isin = $("#dm-isin").value.trim().toUpperCase(), wert = zahlDe($("#dm-wert").value);
       if (!name && !isin) return $("#dm-name").focus();
@@ -2759,7 +2806,7 @@ function depotErgebnisZeigen(r){
 const ERKLAERUNG_DEPOT = {
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
-  d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch nur über sicher bekannte ISINs großer Index-ETFs (gleicher Index) und exakte Kürzel. Bei allem anderen wählst du einen Ersatz, z. B. den passenden Index-ETF für einen Fonds. Ein Ersatz ist eine Annäherung."},
+  d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 4) und 5) sind mit „bitte prüfen“ markiert. Nicht im Tool sind z. B. NYSE-Aktien (Procter & Gamble, Xpeng), Aktien nur aus Hongkong (BYD, Xiaomi) und Themen-ETFs (Uran) – dafür wählst du einen Ersatz. Ein Ersatz ist eine Annäherung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
   d_verteilung: {titel:"Verteilung", text:"Wie die Sparrate auf die Positionen verteilt wird: wie das heutige Depot, gleichmäßig oder nach den Anteilen in der Tabelle."},

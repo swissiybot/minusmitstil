@@ -50,6 +50,7 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/isin
             daten/btc_alt
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
@@ -77,6 +78,12 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
         run: python fundamente.py
 
+      - name: ISIN-Liste für den Depot-Import (SEC)
+        continue-on-error: true
+        env:
+          SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
+        run: python isin.py
+
       - name: Kurse zwischenspeichern
         if: always() && hashFiles('daten/kurse.parquet') != ''
         uses: actions/cache/save@v4
@@ -87,6 +94,7 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/isin
             daten/btc_alt
           key: kurse-${{ github.run_id }}
 
