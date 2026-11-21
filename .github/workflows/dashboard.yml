@@ -153,6 +153,9 @@ jobs:
         with:
           path: site    # reduzierte Online-Fassung ohne Kursreihen (export.py)
 
+      - name: Kurz warten, bis GitHub das Paket kennt
+        run: sleep 20   # sonst findet deploy-pages das eben hochgeladene Artefakt manchmal noch nicht (Lauf 44932143003)
+
       - name: Veröffentlichen
         id: veroeffentlichen
         uses: actions/deploy-pages@v4
