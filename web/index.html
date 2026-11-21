@@ -91,6 +91,18 @@ h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
 span[data-e],th[data-e]{text-decoration:underline dotted #6b6f7a;text-underline-offset:3px;text-decoration-thickness:1px}
 span[data-e]:focus{outline:1px solid var(--blau);outline-offset:1px}
 .i{color:#6b6f7a;font-size:10px;margin-left:3px;vertical-align:super}
+.lesehilfe{margin:10px 16px 0;background:var(--panel);border:1px solid #2962ff66;border-radius:6px}
+.lesehilfe summary{padding:9px 12px;cursor:pointer;font-weight:600;font-size:14px}
+.lesehilfe summary .klein{font-weight:400}
+.lese{padding:0 14px 12px;max-width:1100px}
+.lese h4{margin:12px 0 4px;font-size:13px}
+.lese p,.lese li{margin:4px 0;color:#c4c7cf}
+.lese ul{margin:4px 0;padding-left:18px}
+.lese .merke{margin:4px 0 8px}
+.klein{font-size:11px;color:var(--muted)}
+.check{margin-top:6px;padding:5px 8px;border-radius:4px;font-size:12px;background:var(--panel2)}
+.check.ja{border-left:3px solid var(--gruen)} .check.nein{border-left:3px solid var(--rot)}
+.check a{color:#6f9bff}
 </style>
 </head>
 <body>
@@ -98,6 +110,24 @@ span[data-e]:focus{outline:1px solid var(--blau);outline-offset:1px}
   <h1>Aktien-Kaufplan</h1><span class="stand" id="stand">lädt …</span>
   <span class="hinweis">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts.</span>
 </header>
+<details id="lesehilfe" class="lesehilfe">
+  <summary>So liest du das Tool <span class="klein">– was die Ampel kann und was nicht</span></summary>
+  <div class="lese">
+    <div class="merke" id="lesehilfe-kern"></div>
+    <h4>Was „historisch günstig“ bedeutet</h4>
+    <p>Die Ampel vergleicht den heutigen Stand eines Werts mit seiner eigenen Geschichte: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI. Ab Ampel 80 steht ein Wert im Mittel dieser Messgrößen günstiger als in etwa 80 % seiner bisherigen Wochen. Das ist eine Beschreibung, keine Vorhersage.</p>
+    <h4>Was die Prüfung zeigt</h4>
+    <div id="lesehilfe-zahlen"><div class="klein">rechnet …</div></div>
+    <h4>Wie du das Tool liest</h4>
+    <ul>
+      <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht.</li>
+      <li>Aussagekräftiger ist die Spalte „Vorteil“ – aber nur, wenn sie deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Spalte „Phasen“ in der Tabelle im Detail; unter 3 Phasen ist das meist Zufall).</li>
+      <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
+      <li>Ob die angezeigten Quoten früher gestimmt hätten, zeigen die Kachel „Prüfung der Ampel“ und der Reiter „Prüfung“.</li>
+    </ul>
+    <p class="klein">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts; in den Aktiendaten fehlen Firmen, die pleite gingen.</p>
+  </div>
+</details>
 <div id="kacheln"></div>
 <main>
   <section class="box">
@@ -148,12 +178,13 @@ const pruefSatz = () => {
 };
 const ERKLAERUNG = {
   // --- Liste und Filter
-  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. ${pruefSatz()}`},
+  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. Die Ampel allein ist kein Kaufsignal. ${pruefSatz()} Mehr dazu oben unter „So liest du das Tool“.`},
   zonen: {titel:"Ampel-Zonen", text:"Ab 80: historisch sehr günstig. 60–80: günstig. 40–60: neutral. 15–40: teuer. Bis 15: historisch sehr teuer. Die Grenzen sind eine feste Einteilung, keine Kaufempfehlung; „günstig“ heißt nur, dass der Kurs gemessen an seiner eigenen Geschichte tief steht."},
   cagr20: {titel:"Ø Jahresrendite", text:"Durchschnittlicher jährlicher Zuwachs (mit Zinseszins) über die letzten 20 Jahre, bei kürzerer Historie über die verfügbare Zeit. „Mit Dividenden“ heißt: ausgeschüttete Dividenden stecken im bereinigten Kurs, als wären sie wieder angelegt. Reine Kursindizes und Rohstoffe haben keine Dividenden. Vor Steuern und Kosten; die Vergangenheit garantiert nichts."},
   cagr_max: {titel:"Ø seit Beginn", text:"Durchschnittlicher jährlicher Zuwachs über die gesamte vorhandene Historie. Bei ETFs zählt die vorgeschaltete Index-Historie mit. Sehr lange Zeiträume glätten Krisen, sehr kurze (z. B. junge Kryptowährungen) sind kaum aussagekräftig."},
   p3: {titel:"3J höher", text:"In wie viel Prozent der früheren Wochen mit ähnlicher Ampel (±7,5 Punkte) stand der Kurs 3 Jahre später höher. Gezählt werden nur Wochen, deren Ergebnis heute bekannt ist. Aufeinanderfolgende Wochen hängen zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner. Die Prüfung ohne Zukunftswissen zeigt: diese Quote hat früher nicht besser vorhergesagt als die einfache Basis-Quote."},
-  vorteil: {titel:"Vorteil", text:"Quote der ähnlichen Lagen minus Quote an allen Tagen, in Prozentpunkten. +10 heißt: ähnliche Lagen gingen 10 Punkte öfter gut aus als ein beliebiger Kauftag. Bei wenigen Phasen ist das oft Zufall."},
+  vorteil: {titel:"Vorteil", text:"Quote der ähnlichen Lagen minus Quote an allen Tagen, in Prozentpunkten. +10 heißt: ähnliche Lagen gingen 10 Punkte öfter gut aus als ein beliebiger Kauftag. Aussagekräftiger als die Ampel allein – aber nur, wenn deutlich positiv und auf vielen Phasen beruhend; bei unter 3 Phasen ist das meist Zufall. Auch dann zeigt erst der Strategie-Vergleich, ob sich das Warten gelohnt hätte."},
+  check: {titel:"Lohnt-sich-Check", text:"Vergleicht für diesen Wert 500 je Monat als Sparplan mit „nur bei Ampel 60/75/90 kaufen, sonst auf dem Tagesgeld parken“ – über die echte Vergangenheit, nach Kosten und Abgeltungssteuer. „Ja“ heißt: das Warten hätte früher mehr gebracht. Ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage."},
   rueckschlag: {titel:"Rückschlagrisiko", text:"So oft fiel der Kurs nach einer ähnlichen Lage innerhalb eines Jahres noch mindestens 10 % unter den damaligen Kaufkurs. Dazu der typische (Median-)Tiefpunkt. Zeigt, wie viel Geduld man nach einem „günstigen“ Kauf früher brauchte."},
   vom_hoch: {titel:"Abstand zum Allzeithoch", text:"Wie weit der Kurs unter seinem bisher höchsten Wochenschluss liegt. −30 % heißt: 30 % unter dem Hoch. Ein großer Abstand kann günstig sein, aber auch ein Zeichen, dass das Geschäft dauerhaft schlechter läuft (bei Einzelaktien besonders)."},
   w4: {titel:"Änderung in 4 Wochen", text:"Um wie viele Punkte sich die Ampel in den letzten 4 Wochen verändert hat. Plus heißt: der Wert ist günstiger geworden (meist weil der Kurs gefallen ist)."},
@@ -233,6 +264,95 @@ const ERKLAERUNG = {
   g_strategie: {titel:"Strategie über viele Werte", text:"Für jeden Wert derselbe Vergleich (500 je Monat, bis 20 Jahre). „Besser“ = Anteil der Werte, bei denen die Strategie einen höheren internen Zinsfuß hatte als der Sparplan; „±“ = Median-Unterschied in Prozentpunkten pro Jahr. Aktien enthalten nur heute noch gelistete Firmen."},
   tagebuch: {titel:"Signal-Tagebuch", text:"Jeden Tag wird festgehalten, was das Tool anzeigt, und nie geändert. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen. Das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet."},
 };
+
+// ------------------------------------------------------------ „So liest du das Tool“ (Zahlen live aus dem Server)
+const LESE_WERTE = [["SPY","S&P 500"],["QQQ","Nasdaq-100"],["GOLD","Gold"],["BTC","Bitcoin"]];
+let leseGeladen = false;
+function leseInit(){
+  const d = $("#lesehilfe"); let zu = false;
+  try { zu = localStorage.getItem("lesehilfe_zu") === "1"; } catch(e) {}
+  d.open = !zu;                                   // beim ersten Besuch offen
+  d.addEventListener("toggle", () => {
+    try { localStorage.setItem("lesehilfe_zu", d.open ? "0" : "1"); } catch(e) {}
+    if (d.open) leseLaden();
+  });
+  if (d.open) leseLaden();
+}
+const zoneSumme = (zonen, namen) => {
+  const z = zonen.filter(x => namen.includes(x.zone) && x.n > 0);
+  const n = z.reduce((a,x) => a + x.n, 0);
+  return n ? {n, quote: z.reduce((a,x) => a + x.quote * x.n, 0) / n} : null;
+};
+async function leseLaden(){
+  if (leseGeladen) return; leseGeladen = true;
+  const ziel = $("#lesehilfe-zahlen");
+  const [strat, pr] = await Promise.all([
+    Promise.all(LESE_WERTE.map(([id]) => holeJson("api/strategie?id=" + id))),
+    holeJson("api/pruefung?id=SPY")]);
+  const zeilen = LESE_WERTE.map(([id, name], i) => ({id, name, s: strat[i] && !strat[i].fehler ? strat[i] : null})).filter(x => x.s);
+  if (!zeilen.length) { ziel.innerHTML = '<div class="text">Vergleichszahlen gerade nicht verfügbar (Server neu starten?).</div>'; return; }
+  const mehr = zeilen.filter(x => x.s.ergebnis.staffel.netto > x.s.ergebnis.spar.netto);
+  const weniger = zeilen.filter(x => !mehr.includes(x));
+  const satz1 = !mehr.length
+    ? `Warten auf eine günstige Ampel brachte bei ${zeilen.length === 4 ? "allen vier" : "allen"} Werten weniger als der Sparplan. Märkte steigen meistens; Geld, das auf einen Rücksetzer wartet, verpasst diese Anstiege.`
+    : !weniger.length
+      ? `Warten auf eine günstige Ampel brachte hier bei allen Werten mehr als der Sparplan – das ist eine Ausnahme und muss nicht so bleiben.`
+      : `Warten auf eine günstige Ampel brachte bei ${weniger.map(x => x.name).join(", ")} weniger als der Sparplan, bei ${mehr.map(x => x.name).join(", ")} mehr. Ein verlässliches Muster ist das nicht.`;
+  const spy = zeilen.find(x => x.id === "SPY");
+  let satzVerlust = "";
+  if (spy) {
+    const e = spy.s.ergebnis;
+    satzVerlust = e.staffel.max_verlust > e.spar.max_verlust + 1
+      ? `${mehr.length ? "Ein" : "Einziger"} kleiner Vorteil des Wartens: Der größte Rückgang des Vermögens war geringer (S&P 500: ${fmt(e.staffel.max_verlust,0," %")} statt ${fmt(e.spar.max_verlust,0," %")}).`
+      : `Auch beim größten Rückgang des Vermögens brachte das Warten beim S&P 500 keinen Vorteil (${fmt(e.staffel.max_verlust,0," %")} gegen ${fmt(e.spar.max_verlust,0," %")}).`;
+  }
+  let satzSpy = "";
+  const e1 = pr?.["1"];
+  if (e1) {
+    const hoch = zoneSumme(e1.zonen, ["≥ 90","75–90"]), mitte = zoneSumme(e1.zonen, ["60–75","40–60"]);
+    if (hoch && mitte) {
+      const besser = hoch.quote > e1.alle.quote + 3;
+      satzSpy = `S&P 500, Prüfung ohne Zukunftswissen (${e1.jahr_von}–${e1.jahr_bis}): Nach einer Ampel ab 75 stand der Kurs ein Jahr später in ${fmt(hoch.quote,0," %")} der Wochen höher (${hoch.n.toLocaleString("de-DE")} Wochen), bei mittlerer Ampel (40–75) in ${fmt(mitte.quote,0," %")}, über alle Wochen in ${fmt(e1.alle.quote,0," %")}. `
+        + (besser ? (spy && spy.s.ergebnis.staffel.netto < spy.s.ergebnis.spar.netto
+              ? "Eine hohe Ampel ging also etwas öfter gut aus – das Warten darauf hat diesen Vorteil im Sparplan-Vergleich aber wieder aufgezehrt."
+              : "Eine hohe Ampel ging hier etwas öfter gut aus.")
+          : "Eine hohe Ampel war also kein besserer Kaufzeitpunkt als irgendeine Woche.");
+    }
+  }
+  const btc = ALLE.find(w => w.id === "BTC"), rb = btc?.pi_rueckblick || [];
+  const satzPi = rb.length
+    ? `Pi Cycle Bottom (Bitcoin): ${rb.length} Boden-Signal${rb.length === 1 ? "" : "e"} (${rb.map(x => x.datum.split("-").reverse().join(".")).join(", ")}), ein Jahr später ${rb.map(x => x.r1 == null ? "noch offen" : vz(x.r1,0," %")).join(" und ")}. Das sieht stark aus, aber ${rb.length} Fälle sind zu wenig für eine verlässliche Aussage.`
+    : "";
+  ziel.innerHTML = `
+    <table class="wtab" style="margin:6px 0 8px;width:100%"><thead><tr><th style="text-align:left">500 je Monat, nach Kosten und Steuer</th><th>seit</th><th data-e="s_spar">Sparplan</th><th data-e="s_staffel">nur bei Ampel 60/75/90 kaufen</th><th>Unterschied</th><th data-e="s_rueckgang">größter Rückgang (Spar / Warten)</th></tr></thead><tbody>${
+      zeilen.map(x => { const e = x.s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100;
+        return `<tr style="cursor:pointer" data-id="${x.id}"><td style="text-align:left">${x.name}</td><td>${x.s.von.slice(0,4)} (${fmt(x.s.jahre,0)} J.)</td><td><b>${geld(e.spar.netto)}</b></td><td>${geld(e.staffel.netto)}</td><td class="${klasse(d)}">${vz(d,0," %")}</td><td>${fmt(e.spar.max_verlust,0," %")} / ${fmt(e.staffel.max_verlust,0," %")}</td></tr>`; }).join("")}</tbody></table>
+    <p>${satz1} ${satzVerlust}</p>${satzSpy ? `<p>${satzSpy}</p>` : ""}${satzPi ? `<p>${satzPi}</p>` : ""}
+    <p class="klein">Beträge in der Währung des Werts (meist US-Dollar), Stand ${zeilen[0].s.bis.split("-").reverse().join(".")}, jeden Tag neu gerechnet. Zeile anklicken öffnet den Strategie-Vergleich des Werts.</p>`;
+  ziel.querySelectorAll("tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
+}
+
+// ------------------------------------------------------------ Lohnt-sich-Check je Wert
+async function lohntSichCheck(id){
+  const el = $("#check"); if (!el) return;
+  const s = await holeJson("api/strategie?id=" + encodeURIComponent(id));
+  if (AKTIV !== id || !$("#check")) return;
+  if (!s || s.fehler) { el.innerHTML = `<b>Lohnt-sich-Check:</b> zu wenig Jahre mit Ampel für einen Vergleich mit dem Sparplan.`; return; }
+  const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0;
+  el.className = "check " + (ja ? "ja" : "nein");
+  el.innerHTML = `<b>${ek("check", "Lohnt-sich-Check")}: ${ja ? "Ja" : "Nein"}</b> – Warten auf eine günstige Ampel (60/75/90) hätte hier seit ${s.von.slice(0,4)} ${ja ? "mehr" : "weniger"} gebracht als der Sparplan:
+    ${geld(e.staffel.netto)} statt ${geld(e.spar.netto)} nach Kosten und Steuer (${vz(d,0," %")}). <a href="#" id="check-mehr">Details</a>`;
+  $("#check-mehr").onclick = ev => { ev.preventDefault(); reiter("strategie"); $("#tab").scrollIntoView({behavior:"smooth"}); };
+}
+
+function leseKern(){
+  const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
+  const schwach = !e || !s || (e.skill <= 2 && s.median_diff_staffel <= 0.1);
+  $("#lesehilfe-kern").className = "merke " + (schwach ? "schlecht" : "");
+  $("#lesehilfe-kern").innerHTML = schwach
+    ? `<b>Kurz gesagt:</b> Das Tool zeigt, ob ein Wert <b>historisch günstig</b> steht. Ob sich ein Kauf dann <b>lohnt</b>, kann es nach den Prüfungen nicht zuverlässig sagen.`
+    : `<b>Kurz gesagt:</b> Das Tool zeigt, ob ein Wert historisch günstig steht. Die Prüfungen zeigen dafür derzeit nur einen kleinen Vorteil; verlassen solltest du dich darauf nicht.`;
+}
 const ek = (k, html) => `<span data-e="${k}" tabindex="0">${html}</span>`;
 
 // ------------------------------------------------------------ Tooltip (Maus: Hovern, Handy: Antippen)
@@ -278,7 +398,7 @@ async function start(){
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json"].map(holeJson));
   ALLE = d.werte; $("#stand").textContent = "Stand " + d.stand + " · " + ALLE.length + " Werte";
-  kacheln(); liste();
+  kacheln(); liste(); leseKern(); leseInit();
   const h = new URLSearchParams(location.hash.slice(1));
   if (h.get("seite") === "umfeld") zeigeUmfeld();
   else if (h.get("seite") === "pruefung") zeigePruefungGesamt();
@@ -375,7 +495,8 @@ async function zeige(id){
     <div id="kopf"><h2>${umlaut(w.name)} <span class="sym">${w.symbol}</span>
       <span class="ampel" data-e="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
       <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${ek("zonen", zonen[w.zone])}</span></h2>
-      <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div></div>
+      <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div>
+      <div id="check" class="check"><span class="klein">Lohnt-sich-Check rechnet …</span></div></div>
     <div id="chart"></div><div id="chart2"></div>
     <div class="legende">
       <span data-e="l_200w"><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
@@ -392,6 +513,7 @@ async function zeige(id){
   document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
   zeichne(c, btc);
   reiter(REITER);
+  lohntSichCheck(id);
   ladeKegel(52, 20, []);
 }
 
