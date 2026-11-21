@@ -15,6 +15,7 @@ daten/shiller/
 daten/sec/
 daten/btc_alt/
 daten/nasdaq100.json
+daten/kegelpruefung.json
 daten/*.log
 web/daten/
 site/

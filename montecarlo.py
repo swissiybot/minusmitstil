@@ -16,10 +16,29 @@ import pandas as pd
 QUANTILE = [5, 25, 50, 75, 95]
 
 
-def simulation(w: pd.DataFrame, wochen: int = 52, jahre: int = 20, pfade: int = 10000, block: int = 13,
-               seed_text: str = "", kegel_wochen: int | None = None, ab=None) -> dict | None:
+# Standard-Einstellungen: die Variante mit der besten Trefferquote aus kegelpruefung.py (daten/kegelpruefung.json).
+# Ergebnis 21.11.2026: „Schwankung von heute, abklingend 13 Wochen“ (Abstand 3,2 statt 4,2 Punkte zu 90 %/50 %).
+STANDARD = {"jahre": 20, "vol_tau": 13, "drift": 1.0}
+try:
+    import json as _json
+    import einstellungen as _E
+    _f = _E.DATEN / "kegelpruefung.json"
+    if _f.exists():
+        STANDARD.update(_json.loads(_f.read_text()).get("sieger_einst") or {})
+except Exception:
+    pass
+
+
+def simulation(w: pd.DataFrame, wochen: int = 52, jahre: int | None = None, pfade: int = 10000, block: int = 13,
+               seed_text: str = "", kegel_wochen: int | None = None, ab=None,
+               vol_tau: float | None = "standard", drift: float | None = None) -> dict | None:
     """wochen: Zeitraum fuer Wahrscheinlichkeiten (Kauflimit, Verlust ...); kegel_wochen: so weit reicht der Kegel im Chart.
-    ab: fruehester Tag der Historie (Bitcoin: erst ab Yahoo-Start)."""
+    ab: fruehester Tag der Historie (Bitcoin: erst ab Yahoo-Start).
+    vol_tau: Schwankung von heute (EWMA) statt Durchschnitt, klingt mit dieser Zeitkonstante (Wochen) zum Mittel ab; None = aus.
+    drift: Anteil der historischen Durchschnittsrendite, der in die Pfade geht (1 = wie gewesen, 0.5 = vorsichtiger)."""
+    jahre = STANDARD["jahre"] if jahre is None else jahre
+    vol_tau = STANDARD["vol_tau"] if vol_tau == "standard" else vol_tau
+    drift = STANDARD["drift"] if drift is None else drift
     w = w[w.index >= w.index[-1] - pd.DateOffset(years=jahre)]
     if ab is not None:
         w = w[w.index >= ab]
@@ -41,12 +60,28 @@ def simulation(w: pd.DataFrame, wochen: int = 52, jahre: int = 20, pfade: int = 
     n_bl = -(-lang // block)
     starts = rng.integers(0, m - block + 1, size=(pfade, n_bl))
     ind_lang = (starts[:, :, None] + np.arange(block)).reshape(pfade, -1)[:, :lang]
-    kegel_log = np.cumsum(r_c[ind_lang], axis=1)
+    mu = float(r_c.mean())
+    if vol_tau or drift != 1.0:
+        # Abweichung vom Mittel skalieren (aktuelle Schwankung, abklingend) und Grundrendite anpassen
+        skala = np.ones(lang)
+        if vol_tau:
+            abw = r_c - mu
+            ew = abw[0] ** 2
+            for x in abw[1:]:
+                ew = 0.94 * ew + 0.06 * x * x
+            s_rel = float(np.clip(np.sqrt(ew) / abw.std(), 0.5, 3.0))
+            skala = 1 + (s_rel - 1) * np.exp(-np.arange(lang) / vol_tau)
+        rc_p = mu * drift + (r_c[ind_lang] - mu) * skala
+        rl_p = rc_p + (r_l[ind_lang] - r_c[ind_lang]) * skala
+        rh_p = rc_p + (r_h[ind_lang] - r_c[ind_lang]) * skala
+    else:
+        rc_p, rl_p, rh_p = r_c[ind_lang], r_l[ind_lang], r_h[ind_lang]
+    kegel_log = np.cumsum(rc_p, axis=1)
     ind = ind_lang[:, :wochen]                                 # gleiche Pfade, nur die ersten Wochen
     log_pfad = kegel_log[:, :wochen]                           # Schluss relativ zu heute
     vorher = np.concatenate([np.zeros((pfade, 1)), log_pfad[:, :-1]], axis=1)
-    tief = np.minimum.accumulate(vorher + r_l[ind], axis=1)   # tiefster Stand bis Woche k
-    hoch = np.maximum.accumulate(vorher + r_h[ind], axis=1)
+    tief = np.minimum.accumulate(vorher + rl_p[:, :wochen], axis=1)   # tiefster Stand bis Woche k
+    hoch = np.maximum.accumulate(vorher + rh_p[:, :wochen], axis=1)
     p0 = float(c[-1])
     return {"p0": p0, "pfad": np.exp(log_pfad) * p0, "kegel_pfad": np.exp(kegel_log) * p0, "kegel_wochen": lang, "tief": np.exp(tief[:, -1]) * p0, "hoch": np.exp(hoch[:, -1]) * p0,
             "letzte": w.index[-1], "von": w.index[0], "wochen": wochen, "pfade": pfade, "block": block,

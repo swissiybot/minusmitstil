@@ -51,6 +51,7 @@ jobs:
             daten/shiller
             daten/sec
             daten/nasdaq100.json
+            daten/kegelpruefung.json
             daten/isin
             daten/welt
             daten/welt.csv
@@ -99,6 +100,10 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
         run: python isin.py
 
+      - name: Prüfung des Prognose-Kegels (höchstens einmal pro Woche neu)
+        continue-on-error: true
+        run: python kegelpruefung.py --wenn-alt
+
       - name: Kurse zwischenspeichern
         if: always() && hashFiles('daten/kurse.parquet') != ''
         uses: actions/cache/save@v4
@@ -110,6 +115,7 @@ jobs:
             daten/shiller
             daten/sec
             daten/nasdaq100.json
+            daten/kegelpruefung.json
             daten/isin
             daten/welt
             daten/welt.csv
