@@ -4,7 +4,7 @@ from pathlib import Path
 BASIS = Path(__file__).resolve().parent
 DATEN = BASIS / "daten"
 KURSE = DATEN / "kurse"          # alt: Einzeldateien (nur noch fuer die einmalige Uebernahme)
-EINGANG = DATEN / "eingang"      # hier legt Marc die Vanguard-Excel ab
+EINGANG = DATEN / "eingang"      # hier die Vanguard-Excel (FTSE All-World) ablegen
 WEB = BASIS / "web"
 WEB_DATEN = WEB / "daten"
 

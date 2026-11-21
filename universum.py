@@ -59,7 +59,7 @@ def _yahoo_symbol(ticker: str, land: str) -> str | None:
 
 
 def ftse_all_world() -> pd.DataFrame:
-    """Liest die von Marc heruntergeladene Vanguard-Bestandsliste (Excel/CSV) aus daten/eingang/."""
+    """Liest die heruntergeladene Vanguard-Bestandsliste (Excel/CSV) aus daten/eingang/."""
     dateien = sorted(glob.glob(str(E.EINGANG / "*.xls*")) + glob.glob(str(E.EINGANG / "*.csv")))
     if not dateien:
         print("Hinweis: keine Vanguard-Liste in daten/eingang/ - FTSE All-World wird uebersprungen.")

@@ -9,7 +9,7 @@ Ampel (0-100, hoch = historisch guenstig) = Mittel aus vier Perzentilen:
   3. Abweichung vom log. Langfristtrend in Standardabweichungen
   4. Wochen-RSI(14)
 Bitcoin zusaetzlich: Mayer Multiple (Kurs / 200-Tage-Linie); Pi Cycle Bottom/Top als Markierung.
-Pi Cycle Bottom (Lesart Marc): faellt die 150-Tage-EMA UNTER die 471-Tage-SMA x 0,745, beginnt die
+Pi Cycle Bottom: faellt die 150-Tage-EMA UNTER die 471-Tage-SMA x 0,745, beginnt die
 Bodenbildungszone; steigt sie wieder DARUEBER, ist das das Boden-Signal. Der Boden liegt laut Indikator
 zwischen beiden Kreuzungen. EMA ueber der Linie = Aufwaertstrend bzw. Bodenbildung noch nicht begonnen.
 
