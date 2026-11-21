@@ -9,6 +9,9 @@ Ampel (0-100, hoch = historisch guenstig) = Mittel aus vier Perzentilen:
   3. Abweichung vom log. Langfristtrend in Standardabweichungen
   4. Wochen-RSI(14)
 Bitcoin zusaetzlich: Mayer Multiple (Kurs / 200-Tage-Linie); Pi Cycle Bottom/Top als Markierung.
+Pi Cycle Bottom (Lesart Marc): faellt die 150-Tage-EMA UNTER die 471-Tage-SMA x 0,745, beginnt die
+Bodenbildungszone; steigt sie wieder DARUEBER, ist das das Boden-Signal. Der Boden liegt laut Indikator
+zwischen beiden Kreuzungen. EMA ueber der Linie = Aufwaertstrend bzw. Bodenbildung noch nicht begonnen.
 
 Wahrscheinlichkeit: alle frueheren Wochen mit aehnlicher Ampel (+-7,5 Punkte) -> Anteil, bei dem der
 Kurs 1/3/5 Jahre spaeter hoeher stand, Median-Rendite, Rueckschlagrisiko; Vergleich: alle Wochen.
@@ -227,14 +230,36 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         sma111 = tag_c.rolling(111).mean(); sma350x2 = tag_c.rolling(350).mean() * 2
         unten = (ema150 < sma471)
         oben = (sma111 > sma350x2)
-        pi_bottom = list(tag_c.index[(unten & ~unten.shift(1, fill_value=False))])
+        gueltig_pi = sma471.notna()
+        pi_bottom = list(tag_c.index[(unten & ~unten.shift(1, fill_value=False))])             # Zonenbeginn
+        pi_signal = list(tag_c.index[gueltig_pi & ~unten & unten.shift(1, fill_value=False)])   # Boden-Signal
         pi_top = list(tag_c.index[(oben & ~oben.shift(1, fill_value=False))])
+        abstand = float(ema150.iloc[-1] / sma471.iloc[-1] - 1) * 100
+        de = lambda d: d.strftime("%d.%m.%Y")
+        if bool(unten.iloc[-1]):
+            pi_status = f"Pi Cycle: Bodenbildungszone seit {de(pi_bottom[-1])} (EMA {abs(abstand):.1f} % unter der Linie)".replace(f"{abs(abstand):.1f}", f"{abs(abstand):.1f}".replace(".", ","))
+        else:
+            pi_status = (f"Pi Cycle: keine Zone, EMA {abstand:.1f} % ueber der Linie".replace(f"{abstand:.1f}", f"{abstand:.1f}".replace(".", ","))
+                         + (f"; letztes Boden-Signal {de(pi_signal[-1])}" if pi_signal else ""))
+        rueckblick = []
+        for d in pi_signal:
+            k0 = float(tag_c.asof(d))
+            zeile_r = {"datum": d.strftime("%Y-%m-%d"), "kurs": r(k0, 2),
+                       "zone_ab": next((b.strftime("%Y-%m-%d") for b in reversed(pi_bottom) if b < d), None)}
+            for j in (1, 2, 3):
+                dj = d + pd.DateOffset(years=j)
+                zeile_r[f"r{j}"] = r((float(tag_c.asof(dj)) / k0 - 1) * 100, 0) if dj <= tag_c.index[-1] else None
+            rueckblick.append(zeile_r)
+        zone_w = unten.resample("W-FRI").max().reindex(w.index).fillna(False).values
         extra = {
             "mayer": r(mayer_tag.iloc[-1]),
             "pi": True,
             "pi_bottom_aktiv": bool(unten.iloc[-1]),
             "pi_top_aktiv": bool(oben.iloc[-1]),
             "pi_bottom_daten": [d.strftime("%Y-%m-%d") for d in pi_bottom],
+            "pi_signal_daten": [d.strftime("%Y-%m-%d") for d in pi_signal],
+            "pi_status": pi_status, "pi_abstand": r(abstand, 1), "pi_rueckblick": rueckblick,
+            "pi_zone_w": zone_w,
             "pi_top_daten": [d.strftime("%Y-%m-%d") for d in pi_top],
             "pi_ema150": ema150.resample("W-FRI").last().reindex(w.index).values,
             "pi_sma471": sma471.resample("W-FRI").last().reindex(w.index).values,
@@ -274,7 +299,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     grund.append(f"Wochen-RSI {rs[-1]:.0f}")
     if krypto:
         grund.append(f"Mayer Multiple {extra['mayer']}")
-        if extra.get("pi_bottom_aktiv"): grund.append("Pi Cycle Bottom AKTIV")
+        if extra.get("pi_status"): grund.append(extra["pi_status"])
         if extra.get("pi_top_aktiv"): grund.append("Pi Cycle Top AKTIV")
     vor4 = score[-5] if len(score) > 5 else np.nan
 
@@ -291,7 +316,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "p": stat, "umsatz_usd": r(umsatz, 0),
         "grund": " · ".join(grund),
         "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
-        **{k: v for k, v in extra.items() if not k.startswith("pi_") or k.endswith("aktiv") or k.endswith("daten")},
+        **{k: v for k, v in extra.items() if not k.startswith("pi_") or k.endswith("aktiv") or k.endswith("daten")
+           or k in ("pi_status", "pi_abstand", "pi_rueckblick")},
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -317,6 +343,13 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     }
     if bitcoin:
         chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
+        chart["pi_zone"] = [1 if z else None for z in extra["pi_zone_w"]]
+        # Kreuzungen als Markierung an der Wochenkerze, in der sie lagen
+        def woche(d):
+            i = min(int(w.index.searchsorted(pd.Timestamp(d))), len(t_unix) - 1)
+            return t_unix[i]
+        chart["marken"] = sorted(marken + [[woche(d), "pi_beginn", None] for d in extra["pi_bottom_daten"]]
+                                 + [[woche(d), "pi_boden", None] for d in extra["pi_signal_daten"]], key=lambda m: m[0])
     return zeile_out, chart, {"w": w, "score": score}
 
 

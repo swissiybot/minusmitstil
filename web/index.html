@@ -240,7 +240,7 @@ async function zeige(id){
     <div class="legende">
       <span><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
       <span><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
-      ${btc?'<span><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span>':''}
+      ${btc?'<span><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span style="color:#e040fb">● Bodenbildung beginnt</span><span style="color:#00e676">▲ Pi Boden-Signal</span>':''}
       <span><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
       <span>▲ Ampel ≥ 80 · ▼ Ampel ≤ 15 · unten: Ampel im Zeitverlauf</span>
     </div>
@@ -284,14 +284,27 @@ function tabKennzahlen(w){
       <div class="wert"><div class="k">Abstand zum Hoch</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">zur 200-Wochen-Linie ${fmt(w.zu200w,0,"%")}</div></div>
       <div class="wert"><div class="k">Rückschlagrisiko</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
       <div class="wert"><div class="k">Trendgüte (R²)</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher"}</div></div>
-      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`Pi Bottom ${w.pi_bottom_aktiv?"<b class=pos>AKTIV</b>":"aus"} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
+      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`${umlaut(w.pi_status).replace("Pi Cycle: ","Pi Cycle Bottom: ")} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
     </div>
     <table class="wtab"><thead><tr><th style="text-align:left">Ähnliche Lage früher (Ampel ±7,5)</th><th>Kurs höher</th><th>an allen Tagen</th><th>Vorteil</th><th>Median p.a. (ähnlich / alle)</th><th>Phasen</th></tr></thead>
     <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
+    ${w.pi ? piRueckblick(w) : ""}
     <div class="text">Datenquelle: ${seg}. Jede Kennzahl wird nur mit der Historie bis zum jeweiligen Zeitpunkt verglichen (kein Blick in die Zukunft).
     „Vorteil“ = wie viel öfter ähnliche Lagen gut ausgingen als ein beliebiger Kauftag. Wenige Phasen = wenig aussagekräftig.
     Ob diese Quoten früher gestimmt hätten, zeigt der Reiter „Prüfung“.
     Heutige Indexmitglieder haben überlebt (Pleitefirmen fehlen) – historische Quoten bei Einzelaktien wirken deshalb zu gut.</div>`;
+}
+
+function piRueckblick(w){
+  const d = s => s ? s.split("-").reverse().join(".") : "–";
+  const rb = w.pi_rueckblick || [];
+  return `<h3>Pi Cycle Bottom: Kurs nach jedem Boden-Signal</h3>
+    <div class="text" style="padding-bottom:6px">Fällt die 150-Tage-EMA unter die 471-Tage-SMA × 0,745, beginnt die Bodenbildungszone (lila Fläche im Chart). Steigt sie wieder darüber, ist das das Boden-Signal; der Boden liegt laut Indikator zwischen beiden Kreuzungen. Liegt die EMA über der Linie, ist der Markt im Aufwärtstrend oder die Bodenbildung hat noch nicht begonnen.
+    <b>Heute: ${umlaut(w.pi_status).replace("Pi Cycle: ","")}.</b></div>
+    <table class="wtab"><thead><tr><th style="text-align:left">Boden-Signal</th><th>Zone ab</th><th>Kurs</th><th>nach 1 Jahr</th><th>nach 2 Jahren</th><th>nach 3 Jahren</th></tr></thead><tbody>${
+      rb.length ? rb.map(x => `<tr><td style="text-align:left">${d(x.datum)}</td><td>${d(x.zone_ab)}</td><td>${fmt(x.kurs,0)}</td>${["r1","r2","r3"].map(k => `<td class="${klasse(x[k])}">${x[k]==null?"noch offen":vz(x[k],0,"%")}</td>`).join("")}</tr>`).join("")
+      : `<tr><td colspan="6">noch kein Boden-Signal in den Daten</td></tr>`}</tbody></table>
+    <div class="text">Nur ${rb.length} Boden-Signal${rb.length===1?"":"e"} seit 2014 (Yahoo-Daten ab September 2014, die Zone 2015 fehlt deshalb). So wenige Fälle sagen statistisch kaum etwas; sie zeigen nur, wie es bisher lief.</div>`;
 }
 
 // ------------------------------------------------------------ Monte Carlo
@@ -468,14 +481,22 @@ function zeichne(c, btc){
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:1}});
   const linie = (werte, farbe, breite=1, stil=0) => { const s = ch.addLineSeries({color:farbe,lineWidth:breite,lineStyle:stil,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
     s.setData(c.t.map((t,i)=>({time:t,value:werte[i]})).filter(p=>p.value!=null)); return s; };
+  if (c.pi_zone) {   // Pi-Cycle-Bodenbildungszone als Flaeche ueber die ganze Hoehe (eigene, unsichtbare Skala)
+    const zone = ch.addHistogramSeries({priceScaleId:"pizone", color:"#e040fb26", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
+    ch.priceScale("pizone").applyOptions({scaleMargins:{top:0,bottom:0}, visible:false});
+    zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t}));
+  }
   const kerzen = ch.addCandlestickSeries({upColor:"#26a69a",downColor:"#ef5350",borderVisible:false,wickUpColor:"#26a69a",wickDownColor:"#ef5350"});
   kerzen.setData(c.t.map((t,i)=>({time:t,open:c.o[i]??c.c[i],high:c.h[i]??c.c[i],low:c.l[i]??c.c[i],close:c.c[i]})));
   linie(c.trend_o,"#2962ff55",1,2); linie(c.trend,"#2962ff",1,0); linie(c.trend_u,"#2962ff55",1,2);
   linie(c.sma200w,"#f0b90b",2);
   if (btc && c.pi_ema150) { linie(c.pi_ema150,"#e040fb",1); linie(c.pi_sma471,"#00bcd4",1); }
-  kerzen.setMarkers(c.marken.map(([t,art,s]) => art==="kauf"
-    ? {time:t,position:"belowBar",color:"#089981",shape:"arrowUp",text:String(s)}
-    : {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)}));
+  kerzen.setMarkers(c.marken.map(([t,art,s]) => ({
+    kauf:     {time:t,position:"belowBar",color:"#089981",shape:"arrowUp",text:String(s)},
+    teuer:    {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)},
+    pi_beginn:{time:t,position:"aboveBar",color:"#e040fb",shape:"circle",text:"Bodenbildung beginnt"},
+    pi_boden: {time:t,position:"belowBar",color:"#00e676",shape:"arrowUp",text:"Pi Boden-Signal"},
+  })[art]));
   const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, timeScale:{...basis.timeScale, visible:false}});
   const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
   sc.setData(c.t.map((t,i)=> c.score[i]==null ? {time:t} : {time:t,value:c.score[i],color:farbe(c.score[i])}));
