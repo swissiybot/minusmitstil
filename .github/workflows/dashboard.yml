@@ -48,6 +48,7 @@ jobs:
             daten/kurse.parquet
             daten/universum.csv
             daten/fred
+            daten/shiller
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
 
@@ -59,6 +60,12 @@ jobs:
         continue-on-error: true
         run: python kurse.py
 
+      - name: Zinsen (FRED)
+        run: python umfeld.py   # vor dem Zwischenspeichern, damit FRED- und Shiller-Dateien im Cache landen
+
+      - name: Bewertung S&P 500 (Shiller-CAPE)
+        run: python bewertung.py
+
       - name: Kurse zwischenspeichern
         if: always() && hashFiles('daten/kurse.parquet') != ''
         uses: actions/cache/save@v4
@@ -67,10 +74,8 @@ jobs:
             daten/kurse.parquet
             daten/universum.csv
             daten/fred
+            daten/shiller
           key: kurse-${{ github.run_id }}
-
-      - name: Zinsen (FRED)
-        run: python umfeld.py
 
       - name: Auswertung
         run: |

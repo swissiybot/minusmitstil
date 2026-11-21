@@ -465,6 +465,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
         <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (blaugrün = günstig, orange = teuer).</li>
         <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Kurs höher nach …“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
         <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
+        <li><b>Bewertung (CAPE)</b> unter „Marktumfeld“ und beim S&amp;P 500: zeigt, wie teuer der US-Markt gemessen an seinen <b>Gewinnen</b> ist – die Ampel schaut nur auf den Kurs. Steht bewusst getrennt; auch das CAPE hat als Zeitpunkt zum Kaufen nicht getaugt (siehe Prüfung dort).</li>
         <li>Der violette <b>Prognose-Kegel</b> im Chart ist eine Simulation aus vergangenen Wochen (50 % und 90 % der Wege), keine Vorhersage.</li>
         <li>Ob die angezeigten Quoten früher gestimmt hätten, zeigen die Seite „Prüfung der Ampel“ und der Reiter „Prüfung“.</li>
       </ul>
@@ -529,7 +530,7 @@ let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
     gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib")}; })());
-let UMFELD = null, PRUEF = null, TAGEBUCH = null;
+let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
 // ------------------------------------------------------------ Datenzugriff: lokaler Server (live) oder Online-Seite (statische Dateien)
@@ -773,6 +774,11 @@ const ERKLAERUNG = {
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
+  b_cape: {titel:"Shiller-CAPE", text:"Kurs des S&P 500 geteilt durch den Durchschnittsgewinn der letzten 10 Jahre, beides inflationsbereinigt (Robert J. Shiller, monatlich ab 1881). Hoch heißt: Man bezahlt viel für die Gewinne. Anders als die Ampel schaut das CAPE auf die Gewinne: Fällt der Kurs, weil auch die Gewinne fallen, wird das CAPE nicht billiger. Nur für den S&P 500 gibt es eine so lange freie Reihe."},
+  b_score: {titel:"Bewertung 0–100", text:"100 minus Perzentil des CAPE unter allen Monaten bis zum jeweiligen Zeitpunkt (ohne Blick in die Zukunft, ab 20 Jahren Geschichte). Hoch = historisch günstig bewertet, niedrig = historisch teuer – gleiche Richtung und Stufen wie die Ampel. Steht bewusst getrennt neben der Ampel und wird nicht mit ihr verrechnet."},
+  b_rendite: {titel:"Rendite der folgenden 10 Jahre", text:"Reale Rendite pro Jahr (mit Dividenden, nach Inflation) in den 10 Jahren nach jedem Monat, gruppiert nach der damaligen Bewertung. Median = typischer Wert, schlechteste/beste 10 % = Spanne. Die Monate überlappen sich stark; die Zahl der unabhängigen Fälle ist viel kleiner, als die Monatszahl vermuten lässt."},
+  b_pruefung: {titel:"Prüfung der Bewertung", text:"Für jeden Monat wurde die Rendite der nächsten 10 Jahre (bzw. 1 Jahr) aus dem CAPE geschätzt – mit einer Geraden, die nur aus damals schon bekannten Ergebnissen gelernt ist. Verglichen mit der einfachen Schätzung „Durchschnitt aller bisher bekannten Ergebnisse“. R² über 0 heißt: das CAPE hat besser geschätzt als dieser Durchschnitt; unter 0: schlechter."},
+  b_strategie: {titel:"Sparplan oder warten?", text:"Jeden Monat 1 sparen. Sparplan: sofort kaufen. Warten: Geld im Geldmarkt (US-Treasury-Bills) sammeln und erst kaufen, wenn die Bewertung die Schwelle erreicht. Alle 20-Jahres-Zeiträume ab Januar 1934, inflationsbereinigt, ohne Kosten und Steuern. Ein Rückblick, keine Vorhersage."},
   u_zins3m: {titel:"3-Monats-Zins", text:"US-Geldmarktzins für 3 Monate (Treasury Bill, FRED TB3MS). Wird im Strategie-Vergleich als Zins auf wartendes Geld genutzt."},
   k_pruefung: {titel:"Prüfung der Ampel", text:"Übersicht über alle Werte: Walk-forward-Kalibrierung, Strategie-Vergleich und Signal-Tagebuch. Zeigt ehrlich, ob die Ampel früher etwas gebracht hätte."},
   // --- Gesamtprüfung
@@ -1218,7 +1224,7 @@ async function start(){
   await modusErmitteln();
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
-  [UMFELD, PRUEF, TAGEBUCH] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json"].map(holeJson));
+  [UMFELD, PRUEF, TAGEBUCH, BEWERTUNG] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
   ALLE = d.werte; suchIndex(); datenstand(d.stand);
   Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
@@ -1265,6 +1271,7 @@ function zeigeUebersicht(){
       <div class="wk-wert" style="color:${v && (v.wert >= 25 || ["nervös","Panik"].includes(v.stufe)) ? "var(--teuer)" : "inherit"}">${v ? (v.wert != null ? fmt(v.wert,1) : v.stufe) : "–"}</div><div class="wk-wort">${v ? (v.wert != null ? vixWort(v.wert) : `höher als an ${fmt(v.perzentil,0)} % der Tage`) : "keine Daten"}</div>${miniSpark(v?.reihe, f.teuer, 750)}</div>
     <div class="karte" id="w-zins" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_zinskurve">Zinskurve 10 J. – 2 J.</span><span>${z ? datumDe(z.datum) : ""}</span></div>
       <div class="wk-wert" style="color:${z && z.invertiert ? "var(--teuer)" : "inherit"}">${z ? vz(z.wert,2) : "–"}</div><div class="wk-wort">${z ? (z.invertiert ? "invertiert" : "normal") : "keine Daten"}<span class="klein"> · Prozentpunkte</span></div>${miniSpark(z?.reihe, f.akzent, 750)}</div>
+    ${bewKachel()}
     <div class="karte" id="w-pruefung" tabindex="0" role="button"><div class="karte-kopf"><span data-e="k_pruefung">Prüfung der Ampel</span><span>ETFs, 3 J.</span></div>
       <div class="wk-wert" style="font-size:22px;margin-top:4px">${e && e.skill != null ? (e.skill > 2 ? "hilft etwas" : "kein Vorteil") : "–"}</div>
       <div class="wk-wort" style="font-weight:400;color:var(--text2)">außerhalb der Lernzeit${s ? ` · Warten besser bei ${fmt(s.staffel_besser,0)} % der ETFs` : ""}</div>
@@ -1298,12 +1305,13 @@ function zeigeUebersicht(){
       ${afKarte("Neu historisch sehr teuer (≤ 15)", neuTeuer, w => `<span class="klein">vor 4 W. ${fmt(w.score_vor4w,0)}</span>`, "Diese Woche keiner neu unter 15.")}
     </div>
     <p class="klein" style="margin-top:10px">Aktien mit stabilem Aufwärtstrend und Ampel ab 80 (Umsatz ab 10 Mio $/Tag): <b>${anzahlStabil}</b> – <button class="linkknopf" id="zu-aktien">im Screener ansehen</button>. Bei Einzelaktien fehlen Firmen, die pleite gingen; die Quoten wirken deshalb zu gut.</p>
-    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. Daten: Yahoo Finance, FRED, Cboe; ${STAND_TEXT}</div>`;
+    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. Daten: Yahoo Finance, FRED, Cboe, Robert J. Shiller (CAPE); ${STAND_TEXT}</div>`;
   $("#kern-uebersicht").innerHTML = $("#lesehilfe-kern").innerHTML + ` <button class="linkknopf" id="kern-mehr">Mehr in „So liest du das Tool“</button>`;
   $("#kern-mehr").onclick = () => leseOeffnen(true);
   $$("#haupt [data-id]").forEach(e => { e.onclick = () => zeige(e.dataset.id); e.onkeydown = ev => { if (ev.key === "Enter") zeige(e.dataset.id); }; });
   const geh = (id, fn) => { const e = $(id); if (e) { e.onclick = fn; e.onkeydown = ev => { if (ev.key === "Enter") fn(); }; } };
   ["#w-breite","#w-vix","#w-zins"].forEach(id => geh(id, () => zeigeUmfeld()));
+  geh("#w-bewertung", () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); });
   geh("#w-pruefung", () => zeigePruefungGesamt());
   $("#zu-aktien").onclick = () => { LISTE_REITER = "aktien"; sichere("liste_reiter", LISTE_REITER); $("#nurq").checked = true; $("#minu").value = "1e7"; SORT = {k:"score", dir:-1}; $("#sortierung").value = "score"; reiterZahlen(); listeNeu(); if (istHandy()) ansicht("liste"); };
 }
@@ -1499,6 +1507,7 @@ async function zeige(id, opt={}){
         <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
         <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></section>
       <section class="karte" id="signale">${signalKarte(w, c)}</section>
+      ${id === "SPY" ? bewKarte() : ""}
     </div>
     <div class="abstand"></div>
     <section class="karte vertiefung" id="vertiefung">
@@ -1523,6 +1532,7 @@ async function zeige(id, opt={}){
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
   reiter(REITER);
   lohntSichCheck(id);
+  if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
   if (eigen) ladeKegel(52, 20, [], true).then(m => { if (AKTIV === id) prognoseKarte(m); });
   else prognoseOnline(id);
   if (opt.ohneScroll) $("#haupt").scrollTop = scrollY;
@@ -2493,7 +2503,7 @@ function miniChart(el, reihe, farbe, linien=[]){
   const s = ch.addAreaSeries({lineColor:farbe, topColor:farbe+"55", bottomColor:farbe+"05", lineWidth:1, priceLineVisible:false});
   s.setData(reihe.t.map((t,i) => ({time:t, value:reihe.v[i]})));
   linien.forEach(([p,f,txt]) => s.createPriceLine({price:p,color:f,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:txt}));
-  setTimeout(() => ch.timeScale().fitContent(), 50);
+  [50, 400].forEach(ms => setTimeout(() => ch.timeScale().fitContent(), ms));   // zweites Mal nach dem Layout (lange Reihen)
   charts.push(ch);
 }
 function zeigeUmfeld(){
@@ -2503,15 +2513,68 @@ function zeigeUmfeld(){
   const b = u.breite, v = u.vix, z = u.zinskurve;
   const teil = (titel, x, wert, wort, text, id, nk=1) => x ? `<h3>${titel}: ${wert} <span style="font-weight:400;color:var(--muted)">· ${wort} · Stand ${x.datum.split("-").reverse().join(".")} · vor 4 Wochen ${x.vor4w==null?"–":fmt(x.vor4w, nk)}</span></h3>
       <div class="mini" id="${id}"></div><div class="text">${text} Quelle: ${x.quelle}.</div>` : `<h3>${titel}: keine Daten</h3>`;
-  $("#haupt").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
+  $("#haupt").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Einfache Messgrößen und die Bewertung des US-Markts, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
     ${teil(ek("u_breite","Marktbreite"), b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
     ${teil(ek("u_vix","VIX"), v, v?(v.wert!=null?fmt(v.wert,1):v.stufe):"", v?(v.wert!=null?vixWort(v.wert):`höher als an ${fmt(v.perzentil,0)} % der Tage`):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). ${v.median!=null?`Median seit 1990: ${fmt(v.median,1)}; `:"Online nur als Stufe, ohne Kursreihe. "}höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
     ${teil(ek("u_zinskurve","Zinskurve 10 J. – 2 J."), z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
-    ${u.zins3m?`<div class="text">${ek("u_zins3m","US-Geldmarkt 3 Monate")} (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
+    ${u.zins3m?`<div class="text">${ek("u_zins3m","US-Geldmarkt 3 Monate")} (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}
+    ${bewTeil()}`;
   if (b) miniChart($("#m-breite"), b.reihe, F().guenstig, [[50,"#868993",""],[30,F().teuer,""]]);
   if (v && v.reihe) miniChart($("#m-vix"), v.reihe, F().teuer, [[v.median,"#868993","Median"]]);
   else if ($("#m-vix")) $("#m-vix").remove();
   if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,F().teuer,""]]);
+  const bw = BEWERTUNG;
+  if (bw?.reihe) miniChart($("#m-cape"), {t:bw.reihe.t, v:bw.reihe.cape}, F().teuer, [[bw.median,"#868993","Median seit 1881"],[bw.median_ab1990,"#868993","Median seit 1990"]]);
+}
+// ------------------------------------------------------------ Bewertung des US-Markts (Shiller-CAPE)
+const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
+const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
+function bewKachel(){
+  const b = BEWERTUNG; if (!b) return "";
+  return `<div class="karte" id="w-bewertung" tabindex="0" role="button"><div class="karte-kopf"><span data-e="b_cape">Bewertung S&amp;P 500 (CAPE)</span><span>${monatDe(b.datum)}</span></div>
+      <div class="wk-wert" style="color:${b.score < 40 ? "var(--teuer)" : b.score >= 60 ? "var(--guenstig)" : "inherit"}">${fmt(b.cape,1)}</div><div class="wk-wort">${b.stufe}<span class="klein"> · teurer als ${fmt(b.perzentil,0)} % der Monate seit 1881</span></div>${miniSpark({v:b.reihe.cape}, F().teuer, 480)}</div>`;
+}
+function bewKarte(){
+  const b = BEWERTUNG; if (!b) return "";
+  const a = b.aehnlich, n = a.phasen.length;
+  return `<section class="karte" id="bewertung-karte"><div class="karte-kopf"><span data-e="b_cape" tabindex="0">Bewertung (CAPE)</span><span>${monatDe(b.datum)}</span></div>
+    <div class="gross-zahl" style="color:${b.score < 40 ? "var(--teuer)" : b.score >= 60 ? "var(--guenstig)" : "inherit"}">${fmt(b.cape,1)}</div>
+    <p><b>${b.stufe}</b> gemessen an den Gewinnen: teurer als in ${fmt(b.perzentil,0)} % der Monate seit 1881 (seit 1990: ${fmt(b.perzentil_ab1990,0)} %).</p>
+    <div class="kv"><span data-e="b_score">Bewertung 0–100</span><b>${fmt(b.score,0)}</b></div>
+    <div class="kv"><span>Median seit 1881 / 1990</span><b>${fmt(b.median,1)} / ${fmt(b.median_ab1990,1)}</b></div>
+    <div class="kv"><span data-e="b_rendite">Früher bei ähnlichem CAPE</span><b>${a.r10 ? `${vz(a.r10.median,1," %")} p.a. real · ${n} Phase${n === 1 ? "" : "n"}` : "kein Vergleich"}</b></div>
+    <p class="klein" style="margin-top:8px">Als Kaufzeitpunkt hat auch das CAPE nicht getaugt. <button class="linkknopf" id="bew-mehr">Prüfung und Details</button></p></section>`;
+}
+function bewTeil(){
+  const b = BEWERTUNG;
+  if (!b) return `<h3 id="bewertung-teil">Bewertung S&amp;P 500 (CAPE): keine Daten</h3>`;
+  const sp = x => x ? `<td>${fmt(x.n,0)}</td><td class="${klasse(x.median)}">${vz(x.median,1," %")}</td><td>${vz(x.p10,1," %")}</td><td>${vz(x.p90,1," %")}</td><td>${fmt(x.positiv,0," %")}</td>` : `<td colspan="5">–</td>`;
+  const zw = {"≥ 80":"ab 80 · sehr günstig","60–80":"60–80 · günstig","40–60":"40–60 · neutral","15–40":"15–40 · teuer","≤ 15":"bis 15 · sehr teuer"};
+  const w10 = b.walk_forward?.["10"] || {}, w1 = b.walk_forward?.["1"] || {};
+  const a = b.aehnlich, ph = a.phasen.map(p => `${monatDe(p.von)}–${monatDe(p.bis)}`).join(", ");
+  const st = b.strategie || [];
+  const r2t = x => x ? `R² ${vz(x.r2,1," %")}` : "–";
+  return `<h3 id="bewertung-teil">${ek("b_cape","Bewertung S&amp;P 500 (Shiller-CAPE)")}: ${fmt(b.cape,1)} <span style="font-weight:400;color:var(--muted)">· ${b.stufe} · ${ek("b_score","Bewertung")} ${fmt(b.score,0)} von 100 · Stand ${monatDe(b.datum)}</span></h3>
+    <div class="mini" id="m-cape"></div>
+    <div class="text">Das CAPE teilt den Kurs des S&amp;P 500 durch den Durchschnittsgewinn der letzten 10 Jahre (inflationsbereinigt). <b>Hoch heißt: Man bezahlt viel für die Gewinne.</b> Heute teurer als in ${fmt(b.perzentil,0)} % aller Monate seit 1881, seit 1990 teurer als in ${fmt(b.perzentil_ab1990,0)} %. Median seit 1881: ${fmt(b.median,1)}, seit 1990: ${fmt(b.median_ab1990,1)}; Höchstwert ${fmt(b.hoechst.wert,1)} (${monatDe(b.hoechst.datum)}).
+      Anders als die Ampel schaut das CAPE auf die Gewinne: Fällt der Kurs, weil auch die Gewinne fallen, wird das CAPE nicht billiger. Für DAX, MSCI World und andere Indizes gibt es keine freie, so lange Reihe – dort gibt es diese Bewertung nicht.</div>
+    <h3>${ek("b_rendite","Was danach kam: reale Rendite der folgenden 10 Jahre")}</h3>
+    <table class="wtab"><thead><tr><th style="text-align:left">Bewertung damals</th><th>Monate</th><th>Median p.a.</th><th>schlechteste 10 %</th><th>beste 10 %</th><th>positiv</th></tr></thead><tbody>
+      ${b.zonen.map(z => `<tr><td style="text-align:left">${zw[z.zone] || z.zone}</td>${sp(z.r10)}</tr>`).join("")}
+      <tr><td style="text-align:left"><b>alle Monate</b></td>${sp(b.basis.r10)}</tr></tbody></table>
+    <div class="text">Mit Dividenden, nach Inflation, Monate ${monatDe(b.score_ab)} bis ${monatDe(a.letzte_bekannt)} (danach sind die 10 Jahre noch nicht vorbei). Die Monate überlappen sich – unabhängige Fälle gibt es viel weniger.
+      ${a.r10 ? `Ähnlich hoch wie heute (CAPE ±${fmt(a.spanne,0)} %) stand es mit bekanntem Ergebnis nur ${a.phasen.length === 1 ? "in <b>einer Phase</b>" : `in ${a.phasen.length} Phasen`}: ${ph}. Danach brachten die 10 Jahre real im Median <b>${vz(a.r10.median,1," %")} pro Jahr</b> (positiv in ${fmt(a.r10.positiv,0)} % der Monate). ${a.phasen.length < 3 ? "So wenige Phasen sind statistisch kaum aussagekräftig." : ""}` : "Ähnlich hoch wie heute stand das CAPE mit bekanntem Ergebnis noch nie."}</div>
+    <h3>${ek("b_pruefung","Ehrliche Prüfung: Hätte das CAPE die Zukunft vorhergesagt?")}</h3>
+    <table class="wtab"><thead><tr><th style="text-align:left">Schätzung der Rendite für</th><th>alle Jahre</th><th>bis 1989</th><th>seit 1990</th><th>mittlerer Fehler (CAPE / Durchschnitt)</th></tr></thead><tbody>
+      <tr><td style="text-align:left">die nächsten 10 Jahre</td><td class="${klasse(w10.alle?.r2)}">${r2t(w10.alle)}</td><td class="${klasse(w10.bis1989?.r2)}">${r2t(w10.bis1989)}</td><td class="${klasse(w10.ab1990?.r2)}">${r2t(w10.ab1990)}</td><td>${w10.alle ? `${fmt(w10.alle.fehler_modell,1)} / ${fmt(w10.alle.fehler_basis,1)} Pp.` : "–"}</td></tr>
+      <tr><td style="text-align:left">das nächste Jahr</td><td class="${klasse(w1.alle?.r2)}">${r2t(w1.alle)}</td><td class="${klasse(w1.bis1989?.r2)}">${r2t(w1.bis1989)}</td><td class="${klasse(w1.ab1990?.r2)}">${r2t(w1.ab1990)}</td><td>${w1.alle ? `${fmt(w1.alle.fehler_modell,1)} / ${fmt(w1.alle.fehler_basis,1)} Pp.` : "–"}</td></tr></tbody></table>
+    <div class="text">Jeden Monat geschätzt, nur mit dem damaligen Wissen, verglichen mit dem einfachen Durchschnitt aller bis dahin bekannten Ergebnisse. Für die nächsten 10 Jahre war das CAPE insgesamt <b>${r2Wort(w10.alle?.r2)}</b> als dieser Durchschnitt, bis 1989 ${r2Wort(w10.bis1989?.r2)}, seit 1990 <b>${r2Wort(w10.ab1990?.r2)}</b>${(w10.ab1990?.r2 ?? 0) < -2 ? " – das CAPE war seitdem fast immer hoch, und die Märkte liefen trotzdem oft gut" : ""}. Für ein einzelnes Jahr sagt das CAPE praktisch nichts.</div>
+    ${st.length ? `<h3>${ek("b_strategie","Sparplan oder auf günstige Bewertung warten?")}</h3>
+    <table class="wtab"><thead><tr><th style="text-align:left">Warten bis Bewertung</th><th>Zeiträume (20 J.)</th><th>Warten besser</th><th>Median Endvermögen</th><th>schlechtester / bester Fall</th><th>Warten besser seit 1990</th></tr></thead><tbody>
+      ${st.map(x => `<tr><td style="text-align:left">ab ${x.schwelle}</td><td>${x.fenster} (${x.von}–${x.bis})</td><td>${fmt(x.warten_besser,0," %")}</td><td class="${klasse(x.median_diff)}">${vz(x.median_diff,1," %")}</td><td>${vz(x.schlechtestes,0," %")} / ${vz(x.bestes,0," %")}</td><td>${fmt(x.ab1990_warten_besser,0," %")}${x.ab1990_fenster ? ` <span class="klein">(${x.ab1990_fenster})</span>` : ""}</td></tr>`).join("")}</tbody></table>
+    <div class="text">Jeden Monat 1 sparen; „Warten“ sammelt das Geld im Geldmarkt und kauft erst, wenn die Bewertung die Schwelle erreicht. Inflationsbereinigt, ohne Kosten und Steuern. Endvermögen gegenüber dem Sparplan. Seit 1990 gibt es nur wenige Zeiträume (Zahl in Klammern), und fast alle hängen am selben Einbruch 2008/09. ${b.max_score_ab1990 != null ? `Die höchste Bewertung seit 1990 war ${fmt(b.max_score_ab1990,0)}${st.some(x => x.schwelle > b.max_score_ab1990) ? ` – bei Schwelle ${st.filter(x => x.schwelle > b.max_score_ab1990).map(x => x.schwelle).join("/")} wurde seit 1990 also nie gekauft` : ""}.` : ""}</div>` : ""}
+    <div class="merke" style="margin:10px 14px"><b>Kurz gesagt:</b> Das CAPE sagt zuverlässig, ob der US-Markt gemessen an seinen Gewinnen historisch teuer oder günstig ist – heute: ${b.stufe}. Auf teure Phasen folgten im Mittel schwächere 10 Jahre. Als Zeitpunkt zum Kaufen oder Verkaufen hat aber auch das CAPE nicht verlässlich getaugt.</div>
+    <div class="text">Quelle: ${b.quelle}. Keine Anlageberatung.</div>`;
 }
 function zeigePruefungGesamt(gruppe="etf", h="3"){
   seiteAnfang("pruefung"); hashSetzen("seite=pruefung");

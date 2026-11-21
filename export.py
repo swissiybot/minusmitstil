@@ -111,7 +111,7 @@ def main():
     (SITE / "daten").mkdir(parents=True)
     shutil.copy(E.WEB / "index.html", SITE / "index.html")
     shutil.copytree(E.WEB / "lib", SITE / "lib")
-    for name in ("pruefung.json", "tagebuch_pruefung.json"):
+    for name in ("pruefung.json", "tagebuch_pruefung.json", "bewertung.json"):
         if (E.WEB_DATEN / name).exists():
             schreiben(SITE / "daten" / name, json.loads((E.WEB_DATEN / name).read_text()))
     rl = json.loads((E.WEB_DATEN / "rangliste.json").read_text())
