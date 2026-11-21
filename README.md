@@ -24,6 +24,14 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 - **Bereiche verstellen**: Trennlinien zwischen Liste, Chart, Ampel-Leiste und Seitenleiste ziehen, Doppelklick setzt zurück (wird im Browser gemerkt). Hell/Dunkel oben rechts. Auf dem Handy eine Spalte mit unterer Reiterleiste.
 - Bildschirmfotos: `web/screenshots/`.
 
+## Mein Depot
+Vermögensübersicht laden (von Hand, CSV-Datei oder kopierte Tabelle mit Spalten-Zuordnung) und eine Prognose fürs ganze Depot rechnen – **nur im Browser**: die Datei wird nie hochgeladen, es gibt keine Broker-Logins, gespeichert wird nur auf Wunsch („In diesem Browser merken“), „Depot vergessen“ löscht alles.
+- Zuordnung automatisch nur über sicher bekannte ISINs großer Index-ETFs/ETCs (gleicher Index), exakte Kürzel und exakte Namen; für alles andere wählt man einen Ersatz. Der Anteil ohne Zuordnung wird angezeigt.
+- Sparplan individuell: Betrag (0 = keiner), Verteilung, jährliche Erhöhung, Laufzeit, Einmalbeträge/Entnahmen, Kosten je Kauf, laufende Kosten, Abgeltungssteuer mit Sparerpauschbetrag und Teilfreistellung, Inflation, Zielbetrag.
+- Monte Carlo: Marktwochen (S&P 500, Blöcke à 13 Wochen, letzte 20 Jahre) mal Beta je Position plus eigene, zufällig gezogene Einzelschwankung; Fächer 5–95 %, Verlust- und Ziel-Wahrscheinlichkeit, größter Rückgang. Standard „vorsichtig“: kein Wert wird besser als der Markt angenommen.
+- Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
+- Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
+
 ## Das ehrliche Ergebnis
 Das Tool erkennt zuverlässig, wann etwas **historisch günstig** ist. Ob es sich **lohnt zu kaufen**, kann es nicht zuverlässig sagen: In der Prüfung brachte „nur bei günstiger Ampel kaufen, sonst warten“ bei S&P 500, Nasdaq-100, Gold und Bitcoin **weniger** als ein stumpfer monatlicher Sparplan. Märkte steigen meistens, und wer wartet, verpasst das. Die genauen, täglich neu berechneten Zahlen stehen im Dashboard unter „So liest du das Tool“.
 

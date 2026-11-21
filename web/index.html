@@ -263,6 +263,7 @@ h3{font-size:14px;margin:16px 14px 8px;font-weight:650}
 .eingabe label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12px}
 .eingabe input,.eingabe select{color:var(--text);height:36px;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;padding:0 10px;width:130px}
 .eingabe input:disabled,.eingabe select:disabled{opacity:.55}
+.eingabe input[type=checkbox]{width:18px;height:18px;padding:0;accent-color:var(--akzent)}
 .eingabe button,.knopf{height:36px;background:var(--akzent);color:var(--auf-akzent);border:0;border-radius:9px;padding:0 16px;font-weight:650}
 .eingabe button:hover,.knopf:hover{background:var(--akzent-stark);color:#fff}
 .eingabe button:disabled{opacity:.5;cursor:default}
@@ -382,7 +383,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .wert-kopf{grid-template-columns:1fr;padding:14px}
   .gauge{margin:0 auto;order:-1;transform:scale(.9);margin-bottom:-8px}
   .chart-flaeche{height:min(var(--g-chart,540px),68vh)}
-  .unten-nav{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .unten-nav{display:grid;grid-template-columns:repeat(5,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
   .unten-nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;color:var(--muted);font-size:11px;font-weight:600}
   .unten-nav button svg{width:21px;height:21px}
   .unten-nav button[aria-current="page"]{color:var(--akzent)}
@@ -406,6 +407,8 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   </button>
   <div class="kopf-rechts">
     <span id="stand" class="plakette" data-e="datenstand" tabindex="0"><i></i><span>lädt …</span></span>
+    <button class="knopf-ikon" id="k-depot" aria-label="Mein Depot">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg><span class="txt">Mein Depot</span></button>
     <button class="knopf-ikon" id="k-lesen" aria-pressed="false" aria-controls="lese-bereich">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg><span class="txt">So liest du das Tool</span></button>
     <button class="knopf-ikon" id="k-thema" aria-label="Hell oder dunkel umschalten" title="Hell/Dunkel">
@@ -473,6 +476,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   <button data-ansicht="uebersicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Übersicht</button>
   <button data-ansicht="liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Liste</button>
   <button data-ansicht="haupt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>Wert</button>
+  <button data-ansicht="depot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>Depot</button>
   <button data-ansicht="lesen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>Lesen</button>
 </nav>
 <dialog id="suche-dlg" aria-label="Suche">
@@ -971,8 +975,9 @@ function neuZeichnen(){   // Charts übernehmen die Farben nur beim Anlegen
 // ------------------------------------------------------------ Handy: eine Spalte, untere Reiterleiste
 function ansicht(name){
   if (name === "uebersicht") { zeigeUebersicht(); name = "haupt"; }
+  if (name === "depot") { zeigeDepot(); name = "haupt"; }
   document.body.dataset.ansicht = name;
-  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", b.dataset.ansicht === name || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : "uebersicht")) ? "page" : "false"));
+  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", b.dataset.ansicht === name || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : SEITE === "depot" ? "depot" : "uebersicht")) ? "page" : "false"));
   if (name === "lesen") leseLaden();
   if (name === "liste") listeZeichnen();
 }
@@ -1146,15 +1151,15 @@ function suchPunkte(w, q, qw){
   if (SONDERGRUPPE(w)) p += 60;
   return p + Math.min(40, Math.log10((w.umsatz_usd || 1)) * 3);
 }
-const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
-let TREFFER = [], TREFFER_I = 0;
+const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["depot","Mein Depot","Vermögensübersicht laden, Sparplan, Prognose"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
+let TREFFER = [], TREFFER_I = 0, ERSATZ_FUER = null;
 function sucheOeffnen(){ const d = $("#suche-dlg"); if (d.open) return; d.showModal(); $("#suche-eingabe").value = ""; sucheRechnen(); $("#suche-eingabe").focus(); }
 function sucheRechnen(){
   const q = norm($("#suche-eingabe").value), qw = q.split(" ").filter(Boolean);
   let werte = [];
   if (q) werte = ALLE.map(w => [suchPunkte(w, q, qw), w]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(x => x[1]);
   else werte = [...ALLE.filter(w => FAV.has(w.id)), ...["SPY","QQQ","EXS1","URTH","BTC","GOLD"].map(id => ALLE.find(w => w.id === id))].filter(Boolean).filter((w, i, a) => a.indexOf(w) === i).slice(0, 8);
-  const seiten = SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
+  const seiten = ERSATZ_FUER != null ? [] : SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
   TREFFER = [...werte.map(w => ({art:"wert", w})), ...seiten.map(s => ({art:"seite", s}))]; TREFFER_I = 0;
   const html = [];
   if (werte.length) html.push(`<div class="suche-gruppe">${q ? "Werte" : "Favoriten und beliebte Werte"}</div>`);
@@ -1167,7 +1172,11 @@ function sucheRechnen(){
   $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel oder einen Teil des Namens probieren.</div>`;
 }
 function trefferOeffnen(i){
-  const t = TREFFER[i]; if (!t) return; $("#suche-dlg").close();
+  const t = TREFFER[i]; if (!t) return;
+  const ersatz = ERSATZ_FUER; ERSATZ_FUER = null; $("#suche-dlg").close();
+  if (ersatz != null && t.art === "wert" && DEPOT?.positionen[ersatz]) {   // Depot: gewählten Wert als Ersatz zuordnen
+    Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt"}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
+  }
   if (t.art === "wert") zeige(t.w.id);
   else ({uebersicht:() => { zeigeUebersicht(); ansicht("haupt"); }, umfeld:() => { zeigeUmfeld(); ansicht("haupt"); }, pruefung:() => { zeigePruefungGesamt(); ansicht("haupt"); }, lesen:() => leseOeffnen(true), depot:() => { zeigeDepot(); ansicht("haupt"); }})[t.s[0]]();
 }
@@ -1181,6 +1190,7 @@ $("#suche-eingabe").addEventListener("keydown", ev => {
 });
 $("#suche-treffer").addEventListener("click", ev => { const t = ev.target.closest(".treffer"); if (t) trefferOeffnen(+t.dataset.i); });
 $("#suche-dlg").addEventListener("click", ev => { if (ev.target === $("#suche-dlg")) $("#suche-dlg").close(); });
+$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
 $("#such-knopf").onclick = sucheOeffnen;
 document.addEventListener("keydown", ev => {
   const imFeld = ev.target.closest?.("input,textarea,select,[contenteditable]");
@@ -1188,6 +1198,7 @@ document.addEventListener("keydown", ev => {
   else if (ev.key === "/" && !imFeld) { ev.preventDefault(); sucheOeffnen(); }
 });
 $("#k-start").onclick = () => { zeigeUebersicht(); ansicht("haupt"); };
+$("#k-depot").onclick = () => { zeigeDepot(); ansicht("haupt"); };
 
 // ------------------------------------------------------------ Start
 async function start(){
@@ -1196,7 +1207,7 @@ async function start(){
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json"].map(holeJson));
   ALLE = d.werte; suchIndex(); datenstand(d.stand);
-  Object.assign(ERKLAERUNG, ERKLAERUNG_NEU);
+  Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
   route();
   addEventListener("hashchange", () => { if (location.hash !== _eigenerHash) route(); });
@@ -1616,6 +1627,430 @@ function zeitraumSetzen(z, merken=true){
   const von = Math.max(t[0], letzte - (+z) * 365.25 * 86400);
   try { HAUPT.timeScale().setVisibleRange({from:von, to:ende}); } catch(e) { HAUPT.timeScale().fitContent(); }
 }
+// ------------------------------------------------------------ Mein Depot: Import, Sparplan, Monte Carlo fürs ganze Depot
+// Datenschutz: alles bleibt im Browser. Keine Uploads, keine Broker-Logins. Gespeichert wird nur auf Wunsch (localStorage).
+const DEPOT_SCHLUESSEL = "depot_v1";
+// Bekannte ISINs großer Index-ETFs/ETCs → Wert im Tool mit gleichem Index bzw. gleichem Basiswert (nur sicher bekannte; alles andere wählt der Nutzer)
+const ISIN_TABELLE = {
+  IE00B4L5Y983:["IWDA","iShares Core MSCI World"], IE00BJ0KDQ92:["URTH","Xtrackers MSCI World 1C"], LU0274208692:["URTH","Xtrackers MSCI World Swap 1C"],
+  IE00B3RBWM25:["VWRL","Vanguard FTSE All-World (aussch.)"], IE00BK5BQT80:["VWRL","Vanguard FTSE All-World (thes.)"],
+  IE00B6R52259:["ACWI","iShares MSCI ACWI"], IE00B5BMR087:["SPY","iShares Core S&P 500"], US78462F1030:["SPY","SPDR S&P 500 ETF Trust"],
+  IE00B53SZB19:["QQQ","iShares Nasdaq 100"], US46090E1038:["QQQ","Invesco QQQ Trust"], DE0005933931:["EXS1","iShares Core DAX"],
+  DE0005933956:["SX5E","iShares Core EURO STOXX 50"], IE00B0M63177:["EEM","iShares MSCI Emerging Markets"], DE000A0S9GB0:["GOLD","Xetra-Gold"],
+};
+const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000};
+let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar}], e:{…Einstellungen}, merken:bool}
+function depotLaden(){
+  const d = lade(DEPOT_SCHLUESSEL, null);
+  DEPOT = d && Array.isArray(d.positionen) ? {...d, e:{...DEPOT_STD, ...(d.e || {}), ...(d.e?.rendite === "markt" ? {rendite:"deckel"} : {})}, merken:true} : {positionen:[], e:{...DEPOT_STD}, merken:false};
+}
+function depotSichern(){ if (DEPOT.merken) sichere(DEPOT_SCHLUESSEL, {positionen:DEPOT.positionen, e:DEPOT.e}); }
+function depotVergessen(){
+  try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(e) {}
+  DEPOT = {positionen:[], e:{...DEPOT_STD}, merken:false}; DEPOT_ERG = null; zeigeDepot();
+}
+const zahlDe = s => {   // "1.234,56 €" / "1,234.56" / "1234.5" → Zahl
+  if (typeof s === "number") return s;
+  let t = String(s ?? "").replace(/[^\d,.\-]/g, "");
+  if (!t) return NaN;
+  const k = t.lastIndexOf(","), p = t.lastIndexOf(".");
+  if (k > p) t = t.replace(/\./g, "").replace(",", ".");                           // deutsch: 1.234,56
+  else if (k >= 0) t = t.replace(/,/g, "");                                          // englisch: 1,234.56
+  else if (/^-?\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");               // nur Tausenderpunkte: 10.000
+  return parseFloat(t);
+};
+const istIsin = s => /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(String(s || "").trim().toUpperCase());
+function zuordnen(pos){   // ISIN-Tabelle, dann exaktes Kürzel/ID im Tool; sonst offen
+  const isin = String(pos.isin || "").trim().toUpperCase(), k = String(pos.kuerzel || "").trim().toUpperCase();
+  if (isin && ISIN_TABELLE[isin] && ALLE.some(w => w.id === ISIN_TABELLE[isin][0])) return {id:ISIN_TABELLE[isin][0], quelle:"ISIN (gleicher Index)"};
+  if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k || w.id.toUpperCase() === k); if (w) return {id:w.id, quelle:"Kürzel"}; }
+  return {id:null, quelle:""};
+}
+
+// ------------------------------------------------------------ CSV lesen (Trennzeichen und Dezimalkomma erkennen)
+function csvLesen(text){
+  text = text.replace(/^﻿/, "");
+  const zeilen = text.split(/\r?\n/).filter(z => z.trim());
+  if (!zeilen.length) return null;
+  const kandidaten = [";", "\t", ",", "|"];
+  const trenner = kandidaten.map(t => [t, zeilen.slice(0, 10).map(z => z.split(t).length)]).filter(([, n]) => n[0] > 1)
+    .sort((a, b) => (new Set(a[1]).size - new Set(b[1]).size) || (b[1][0] - a[1][0]))[0]?.[0] || ";";
+  const teile = z => { const out = []; let cur = "", q = false;
+    for (let i = 0; i < z.length; i++) { const ch = z[i];
+      if (ch === '"') { if (q && z[i+1] === '"') { cur += '"'; i++; } else q = !q; }
+      else if (ch === trenner && !q) { out.push(cur.trim()); cur = ""; } else cur += ch; }
+    out.push(cur.trim()); return out; };
+  const rows = zeilen.map(teile);
+  return {trenner, kopf:rows[0], daten:rows.slice(1)};
+}
+const SPALTEN = [["name","Name / Bezeichnung"],["isin","ISIN"],["kuerzel","Kürzel / Ticker"],["wert","Wert in € (Marktwert)"],["anzahl","Anzahl / Stück"],["kurs","Kurs in €"]];
+function spalteRaten(kopf, art){   // nur Vorschlag – der Nutzer sieht und ändert die Zuordnung
+  const muster = {name:/^(name|bezeichnung|wertpapier|titel|instrument|produkt)/i, isin:/isin/i, kuerzel:/(kürzel|kuerzel|ticker|symbol|wkn)/i,
+    wert:/(marktwert|kurswert|wert|value|betrag|summe|position)/i, anzahl:/(anzahl|stück|stueck|menge|quantity|shares|nominal)/i, kurs:/(kurs|preis|price)/i};
+  return kopf.findIndex(k => muster[art].test(k) && !(art === "wert" && /(kurs|einstand|kauf)/i.test(k) && !/kurswert|marktwert/i.test(k)));
+}
+let CSV = null;
+function csvVorschau(text){
+  CSV = csvLesen(text);
+  const ziel = $("#csv-zuordnung");
+  if (!CSV || !CSV.daten.length) { ziel.innerHTML = `<p class="neg">Keine Datenzeilen erkannt. Erste Zeile muss die Spaltenköpfe enthalten.</p>`; return; }
+  const opt = sel => `<option value="-1">– nicht vorhanden –</option>` + CSV.kopf.map((k, i) => `<option value="${i}" ${i === sel ? "selected" : ""}>${esc(k || "Spalte " + (i + 1))}</option>`).join("");
+  ziel.innerHTML = `
+    <p class="klein">Erkannt: ${CSV.daten.length} Zeilen, Trennzeichen „${CSV.trenner === "\t" ? "Tab" : CSV.trenner}“. Bitte prüfen, welche Spalte was enthält:</p>
+    <div class="eingabe" style="padding:4px 0 10px">${SPALTEN.map(([k, t]) => `<label>${t}<select data-sp="${k}">${opt(spalteRaten(CSV.kopf, k))}</select></label>`).join("")}</div>
+    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr>${CSV.kopf.map(k => `<th style="text-align:left">${esc(k)}</th>`).join("")}</tr></thead>
+      <tbody>${CSV.daten.slice(0, 5).map(r => `<tr>${CSV.kopf.map((_, i) => `<td style="text-align:left">${esc(r[i] ?? "")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+    <p class="klein">Wert fehlt? Dann wird Anzahl × Kurs gerechnet. Zeilen ohne Wert (z. B. Summenzeilen) werden übersprungen.</p>
+    <button class="knopf" id="csv-uebernehmen">Positionen übernehmen</button> <span class="klein" id="csv-info"></span>`;
+  $("#csv-uebernehmen").onclick = () => {
+    const sp = Object.fromEntries($$("#csv-zuordnung [data-sp]").map(s => [s.dataset.sp, +s.value]));
+    if (sp.wert < 0 && (sp.anzahl < 0 || sp.kurs < 0)) { $("#csv-info").textContent = "Bitte die Spalte „Wert“ oder „Anzahl“ und „Kurs“ wählen."; return; }
+    const neu = [];
+    for (const r of CSV.daten) {
+      const g = k => sp[k] >= 0 ? r[sp[k]] : "";
+      let wert = zahlDe(g("wert"));
+      if (!(wert > 0)) wert = zahlDe(g("anzahl")) * zahlDe(g("kurs"));
+      const name = g("name") || g("isin") || g("kuerzel");
+      if (!(wert > 0) || !name || /^(summe|gesamt|total)/i.test(name)) continue;
+      let isin = g("isin"); if (!isin && istIsin(g("kuerzel"))) isin = g("kuerzel");
+      const pos = {name, isin:isin.toUpperCase(), kuerzel:istIsin(g("kuerzel")) ? "" : g("kuerzel"), wert:Math.round(wert * 100) / 100};
+      neu.push({...pos, ...zuordnen(pos)});
+    }
+    if (!neu.length) { $("#csv-info").textContent = "Keine Zeile mit gültigem Wert gefunden."; return; }
+    DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
+  };
+}
+
+// ------------------------------------------------------------ Seite
+let DEPOT_ERG = null, DEPOT_LAEUFT = false, DEPOT_SKALA = lade("depot_skala", 0);
+const depotSumme = () => DEPOT.positionen.reduce((a, p) => a + (p.wert || 0), 0);
+function sparAnteileSetzen(art){
+  const P = DEPOT.positionen, s = depotSumme();
+  art = art || DEPOT.e.verteilung;
+  if (art === "depot") P.forEach(p => p.spar = s > 0 ? Math.round(p.wert / s * 1000) / 10 : 0);
+  if (art === "gleich") P.forEach(p => p.spar = P.length ? Math.round(1000 / P.length) / 10 : 0);
+}
+function feld(k, titel, e, attr="", art="number"){
+  return `<label>${ek(e, titel)}<input data-e2="${k}" type="${art}" value="${esc(DEPOT.e[k])}" ${attr}></label>`;
+}
+function zeigeDepot(){
+  if (!DEPOT) depotLaden();
+  seiteAnfang("depot"); hashSetzen("seite=depot");
+  const P = DEPOT.positionen, summe = depotSumme(), offen = P.filter(p => !p.id), offenWert = offen.reduce((a, p) => a + p.wert, 0);
+  const e = DEPOT.e;
+  $("#haupt").innerHTML = `
+    <h1 class="seiten-titel">Mein Depot</h1>
+    <p class="seiten-unter">Lade deine Vermögensübersicht, ordne die Positionen zu und sieh, wie sich das Depot mit oder ohne Sparplan entwickeln <b>könnte</b> – als Simulation aus der Vergangenheit, nicht als Vorhersage.</p>
+    <div class="kern" style="border-color:color-mix(in srgb,var(--guenstig) 45%,transparent)">
+      <b>🔒 Datenschutz:</b> Deine Datei wird nur hier im Browser gelesen und <b>nie hochgeladen</b>. Es gibt keine Broker-Logins und keine Verbindung zu deinem Konto.
+      Gespeichert wird nur, wenn du „In diesem Browser merken“ einschaltest – und „Depot vergessen“ löscht alles wieder.
+      <div style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin-top:10px">
+        <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="d-merken" ${DEPOT.merken ? "checked" : ""}> In diesem Browser merken</label>
+        <button class="knopf leise" id="d-vergessen">Depot vergessen</button>
+      </div>
+    </div>
+    <section class="karte seite-karte">
+      <div class="reiter" role="tablist" id="d-import-reiter">
+        <button data-imp="manuell" class="an">Von Hand eintragen</button><button data-imp="csv">CSV-Datei</button><button data-imp="text">CSV-Text einfügen</button>
+      </div>
+      <div id="d-import" style="padding:12px 14px"></div>
+    </section>
+    <div class="abstand"></div>
+    <section class="karte seite-karte">
+      <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;padding:12px 14px 0">
+        <h2 style="margin:0;font-size:16px">Positionen</h2>
+        <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
+      </div>
+      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>Wert €</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
+        P.map((p, i) => { const w = ALLE.find(x => x.id === p.id);
+          return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
+            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro"></td>
+            <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
+            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")} · ${fmt(w.jahre_daten,0)} J. Daten</div>` : `<span class="neg">noch offen</span>`}
+              <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
+            <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
+            <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join("")}</tbody></table></div>
+        ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
+      : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
+    </section>
+    <div class="abstand"></div>
+    <section class="karte seite-karte">
+      <h2 style="margin:0;font-size:16px;padding:12px 14px 0">Sparplan und Annahmen</h2>
+      <div class="eingabe">
+        ${feld("sparrate","Sparrate je Monat €","d_sparrate",'min="0" step="25"')}
+        <label>${ek("d_verteilung","Verteilung")}<select data-e2="verteilung"><option value="depot" ${e.verteilung === "depot" ? "selected" : ""}>wie das Depot</option><option value="gleich" ${e.verteilung === "gleich" ? "selected" : ""}>gleichmäßig</option><option value="eigen" ${e.verteilung === "eigen" ? "selected" : ""}>eigene Anteile (Tabelle)</option></select></label>
+        ${feld("dynamik","jährliche Erhöhung %","d_dynamik",'min="0" max="20" step="0.5"')}
+        ${feld("jahre","Laufzeit Jahre","d_jahre",'min="1" max="40" step="1"')}
+        ${feld("ziel","Ziel € (heutige Kaufkraft)","d_ziel",'min="0" step="1000"')}
+      </div>
+      <div class="eingabe" style="padding-top:0">
+        ${feld("kfix","Kosten je Kauf €","d_kosten",'min="0" step="0.5"')}
+        ${feld("kproz","Kosten je Kauf %","d_kosten",'min="0" max="5" step="0.05"')}
+        ${feld("ter","laufende Kosten % p.a.","d_ter",'min="0" max="3" step="0.05"')}
+        ${feld("inflation","Inflation % p.a.","d_inflation",'min="0" max="10" step="0.1"')}
+        <label>${ek("d_rendite","Rendite-Annahme")}<select data-e2="rendite"><option value="deckel" ${e.rendite !== "eigen" ? "selected" : ""}>vorsichtig: höchstens wie der Markt</option><option value="eigen" ${e.rendite === "eigen" ? "selected" : ""}>eigene Historie fortschreiben</option></select></label>
+      </div>
+      <div class="eingabe" style="padding-top:0;align-items:center">
+        <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px"><input type="checkbox" data-e2="steuer" ${e.steuer ? "checked" : ""}> ${ek("d_steuer","Abgeltungssteuer am Ende abziehen")}</label>
+        ${feld("pausch","Sparerpauschbetrag €","d_pausch",'min="0" step="100"')}
+        <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px"><input type="checkbox" data-e2="teilfrei" ${e.teilfrei ? "checked" : ""}> ${ek("d_teilfrei","Teilfreistellung 30 % (Aktienfonds)")}</label>
+      </div>
+      <div style="padding:0 14px 12px">
+        <div class="klein" style="margin-bottom:6px">${ek("d_einmal","Einmalbeträge")} (z. B. Bonus in Jahr 3; negativ = Entnahme):</div>
+        <div id="d-einmal">${e.einmal.map((x, i) => `<span class="grund-chips" style="display:inline-flex;margin:0 6px 6px 0"><span>Jahr ${x.jahr}: ${x.betrag > 0 ? "+" : ""}${geld(x.betrag)} € <button class="linkknopf" data-el="${i}" aria-label="Einmalbetrag entfernen" style="margin-left:6px;color:var(--muted)">✕</button></span></span>`).join("")}</div>
+        <div class="eingabe" style="padding:0"><label>Jahr<input id="d-ej" type="number" min="0" max="40" value="1" style="width:80px"></label><label>Betrag €<input id="d-eb" type="number" step="500" value="5000"></label><button class="knopf leise" id="d-eplus">hinzufügen</button></div>
+      </div>
+      <div style="padding:0 14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <button class="knopf" id="d-rechnen" ${P.some(p => p.id) ? "" : "disabled"}>Prognose berechnen</button>
+        <span class="klein" id="d-status">${P.some(p => p.id) ? "Rechnet im Browser, dauert wenige Sekunden." : "Erst Positionen eintragen und zuordnen."}</span>
+      </div>
+    </section>
+    <div class="abstand"></div>
+    <div id="d-ergebnis"></div>
+    <div class="fussnote">Simulation aus vergangenen Wochenrenditen, keine Vorhersage und keine Anlageberatung. Renditen in der Währung der Werte (meist US-Dollar), Wechselkurse sind nicht berücksichtigt. Kurze Historien (z. B. junge Kryptowährungen) und das „Überleben“ heutiger Aktien (Pleitefirmen fehlen) lassen die Vergangenheit zu gut aussehen.</div>`;
+  depotImport("manuell");
+  $$("#d-import-reiter button").forEach(b => b.onclick = () => { $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x === b)); depotImport(b.dataset.imp); });
+  $("#d-merken").onchange = ev => { DEPOT.merken = ev.target.checked; if (DEPOT.merken) depotSichern(); else { try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(x) {} } };
+  $("#d-vergessen").onclick = () => { if (confirm("Depot und Einstellungen in diesem Browser löschen?")) depotVergessen(); };
+  $$("#haupt [data-pw]").forEach(inp => inp.onchange = () => { const v = zahlDe(inp.value); if (v > 0) { DEPOT.positionen[+inp.dataset.pw].wert = v; if (DEPOT.e.verteilung === "depot") sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); } });
+  $$("#haupt [data-ps]").forEach(inp => inp.onchange = () => { DEPOT.positionen[+inp.dataset.ps].spar = Math.max(0, zahlDe(inp.value) || 0); DEPOT.e.verteilung = "eigen"; depotSichern(); zeigeDepot(); });
+  $$("#haupt [data-pl]").forEach(b => b.onclick = () => { DEPOT.positionen.splice(+b.dataset.pl, 1); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
+  $$("#haupt [data-pz]").forEach(b => b.onclick = () => ersatzWaehlen(+b.dataset.pz));
+  $$("#haupt [data-e2]").forEach(inp => inp.onchange = () => {
+    const k = inp.dataset.e2; DEPOT.e[k] = inp.type === "checkbox" ? inp.checked : inp.tagName === "SELECT" ? inp.value : (zahlDe(inp.value) || 0);
+    if (k === "verteilung" && inp.value !== "eigen") { sparAnteileSetzen(inp.value); depotSichern(); zeigeDepot(); return; }
+    depotSichern();
+  });
+  $$("#haupt [data-el]").forEach(b => b.onclick = () => { DEPOT.e.einmal.splice(+b.dataset.el, 1); depotSichern(); zeigeDepot(); });
+  $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
+  $("#d-rechnen").onclick = depotRechnen;
+  if (DEPOT_ERG) depotErgebnisZeigen(DEPOT_ERG);
+}
+function depotImport(art){
+  const z = $("#d-import");
+  if (art === "manuell") {
+    z.innerHTML = `<div class="eingabe" style="padding:0">
+      <label>Name oder Kürzel<input id="dm-name" placeholder="z. B. MSCI World" style="width:220px"></label>
+      <label>ISIN (optional)<input id="dm-isin" placeholder="IE00B4L5Y983" style="width:150px"></label>
+      <label>Wert in €<input id="dm-wert" placeholder="10.000" style="width:120px"></label>
+      <button class="knopf" id="dm-plus">Hinzufügen</button></div>
+      <p class="klein" style="margin:8px 0 0">Bekannte Kürzel (z. B. SPY, BTC, AAPL) und die ISINs großer Index-ETFs werden automatisch zugeordnet; sonst wählst du danach einen Ersatz.</p>`;
+    $("#dm-plus").onclick = () => {
+      const name = $("#dm-name").value.trim(), isin = $("#dm-isin").value.trim().toUpperCase(), wert = zahlDe($("#dm-wert").value);
+      if (!name && !isin) return $("#dm-name").focus();
+      if (!(wert > 0)) return $("#dm-wert").focus();
+      const pos = {name:name || isin, isin, kuerzel:istIsin(name) ? "" : name.split(/\s+/)[0], wert};
+      let z0 = zuordnen(pos);
+      if (!z0.id && istIsin(name)) z0 = zuordnen({isin:name});
+      for (const wort of name.split(/\s+/)) if (!z0.id && wort.length > 1) z0 = zuordnen({kuerzel:wort});   // jedes Wort als Kürzel
+      if (!z0.id) {   // genau gleicher Name wie im Tool (z. B. „Bitcoin“, „Gold“)
+        const n = norm(name), w = ALLE.find(x => norm(kurzname(x)) === n || norm(x.name) === n);
+        if (w) z0 = {id:w.id, quelle:"Name"};
+      }
+      DEPOT.positionen.push({...pos, ...z0}); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
+    };
+  } else if (art === "csv") {
+    z.innerHTML = `<p style="margin:0 0 8px">Exportiere die Depot- bzw. Vermögensübersicht bei deiner Bank als CSV und wähle die Datei hier aus. Sie wird nur in diesem Browser gelesen.</p>
+      <input type="file" id="d-datei" accept=".csv,.txt,text/csv"><div id="csv-zuordnung" style="margin-top:10px"></div>
+      <p class="klein">Feste Vorlagen für einzelne Banken gibt es noch nicht – die Spalten ordnest du einmal selbst zu.</p>`;
+    $("#d-datei").onchange = ev => { const f = ev.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = () => { let t = r.result; if (t.includes("�")) { const r2 = new FileReader(); r2.onload = () => csvVorschau(r2.result); r2.readAsText(f, "windows-1252"); } else csvVorschau(t); };
+      r.readAsText(f, "utf-8"); };
+  } else {
+    z.innerHTML = `<p style="margin:0 0 8px">Tabelle aus Excel oder der Bank-Webseite kopieren und hier einfügen (erste Zeile = Spaltenköpfe).</p>
+      <textarea id="d-text" rows="6" style="width:100%;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);padding:10px;font:12.5px/1.45 ui-monospace,monospace;color:var(--text)" placeholder="Name;ISIN;Wert&#10;iShares Core MSCI World;IE00B4L5Y983;12.345,67"></textarea>
+      <button class="knopf leise" id="d-text-los" style="margin-top:8px">Spalten zuordnen</button><div id="csv-zuordnung" style="margin-top:10px"></div>`;
+    $("#d-text-los").onclick = () => csvVorschau($("#d-text").value);
+  }
+}
+function ersatzWaehlen(i){   // Suche im Auswahl-Modus: der gewählte Wert wird der Position zugeordnet
+  sucheOeffnen(); ERSATZ_FUER = i;
+  $("#suche-eingabe").placeholder = "Ersatz für „" + DEPOT.positionen[i].name.slice(0, 40) + "“ wählen …";
+  $("#suche-eingabe").value = DEPOT.positionen[i].name.replace(/\b(ucits|etf|acc|dist|thes|aussch|usd|eur|\(.*?\))\b/gi, " ").replace(/\s+/g, " ").trim().slice(0, 40);
+  sucheRechnen();
+}
+
+// ------------------------------------------------------------ Monte Carlo fürs Depot (Marktfaktor/Beta + Einzelschwankung)
+async function reiheHolen(id){
+  const d = await apiWert(id);
+  if (!d?.chart?.c) return null;
+  const m = new Map(); d.chart.t.forEach((t, i) => { const c = d.chart.c[i]; if (c > 0) m.set(t, c); });
+  return m;
+}
+function rendite(m){   // Map t→Kurs → Map t→log-Rendite zur Vorwoche
+  const out = new Map(); let vt = null, vc = null;
+  for (const [t, c] of m) { if (vc && t - vt < 15 * 86400) out.set(t, Math.log(c / vc)); vt = t; vc = c; }
+  return out;
+}
+let _seed = 1;
+const zufall = () => { _seed = (_seed * 1664525 + 1013904223) >>> 0; return _seed / 4294967296; };
+async function depotRechnen(){
+  if (DEPOT_LAEUFT) return; DEPOT_LAEUFT = true;
+  const st = $("#d-status"); const knopf = $("#d-rechnen"); knopf.disabled = true;
+  try {
+    const P = DEPOT.positionen.filter(p => p.id && (p.wert > 0 || (p.spar || 0) > 0)), e = DEPOT.e;
+    st.textContent = "lädt Kursreihen …";
+    const ids = [...new Set(["SPY", ...P.map(p => p.id)])];
+    const reihen = Object.fromEntries(await Promise.all(ids.map(async id => [id, await reiheHolen(id)])));
+    if (!reihen.SPY) throw new Error("Marktreihe (S&P 500) nicht verfügbar.");
+    const markt = rendite(reihen.SPY);
+    const mT = [...markt.keys()], letzte = mT[mT.length - 1], ab = letzte - 20 * 365.25 * 86400;
+    const mWochen = mT.filter(t => t >= ab), mR = mWochen.map(t => markt.get(t));   // Markt: letzte 20 Jahre
+    // je Position: Beta, Alpha, Einzelschwankungen (Residuen) über die gemeinsame Zeit
+    const modelle = P.map(p => {
+      const r = rendite(reihen[p.id] || new Map()), xs = [], ys = [];
+      for (const t of mWochen) if (r.has(t)) { xs.push(markt.get(t)); ys.push(r.get(t)); }
+      if (xs.length < 104) return {fehler:true, p};
+      const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+      let sxy = 0, sxx = 0; for (let i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
+      const beta = sxx ? sxy / sxx : 1, alpha = my - beta * mx;
+      const res = ys.map((y, i) => y - alpha - beta * xs[i]);
+      const mMittel = mR.reduce((a, b) => a + b) / mR.length;
+      // vorsichtig: erwartete Rendite höchstens wie der Markt (Alpha gedeckelt); Werte unter dem Markt behalten ihre Historie
+      const alphaSim = e.rendite === "eigen" ? alpha : Math.min(alpha, (1 - beta) * mMittel);
+      return {p, beta, alpha:alphaSim, gedeckelt:alphaSim < alpha - 1e-9, simPa:(Math.exp((alphaSim + beta * mMittel) * 52.18) - 1) * 100, res, wochen:xs.length, jahre:xs.length / 52.18, korr:sxx ? sxy / Math.sqrt(sxx * ys.reduce((a, y) => a + (y - my) ** 2, 0)) : 0, eigenPa:(Math.exp((alpha + beta * mMittel) * 52.18) - 1) * 100};
+    });
+    const gut = modelle.filter(m => !m.fehler);
+    if (!gut.length) throw new Error("Keine zugeordnete Position hat mindestens 2 Jahre gemeinsame Daten mit dem Markt.");
+    const ohne = modelle.filter(m => m.fehler).map(m => m.p.name);
+    // Sparplan-Anteile normieren (nur gerechnete Positionen)
+    let sa = gut.map(m => Math.max(0, m.p.spar || 0)); const ssum = sa.reduce((a, b) => a + b, 0);
+    sa = ssum > 0 ? sa.map(x => x / ssum) : gut.map(() => 1 / gut.length);
+    const N = gut.length, W = Math.round(e.jahre * 52.18), PF = Math.min(4000, Math.max(200, e.pfade | 0)), BLOCK = 13;
+    const terW = Math.log(1 - e.ter / 100) / 52.18;
+    const inflW = Math.log(1 + e.inflation / 100) / 52.18;
+    const monatWoche = k => Math.floor(k * 12 / 52.18);
+    const einmalW = new Map(); e.einmal.forEach(x => { const k = Math.min(W - 1, Math.max(0, Math.round(x.jahr * 52.18))); einmalW.set(k, (einmalW.get(k) || 0) + x.betrag); });
+    const STUFEN = 60, schritt = Math.max(1, Math.round(W / STUFEN));   // Zeitpunkte für den Fächer
+    const punkte = []; for (let k = 0; k <= W; k += schritt) punkte.push(k); if (punkte[punkte.length - 1] !== W) punkte.push(W);
+    const fächer = punkte.map(() => new Float64Array(PF)), real = new Float64Array(PF), endBrutto = new Float64Array(PF), endNetto = new Float64Array(PF), maxRueck = new Float64Array(PF);
+    const eingezahltPunkte = new Float64Array(punkte.length);
+    let eingezahltEnde = 0, kostenEnde = 0;
+    _seed = 20261121;
+    const startWerte = gut.map(m => m.p.wert || 0), startSumme = startWerte.reduce((a, b) => a + b, 0);
+    const anteilHeute = startSumme > 0 ? startWerte.map(x => x / startSumme) : sa;   // Einmalbeträge wie das heutige Depot
+    const nSpar = sa.filter(x => x > 0).length, nHeute = anteilHeute.filter(x => x > 0).length;
+    st.textContent = "rechnet …";
+    for (let pf = 0; pf < PF; pf++) {
+      if (pf % 250 === 0) { st.textContent = `rechnet … ${Math.round(pf / PF * 100)} %`; await new Promise(r => setTimeout(r, 0)); }
+      const v = Float64Array.from(startWerte); let basis = startSumme, eingezahlt = startSumme, kosten = 0, hoch = startSumme, rueck = 0, pi = 0, blockStart = 0, mon = -1;
+      if (pf === 0) eingezahltPunkte[0] = startSumme;
+      fächer[0][pf] = startSumme; pi = 1;
+      for (let k = 0; k < W; k++) {
+        if (k % BLOCK === 0) blockStart = Math.floor(zufall() * (mR.length - BLOCK));
+        const m = mR[blockStart + (k % BLOCK)];
+        let summe = 0;
+        for (let i = 0; i < N; i++) {
+          const g = gut[i], eps = g.res[Math.floor(zufall() * g.res.length)];
+          v[i] *= Math.exp(g.alpha + g.beta * m + eps + terW); summe += v[i];
+        }
+        // Monatsanfang: Sparrate (mit jährlicher Erhöhung) und Einmalbeträge
+        const mo = monatWoche(k);
+        let zufluss = 0;
+        if (mo !== mon) { mon = mo; if (e.sparrate > 0) zufluss += e.sparrate * Math.pow(1 + e.dynamik / 100, Math.floor(mo / 12)); }
+        const em = einmalW.get(k) || 0;
+        const kaufen = (betrag, gewichte, orders) => {   // Kosten je Order (fest je Position + Prozent), Rest wird angelegt
+          const k1 = e.kfix * orders + betrag * e.kproz / 100, netto = Math.max(0, betrag - k1);
+          kosten += Math.min(betrag, k1); for (let i = 0; i < N; i++) v[i] += netto * gewichte[i];
+          basis += betrag; eingezahlt += betrag; summe += netto;
+        };
+        if (zufluss > 0) kaufen(zufluss, sa, nSpar);
+        if (em > 0) kaufen(em, anteilHeute, nHeute);
+        if (em < 0 && summe > 0) { const ant = Math.min(1, -em / summe); for (let i = 0; i < N; i++) v[i] *= 1 - ant; basis *= 1 - ant; eingezahlt -= Math.min(-em, summe); summe *= 1 - ant; }
+        if (summe > hoch) hoch = summe; else if (hoch > 0) rueck = Math.max(rueck, 1 - summe / hoch);
+        if (k + 1 === punkte[pi]) { fächer[pi][pf] = summe; if (pf === 0) eingezahltPunkte[pi] = eingezahlt; pi++; }
+      }
+      const ende = v.reduce((a, b) => a + b, 0);
+      let steuer = 0;
+      if (e.steuer) { const gewinn = (ende - basis) * (e.teilfrei ? 0.7 : 1); steuer = Math.max(0, gewinn - e.pausch) * 0.26375; }
+      endBrutto[pf] = ende; endNetto[pf] = ende - steuer; real[pf] = (ende - steuer) * Math.exp(-inflW * W); maxRueck[pf] = rueck * 100;
+      if (pf === 0) { eingezahltEnde = eingezahlt; kostenEnde = kosten; }
+    }
+    const q = (arr, p) => { const s = Float64Array.from(arr).sort(); return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))]; };
+    const ant = (arr, f) => arr.reduce((a, x) => a + (f(x) ? 1 : 0), 0) / arr.length * 100;
+    const t0 = Math.floor(Date.now() / 1000 / 86400) * 86400;
+    DEPOT_ERG = {
+      t:punkte.map(k => t0 + Math.round(k * 7 * 86400)), fächer:[5, 25, 50, 75, 95].map(p => punkte.map((_, i) => q(fächer[i], p))),
+      eingezahlt:Array.from(eingezahltPunkte), eingezahltEnde, kostenEnde, start:startSumme, jahre:e.jahre, pfade:PF,
+      netto:{q5:q(endNetto, 5), q50:q(endNetto, 50), q95:q(endNetto, 95)}, brutto50:q(endBrutto, 50), real50:q(real, 50), real5:q(real, 5), real95:q(real, 95),
+      verlust:ant(endNetto, x => x < eingezahltEnde), ziel:e.ziel > 0 ? ant(real, x => x >= e.ziel) : null, rueck50:q(maxRueck, 50), rueck95:q(maxRueck, 95),
+      modelle:gut.map(m => ({name:m.p.name, id:m.p.id, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
+      offenWert:DEPOT.positionen.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
+    };
+    depotErgebnisZeigen(DEPOT_ERG);
+    st.textContent = `fertig: ${PF.toLocaleString("de-DE")} Wege über ${e.jahre} Jahre`;
+  } catch(ex) { st.innerHTML = `<span class="neg">${esc(ex.message)}</span>`; }
+  finally { DEPOT_LAEUFT = false; knopf.disabled = false; }
+}
+function depotErgebnisZeigen(r){
+  const el = $("#d-ergebnis"); if (!el) return;
+  const e = r.e;
+  el.innerHTML = `
+    <h2 class="abschnitt-titel" style="margin-top:0">Prognose in ${r.jahre} Jahren <span class="klein">Simulation, ${r.pfade.toLocaleString("de-DE")} Wege</span></h2>
+    <div class="raster">
+      <section class="karte breit2"><div class="karte-kopf"><span data-e="d_faecher" tabindex="0">Depotwert über die Zeit</span>
+          <div class="segment" role="group" aria-label="Skala" data-e="skala" style="text-transform:none;letter-spacing:0"><button data-dsk="0" aria-pressed="${DEPOT_SKALA === 0}">Linear</button><button data-dsk="1" aria-pressed="${DEPOT_SKALA === 1}">Log</button></div></div>
+        <div id="d-chart" style="height:340px;margin:0 -6px"></div>
+        <div class="legende" style="padding:6px 0 0"><span><i style="background:var(--kegel);opacity:.35;height:9px"></i>90 % der Wege</span><span><i style="background:var(--kegel);opacity:.7;height:9px"></i>50 % der Wege</span><span><i style="background:var(--kegel)"></i>mittlerer Weg</span><span><i style="background:var(--muted)"></i>eingezahlt</span></div></section>
+      <section class="karte"><div class="karte-kopf"><span data-e="d_ende" tabindex="0">Am Ende (nach Steuer)</span><span>Median</span></div>
+        <div class="gross-zahl">${geld(r.netto.q50)} €</div>
+        <p>in heutiger Kaufkraft etwa <b>${geld(r.real50)} €</b> (Inflation ${fmt(e.inflation,1," %")})</p>
+        <div class="kv"><span>90 % der Wege zwischen</span><b>${geld(r.netto.q5)} und ${geld(r.netto.q95)} €</b></div>
+        <div class="kv"><span>eingezahlt (inkl. Depot heute)</span><b>${geld(r.eingezahltEnde)} €</b></div>
+        <div class="kv"><span>Kaufkosten gesamt</span><b>${geld(r.kostenEnde)} €</b></div></section>
+      <section class="karte"><div class="karte-kopf"><span data-e="d_wahrsch" tabindex="0">Wahrscheinlichkeiten</span><span>am Ende</span></div>
+        <div class="kv"><span>weniger als eingezahlt</span><b class="${r.verlust > 10 ? "neg" : ""}">${fmt(r.verlust,0," %")}</b></div>
+        ${r.ziel != null ? `<div class="kv"><span>Ziel ${geld(e.ziel)} € (heutige Kaufkraft) erreicht</span><b>${fmt(r.ziel,0," %")}</b></div>` : ""}
+        <div class="kv"><span data-e="s_rueckgang">größter Rückgang unterwegs (typisch)</span><b class="neg">−${fmt(r.rueck50,0," %")}</b></div>
+        <div class="kv"><span>größter Rückgang (schlechteste 5 %)</span><b class="neg">−${fmt(r.rueck95,0," %")}</b></div>
+        <p class="klein" style="margin-top:8px">Häufigkeiten unter den simulierten Wegen, keine Zusage.</p></section>
+    </div>
+    <div class="abstand"></div>
+    <section class="karte seite-karte"><h3>So wurde gerechnet</h3>
+      <div class="tab-scroll"><table class="wtab"><thead><tr><th>Position</th><th>gerechnet mit</th><th data-e="d_beta">Beta zum Markt</th><th data-e="d_korr">Gleichlauf</th><th>Ø p.a. (Historie)</th><th data-e="d_simpa">Ø p.a. (Simulation)</th><th>gemeinsame Jahre</th></tr></thead><tbody>${
+        r.modelle.map(m => { const w = ALLE.find(x => x.id === m.id); return `<tr><td style="text-align:left">${esc(m.name)}</td><td style="text-align:left">${esc(w ? kurzname(w) : m.id)}</td><td>${fmt(m.beta,2)}</td><td>${fmt(m.korr,2)}</td><td>${fmt(m.eigenPa,1," %")}</td><td>${fmt(m.simPa,1," %")}${m.gedeckelt ? ' <span class="klein">gedeckelt</span>' : ""}</td><td>${fmt(m.jahre,0)}${m.jahre < 10 ? ' <span class="neg">kurz!</span>' : ""}</td></tr>`; }).join("")}</tbody></table></div>
+      <div class="text">Jede Woche wird ein Stück echter Marktgeschichte (S&P 500, Blöcke à 13 Wochen aus den letzten 20 Jahren seit ${new Date(r.mVon * 1000).getFullYear()}) gezogen. Jede Position bewegt sich mit ihrem <b>Beta</b> zum Markt plus einer eigenen, zufällig gezogenen Schwankung aus ihrer Vergangenheit; so fallen in Krisen alle Positionen gemeinsam, wie früher. Achtung: Die letzten 20 Jahre waren für US-Aktien überdurchschnittlich gut; andere Märkte und Jahrzehnte liefen deutlich schlechter (z. B. Japan ab 1990, Europa 2000–2013). Eine Zeit wie diese kommt in der Simulation nur vor, soweit sie in den gezogenen Wochen steckt.
+        ${e.rendite === "eigen" ? "Rendite-Annahme „eigene Historie“: der frühere Vorsprung einzelner Werte vor dem Markt wird fortgeschrieben – bei Überfliegern wie großen Tech-Aktien wirkt das meist viel zu gut." : "Rendite-Annahme „vorsichtig“: kein Wert wird besser angenommen als der Markt (S&P 500) in den letzten 20 Jahren; Werte, die früher schwächer waren, behalten ihre schwächere Rendite."}
+        Sparplan monatlich${e.dynamik ? `, jährlich +${fmt(e.dynamik,1," %")}` : ""}, Kosten je Kauf ${fmt(e.kfix,2)} € + ${fmt(e.kproz,2," %")}, laufende Kosten ${fmt(e.ter,2," %")} p.a.
+        ${e.steuer ? `Abgeltungssteuer 26,375 % auf den Gewinn beim gedachten Verkauf am Ende, abzüglich Sparerpauschbetrag ${geld(e.pausch)} €${e.teilfrei ? ", Teilfreistellung 30 %" : ""}; Vorabpauschale, Kirchensteuer und Steuern unterwegs sind vereinfacht weggelassen.` : "Ohne Steuer."}
+        ${r.ohne.length ? `<br><b>Nicht gerechnet</b> (zu wenig gemeinsame Daten): ${r.ohne.map(esc).join(", ")}.` : ""}
+        ${r.offenWert > 0 ? `<br><b>Ohne Zuordnung</b> und deshalb nicht enthalten: ${geld(r.offenWert)} €.` : ""}
+        <br>Das ist eine Simulation aus der Vergangenheit, keine Vorhersage und keine Anlageberatung. Renditen in der Währung der Werte (meist US-Dollar), ohne Wechselkurs.</div></section>`;
+  const f = F(), cb = chartBasis(), ch = LightweightCharts.createChart($("#d-chart"), {...cb, rightPriceScale:{...cb.rightPriceScale, mode:DEPOT_SKALA, scaleMargins:{top:0.06, bottom:0}}, localization:{locale:"de-DE", priceFormatter:p => Math.round(p).toLocaleString("de-DE") + " €"}, handleScroll:false, handleScale:false});
+  const daten = arr => r.t.map((t, i) => ({time:t, value:arr[i]}));
+  const flaeche = (arr, farbe) => { const s = ch.addAreaSeries({lineColor:"rgba(0,0,0,0)", topColor:farbe, bottomColor:farbe, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); s.setData(daten(arr)); };
+  flaeche(r.fächer[4], f.kegel + "40"); flaeche(r.fächer[3], f.kegel + "55"); flaeche(r.fächer[1], f.kegel + "40"); flaeche(r.fächer[0], f.bg);
+  [[0, f.kegel + "aa", 1, 2], [4, f.kegel + "aa", 1, 2], [2, f.kegel, 2, 0]].forEach(([i, c, w, st]) => { const s = ch.addLineSeries({color:c, lineWidth:w, lineStyle:st, priceLineVisible:false, lastValueVisible:i === 2, crosshairMarkerVisible:false}); s.setData(daten(r.fächer[i])); });
+  const ein = ch.addLineSeries({color:f.muted, lineWidth:1, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); ein.setData(daten(r.eingezahlt));
+  setTimeout(() => ch.timeScale().fitContent(), 30);
+  charts.push(ch);
+  $$("#d-ergebnis [data-dsk]").forEach(b => b.onclick = () => { DEPOT_SKALA = +b.dataset.dsk; sichere("depot_skala", DEPOT_SKALA); ch.priceScale("right").applyOptions({mode:DEPOT_SKALA});
+    $$("#d-ergebnis [data-dsk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+}
+const ERKLAERUNG_DEPOT = {
+  d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch nur über sicher bekannte ISINs großer Index-ETFs (gleicher Index) und exakte Kürzel. Bei allem anderen wählst du einen Ersatz, z. B. den passenden Index-ETF für einen Fonds. Ein Ersatz ist eine Annäherung."},
+  d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
+  d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
+  d_verteilung: {titel:"Verteilung", text:"Wie die Sparrate auf die Positionen verteilt wird: wie das heutige Depot, gleichmäßig oder nach den Anteilen in der Tabelle."},
+  d_dynamik: {titel:"Jährliche Erhöhung", text:"Um wie viel Prozent die Sparrate jedes Jahr steigt (Dynamik), z. B. 3 % wie eine Gehaltserhöhung. 0 = gleichbleibend."},
+  d_jahre: {titel:"Laufzeit", text:"Wie viele Jahre in die Zukunft simuliert wird (1–40). Je länger, desto breiter der Fächer."},
+  d_ziel: {titel:"Ziel", text:"Wunschbetrag am Ende in heutiger Kaufkraft (nach Steuer). Angezeigt wird, in wie viel Prozent der simulierten Wege er erreicht wurde."},
+  d_kosten: {titel:"Kosten je Kauf", text:"Ordergebühr je Sparplan-Ausführung bzw. Einmalkauf: fester Betrag plus Prozent vom Kaufbetrag. Wird vom angelegten Betrag abgezogen."},
+  d_ter: {titel:"Laufende Kosten", text:"Zusätzliche jährliche Kosten in Prozent, z. B. Depotgebühr oder die höhere Gebühr eines aktiven Fonds. Wird wöchentlich vom Depotwert abgezogen. Die Kursreihen von ETFs enthalten deren eigene Kosten (TER) schon – dafür also nichts eintragen; bei reinen Index-Reihen und Einzelaktien entsteht keine TER."},
+  d_inflation: {titel:"Inflation", text:"Mit dieser Teuerung werden die Endwerte in heutige Kaufkraft umgerechnet. 2 % ist das Ziel der EZB; früher lag sie zeitweise deutlich höher."},
+  d_rendite: {titel:"Rendite-Annahme", text:"„Vorsichtig“ (Standard): Keine Position wird besser angenommen als der Markt (S&P 500 der letzten 20 Jahre); wer früher schwächer war, bleibt schwächer. „Eigene Historie“: jede Position behält ihren früheren Vorsprung vor dem Markt – bei Aktien, die stark gestiegen sind (z. B. Apple, Nvidia), ergibt das oft unrealistisch hohe Endwerte. Die Schwankungen sind in beiden Fällen die echten."},
+  d_simpa: {titel:"Ø p.a. in der Simulation", text:"Mittlere Jahresrendite, mit der diese Position in der Simulation läuft (vor Kosten, in der Währung des Werts). „Gedeckelt“: die frühere Rendite lag über dem Markt und wurde vorsichtig auf Marktniveau begrenzt."},
+  d_steuer: {titel:"Abgeltungssteuer", text:"26,375 % (25 % plus Solidaritätszuschlag) auf den Gewinn beim gedachten Verkauf am Ende. Vereinfacht: keine Vorabpauschale, keine Kirchensteuer, keine Verrechnung mit anderen Gewinnen oder Verlusten."},
+  d_pausch: {titel:"Sparerpauschbetrag", text:"Bis zu diesem Betrag bleiben Kapitalerträge steuerfrei: 1.000 € für Alleinstehende, 2.000 € für Verheiratete (Stand 2026). Hier vereinfacht einmal beim Verkauf am Ende abgezogen."},
+  d_teilfrei: {titel:"Teilfreistellung", text:"Bei Aktienfonds und Aktien-ETFs (mind. 51 % Aktien) sind 30 % der Erträge steuerfrei. Für Einzelaktien, Krypto und Rohstoff-ETCs gilt das nicht."},
+  d_einmal: {titel:"Einmalbeträge", text:"Zusätzliche Einzahlungen (positiv) oder Entnahmen (negativ) in einem bestimmten Jahr, z. B. ein Bonus oder eine größere Anschaffung. Einzahlungen werden wie das heutige Depot verteilt."},
+  d_faecher: {titel:"Fächer", text:"Jede Linie ist ein Anteil der simulierten Wege: In der mittleren Linie liegt die Hälfte darüber, die Hälfte darunter. Die dunklere Fläche umfasst 50 %, die hellere 90 % der Wege. Gestrichelt: eingezahltes Geld. Vor Steuer."},
+  d_ende: {titel:"Am Ende", text:"Typischer Depotwert am Ende der Laufzeit (Median der Wege) nach Kosten und, falls gewählt, nach Abgeltungssteuer beim gedachten Verkauf."},
+  d_wahrsch: {titel:"Wahrscheinlichkeiten", text:"Anteil der simulierten Wege mit diesem Ergebnis. Verlust: am Ende nach Steuer weniger als heutiges Depot plus alle Einzahlungen. Größter Rückgang: stärkster Fall des Depots vom bisherigen Höchststand unterwegs."},
+  d_beta: {titel:"Beta", text:"Wie stark die Position im Mittel mit dem Markt (S&P 500) mitging: 1 = gleich stark, 0,5 = halb so stark, 1,5 = stärker. Gold und Rohstoffe haben oft ein Beta nahe 0."},
+  d_korr: {titel:"Gleichlauf (Korrelation)", text:"Wie eng die Wochenrenditen mit dem Markt zusammenhingen: 1 = immer gemeinsam, 0 = unabhängig, negativ = gegenläufig. Der Rest ist Einzelschwankung."},
+};
 function grundMitErklaerung(g){
   return umlaut(g)
     .replace(/(\d+ % unter Allzeithoch)/, (m) => ek("vom_hoch", m))
