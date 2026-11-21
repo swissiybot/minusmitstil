@@ -21,7 +21,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
   --pos:#3fd0b2; --neg:#ff9a57;
   --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff;
-  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --marke-gut:#9ff5e2;
+  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --ema20:#5ad1ff; --ema50:#a6e35a; --ema100:#ff8fc8; --ema200:#ff5f5f; --marke-gut:#9ff5e2;
   --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
   --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
   --r:14px; --r-klein:9px;
@@ -35,7 +35,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
   --pos:#0b8a73; --neg:#c4530a;
   --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad;
-  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --marke-gut:#06604f;
+  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --ema20:#0277bd; --ema50:#4c8a00; --ema100:#c2185b; --ema200:#c62828; --marke-gut:#06604f;
   --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
   --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
 }
@@ -543,7 +543,7 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib"), gut:g("marke-gut")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -612,7 +612,7 @@ function tvWidget(el, symbol, iv="M"){
   // immer Monatsansicht; 200-Wochen-Linie im Monatsbild = gleitender Durchschnitt über 46 Monate (200 Wochen ≈ 46 Monate)
   s.text = JSON.stringify({autosize:true, symbol, interval:iv, ...(iv === "M" ? {range:"ALL"} : {}), timezone:"Europe/Berlin", theme:document.documentElement.dataset.theme === "light" ? "light" : "dark", style:"1", locale:"de_DE",
     allow_symbol_change:false, hide_side_toolbar:true, calendar:false, support_host:"https://www.tradingview.com",
-    studies:ma ? [{id:"MASimple@tv-basicstudies", inputs:{length:ma}}] : []});
+    studies:[...(ma ? [{id:"MASimple@tv-basicstudies", inputs:{length:ma}}] : []), ...(CHIPS.ema ? [20, 50, 100, 200].map(n => ({id:"MAExp@tv-basicstudies", inputs:{length:n}})) : [])]});
   box.appendChild(s); el.appendChild(box);
 }
 function zeichneOnline(w, c){
@@ -951,6 +951,7 @@ const ERKLAERUNG_NEU = {
   klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
   lineal: {titel:"Lineal", text:"Messen im Chart: 1. Klick setzt den Start, dann zieht das Lineal mit der Maus mit. 2. Klick setzt das Ende, die Messung bleibt stehen. 3. Klick beendet das Lineal, die Maus ist wieder frei. Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
   l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (kräftig blaugrün, „sehr günstig“), zwischen 60 und 80 (hell blaugrün, „günstig“) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
+  l_ema: {titel:"EMA 20/50/100/200", text:"Exponentielle gleitende Durchschnitte über 20, 50, 100 und 200 Kerzen der gewählten Zeitebene (wie der beliebte TradingView-Indikator). Neuere Kurse zählen stärker als ältere, deshalb folgt die EMA dem Kurs schneller als ein einfacher Durchschnitt. Achtung: Im Wochenchart ist EMA 200 ≈ 4 Jahre, im Tageschart ≈ 10 Monate. Viele lesen „Kurs über EMA 200“ oder „EMA 50 über EMA 200“ als Aufwärtstrend. Die Trendstudie im Tool (23 Regeln, Prüfzeit ab 2005) fand für solche Linien keinen verlässlichen Vorteil bei der Richtung, nur kleinere Rückgänge auf Kosten von Rendite."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
@@ -1506,7 +1507,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1622,6 +1623,7 @@ async function zeige(id, opt={}){
     ["ergebnis", "Kauf-Ergebnis", `<i class="pfeil"><span style="color:var(--guenstig)">●</span></i>`, "l_ergebnis", eigen && !!c.c],
     ["tiefhoch", "Tief-/Hochpunkte", `<i class="pfeil"><span style="color:var(--guenstig)">●</span><span style="color:var(--teuer)">●</span></i>`, "l_tiefhoch", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
+    ["ema", "EMA 20/50/100/200", `<i style="color:var(--ema20)"></i>`, "l_ema", eigen],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["gp", "Golden Pocket", `<i class="flaeche" style="color:var(--fib)"></i>`, "l_gp", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
@@ -1977,7 +1979,7 @@ function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], phasen:[], bb:[]};
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], phasen:[], bb:[], ema:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
   const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
@@ -2007,6 +2009,16 @@ function zeichne(c, w){
     }
     c._bb = {mitte, oben, unten};
     linie("bb", oben, f.bb, 1, 0, true); linie("bb", mitte, f.bb + "99", 1, 2, true); linie("bb", unten, f.bb, 1, 0, true);
+  }
+  {   // EMA 20/50/100/200 (exponentiell, auf der gewählten Zeitebene; Start mit dem einfachen Durchschnitt der ersten n Kerzen)
+    c._ema = {};
+    [[20, f.ema20], [50, f.ema50], [100, f.ema100], [200, f.ema200]].forEach(([n, farbe]) => {
+      const a = 2 / (n + 1), r = new Array(c.c.length).fill(null); let e = null, s = 0, k = 0;
+      for (let i = 0; i < c.c.length; i++) { const x = c.c[i]; if (x == null) continue;
+        if (e == null) { s += x; k++; if (k === n) { e = s / n; r[i] = e; } } else { e = a * x + (1 - a) * e; r[i] = e; } }
+      c._ema[n] = r;
+      const l = linie("ema", r, farbe, n >= 100 ? 2 : 1, 0, true); if (l) l.applyOptions({lastValueVisible:true, title:"EMA" + n});
+    });
   }
   if (c.pi_ema150) { linie("pi", c.pi_ema150, f.lila, 2); linie("pi", c.pi_sma471, f.cyan, 2); }
   if (c.pi_top111) { linie("pitop", c.pi_top111, f.pitop1, 1, 2, true); linie("pitop", c.pi_top350x2, f.pitop2, 1, 2, true); }
@@ -2059,6 +2071,7 @@ function zeichne(c, w){
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
+      ${CHIPS.ema && c._ema ? [20, 50, 100, 200].filter(n => c._ema[n][i] != null).map(n => `<span><i class="sw" style="background:var(--ema${n})"></i>EMA${n} ${fmt(c._ema[n][i],nk)}</span>`).join("") : ""}
       ${CHIPS.bb && c._bb?.mitte[i] != null ? `<span><i class="sw" style="background:var(--bb)"></i>Bollinger ${c._bb.unten[i] == null ? "–" : fmt(c._bb.unten[i],nk)} – ${fmt(c._bb.oben[i],nk)}</span>` : ""}</div>`;
   };
   fkZeigen(null);
