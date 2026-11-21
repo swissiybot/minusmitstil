@@ -400,7 +400,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .wert-kopf{grid-template-columns:1fr;padding:14px}
   .gauge{margin:0 auto;order:-1;transform:scale(.9);margin-bottom:-8px}
   .chart-flaeche{height:min(var(--g-chart,540px),68vh)}
-  .unten-nav{display:grid;grid-template-columns:repeat(5,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .unten-nav{display:grid;grid-template-columns:repeat(6,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
   .unten-nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;color:var(--muted);font-size:11px;font-weight:600}
   .unten-nav button svg{width:21px;height:21px}
   .unten-nav button[aria-current="page"]{color:var(--akzent)}
@@ -496,6 +496,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 </div>
 <nav class="unten-nav" aria-label="Ansicht">
   <button data-ansicht="uebersicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Übersicht</button>
+  <button data-ansicht="karte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="10" height="11" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="15" y="11" width="6" height="10" rx="1"/><rect x="3" y="16" width="10" height="5" rx="1"/></svg>Heatmap</button>
   <button data-ansicht="liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Liste</button>
   <button data-ansicht="haupt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>Wert</button>
   <button data-ansicht="depot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg>Depot</button>
@@ -1029,8 +1030,9 @@ function neuZeichnen(){   // Charts übernehmen die Farben nur beim Anlegen
 function ansicht(name){
   if (name === "uebersicht") { zeigeUebersicht(); name = "haupt"; }
   if (name === "depot") { zeigeDepot(); name = "haupt"; }
+  if (name === "karte") { zeigeKarte(); name = "haupt"; }
   document.body.dataset.ansicht = name;
-  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", b.dataset.ansicht === name || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : SEITE === "depot" ? "depot" : "uebersicht")) ? "page" : "false"));
+  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", (b.dataset.ansicht === name && name !== "haupt") || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : SEITE === "depot" ? "depot" : SEITE === "karte" ? "karte" : "uebersicht")) ? "page" : "false"));
   if (name === "lesen") leseLaden();
   if (name === "liste") listeZeichnen();
 }
@@ -1323,8 +1325,10 @@ function quadrate(werte, x, y, w, h){   // „Squarified Treemap“: Kacheln mö
   if (reihe.length) legen(reihe);
   return out;
 }
-function zeigeKarte(){
-  seiteAnfang("karte"); hashSetzen("seite=karte");
+function zeigeKarte(opt = {}){
+  const ziel = opt.ziel || null;   // ziel gesetzt: Heatmap eingebettet (Übersicht), sonst eigene Seite
+  if (!ziel) { seiteAnfang("karte"); hashSetzen("seite=karte"); }
+  const wurzel = ziel || $("#haupt");
   if (!["t","w","m","j","ampel","mp"].includes(KARTE.farbe)) KARTE.farbe = "t";
   if (!["n100","ETF","Krypto","Rohstoffe","alle"].includes(KARTE.titel)) KARTE.titel = "alle";
   if (!["branche","zone","keine"].includes(KARTE.gruppe)) KARTE.gruppe = "branche";
@@ -1353,8 +1357,8 @@ function zeigeKarte(){
     ? SKALA.map((c, i) => `<span class="hm-stufe" style="background:${c}">${i === 3 ? "0 %" : (i < 3 ? "−" : "+") + fmt(Math.abs(i - 3) * g3, g3 < 1 ? 1 : 0) + " %"}${i === 0 || i === 6 ? "+" : ""}</span>`).join("")
     : KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"],[f.teuer,"↘ Abwärtstrend"]].map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("")
     : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("");
-  $("#haupt").innerHTML = `
-    <h1 class="seiten-titel">Heatmap</h1>
+  wurzel.innerHTML = `
+    ${ziel ? "" : '<h1 class="seiten-titel">Heatmap</h1>'}
     <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
     <div class="chart-leiste" style="margin-bottom:8px">
       <div class="segment" role="group" aria-label="Zeitraum">${knopf("farbe","t","Tag")}${knopf("farbe","w","Woche")}${knopf("farbe","m","Monat")}${knopf("farbe","j","Jahr")}${knopf("farbe","ampel","Ampel")}${knopf("farbe","mp","Trend")}</div>
@@ -1363,12 +1367,12 @@ function zeigeKarte(){
     </div>
     <div id="karte-legende" class="skala-legende">${legende}</div>
     ${aktien.length === 0 && (KARTE.titel === "n100" || KARTE.titel === "alle") ? `<p class="klein" style="margin:4px 0 8px">Die Nasdaq-100-Liste ist noch nicht geladen (läuft mit der nächsten Aktualisierung).</p>` : ""}
-    <div id="karte-box" style="position:relative;height:max(440px, calc(100vh - 250px));border-radius:10px;overflow:hidden;background:#11141b">
+    <div id="karte-box" style="position:relative;height:${ziel ? "min(560px, 75vh)" : "max(440px, calc(100vh - 250px))"};border-radius:10px;overflow:hidden;background:#11141b">
       <canvas id="karte-cv" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer" role="img" aria-label="Heatmap aller gewählten Titel"></canvas>
       <div id="karte-tip" class="karte-tip" hidden></div>
     </div>
     <div class="fussnote">Kursveränderung Schluss gegen Schluss (Tag: letzter Handelstag, Krypto auch am Wochenende), ohne Dividenden bei Indizes und Rohstoffen. Nasdaq-100-Mitglieder und Branchen (ICB): Wikipedia „List of NASDAQ-100 companies“ (CC BY-SA). Ampel = Lage gemessen an der eigenen Geschichte. Keine Anlageberatung. ${STAND_TEXT}</div>`;
-  $$("#haupt [data-k]").forEach(b => b.onclick = () => { KARTE[b.dataset.k] = b.dataset.v; sichere("karte", KARTE); zeigeKarte(); });
+  wurzel.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { KARTE[b.dataset.k] = b.dataset.v; sichere("karte", KARTE); zeigeKarte(opt); });
   const groesse = w => istAktie(w) ? Math.max(nachMw && w.f?.mw > 0 ? w.f.mw * 1e6 : (w.umsatz_usd || 0) * 250, 1) : 1;
   // Gruppen: Aktien nach Branche / Ampel-Zone, die anderen nach ihrer Gruppe; bei „Alle“ feste Flächenanteile
   const ZONEN_N = ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"];
@@ -1422,7 +1426,7 @@ function zeigeKarte(){
     tip.style.left = Math.min(tx, r.width - 255) + "px"; tip.style.top = Math.min(ty, r.height - 120) + "px"; };
   cv.onmouseleave = () => { tip.hidden = true; };
   cv.onclick = ev => { const k = finde(ev); if (k && !k.w_.kurz) zeige(k.w_.id); else if (k) cv.onmousemove(ev); };
-  KARTE_RO?.disconnect(); KARTE_RO = new ResizeObserver(() => { if (SEITE === "karte" && $("#karte-cv")) zeichnen(); }); KARTE_RO.observe(box);
+  KARTE_RO?.disconnect(); KARTE_RO = new ResizeObserver(() => { if (document.body.contains(cv)) zeichnen(); }); KARTE_RO.observe(box);
   zeichnen();
 }
 function zeigeUebersicht(){
@@ -1465,7 +1469,8 @@ function zeigeUebersicht(){
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
     <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
     ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
-    <p class="klein" style="margin:6px 0 0"><button class="linkknopf" id="zu-karte">Heatmap: Nasdaq-100, Index-ETFs, Krypto, Rohstoffe (Tag, Woche, Monat, Jahr)</button></p>
+    <h2 class="abschnitt-titel"><span data-e="karte">Heatmap: Kursveränderung</span><span class="klein">Nasdaq-100, Index-ETFs, Krypto, Rohstoffe · <button class="linkknopf" id="zu-karte">groß öffnen</button></span></h2>
+    <div id="uebersicht-heatmap"></div>
     <h2 class="abschnitt-titel"><span data-e="auffaellig">Heute auffällig</span><span class="klein">auffällig heißt nicht kaufenswert</span></h2>
     <div class="auffaellig">
       ${afKarte("Größte Bewegung in 4 Wochen", mitD, w => { const d = wert(w, "delta"); return `<span class="w4">${w4Html(d)}</span>`; }, "keine Daten")}
@@ -1477,6 +1482,7 @@ function zeigeUebersicht(){
   $("#kern-uebersicht").innerHTML = $("#lesehilfe-kern").innerHTML + ` <button class="linkknopf" id="kern-mehr">Mehr in „So liest du das Tool“</button>`;
   $("#kern-mehr").onclick = () => leseOeffnen(true);
   if ($("#zu-karte")) $("#zu-karte").onclick = () => zeigeKarte();
+  if ($("#uebersicht-heatmap")) zeigeKarte({ziel: $("#uebersicht-heatmap")});
   $$("#haupt [data-id]").forEach(e => { e.onclick = () => zeige(e.dataset.id); e.onkeydown = ev => { if (ev.key === "Enter") zeige(e.dataset.id); }; });
   const geh = (id, fn) => { const e = $(id); if (e) { e.onclick = fn; e.onkeydown = ev => { if (ev.key === "Enter") fn(); }; } };
   ["#w-breite","#w-vix","#w-zins"].forEach(id => geh(id, () => zeigeUmfeld()));
