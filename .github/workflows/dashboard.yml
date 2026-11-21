@@ -49,6 +49,7 @@ jobs:
             daten/universum.csv
             daten/fred
             daten/shiller
+            daten/sec
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
 
@@ -66,6 +67,11 @@ jobs:
       - name: Bewertung S&P 500 (Shiller-CAPE)
         run: python bewertung.py
 
+      - name: Geschäftszahlen (SEC EDGAR)
+        env:
+          SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
+        run: python fundamente.py
+
       - name: Kurse zwischenspeichern
         if: always() && hashFiles('daten/kurse.parquet') != ''
         uses: actions/cache/save@v4
@@ -75,6 +81,7 @@ jobs:
             daten/universum.csv
             daten/fred
             daten/shiller
+            daten/sec
           key: kurse-${{ github.run_id }}
 
       - name: Auswertung

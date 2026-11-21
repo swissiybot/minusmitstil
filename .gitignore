@@ -12,6 +12,7 @@ daten/ohne_daten.txt
 daten/kurse_lauf.json
 daten/fred/
 daten/shiller/
+daten/sec/
 daten/*.log
 web/daten/
 site/

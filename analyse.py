@@ -371,6 +371,7 @@ def tagebuch(zeilen):
         return
     eintraege = [
         {k: z.get(k) for k in ("id", "symbol", "datum", "kurs", "score", "zone", "qualitaet")}
+        | ({"falle": z["f"]["falle"]} if z.get("f") else {})
         | {f"p{h}": (z["p"].get(h) or {}).get("quote") if z.get("p") else None for h in ("1", "3", "5")}
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
@@ -446,8 +447,9 @@ class Stufe2:
     """Sammelt beim Durchlauf ueber alle Werte: Walk-forward-Pruefung, Strategie-Vergleich, Marktbreite."""
 
     def __init__(self):
-        import pruefung, umfeld
+        import pruefung, umfeld, fundamente
         self.sammler = {k: pruefung.Sammler() for k in PRUEF_GRUPPEN}
+        self.fallen = fundamente.Pruefung()
         self.breite = umfeld.Breite()
         self.zins = umfeld.zins_monatlich()
         self.strat_einzeln, self.strat_aktien = [], []
@@ -489,6 +491,7 @@ class Stufe2:
         out = {
             "stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
             "kalibrierung": {k: {"name": PRUEF_GRUPPEN[k], **s.ergebnis()} for k, s in self.sammler.items()},
+            "fallen": self.fallen.ergebnis() if self.fallen.aktien["alle"] else None,
             "strategie": {
                 "annahmen": "500 je Monat, bis 20 Jahre (ab erster gültiger Ampel), 1 je Order, Abgeltungssteuer 26,375 %, Zins US-Geldmarkt 3 Monate",
                 "einzeln": self.strat_einzeln,
@@ -512,10 +515,24 @@ def main(argv):
         alle_laden()   # einmal alles in den Arbeitsspeicher, dann geht es schnell
     zeilen, fehler = [], 0
     s2 = None if argv else Stufe2()
+    try:
+        import fundamente
+        fund = fundamente.kennzahlen()   # Geschaeftszahlen (SEC), leer, wenn nicht geladen
+    except Exception as ex:
+        print(f"Geschäftszahlen nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+        fund = {}
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
             if erg is not None:
+                f = fund.get(z["symbol"]) if "Nasdaq" in z["gruppe"] else None
+                if f is not None:
+                    try:
+                        erg[0]["f"] = fundamente.fuer_zeile(f, erg[0].get("kurs"), erg[0].get("score")) or None
+                        if s2 is not None:
+                            s2.fallen.add(z["symbol"], f, erg[2]["w"], erg[2]["score"])
+                    except Exception as ex:
+                        print(f"Geschäftszahlen-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
                 zeilen.append(erg[0])
                 if s2 is not None:
                     try:
@@ -534,7 +551,7 @@ def main(argv):
         tmp.replace(E.WEB_DATEN / "rangliste.json")
         tagebuch(zeilen)
         s2.schreiben()
-    print(f"Fertig: {len(zeilen)} Werte ausgewertet, {fehler} Fehler")
+    print(f"Fertig: {len(zeilen)} Werte ausgewertet, {fehler} Fehler" + (f", Geschäftszahlen für {sum(1 for z in zeilen if z.get('f'))}" if fund else ""))
     return zeilen
 
 

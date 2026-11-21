@@ -3,9 +3,9 @@
 cd "$(dirname "$0")"
 {
   echo "=== $(date '+%F %T') Start"
-  # umfeld.py (FRED-Zinsdaten) und bewertung.py (Shiller-CAPE) brechen bei Netzfehlern nicht ab, sondern nutzen die letzten Dateien
+  # fundamente.py lädt nur mit SEC_KONTAKT (sonst nichts). umfeld.py (FRED-Zinsdaten) und bewertung.py (Shiller-CAPE) brechen bei Netzfehlern nicht ab, sondern nutzen die letzten Dateien
   .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python umfeld.py \
-    && .venv/bin/python bewertung.py \
+    && .venv/bin/python bewertung.py && .venv/bin/python fundamente.py \
     && .venv/bin/python analyse.py && .venv/bin/python tagebuch_pruefung.py
   rc=$?
   # Signal-Tagebuch lokal in Git festhalten (macht nachtraegliche Aenderungen sichtbar)

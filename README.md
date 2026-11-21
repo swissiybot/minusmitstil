@@ -14,6 +14,7 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 - **Trefferquote**: Wie oft stand der Kurs nach 1/3/5 Jahren höher, wenn die Lage früher ähnlich war – im Vergleich zu einem beliebigen Kauftag.
 - **Bitcoin**: Pi Cycle Bottom (Bodenbildungszone und Boden-Signal), Pi Cycle Top, Mayer Multiple.
 - **Bewertung S&P 500 (Shiller-CAPE)**: wie teuer der US-Markt gemessen an seinen **Gewinnen** ist (die Ampel schaut nur auf den Kurs). Getrennt von der Ampel, mit eigener ehrlicher Prüfung: Auf teure Phasen folgten im Mittel schwächere 10 Jahre, als Echtzeit-Vorhersage war das CAPE aber kaum besser als der einfache Durchschnitt (seit 1990 schlechter), und Warten auf günstige Bewertung schlug den Sparplan meist nicht. Nur für den S&P 500 gibt es eine so lange freie Reihe.
+- **Geschäftszahlen und Fallen-Warnung** (Nasdaq-Aktien, nur im Online-Lauf): Gewinn, Umsatz, KGV und KUV aus den Pflichtberichten an die US-Börsenaufsicht (SEC EDGAR, gemeinfrei). ⚠ Fallen-Warnung, wenn die Ampel günstig steht, die Firma aber Verlust macht oder Gewinn bzw. Umsatz deutlich sinken – mit eigener Prüfung ohne Zukunftswissen (Abschnitt 4 der Prüfseite). Ausländische Firmen (IFRS) haben keine Zahlen.
 - **Prüfung**: Walk-forward-Test, Kalibrierung, Sparplan gegen „nur kaufen, wenn günstig“, Monte-Carlo-Kegel, Marktumfeld (Marktbreite, VIX, Zinskurve).
 - **Signal-Tagebuch** (`daten/tagebuch/`): jeden Tag festgehalten und in Git gesichert, damit später niemand schummeln kann.
 
@@ -59,6 +60,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 ## Daten und Lizenzen
 - Kurse: Yahoo Finance über [yfinance](https://github.com/ranaroussi/yfinance) – nur für den privaten Gebrauch, werden **nicht** mitgeliefert, sondern bei jedem selbst geladen.
 - Nasdaq-Werteliste: nasdaqtrader.com · Zinsen: FRED (Federal Reserve Bank of St. Louis).
+- Geschäftszahlen: SEC EDGAR (US-Börsenaufsicht, gemeinfrei). Die SEC verlangt bei automatischen Abrufen eine Kontaktangabe im User-Agent; sie kommt aus der Umgebungsvariable `SEC_KONTAKT` (auf GitHub als geheime Einstellung) und steht nicht im Code. Ohne sie wird nichts geladen.
 - CAPE: Robert J. Shiller, [shillerdata.com](https://shillerdata.com/) (`ie_data.xls`, frei zum Herunterladen; Datei wird nicht mitgeliefert, sondern bei jedem Lauf selbst geladen).
 - Charts: [TradingView Lightweight Charts](https://github.com/tradingview/lightweight-charts) (Apache-2.0), liegt in `web/lib/`.
 - Eigener Code: MIT-Lizenz, siehe `LICENSE`.
@@ -71,6 +73,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `kurse.py` | Tageskurse von Yahoo (yfinance) → eine komprimierte Datei `daten/kurse.parquet` |
 | `analyse.py` | Ampel 0–100, Ø Jahresrendite, Wahrscheinlichkeiten, Rangliste, Signal-Tagebuch |
 | `bewertung.py` | Shiller-CAPE des S&P 500: Bewertung 0–100 ohne Blick in die Zukunft, Renditen danach, Walk-forward-Prüfung, Sparplan gegen Warten |
+| `fundamente.py` | Geschäftszahlen aus SEC EDGAR (frames-Schnittstelle): KGV, KUV, Gewinn-/Umsatztrend, Fallen-Warnung und deren Prüfung; lädt nur mit `SEC_KONTAKT` |
 | `umfeld.py` | FRED-Reihen (Zinskurve T10Y2Y, 3-Monats-Zins TB3MS); Marktumfeld (Marktbreite, VIX, Zinskurve) |
 | `pruefung.py` | Walk-forward-Prüfung und Kalibrierung der Ampel-Wahrscheinlichkeit |
 | `strategie.py` | Sparplan gegen Staffelkäufe 60/75/90 (+ Teilverkauf ≤ 15), mit Kosten, Abgeltungssteuer, Zins |
@@ -80,7 +83,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `web/index.html` | Dashboard |
 | `daten/tagebuch/` | tägliche Signale – nie ändern |
 
-Erzeugte Dateien (jederzeit neu erzeugbar, nicht im Repository): `daten/kurse.parquet`, `web/daten/*.json`, `daten/fred/*.csv`, `daten/shiller/ie_data.xls`.
+Erzeugte Dateien (jederzeit neu erzeugbar, nicht im Repository): `daten/kurse.parquet`, `web/daten/*.json`, `daten/fred/*.csv`, `daten/shiller/ie_data.xls`, `daten/sec/`.
 
 ## Online-Fassung (GitHub Pages)
 Der Workflow `.github/workflows/dashboard.yml` lädt die Kurse auf GitHub, rechnet alles neu und veröffentlicht mit `export.py` den Ordner `site/`. Die Online-Seite zeigt den **eigenen Chart wie lokal** (Wochenkerzen, 200-Wochen-Linie, Langfristtrend, Kauf-/Teuer-Pfeile, Pi Cycle bei Bitcoin, Prognose-Kegel); per Knopf lässt sich auf den TradingView-Chart umschalten (Monatsansicht, 200-Wochen-Linie). Die Kursdatei bleibt zwischen den Läufen im GitHub-Cache, nie im Repository. Sperrt Yahoo, wird der letzte Stand veröffentlicht und oben auf der Seite als veraltet markiert. Online sind der Strategie-Vergleich (Standardwerte) und der Monte-Carlo-Rechner (12 Monate, 20 Jahre) vorab gerechnet; frei einstellbar in der lokalen Fassung. (In `export.py` lässt sich mit `KURSE_OEFFENTLICH = False` eine Fassung ganz ohne Kurse erzeugen.)

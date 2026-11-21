@@ -260,6 +260,8 @@ table{border-collapse:collapse;width:100%}
 .wtab th{color:var(--muted);font-weight:550;font-size:12px}
 .wtab th:first-child,.wtab td:first-child{text-align:left}
 .wtab tbody tr:hover td{background:var(--hover)}
+.falle-box{background:color-mix(in srgb,var(--teuer) 13%,transparent);border:1px solid color-mix(in srgb,var(--teuer) 45%,transparent);border-radius:10px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.45}
+.falle-mark{color:var(--teuer);font-weight:700}
 .wtab tr.depot-zeile td{background:var(--panel2);white-space:normal;padding-top:10px}
 .tab-scroll{overflow-x:auto}
 .text{padding:0 14px 12px;color:var(--muted);font-size:12.5px;line-height:1.55}
@@ -439,6 +441,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
     <div class="filter-aktien" id="filter-aktien" hidden>
       <label><span data-e="f_minj" tabindex="0">min. Jahre</span><input id="minj" type="number" value="10" min="0" max="60"></label>
       <label><input id="nurq" type="checkbox" checked><span data-e="f_stabil" tabindex="0">nur stabiler Aufwärtstrend</span></label>
+      <label><input id="nurf" type="checkbox"><span data-e="f_nurf" tabindex="0">ohne Fallen-Warnung</span></label>
       <label><span data-e="f_umsatz" tabindex="0">Umsatz/Tag</span><select id="minu"><option value="0">egal</option><option value="1e6">ab 1 Mio $</option><option value="1e7" selected>ab 10 Mio $</option><option value="1e8">ab 100 Mio $</option></select></label>
     </div>
     <div class="liste-kopf" id="liste-kopf">
@@ -466,6 +469,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
         <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (blaugrün = günstig, orange = teuer).</li>
         <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Kurs höher nach …“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
         <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
+        <li><b>Fallen-Warnung ⚠</b> bei Nasdaq-Aktien: Ampel günstig, aber Verlust oder deutlich sinkender Gewinn bzw. Umsatz (Zahlen der US-Börsenaufsicht SEC). Ein gefallener Kurs ist dann oft kein Schnäppchen. Im Screener lässt sie sich ausblenden.</li>
         <li><b>Bewertung (CAPE)</b> unter „Marktumfeld“ und beim S&amp;P 500: zeigt, wie teuer der US-Markt gemessen an seinen <b>Gewinnen</b> ist – die Ampel schaut nur auf den Kurs. Steht bewusst getrennt; auch das CAPE hat als Zeitpunkt zum Kaufen nicht getaugt (siehe Prüfung dort).</li>
         <li>Der violette <b>Prognose-Kegel</b> im Chart ist eine Simulation aus vergangenen Wochen (50 % und 90 % der Wege), keine Vorhersage.</li>
         <li>Ob die angezeigten Quoten früher gestimmt hätten, zeigen die Seite „Prüfung der Ampel“ und der Reiter „Prüfung“.</li>
@@ -775,6 +779,14 @@ const ERKLAERUNG = {
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
+  f_sec: {titel:"Geschäft (SEC)", text:"Gewinn, Umsatz und Aktienzahl aus den Pflichtberichten an die US-Börsenaufsicht SEC (EDGAR, gemeinfrei). „12 Monate“ = die letzten vier Quartale, sonst das letzte Geschäftsjahr. Nur Firmen, die nach US-Regeln in Dollar berichten; ausländische Firmen fehlen. Kurs und Aktienzahl ergeben den Börsenwert."},
+  f_kgv: {titel:"KGV", text:"Kurs-Gewinn-Verhältnis: Börsenwert geteilt durch den Gewinn der letzten 12 Monate. 20 heißt: Man zahlt das 20-Fache des Jahresgewinns. Niedrig ist nicht automatisch billig (Gewinn kann fallen), hoch nicht automatisch teuer (Gewinn kann stark wachsen). Bei Verlust gibt es kein KGV."},
+  f_kuv: {titel:"KUV", text:"Kurs-Umsatz-Verhältnis: Börsenwert geteilt durch den Umsatz der letzten 12 Monate. Hilft bei Firmen ohne Gewinn. Je nach Branche sehr unterschiedlich (Software hoch, Handel niedrig)."},
+  f_trend: {titel:"Gewinn und Umsatz", text:"Summe der letzten 12 Monate (bzw. des letzten Geschäftsjahrs) in US-Dollar; in Klammern die Veränderung zum gleichen Zeitraum ein Jahr davor. Bei Verlust (jetzt oder im Vorjahr) wird keine Prozentzahl gezeigt."},
+  falle: {titel:"Fallen-Warnung", text:"Die Ampel steht günstig (ab 60), aber das Geschäft ist schwach: Verlust, oder Gewinn mindestens 25 % bzw. Umsatz mindestens 10 % unter Vorjahr. Dann ist der gefallene Kurs womöglich kein Schnäppchen, sondern die Reaktion auf schlechtere Zahlen. Wie oft das früher stimmte, steht unter „Prüfung der Ampel“, Abschnitt 4. Kein Verkaufssignal."},
+  f_nurf: {titel:"Ohne Fallen-Warnung", text:"Blendet Aktien aus, deren Ampel günstig steht, deren Geschäft aber schwach ist (Verlust oder deutlich sinkender Gewinn bzw. Umsatz)."},
+  f_absturz: {titel:"Absturz ≥ 50 %", text:"Anteil der Fälle, in denen der Kurs am Ende des Zeitraums mindestens die Hälfte unter dem Ausgangskurs lag."},
+  g_fallen: {titel:"Prüfung der Fallen-Warnung", text:"Rückblick ohne Zukunftswissen: Jahreszahlen zählen erst 90 Tage nach Geschäftsjahresende als bekannt. Verglichen werden Wochen mit günstiger Ampel und damals schwachem Geschäft gegen solche mit solidem Geschäft. Stichprobe alle 4 Wochen. Pleitefirmen fehlen in den Daten."},
   b_cape: {titel:"Shiller-CAPE", text:"Kurs des S&P 500 geteilt durch den Durchschnittsgewinn der letzten 10 Jahre, beides inflationsbereinigt (Robert J. Shiller, monatlich ab 1881). Hoch heißt: Man bezahlt viel für die Gewinne. Anders als die Ampel schaut das CAPE auf die Gewinne: Fällt der Kurs, weil auch die Gewinne fallen, wird das CAPE nicht billiger. Nur für den S&P 500 gibt es eine so lange freie Reihe."},
   b_score: {titel:"Bewertung 0–100", text:"100 minus Perzentil des CAPE unter allen Monaten bis zum jeweiligen Zeitpunkt (ohne Blick in die Zukunft, ab 20 Jahren Geschichte). Hoch = historisch günstig bewertet, niedrig = historisch teuer – gleiche Richtung und Stufen wie die Ampel. Steht bewusst getrennt neben der Ampel und wird nicht mit ihr verrechnet."},
   b_rendite: {titel:"Rendite der folgenden 10 Jahre", text:"Reale Rendite pro Jahr (mit Dividenden, nach Inflation) in den 10 Jahren nach jedem Monat, gruppiert nach der damaligen Bewertung. Median = typischer Wert, schlechteste/beste 10 % = Spanne. Die Monate überlappen sich stark; die Zahl der unabhängigen Fälle ist viel kleiner, als die Monatszahl vermuten lässt."},
@@ -1047,10 +1059,10 @@ function reiterZahlen(){
 }
 function gefiltert(){
   const q = norm($("#listen-filter").value), r = LISTE_REITER, aktien = r === "aktien";
-  const mj = +$("#minj").value || 0, nq = $("#nurq").checked, mu = +$("#minu").value;
+  const mj = +$("#minj").value || 0, nq = $("#nurq").checked, mu = +$("#minu").value, nf = $("#nurf").checked;
   return ALLE.filter(w => imReiter(w, r)
     && (!q || w._such.includes(q))
-    && (!aktien || (w.score != null && (w.jahre_daten || 0) >= mj && (!nq || w.qualitaet) && (w.umsatz_usd || 0) >= mu)));
+    && (!aktien || (w.score != null && (w.jahre_daten || 0) >= mj && (!nq || w.qualitaet) && (!nf || !w.f?.falle) && (w.umsatz_usd || 0) >= mu)));
 }
 function listeNeu(){
   $("#filter-aktien").hidden = LISTE_REITER !== "aktien";
@@ -1088,7 +1100,7 @@ function listeZeichnen(){
     for (let i = von; i < bis; i++) {
       const w = GEFILTERT[i], p = p3(w), v = p ? p.quote - p.basis : null;
       html += `<div class="zeile${w.id === AKTIV ? " aktiv" : ""}${i === FOKUS_I ? " fokus" : ""}" role="option" aria-selected="${w.id === AKTIV}" id="z-${i}" data-i="${i}" style="top:${i * ZEILE_H}px">
-        <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${esc(w.symbol)} · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
+        <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Ampel günstig, Geschäft schwach">⚠</span> ' : ""}${esc(w.symbol)} · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
         <div style="text-align:right">${pille(w.score)}</div>
         <div>${spark(w.sv, w.score)}</div>
         <div class="zahl-r c-cagr ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1,"%")}</div>
@@ -1116,7 +1128,7 @@ $("#liste").addEventListener("keydown", ev => {   // Pfeiltasten wandern durch d
   } else if (ev.key === "Enter" && GEFILTERT[FOKUS_I]) zeige(GEFILTERT[FOKUS_I].id);
 });
 $("#listen-filter").addEventListener("input", () => listeNeu());
-["#minj","#nurq","#minu"].forEach(s => $(s).addEventListener("input", listeNeu));
+["#minj","#nurq","#nurf","#minu"].forEach(s => $(s).addEventListener("input", listeNeu));
 $("#sortierung").addEventListener("change", ev => { const k = ev.target.value; SORT = {k, dir: (k === "name" || k === "rueck") ? 1 : -1}; listeNeu(); });
 $$("#liste-kopf button").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.s; SORT = {k, dir: SORT.k === k ? -SORT.dir : (k === "name" || k === "rueck" ? 1 : -1)};
@@ -1288,7 +1300,7 @@ function zeigeUebersicht(){
     .sort((a, b) => b.score - a.score).slice(0, 6);
   const neuTeuer = ALLE.filter(w => w.score != null && w.score <= 15 && w.score_vor4w != null && w.score_vor4w > 15 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
     .sort((a, b) => a.score - b.score).slice(0, 6);
-  const afZeile = (w, rechts) => `<div class="af-zeile" data-id="${w.id}" tabindex="0" role="button"><div class="af-n">${esc(kurzname(w))}<span class="klein">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie" : w.gruppe}</span></div>${rechts}${pille(w.score)}</div>`;
+  const afZeile = (w, rechts) => `<div class="af-zeile" data-id="${w.id}" tabindex="0" role="button"><div class="af-n">${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Geschäft schwach">⚠</span> ' : ""}${esc(kurzname(w))}<span class="klein">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie" : w.gruppe}</span></div>${rechts}${pille(w.score)}</div>`;
   const afKarte = (titel, liste, rechts, leer) => `<div class="karte"><div class="karte-kopf"><span>${titel}</span></div>${liste.length ? liste.map(w => afZeile(w, rechts(w))).join("") : `<p class="klein">${leer}</p>`}</div>`;
   const anzahlStabil = ALLE.filter(w => !SONDERGRUPPE(w) && w.qualitaet && w.score >= 80 && (w.umsatz_usd || 0) >= 1e7).length;
   $("#haupt").innerHTML = `
@@ -1441,6 +1453,7 @@ async function zeige(id, opt={}){
   if (AKTIV !== id) return;
   if (!daten) { $("#haupt").innerHTML = `<div class="leer">Keine Daten für ${esc(id)}.</div>`; return; }
   const {info:w, chart:c} = daten;
+  if (vorher?.f && !w.f) w.f = vorher.f;   // Geschäftszahlen stehen nur in der Rangliste
   const scrollY = $("#haupt").scrollTop;
   alleChartsWeg(); INFO = w; CDATA = c;
   const btc = !!w.pi, krypto = w.gruppe === "Krypto", eigen = !!c.c;
@@ -1492,6 +1505,7 @@ async function zeige(id, opt={}){
       <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
     </section>
     <div class="abstand"></div>
+    ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
     <div class="raster">
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
@@ -1509,6 +1523,7 @@ async function zeige(id, opt={}){
         <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></section>
       <section class="karte" id="signale">${signalKarte(w, c)}</section>
       ${id === "SPY" ? bewKarte() : ""}
+      ${geschaeftKarte(w)}
     </div>
     <div class="abstand"></div>
     <section class="karte vertiefung" id="vertiefung">
@@ -2567,7 +2582,10 @@ function miniChart(el, reihe, farbe, linien=[]){
   const s = ch.addAreaSeries({lineColor:farbe, topColor:farbe+"55", bottomColor:farbe+"05", lineWidth:1, priceLineVisible:false});
   s.setData(reihe.t.map((t,i) => ({time:t, value:reihe.v[i]})));
   linien.forEach(([p,f,txt]) => s.createPriceLine({price:p,color:f,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:txt}));
-  [50, 400].forEach(ms => setTimeout(() => ch.timeScale().fitContent(), ms));   // zweites Mal nach dem Layout (lange Reihen)
+  // ganze Reihe zeigen – auch wenn die Breite erst später feststeht (autoSize) oder sich ändert
+  const passen = () => { try { ch.timeScale().fitContent(); } catch(e) {} };
+  [50, 400].forEach(ms => setTimeout(passen, ms));
+  try { new ResizeObserver(() => setTimeout(passen, 60)).observe(el); } catch(e) {}   // nach der eigenen Größenanpassung des Charts
   charts.push(ch);
 }
 function zeigeUmfeld(){
@@ -2593,6 +2611,24 @@ function zeigeUmfeld(){
 // ------------------------------------------------------------ Bewertung des US-Markts (Shiller-CAPE)
 const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
 const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
+function geschaeftKarte(w){
+  if (SONDERGRUPPE(w) || !String(w.gruppe).includes("Nasdaq")) return "";
+  const f = w.f;
+  const kopf = `<div class="karte-kopf"><span data-e="f_sec" tabindex="0">Geschäft (SEC)</span><span>${f ? `${f.art} bis ${datumDe(f.stand)}` : ""}</span></div>`;
+  if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen der US-Börsenaufsicht – meist ausländische Firmen (Bilanz nach IFRS) oder sehr junge Börsengänge." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
+  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd. $") : fmt(x, 0, " Mio. $");
+  const d = x => x == null ? "" : ` <span class="${klasse(x)}">(${vz(x,0," %")})</span>`;
+  return `<section class="karte" id="geschaeft-karte">${kopf}
+    ${f.falle ? `<div class="falle-box">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Ampel günstig, aber ${esc(f.gruende.join(", "))}.</div>` : f.schwach ? `<p class="klein neg" style="margin:0 0 6px">Geschäft schwach: ${esc(f.gruende.join(", "))}</p>` : ""}
+    <div class="gross-zahl">${f.kgv != null ? fmt(f.kgv,1) : f.verlust ? "Verlust" : "–"}</div>
+    <p>${f.kgv != null ? ek("f_kgv","KGV") + " (Kurs-Gewinn-Verhältnis)" : f.verlust ? "kein KGV – die Firma macht Verlust" : "KGV nicht berechenbar"}</p>
+    <div class="kv"><span data-e="f_trend">Gewinn</span><b>${mio(f.gewinn)}${d(f.d_gewinn)}</b></div>
+    <div class="kv"><span data-e="f_trend">Umsatz</span><b>${mio(f.umsatz)}${d(f.d_umsatz)}</b></div>
+    <div class="kv"><span data-e="f_kuv">KUV</span><b>${fmt(f.kuv,2)}</b></div>
+    <div class="kv"><span>Jahre mit Gewinn</span><b>${f.jahre_gewinn} von ${f.jahre}</b></div>
+    ${f.veraltet ? `<p class="klein neg">Zahlen älter als 18 Monate – keine Warnung möglich.</p>` : ""}
+    <p class="klein" style="margin-top:6px">In Klammern: Veränderung zum Vorjahr. Quelle: SEC EDGAR.</p></section>`;
+}
 function bewKachel(){
   const b = BEWERTUNG; if (!b) return "";
   return `<div class="karte" id="w-bewertung" tabindex="0" role="button"><div class="karte-kopf"><span data-e="b_cape">Bewertung S&amp;P 500 (CAPE)</span><span>${monatDe(b.datum)}</span></div>
@@ -2640,6 +2676,17 @@ function bewTeil(){
     <div class="merke" style="margin:10px 14px"><b>Kurz gesagt:</b> Das CAPE sagt zuverlässig, ob der US-Markt gemessen an seinen Gewinnen historisch teuer oder günstig ist – heute: ${b.stufe}. Auf teure Phasen folgten im Mittel schwächere 10 Jahre. Als Zeitpunkt zum Kaufen oder Verkaufen hat aber auch das CAPE nicht verlässlich getaugt.</div>
     <div class="text">Quelle: ${b.quelle}. Keine Anlageberatung.</div>`;
 }
+function fallenHtml(fa){
+  if (!fa) return "";
+  const namen = {schwach:"schwach (Warnung)", solide:"solide", alle:"alle Wochen (jede Ampel)"};
+  const zeilen = ["1","3"].flatMap(h => ["schwach","solide","alle"].map(g => { const x = fa[g]?.[h];
+    return `<tr><td style="text-align:left">${h === "1" ? "1 Jahr" : "3 Jahre"}</td><td style="text-align:left">${namen[g]}</td>${x ? `<td>${fa[g].aktien.toLocaleString("de-DE")}</td><td>${x.n.toLocaleString("de-DE")}</td><td>${fmt(x.hoeher,0," %")}</td><td class="${klasse(x.median)}">${vz(x.median,1," %")}</td><td class="${x.absturz > 15 ? "neg" : ""}">${fmt(x.absturz,0," %")}</td>` : `<td colspan="5">zu wenig Fälle</td>`}</tr>`; }));
+  const s1 = fa.schwach?.["1"], o1 = fa.solide?.["1"];
+  return `<h3>4. ${ek("g_fallen","Hilft die Fallen-Warnung?")}</h3>
+    <div class="text">Wochen, in denen die Ampel einer Nasdaq-Aktie günstig stand (ab ${fa.ampel_ab}). „Schwach“ heißt: ${fa.regel} – nach den <b>damals</b> bekannten Jahreszahlen. Wie lief der Kurs danach?</div>
+    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">danach</th><th style="text-align:left">Geschäft damals</th><th>Aktien</th><th>Fälle</th><th>Kurs höher</th><th>Median</th><th data-e="f_absturz">Absturz ≥ 50 %</th></tr></thead><tbody>${zeilen.join("")}</tbody></table></div>
+    <div class="text">${s1 && o1 ? `Nach einem Jahr stand der Kurs bei schwachem Geschäft in ${fmt(s1.hoeher,0)} % der Fälle höher, bei solidem in ${fmt(o1.hoeher,0)} %; um die Hälfte oder mehr abgestürzt sind ${fmt(s1.absturz,0)} % gegen ${fmt(o1.absturz,0)} %. ` : ""}${esc(fa.hinweis)}. Firmen, die pleite gingen oder von der Börse verschwanden, fehlen – sie wären fast alle „schwach“ gewesen, der Unterschied ist in Wirklichkeit also eher größer. Ausländische Firmen ohne SEC-Zahlen fehlen ganz. Die Warnung sagt nichts darüber, ob eine solide Aktie steigt.</div>`;
+}
 function zeigePruefungGesamt(gruppe="etf", h="3"){
   seiteAnfang("pruefung"); hashSetzen("seite=pruefung");
   if (!PRUEF) { $("#haupt").innerHTML = '<div class="leer">Prüfung noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
@@ -2668,7 +2715,7 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
     <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th data-e="s_irr">Sparplan</th><th data-e="s_staffel">Staffel</th><th data-e="s_staffel_vk">+ Teilverkauf</th><th data-e="s_rueckgang">größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
       s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
-    <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}`;
+    <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}${fallenHtml(PRUEF.fallen)}`;
   document.querySelectorAll("#haupt [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
   document.querySelectorAll("#haupt [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
   document.querySelectorAll("#haupt tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
