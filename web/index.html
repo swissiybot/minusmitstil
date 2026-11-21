@@ -576,8 +576,8 @@ async function apiStrategie(id, q=""){
   if (!d) return null;
   return d.strategie || {fehler:"zu wenig Monate mit gültiger Ampel"};
 }
-async function apiMc(id, wochen, jahre, preise){
-  if (!STATISCH) return holeJson(`api/mc?id=${encodeURIComponent(id)}&wochen=${wochen}&jahre=${jahre}&preise=${preise.join(",")}`);
+async function apiMc(id, wochen, jahre, preise, kegel=wochen){
+  if (!STATISCH) return holeJson(`api/mc?id=${encodeURIComponent(id)}&wochen=${wochen}&jahre=${jahre}&preise=${preise.join(",")}&kegel=${kegel}`);
   // online: vorab gerechnete Verteilungen (Verhältnisse zum heutigen Kurs) aus dem Export
   const d = await exportLaden(id), m = d?.mc;
   if (!m || m.fehler) return m || null;
@@ -736,7 +736,7 @@ const ERKLAERUNG = {
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
   l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „günstig“ mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „teuer“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Ein Pfeil steht nur in der Woche, in der die Grenze überschritten wird – bleibt die Ampel danach über 80 (oder unter 15), kommt kein weiterer Pfeil. Die Farbe der Balken in der Ampel-Leiste zeigt jede Woche. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
   l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Die gestrichelten Linien markieren 80 und 15."},
-  l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 12 Monate: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
+  l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 3 Jahre (die Karte „Prognose“ zeigt die Zahlen nach 12 Monaten). Je weiter in der Zukunft, desto breiter der Kegel: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
   tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Pfeile und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
   // --- Wahrscheinlichkeitstabelle
   t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel höchstens 7,5 Punkte vom heutigen Wert entfernt war. Für jede wird geschaut, wie der Kurs nach 1, 3 und 5 Jahren stand."},
@@ -943,7 +943,7 @@ const ERKLAERUNG_NEU = {
   sparkline: {titel:"Ampel im letzten Jahr", text:"Kleine Linie: die Ampel alle 4 Wochen über das letzte Jahr. Steigt sie, ist der Wert gemessen an seiner Geschichte günstiger geworden (meist, weil der Kurs gefallen ist)."},
   gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
   klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
-  lineal: {titel:"Lineal", text:"Messen im Chart: einmal klicken (Start), Maus bewegen, noch einmal klicken (Ende). Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
+  lineal: {titel:"Lineal", text:"Messen im Chart: 1. Klick setzt den Start, dann zieht das Lineal mit der Maus mit. 2. Klick setzt das Ende, die Messung bleibt stehen. 3. Klick beendet das Lineal, die Maus ist wieder frei. Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
   l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (kräftig blaugrün, „sehr günstig“), zwischen 60 und 80 (hell blaugrün, „günstig“) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
@@ -1445,7 +1445,7 @@ function prognoseKarte(m){
   const kopf = `<div class="karte-kopf"><span data-e="prognose" tabindex="0">Prognose · 12 Monate</span><span>Simulation</span></div>`;
   if (!m) { el.innerHTML = kopf + `<p class="klein">Keine Simulation möglich.</p>`; return; }
   if (m.fehler) { el.innerHTML = kopf + `<p class="klein">${esc(m.fehler)}</p>`; return; }
-  const k0 = m.kurs, n = m.t.length - 1, q = k => (m.kegel[k][n] / k0 - 1) * 100;
+  const k0 = m.kurs, n = Math.min(m.wochen ?? m.t.length - 1, m.t.length - 1), q = k => (m.kegel[k][n] / k0 - 1) * 100;   // Karte: 12 Monate, auch wenn der Kegel länger ist
   const lo = q("q5"), hi = q("q95"), mid = q("q50"), lo50 = q("q25"), hi50 = q("q75");
   const span = Math.max(Math.abs(lo), Math.abs(hi), 10), x = v => 50 + v / span * 48;
   el.innerHTML = kopf + `
@@ -1578,7 +1578,7 @@ async function zeige(id, opt={}){
   reiter(REITER);
   lohntSichCheck(id);
   if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
-  if (eigen) ladeKegel(52, 20, [], true).then(m => { if (AKTIV === id) prognoseKarte(m); });
+  if (eigen) ladeKegel(52, 20, [], true, KEGEL_WOCHEN).then(m => { if (AKTIV === id) prognoseKarte(m); });
   else prognoseOnline(id);
   if (opt.ohneScroll) $("#haupt").scrollTop = scrollY;
 }
@@ -1699,8 +1699,12 @@ function reiter(name){
 }
 
 // ------------------------------------------------------------ Hauptchart (eigener Chart)
+// Viele Kerzen im Bild: lange Beschriftungen kürzen, damit sie sich nicht überlagern
+let MARKEN_ENG = null;
+const eng = () => { const r = HAUPT?.timeScale().getVisibleLogicalRange(); return !!r && (r.to - r.from) > 220; };
 function markenSetzen(){
   if (!KERZEN || !CD) return;
+  MARKEN_ENG = eng();
   const f = F();
   const m = CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
   // Kauf-Ergebnis je günstiger Phase (Beginn der Phase, Kurs 1 Jahr später) – an die nächste Kerze der aktuellen Ansicht gelegt
@@ -1713,8 +1717,8 @@ function markenSetzen(){
     ...teuerPhasen(CDATA).map(p => [naechste(p.tHoch), "hoch", p])];
   const alle = [...m, ...tiefHoch].sort((a, b) => a[0] - b[0]);
   KERZEN.setMarkers(alle.map(([t, art, s]) => ({
-    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:`${s.laeuft ? "Tief bisher" : "Tief"} · Ampel ${fmt(s.aTief,0)}`} : null,
-    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:`${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel ${fmt(s.aHoch,0)}`} : null,
+    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Tief bisher" : "Tief"} · Ampel ${fmt(s.aTief,0)}`} : null,
+    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel ${fmt(s.aHoch,0)}`} : null,
     kauf:     {time:t, position:"belowBar", color:f.gut, shape:"arrowUp", text:String(s)},
     teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
     pi_beginn:{time:t, position:"aboveBar", color:f.lila, shape:"circle", text:"Bodenbildung beginnt"},
@@ -1739,8 +1743,8 @@ function ergebnisLinien(kp, naechste){
     const s = HAUPT.addLineSeries({color:farbe, lineWidth:2, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, autoscaleInfoProvider:() => null});
     s.setData([{time:ta, value:c.c[i0]}, {time:tb, value:c.c[i1]}]);
     s.setMarkers([
-      {time:ta, position:"inBar", color:farbe, shape:"circle", text:`Kauf ${tDe(c.t[i0])} · ${kursKurz(c.c[i0])}`},
-      {time:tb, position:"inBar", color:farbe, shape:"square", text:`${fertig ? "1 Jahr später" : "bis heute"} ${kursKurz(c.c[i1])} = ${r > 0 ? "+" : "−"}${fmt(Math.abs(r),0)} %`}]);
+      {time:ta, position:"inBar", color:farbe, shape:"circle", text:MARKEN_ENG ? "" : `Kauf ${tDe(c.t[i0])} · ${kursKurz(c.c[i0])}`},
+      {time:tb, position:"inBar", color:farbe, shape:"square", text:MARKEN_ENG ? `${r > 0 ? "+" : "−"}${fmt(Math.abs(r),0)} %` : `${fertig ? "1 Jahr später" : "bis heute"} ${kursKurz(c.c[i1])} = ${r > 0 ? "+" : "−"}${fmt(Math.abs(r),0)} %`}]);
     ERG_SERIEN.push(s);
   });
 }
@@ -1903,7 +1907,7 @@ function zeichne(c, w){
   sync(ch, ch2); sync(ch2, ch);
   // Fibonacci neu, wenn sich der sichtbare Ausschnitt ändert; Lineal folgt Zoom und Verschieben
   let fibZeit = 0;
-  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(fibAktualisieren, 120); linealZeichnen(); });
+  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(() => { fibAktualisieren(); if (eng() !== MARKEN_ENG) markenSetzen(); }, 120); linealZeichnen(); });
   ch.subscribeClick(p => linealKlick(p));
   // Fadenkreuz mit Werten
   const fk = $("#fk");
@@ -1992,7 +1996,7 @@ function linealUmschalten(an){
   LINEAL = {an:an ?? !LINEAL.an, a:null, b:null, fertig:false};
   $("#lineal-knopf")?.setAttribute("aria-pressed", String(LINEAL.an));
   $("#chart-karte")?.classList.toggle("lineal-an", LINEAL.an);
-  if (LINEAL.an) meldung("Lineal: in den Chart klicken (Start), Maus bewegen, noch einmal klicken (Ende). Esc beendet.");
+  if (LINEAL.an) meldung("Lineal: 1. Klick setzt den Start, Maus bewegen, 2. Klick setzt das Ende, 3. Klick beendet das Lineal. Esc beendet sofort.");
   else meldung("");
   linealZeichnen();
 }
@@ -2004,8 +2008,9 @@ function linealPunkt(p){
 function linealKlick(p){
   if (!LINEAL.an) return;
   const pkt = linealPunkt(p); if (!pkt) return;
-  if (!LINEAL.a || LINEAL.fertig) { LINEAL.a = pkt; LINEAL.b = pkt; LINEAL.fertig = false; }
-  else { LINEAL.b = pkt; LINEAL.fertig = true; meldung(""); }
+  if (LINEAL.fertig) { linealUmschalten(false); return; }   // dritter Klick: Lineal aus, Maus wieder frei
+  if (!LINEAL.a) { LINEAL.a = pkt; LINEAL.b = pkt; LINEAL.fertig = false; }
+  else { LINEAL.b = pkt; LINEAL.fertig = true; meldung("Gemessen. Noch einmal klicken beendet das Lineal."); }
   linealZeichnen();
 }
 function linealZiehen(p){
@@ -2724,9 +2729,10 @@ function piRueckblick(w){
 }
 
 // ------------------------------------------------------------ Monte Carlo
-async function ladeKegel(wochen, jahre, preise, erst=false){
+const KEGEL_WOCHEN = 156;   // Prognose-Kegel im Chart: 3 Jahre (Wahrscheinlichkeiten in der Karte weiter für 12 Monate)
+async function ladeKegel(wochen, jahre, preise, erst=false, kegel=wochen){
   const id = AKTIV;
-  const m = await apiMc(id, wochen, jahre, preise);
+  const m = await apiMc(id, wochen, jahre, preise, kegel);
   if (!m || AKTIV !== id) return m || null;
   if (m.fehler) return m;
   KEGEL_M = m; kegelZeichnen();

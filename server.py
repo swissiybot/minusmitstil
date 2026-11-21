@@ -5,7 +5,7 @@
   (ca. 0,1 s). So muessen keine Tausende Chartdateien gespeichert werden.
 - /api/pruefung?id=SPY      Walk-forward-Pruefung und Kalibrierung dieses Werts
 - /api/strategie?id=SPY&betrag=500&jahre=20&kfix=1&kproz=0&zins=echt|2.5   Sparplan gegen Staffelkauf
-- /api/mc?id=SPY&wochen=52&jahre=20&preise=500,800   Monte-Carlo-Kegel und Wahrscheinlichkeiten
+- /api/mc?id=SPY&wochen=52&jahre=20&preise=500,800&kegel=156   Monte-Carlo-Kegel (kegel = Wochen im Chart) und Wahrscheinlichkeiten
 - /api/tag?id=SPY           Tageskerzen der letzten 15 Jahre (Zeitebene „Tag“ im Chart)
 Nur auf diesem Rechner erreichbar (127.0.0.1).
 """
@@ -121,8 +121,9 @@ def mc_json(wid: str, q) -> bytes | None:
             preise.append(float(s.replace(" ", "")))
         except ValueError:
             pass
-    sim = montecarlo.simulation(w, wochen=int(_zahl(q, "wochen", 52, 4, 260)), jahre=int(_zahl(q, "jahre", 20, 3, 100)),
-                                seed_text=wid)
+    wo = int(_zahl(q, "wochen", 52, 4, 260))
+    sim = montecarlo.simulation(w, wochen=wo, jahre=int(_zahl(q, "jahre", 20, 3, 100)),
+                                seed_text=wid, kegel_wochen=int(_zahl(q, "kegel", wo, wo, 260)), ab=erg[2].get("mc_ab"))
     if sim is None:
         return _gz({"fehler": "zu wenig Kursdaten (mind. 2 Jahre)"})
     return _gz(montecarlo.ergebnis(sim, preise[:10]))

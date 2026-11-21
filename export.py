@@ -56,20 +56,23 @@ def ohne_kurs(info: dict) -> dict:
     return info
 
 
-def mc_relativ(w, wid: str) -> dict:
+KEGEL_WOCHEN = 156   # Prognose-Kegel im Chart: 3 Jahre (Wahrscheinlichkeiten weiter fuer 12 Monate)
+
+
+def mc_relativ(w, wid: str, ab=None) -> dict:
     """Monte Carlo als Verhaeltnisse zum heutigen Kurs (1 = heute). Daraus rechnet die Seite
     Wahrscheinlichkeiten fuer beliebige Abstaende in Prozent, ohne einen Kurs zu kennen."""
-    sim = montecarlo.simulation(w, seed_text=wid)
+    sim = montecarlo.simulation(w, seed_text=wid, kegel_wochen=KEGEL_WOCHEN, ab=ab)
     if sim is None:
         return {"fehler": "zu wenig Kursdaten (mind. 2 Jahre)"}
     p0 = sim["p0"]
-    q = np.percentile(sim["pfad"] / p0, montecarlo.QUANTILE, axis=0)
+    q = np.percentile(sim["kegel_pfad"] / p0, montecarlo.QUANTILE, axis=0)
     rnd = lambda a: [round(float(x), 4) for x in a]
     t0 = sim["letzte"]
     return {
         "wochen": sim["wochen"], "pfade": sim["pfade"], "block": sim["block"],
         "hist_von": sim["von"].strftime("%Y-%m-%d"), "hist_jahre": sim["jahre_hist"],
-        "t": [int((t0 + pd.Timedelta(weeks=k) - pd.Timestamp("1970-01-01")).total_seconds()) for k in range(sim["wochen"] + 1)],
+        "t": [int((t0 + pd.Timedelta(weeks=k) - pd.Timestamp("1970-01-01")).total_seconds()) for k in range(sim["kegel_wochen"] + 1)],
         "kegel": {f"q{p}": [1.0] + rnd(q[i]) for i, p in enumerate(montecarlo.QUANTILE)},
         "tief": rnd(np.percentile(sim["tief"] / p0, STUFEN)),
         "hoch": rnd(np.percentile(sim["hoch"] / p0, STUFEN)),
@@ -135,7 +138,7 @@ def main():
                 "info": ohne_kurs(info) | {"tv": E.tv_symbol(z["id"], z["symbol"], z["gruppe"])},
                 "chart": chart if KURSE_OEFFENTLICH else {"t": chart["t"], "score": chart["score"], "marken": chart["marken"],
                           **({"pi_zone": chart["pi_zone"]} if "pi_zone" in chart else {})},
-                "mc": mc_relativ(w, z["id"]),
+                "mc": mc_relativ(w, z["id"], roh.get("mc_ab")),
             }
             if info["score"] is not None:
                 out["pruefung"] = pruefung.fuer_wert(w["Close"].values.astype(float), score, w.index.year.values)

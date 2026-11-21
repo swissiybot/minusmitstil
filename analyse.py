@@ -41,6 +41,8 @@ QUELLEN_TEXT = {
     "etf": ("ETF", True),
     "aktie": ("Aktie", True),
     "krypto": ("Krypto", False),
+    "krypto_cm": ("Coin Metrics Community-Daten (nur Tagespreis, keine Kerzen)", False),
+    "krypto_bs": ("Bitstamp (Börse, Tageskerzen)", False),
     "rohstoff": ("Endlos-Future (Spruenge beim Kontraktwechsel, ohne Rollkosten)", False),
 }
 
@@ -437,8 +439,16 @@ def werte_eines(z: dict):
         seg = [(tag.index[0], art, z["symbol"])] if tag is not None and not tag.empty else []
     if tag is None or tag.empty:
         return None
+    mc_ab = None
+    if z["id"] == E.BITCOIN["id"]:   # Vorgeschichte vor Yahoo (ab 2010/2011)
+        import btc_alt
+        mc_ab = tag.index[0]           # Simulation nur mit Yahoo-Zeit: die Anfangsjahre (Kurse unter 1 $) wiederholen sich nicht
+        tag, seg = btc_alt.verlaengern(tag, seg)
     tag = tag[tag["Close"] > 0]
-    return analysiere(z, tag, seg)
+    erg = analysiere(z, tag, seg)
+    if erg is not None and mc_ab is not None:
+        erg[2]["mc_ab"] = mc_ab
+    return erg
 
 
 def universum() -> pd.DataFrame:

@@ -50,11 +50,16 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/btc_alt
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
 
       - name: Werteliste
         run: python universum.py || { echo "::warning::Werteliste nicht ladbar – nutze die zwischengespeicherte"; test -f daten/universum.csv; }
+
+      - name: Bitcoin-Vorgeschichte (Coin Metrics, Bitstamp)
+        continue-on-error: true
+        run: python btc_alt.py
 
       - name: Kurse (Yahoo)
         id: kurse
@@ -82,6 +87,7 @@ jobs:
             daten/fred
             daten/shiller
             daten/sec
+            daten/btc_alt
           key: kurse-${{ github.run_id }}
 
       - name: Auswertung
