@@ -62,7 +62,8 @@ def wert_json(wid: str) -> bytes | None:
         erg = _berechnen(wid)
         if erg is None:
             return None
-        daten = _gz({"info": erg[0], "chart": erg[1]})
+        info = erg[0] | {"tv": E.tv_symbol(erg[0]["id"], erg[0]["symbol"], erg[0]["gruppe"])}   # TradingView-Umschalter
+        daten = _gz({"info": info, "chart": erg[1]})
         if len(_zwischen["werte"]) > 200:
             _zwischen["werte"].clear()
         _zwischen["werte"][wid] = daten
@@ -146,6 +147,12 @@ class Anfrage(SimpleHTTPRequestHandler):
             self.wfile.write(daten)
             return
         super().do_GET()
+
+    def end_headers(self):
+        # Seite und Skripte immer frisch pruefen lassen (sonst zeigt der Browser nach Aenderungen alte Fassungen)
+        if not self.path.startswith("/api/"):
+            self.send_header("Cache-Control", "no-cache")
+        super().end_headers()
 
     def log_message(self, *args):  # ruhig bleiben
         pass

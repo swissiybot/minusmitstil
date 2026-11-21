@@ -16,6 +16,14 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 - **Prüfung**: Walk-forward-Test, Kalibrierung, Sparplan gegen „nur kaufen, wenn günstig“, Monte-Carlo-Kegel, Marktumfeld (Marktbreite, VIX, Zinskurve).
 - **Signal-Tagebuch** (`daten/tagebuch/`): jeden Tag festgehalten und in Git gesichert, damit später niemand schummeln kann.
 
+## Bedienung
+- **Übersicht** mit Marktwetter (Marktbreite, VIX, Zinskurve, Prüfung der Ampel), Heatmap aller ETFs, Kryptowährungen und Rohstoffe nach Ampel und „Heute auffällig“.
+- **Suche** oben (Taste `/` oder `Strg K`), verzeiht Tippfehler („bitcon“ findet Bitcoin).
+- **Liste** links mit Reitern Übersicht · ETFs · Krypto · Rohstoffe · Aktien (Screener mit Filtern, flüssig bei 3.000 Zeilen) · Meine (Favoriten-Stern); je Zeile Ampel, Verlauf des letzten Jahres und Änderung in 4 Wochen. Breiter ziehen zeigt mehr Spalten.
+- **Detail**: Ampel-Halbkreis mit Klartext-Satz, Chart mit Zeitraum-Knöpfen (1J/5J/10J/Alles), Log/Linear, Fadenkreuz mit Werten und ein-/ausschaltbaren Linien (200-Wochen-Linie, Trendkanal, Prognose-Kegel, Pfeile, bei Bitcoin Pi Cycle Bottom/Top und Mayer); Umschalter auf den TradingView-Chart (Monat, 200-Wochen-Linie). Darunter Karten: Lohnt-sich-Check, Wahrscheinlichkeiten gegen „beliebiger Tag“, Prognose, Rückschlag, Ø Rendite, Signale – und Reiter für Details, Kurs-Rechner, Prüfung und Strategie-Vergleich.
+- **Bereiche verstellen**: Trennlinien zwischen Liste, Chart, Ampel-Leiste und Seitenleiste ziehen, Doppelklick setzt zurück (wird im Browser gemerkt). Hell/Dunkel oben rechts. Auf dem Handy eine Spalte mit unterer Reiterleiste.
+- Bildschirmfotos: `web/screenshots/`.
+
 ## Das ehrliche Ergebnis
 Das Tool erkennt zuverlässig, wann etwas **historisch günstig** ist. Ob es sich **lohnt zu kaufen**, kann es nicht zuverlässig sagen: In der Prüfung brachte „nur bei günstiger Ampel kaufen, sonst warten“ bei S&P 500, Nasdaq-100, Gold und Bitcoin **weniger** als ein stumpfer monatlicher Sparplan. Märkte steigen meistens, und wer wartet, verpasst das. Die genauen, täglich neu berechneten Zahlen stehen im Dashboard unter „So liest du das Tool“.
 

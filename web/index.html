@@ -1,168 +1,523 @@
 <!doctype html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Aktien-Kaufplan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<title>minus mit stil · Kaufplan</title>
+<script>
+// Thema so früh wie möglich setzen (kein Aufblitzen); Standard: dunkel
+try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch(e) {}
+</script>
 <script src="lib/lightweight-charts.js"></script>
 <style>
+/* ------------------------------------------------------------ Farben (eine Akzentfarbe; Ampel blaugrün ↔ orange, farbenblind-tauglich) */
 :root{
-  --bg:#131722; --panel:#1e222d; --panel2:#2a2e39; --line:#363a45; --text:#d1d4dc; --muted:#868993;
-  --gruen:#26a69a; --gruen2:#089981; --rot:#ef5350; --gelb:#f0b90b; --blau:#2962ff; --orange:#ff9800;
+  color-scheme:dark;
+  --bg:#0b0e14; --bg2:#0f131b; --panel:#131822; --panel2:#1a202c; --panel3:#222937; --hover:#1f2633;
+  --line:#232a38; --line2:#2e3646;
+  --text:#e7eaf0; --text2:#bcc3d0; --muted:#949db0;
+  --akzent:#7c93ff; --akzent-stark:#5b75f5; --akzent-weich:rgba(124,147,255,.14); --auf-akzent:#0b0e14;
+  --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
+  --pos:#3fd0b2; --neg:#ff9a57;
+  --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff;
+  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d;
+  --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
+  --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
+  --r:14px; --r-klein:9px;
+}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f3f5f9; --bg2:#eceff5; --panel:#ffffff; --panel2:#f4f6fa; --panel3:#e9edf4; --hover:#eef1f7;
+  --line:#e2e6ee; --line2:#d3d9e3;
+  --text:#121722; --text2:#363e4c; --muted:#5a6475;
+  --akzent:#3d5af1; --akzent-stark:#2f49d6; --akzent-weich:rgba(61,90,241,.10); --auf-akzent:#ffffff;
+  --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
+  --pos:#0b8a73; --neg:#c4530a;
+  --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad;
+  --kerze-auf:#0f9d84; --kerze-ab:#e0532a;
+  --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
+  --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,sans-serif}
-header{display:flex;gap:16px;align-items:baseline;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-header h1{font-size:16px;margin:0;font-weight:600}
-header .stand{color:var(--muted)}
-header .hinweis{color:var(--muted);font-size:11px;margin-left:auto}
-#kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:10px 16px}
-.kachel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer}
-.kachel:hover{border-color:var(--blau)}
-.kachel .n{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.kachel .s{font-size:20px;font-weight:600}
-.kachel .z{font-size:11px}
-main{display:grid;grid-template-columns:minmax(500px,47%) 1fr;gap:10px;padding:0 16px 16px;min-height:calc(100vh - 190px)}
-@media (max-width:1000px){main{grid-template-columns:1fr}}
-.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
-.filter{display:flex;gap:8px;flex-wrap:wrap;padding:8px;border-bottom:1px solid var(--line);align-items:center}
-.filter input,.filter select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:inherit}
-.filter label{color:var(--muted);display:flex;gap:4px;align-items:center}
-.tabelle{overflow:auto;flex:1;max-height:calc(100vh - 250px)}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--akzent);outline-offset:2px;border-radius:6px}
+a{color:var(--akzent)}
+.skip{position:absolute;left:-999px;top:8px;z-index:3000;background:var(--akzent);color:var(--auf-akzent);padding:8px 12px;border-radius:8px}
+.skip:focus{left:8px}
+.klein{font-size:12px;color:var(--muted)}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
+.unsichtbar{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ------------------------------------------------------------ Kopfleiste */
+.kopf{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--bg2);border-bottom:1px solid var(--line);min-height:60px;flex-shrink:0;z-index:20}
+.marke{display:flex;align-items:center;gap:9px;font-weight:650;font-size:15px;letter-spacing:-.01em;white-space:nowrap;text-decoration:none;color:var(--text);background:none;border:0;padding:4px}
+.marke svg{flex-shrink:0}
+.marke b{font-weight:650;color:var(--akzent)}
+.suchfeld{flex:1;min-width:0;max-width:620px;display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line2);color:var(--muted);text-align:left;transition:border-color .15s,box-shadow .15s}
+.suchfeld:hover{border-color:var(--akzent);box-shadow:0 0 0 4px var(--akzent-weich)}
+.suchfeld span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 6px;border-radius:6px;background:var(--panel3);border:1px solid var(--line2);color:var(--text2)}
+.kopf-rechts{display:flex;align-items:center;gap:8px;margin-left:auto}
+.plakette{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line2);font-size:12px;color:var(--text2);white-space:nowrap;cursor:help}
+.plakette i{width:8px;height:8px;border-radius:50%;background:var(--guenstig);box-shadow:0 0 0 3px color-mix(in srgb,var(--guenstig) 25%,transparent)}
+.plakette.alt i{background:var(--gelb);box-shadow:0 0 0 3px color-mix(in srgb,var(--gelb) 25%,transparent)}
+.knopf-ikon{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:10px;background:transparent;border:1px solid var(--line2);color:var(--text2);white-space:nowrap}
+.knopf-ikon:hover{background:var(--hover);color:var(--text)}
+.knopf-ikon[aria-pressed="true"]{background:var(--akzent-weich);border-color:var(--akzent);color:var(--text)}
+.knopf-ikon svg{width:17px;height:17px}
+#warnband{background:color-mix(in srgb,var(--gelb) 16%,var(--bg2));color:var(--text);border-bottom:1px solid var(--line);padding:7px 16px;font-size:13px}
+
+/* ------------------------------------------------------------ Grundgerüst mit verstellbaren Bereichen */
+#layout{flex:1;min-height:0;display:grid;grid-template-columns:var(--g-liste,380px) 7px minmax(0,1fr)}
+#layout.lesen-offen{grid-template-columns:var(--g-liste,380px) 7px minmax(0,1fr) 7px var(--g-lesen,420px)}
+.trenner{position:relative;background:transparent;z-index:5;touch-action:none;user-select:none}
+.trenner::after{content:"";position:absolute;background:var(--line);transition:background .15s}
+.trenner.senkrecht{cursor:col-resize}
+.trenner.senkrecht::after{left:3px;top:0;bottom:0;width:1px}
+.trenner.waagerecht{cursor:row-resize;height:9px;margin:-4px 0;flex-shrink:0}
+.trenner.waagerecht::after{left:0;right:0;top:4px;height:1px}
+.trenner::before{content:"";position:absolute;border-radius:3px;background:var(--line2);opacity:0;transition:opacity .15s}
+.trenner.senkrecht::before{left:2px;top:50%;width:3px;height:34px;margin-top:-17px}
+.trenner.waagerecht::before{top:3px;left:50%;height:3px;width:34px;margin-left:-17px}
+.trenner:hover::after,.trenner.zieht::after,.trenner:focus-visible::after{background:var(--akzent)}
+.trenner:hover::before,.trenner.zieht::before{opacity:1;background:var(--akzent)}
+body.zieht-x{cursor:col-resize!important;user-select:none} body.zieht-y{cursor:row-resize!important;user-select:none}
+body.zieht-x iframe,body.zieht-y iframe{pointer-events:none}
+
+/* ------------------------------------------------------------ Liste links */
+#liste-bereich{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg2);container-type:inline-size}
+.reiter-liste{display:flex;gap:2px;padding:10px 10px 0;overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.reiter-liste::-webkit-scrollbar{display:none}
+.reiter-liste button{flex-shrink:0;background:none;border:0;padding:7px 10px;border-radius:9px;color:var(--muted);font-weight:550;font-size:13px;white-space:nowrap}
+.reiter-liste button:hover{color:var(--text);background:var(--hover)}
+.reiter-liste button[aria-selected="true"]{color:var(--text);background:var(--panel3)}
+.reiter-liste .zahl{font-size:11px;color:var(--muted);margin-left:4px;font-weight:500}
+.listen-werkzeug{display:flex;flex-wrap:wrap;gap:6px;padding:10px;flex-shrink:0}
+.listen-werkzeug input[type=search],.listen-werkzeug select,.feld{height:34px;border-radius:9px;background:var(--panel);border:1px solid var(--line2);padding:0 10px}
+.listen-werkzeug input[type=search]{flex:1;min-width:120px}
+.listen-werkzeug select{max-width:170px}
+.filter-aktien{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:0 10px 10px;font-size:12px;color:var(--text2);flex-shrink:0}
+.filter-aktien label{display:flex;align-items:center;gap:6px}
+.filter-aktien input[type=number]{width:56px;height:30px;border-radius:8px;background:var(--panel);border:1px solid var(--line2);padding:0 8px}
+.filter-aktien select{height:30px;border-radius:8px;background:var(--panel);border:1px solid var(--line2);padding:0 6px}
+.zeile,.liste-kopf{display:grid;grid-template-columns:minmax(0,1fr) 56px 62px 50px;align-items:center;gap:8px;padding:0 12px}
+.liste-kopf{height:30px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);flex-shrink:0;text-transform:uppercase;letter-spacing:.04em}
+.liste-kopf button{background:none;border:0;padding:0;color:inherit;font:inherit;text-transform:inherit;letter-spacing:inherit;text-align:right;white-space:nowrap}
+.liste-kopf button:first-child{text-align:left}
+.liste-kopf button:hover,.liste-kopf button.an{color:var(--text)}
+.c-cagr,.c-vorteil,.c-rueck,.c-dd{display:none;text-align:right}
+@container (min-width:540px){
+  .zeile,.liste-kopf{grid-template-columns:minmax(0,1fr) 56px 62px 62px 58px 50px}
+  .c-cagr,.c-vorteil{display:block}
+}
+@container (min-width:740px){
+  .zeile,.liste-kopf{grid-template-columns:minmax(0,1fr) 56px 62px 62px 58px 66px 62px 50px}
+  .c-rueck,.c-dd{display:block}
+}
+#liste{flex:1;overflow-y:auto;position:relative;min-height:0;outline:none}
+#liste:focus-visible{box-shadow:inset 0 0 0 2px var(--akzent)}
+#liste-innen{position:relative}
+.zeile{position:absolute;left:0;right:0;height:54px;cursor:pointer;border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.zeile:hover{background:var(--hover)}
+.zeile.aktiv{background:var(--akzent-weich);box-shadow:inset 3px 0 0 var(--akzent)}
+.zeile.fokus{box-shadow:inset 0 0 0 2px var(--akzent)}
+.zeile .nm{display:block;font-weight:550;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
+.zeile .sym{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zeile .sym .stern-klein{color:var(--gelb)}
+.zeile .w4{text-align:right;font-size:12px;font-weight:600;white-space:nowrap}
+.zeile .zahl-r{text-align:right;font-size:12.5px;color:var(--text2)}
+.spark{display:block}
+.liste-fuss{padding:6px 12px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line);flex-shrink:0}
+.leer-liste{padding:30px 16px;color:var(--muted);text-align:center}
+
+/* Ampel-Pille: immer Zahl, Farbe nur zusätzlich */
+.pille{display:inline-flex;align-items:center;justify-content:center;min-width:40px;height:24px;padding:0 7px;border-radius:999px;font-weight:700;font-size:12.5px;color:#0b0e14;letter-spacing:-.01em}
+.pille.gross{min-width:52px;height:30px;font-size:15px}
+.pille.leer{background:var(--panel3);color:var(--muted)}
+.zonenwort{font-weight:600}
+
+/* ------------------------------------------------------------ Hauptbereich */
+#haupt{overflow-y:auto;min-width:0;min-height:0;padding:18px 20px 40px}
+#haupt:focus{outline:none}
+.karte{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--schatten-klein)}
+.karte-kopf{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.abstand{height:16px}
+h1,h2,h3{letter-spacing:-.015em}
+.seiten-titel{margin:2px 0 4px;font-size:24px;font-weight:700}
+.seiten-unter{margin:0 0 16px;color:var(--text2);max-width:880px}
+.abschnitt-titel{display:flex;align-items:baseline;gap:10px;margin:26px 0 10px;font-size:16px;font-weight:650}
+.abschnitt-titel .klein{font-weight:400}
+
+/* Wert-Kopf mit Ampel-Halbkreis */
+.wert-kopf{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;padding:18px 20px;align-items:center}
+.wk-titel{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.wk-titel h1{margin:0;font-size:24px;font-weight:700}
+.wk-meta{color:var(--muted);font-size:13px;margin-top:2px}
+.klartext{margin:10px 0 10px;font-size:15px;line-height:1.55;color:var(--text);max-width:820px}
+.grund-chips{display:flex;flex-wrap:wrap;gap:6px}
+.grund-chips>span{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12.5px;color:var(--text2)}
+.stern{background:none;border:1px solid var(--line2);border-radius:10px;height:34px;padding:0 10px;color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-size:13px}
+.stern:hover{color:var(--text);background:var(--hover)}
+.stern[aria-pressed="true"]{color:var(--gelb);border-color:color-mix(in srgb,var(--gelb) 55%,transparent);background:color-mix(in srgb,var(--gelb) 10%,transparent)}
+.gauge{width:230px;text-align:center}
+.gauge svg{display:block;width:230px;height:140px}
+.gauge .g-zahl{font-size:38px;font-weight:750;letter-spacing:-.03em;line-height:1;margin-top:-80px}
+.gauge .g-wort{font-weight:650;font-size:14px;margin-top:44px}
+.gauge .g-vor{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* Chart-Karte */
+.chart-karte{padding:0;overflow:hidden;display:flex;flex-direction:column}
+.chart-leiste{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.segment{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:2px}
+.segment button{background:none;border:0;padding:5px 10px;border-radius:8px;color:var(--muted);font-size:12.5px;font-weight:600;white-space:nowrap}
+.segment button:hover{color:var(--text)}
+.segment button[aria-pressed="true"]{background:var(--panel);color:var(--text);box-shadow:var(--schatten-klein)}
+.chart-leiste .rechts{margin-left:auto}
+.chip:disabled,.segment button:disabled{opacity:.4;cursor:default}
+.chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line)}
+.chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12.5px;white-space:nowrap}
+.chip i{width:14px;height:3px;border-radius:2px;background:currentColor;flex-shrink:0}
+.chip i.flaeche{height:10px;border-radius:3px}
+.chip i.pfeil{width:auto;height:auto;background:none;font-style:normal;font-size:10px}
+.chip[aria-pressed="true"]{color:var(--text);background:var(--panel2);border-color:var(--line2)}
+.chip[aria-pressed="false"] i{opacity:.35}
+.chip[aria-pressed="false"]{text-decoration:line-through;text-decoration-color:var(--muted)}
+.chart-flaeche{position:relative;display:flex;flex-direction:column;height:var(--g-chart,540px);min-height:240px}
+.chart-oben{position:relative;flex:1;min-height:120px}
+#chart,#tvchart{position:absolute;inset:0}
+#chart2{height:var(--g-ampel,120px);min-height:60px;position:relative;flex-shrink:0}
+.ohne-ampel #chart2,.ohne-ampel .trenner[data-trenner="ampel"]{display:none}
+.fk{position:absolute;left:10px;top:8px;z-index:4;pointer-events:none;font-size:12px;line-height:1.55;padding:6px 10px;border-radius:10px;
+  background:color-mix(in srgb,var(--panel) 86%,transparent);backdrop-filter:blur(6px);border:1px solid var(--line);max-width:calc(100% - 90px)}
+.fk b{font-weight:650}
+.fk .r{display:flex;flex-wrap:wrap;gap:2px 12px}
+.fk .sw{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.ampel-titel{position:absolute;left:10px;top:4px;z-index:4;font-size:11px;color:var(--muted);pointer-events:none}
+.chart-fuss{display:flex;flex-wrap:wrap;gap:4px 14px;padding:7px 12px;font-size:11.5px;color:var(--muted);border-top:1px solid var(--line)}
+.tv-hinweis{padding:7px 12px;font-size:12px;color:var(--muted);border-top:1px solid var(--line)}
+
+/* Karten-Raster */
+.raster{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.raster .karte{padding:16px}
+.raster .breit2{grid-column:span 2}
+@media (max-width:760px){.raster .breit2{grid-column:auto}}
+.gross-zahl{font-size:30px;font-weight:750;letter-spacing:-.02em;line-height:1.1}
+.mittel-zahl{font-size:20px;font-weight:700;letter-spacing:-.01em}
+.karte p{margin:6px 0;color:var(--text2)}
+.urteil{display:inline-flex;align-items:center;gap:8px;font-size:26px;font-weight:750;letter-spacing:-.02em}
+.urteil .punkt{width:12px;height:12px;border-radius:50%}
+.vgl{display:grid;grid-template-columns:auto 1fr auto;gap:8px 10px;align-items:center;margin:12px 0 8px;font-size:13px}
+.balken{height:10px;border-radius:6px;background:var(--panel3);overflow:hidden}
+.balken i{display:block;height:100%;border-radius:6px;background:var(--akzent)}
+.balken i.grau{background:var(--neutral)}
+.wz{display:grid;grid-template-columns:72px 1fr;gap:4px 10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.wz:last-child{border-bottom:0}
+.wz .lbl{font-weight:600;font-size:13px}
+.wz .lbl .klein{display:block;font-weight:400}
+.wz .bb{display:grid;grid-template-columns:1fr 42px;gap:3px 8px;align-items:center;font-size:12px;color:var(--text2)}
+.wz .bb b{text-align:right;color:var(--text)}
+.linkknopf{background:none;border:0;padding:0;color:var(--akzent);font-weight:600;font-size:13px}
+.linkknopf:hover{text-decoration:underline}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.kv:last-child{border-bottom:0}
+.kv span:first-child{color:var(--text2)}
+.kv b{font-weight:650;text-align:right}
+.lade{position:relative;overflow:hidden;background:var(--panel2);border-radius:8px;min-height:14px}
+.lade::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--text) 7%,transparent),transparent);animation:schimmer 1.3s infinite}
+@keyframes schimmer{to{transform:translateX(100%)}}
+@media (prefers-reduced-motion:reduce){.lade::after{animation:none}}
+
+/* Vertiefung: Reiter */
+.vertiefung{padding:0;overflow:hidden}
+.reiter{display:flex;gap:4px;padding:8px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.reiter button{background:none;border:0;padding:8px 14px;border-radius:9px;color:var(--muted);font-weight:600;white-space:nowrap}
+.reiter button:hover{color:var(--text);background:var(--hover)}
+.reiter button.an{color:var(--text);background:var(--panel3)}
+#tab{padding-bottom:8px;min-height:120px;overflow-x:auto}
+
+/* übernommene Bausteine (Tabellen, Hinweise, Eingaben) */
+.werte{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;padding:12px 14px}
+.wert{background:var(--panel2);border-radius:10px;padding:10px 12px;border:1px solid var(--line)}
+.wert .k{font-size:12px;color:var(--muted)}
+.wert .v{font-size:17px;font-weight:700}
+.wert .u{font-size:12px;color:var(--muted)}
 table{border-collapse:collapse;width:100%}
-th,td{padding:5px 6px;text-align:right;white-space:nowrap;border-bottom:1px solid #2a2e39}
-th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:500;cursor:pointer;user-select:none}
-th:first-child,td:first-child{text-align:left}
-tr:hover td{background:#2a2e3988}
-tr.aktiv td{background:#2962ff22}
-td .nm{max-width:170px;overflow:hidden;text-overflow:ellipsis;display:block}
-td .sym{color:var(--muted);font-size:11px}
-.ampel{display:inline-block;min-width:38px;padding:1px 6px;border-radius:3px;font-weight:600;text-align:center;color:#fff}
-.mehr{padding:8px;text-align:center}
-.mehr button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 12px;cursor:pointer}
-#detail{padding:0}
-#kopf{padding:10px 12px;border-bottom:1px solid var(--line)}
-#kopf h2{margin:0;font-size:16px}
-#kopf .grund{color:var(--muted);margin-top:4px}
-#chart{height:430px}
-#chart2{height:120px;border-top:1px solid var(--line)}
-.legende{display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
-.legende i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
-.werte{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:10px 12px}
-.wert{background:var(--panel2);border-radius:4px;padding:7px 9px}
-.wert .k{font-size:11px;color:var(--muted)}
-.wert .v{font-size:15px;font-weight:600}
-.wert .u{font-size:11px;color:var(--muted)}
-.wtab{margin:0 12px 12px;width:calc(100% - 24px)}
-.wtab td,.wtab th{text-align:right}
-.wtab th{position:static}
-.text{padding:0 12px 12px;color:var(--muted);font-size:12px}
-.pos{color:var(--gruen)} .neg{color:var(--rot)}
-.leer{padding:40px;text-align:center;color:var(--muted)}
-.kachel.breit{grid-column:span 2}
-.kopfzeile{grid-column:1/-1;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 -2px}
-.kachel.sonder{border-color:#2962ff66}
-.kachel .drei{display:flex;gap:12px;margin-top:2px}
-.kachel .drei div{flex:1;min-width:0}
-.kachel .drei b{font-size:17px;display:block}
-.kachel .drei span{font-size:11px;color:var(--muted)}
-.reiter{display:flex;gap:2px;padding:0 12px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--panel)}
-.reiter button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);padding:8px 12px;cursor:pointer;font:inherit}
-.reiter button.an{color:var(--text);border-bottom-color:var(--blau)}
-.eingabe{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:10px 12px}
-.eingabe label{display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:11px}
-.eingabe input,.eingabe select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:inherit;width:110px}
-.eingabe button,.knopf{background:var(--blau);color:#fff;border:none;border-radius:4px;padding:6px 14px;cursor:pointer;font:inherit}
-.knopf.leise{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-.knopf.an{background:var(--blau);color:#fff}
-.zweispaltig{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:0 12px 12px;align-items:start}
+.wtab{margin:0 14px 14px;width:calc(100% - 28px);font-size:13px}
+.wtab th,.wtab td{padding:8px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+.wtab th{color:var(--muted);font-weight:550;font-size:12px}
+.wtab th:first-child,.wtab td:first-child{text-align:left}
+.wtab tbody tr:hover td{background:var(--hover)}
+.tab-scroll{overflow-x:auto}
+.text{padding:0 14px 12px;color:var(--muted);font-size:12.5px;line-height:1.55}
+.merke{margin:12px 14px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--gelb) 40%,transparent);background:color-mix(in srgb,var(--gelb) 9%,transparent);font-size:13px;color:var(--text)}
+.merke.gut{border-color:color-mix(in srgb,var(--guenstig) 45%,transparent);background:color-mix(in srgb,var(--guenstig) 10%,transparent)}
+.merke.schlecht{border-color:color-mix(in srgb,var(--teuer) 45%,transparent);background:color-mix(in srgb,var(--teuer) 10%,transparent)}
+h3{font-size:14px;margin:16px 14px 8px;font-weight:650}
+.eingabe{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:12px 14px}
+.eingabe label{display:flex;flex-direction:column;gap:4px;color:var(--muted);font-size:12px}
+.eingabe input,.eingabe select{color:var(--text);height:36px;background:var(--panel2);border:1px solid var(--line2);border-radius:9px;padding:0 10px;width:130px}
+.eingabe input:disabled,.eingabe select:disabled{opacity:.55}
+.eingabe button,.knopf{height:36px;background:var(--akzent);color:var(--auf-akzent);border:0;border-radius:9px;padding:0 16px;font-weight:650}
+.eingabe button:hover,.knopf:hover{background:var(--akzent-stark);color:#fff}
+.eingabe button:disabled{opacity:.5;cursor:default}
+.knopf.leise{background:var(--panel2);color:var(--text);border:1px solid var(--line2)}
+.knopf.leise:hover{background:var(--hover);color:var(--text)}
+.knopf.an,.knopf.leise.an{background:var(--akzent);color:var(--auf-akzent);border-color:var(--akzent)}
+.legende{display:flex;gap:14px;flex-wrap:wrap;padding:6px 14px;font-size:12px;color:var(--muted)}
+.legende i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.zweispaltig{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:0 14px 12px;align-items:start}
 @media (max-width:1300px){.zweispaltig{grid-template-columns:1fr}}
-.kal{background:var(--panel2);border-radius:4px}
+.kal{background:var(--panel2);border-radius:10px;max-width:100%;height:auto}
 .kal text{fill:var(--muted);font-size:10px}
-.merke{margin:0 12px 12px;padding:8px 10px;border-left:3px solid var(--gelb);background:#f0b90b14;font-size:12px}
-.merke.gut{border-left-color:var(--gruen);background:#26a69a14}
-.merke.schlecht{border-left-color:var(--rot);background:#ef535014}
-h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
-#chart3{height:220px;margin:0 12px 12px;border:1px solid var(--line);border-radius:4px}
-.mini{height:150px;margin:0 12px 6px;border:1px solid var(--line);border-radius:4px}
-#tip{position:fixed;z-index:1000;display:none;max-width:min(340px,calc(100vw - 16px),calc(100dvw - 16px));background:#2a2e39;color:var(--text);border:1px solid #4a4e5a;border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.45;box-shadow:0 6px 20px #0009;pointer-events:none}
-#tip b{display:block;margin-bottom:3px;color:#fff;font-size:12px}
-[data-e]{cursor:help}
-span[data-e],th[data-e]{text-decoration:underline dotted #6b6f7a;text-underline-offset:3px;text-decoration-thickness:1px}
-span[data-e]:focus{outline:1px solid var(--blau);outline-offset:1px}
-.i{color:#6b6f7a;font-size:10px;margin-left:3px;vertical-align:super}
-.lesehilfe{margin:10px 16px 0;background:var(--panel);border:1px solid #2962ff66;border-radius:6px}
-.lesehilfe summary{padding:9px 12px;cursor:pointer;font-weight:600;font-size:14px}
-.lesehilfe summary .klein{font-weight:400}
-.lese{padding:0 14px 12px;max-width:1100px}
-.lese h4{margin:12px 0 4px;font-size:13px}
-.lese p,.lese li{margin:4px 0;color:#c4c7cf}
+#chart3{height:260px;margin:0 14px 14px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.mini{height:170px;margin:0 14px 8px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.leer{padding:50px 20px;text-align:center;color:var(--muted)}
+#kopf{margin-bottom:6px}
+#kopf h2{margin:0 0 4px;font-size:24px;font-weight:700}
+#kopf .grund{color:var(--text2);max-width:880px}
+.seite-karte{padding:4px 0 6px}
+
+/* Übersicht */
+.wetter{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.wetter .karte{padding:14px 16px;cursor:pointer;transition:border-color .15s,transform .15s}
+.wetter .karte:hover{border-color:var(--akzent)}
+.wetter .wk-wert{font-size:28px;font-weight:750;letter-spacing:-.02em;line-height:1.15}
+.wetter .wk-wort{font-weight:600;font-size:13px}
+.wetter svg{display:block;width:100%;height:38px;margin-top:8px}
+.heat-gruppe{margin-bottom:16px}
+.heat-gruppe h3{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.heat{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.kachel{position:relative;text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-height:86px;background:var(--panel);overflow:hidden;transition:transform .12s,border-color .12s}
+.kachel::before{content:"";position:absolute;inset:0;background:var(--kf);opacity:.20;pointer-events:none}
+.kachel:hover{border-color:var(--kf);transform:translateY(-1px)}
+.kachel>*{position:relative}
+.kachel .n{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.kachel .s{display:flex;align-items:baseline;gap:6px;margin-top:4px}
+.kachel .s b{font-size:24px;font-weight:750;letter-spacing:-.02em}
+.kachel .z{font-size:12px;color:var(--text2)}
+.kachel .d{font-size:11.5px;color:var(--muted)}
+.skala-legende{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--text2);margin:-2px 0 12px}
+.skala-legende span{display:inline-flex;align-items:center;gap:6px}
+.skala-legende i{width:12px;height:12px;border-radius:4px}
+.auffaellig{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.auffaellig .karte{padding:14px 16px}
+.af-zeile{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.af-zeile:last-child{border-bottom:0}
+.af-zeile:hover .af-n{color:var(--akzent)}
+.af-n{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px}
+.af-n .klein{display:block}
+.kern{padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);background:linear-gradient(135deg,var(--akzent-weich),transparent 60%),var(--panel);margin-bottom:16px}
+.kern b{color:var(--text)}
+
+/* So liest du das Tool (Seitenleiste) */
+#lese-bereich{min-width:0;min-height:0;overflow-y:auto;background:var(--bg2);padding:0 18px 30px}
+.lese-kopf{position:sticky;top:0;display:flex;align-items:center;gap:10px;padding:14px 0 10px;background:var(--bg2);z-index:2;border-bottom:1px solid var(--line);margin-bottom:6px}
+.lese-kopf h2{margin:0;font-size:17px;flex:1}
+.lese h4{margin:16px 0 6px;font-size:14px}
+.lese p,.lese li{margin:5px 0;color:var(--text2);line-height:1.55}
 .lese ul{margin:4px 0;padding-left:18px}
-.lese .merke{margin:4px 0 8px}
-.klein{font-size:11px;color:var(--muted)}
-.check{margin-top:6px;padding:5px 8px;border-radius:4px;font-size:12px;background:var(--panel2)}
-.check.ja{border-left:3px solid var(--gruen)} .check.nein{border-left:3px solid var(--rot)}
-.check a{color:#6f9bff}
+.lese .merke{margin:10px 0}
+.lese .wtab{margin:8px 0;width:100%;font-size:12.5px}
+/* in der schmalen Seitenleiste: jede Zeile als kleine Karte mit Beschriftung */
+.lese .wtab thead{display:none}
+.lese .wtab tr{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:9px 10px;margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.lese .wtab td{border:0;padding:0;text-align:left;white-space:nowrap;color:var(--text2)}
+.lese .wtab td:first-child{grid-column:1/-1;font-weight:650;color:var(--text)}
+.lese .wtab td:nth-child(2)::before{content:"seit ";color:var(--muted)}
+.lese .wtab td:nth-child(3)::before{content:"Sparplan ";color:var(--muted)}
+.lese .wtab td:nth-child(4)::before{content:"Warten ";color:var(--muted)}
+.lese .wtab td:nth-child(5)::before{content:"Unterschied ";color:var(--muted)}
+.lese .wtab td:nth-child(6){grid-column:1/-1}
+.lese .wtab td:nth-child(6)::before{content:"größter Rückgang Spar / Warten ";color:var(--muted)}
+
+/* Suche (Befehlsfenster) */
+#suche-dlg{border:0;padding:0;background:transparent;max-width:min(680px,calc(100vw - 24px));width:100%;margin:10vh auto auto;color:var(--text)}
+#suche-dlg::backdrop{background:rgba(5,8,14,.55);backdrop-filter:blur(3px)}
+.suche-box{background:var(--panel);border:1px solid var(--line2);border-radius:16px;box-shadow:var(--schatten);overflow:hidden}
+.suche-feld{display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line)}
+.suche-feld input{flex:1;height:58px;border:0;background:transparent;font-size:17px;outline:none}
+.suche-treffer{max-height:min(60vh,520px);overflow-y:auto;padding:6px}
+.treffer{display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:10px;cursor:pointer}
+.treffer[aria-selected="true"]{background:var(--akzent-weich)}
+.treffer .t-n{flex:1;min-width:0}
+.treffer .t-n b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treffer .t-n span{font-size:12px;color:var(--muted)}
+.treffer .t-ikon{width:30px;height:30px;border-radius:9px;background:var(--panel3);display:grid;place-items:center;color:var(--text2);flex-shrink:0}
+.suche-fuss{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.suche-gruppe{padding:8px 12px 4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* Tooltip */
+#tip{position:fixed;z-index:4000;display:none;max-width:min(360px,calc(100vw - 16px));background:var(--panel3);color:var(--text);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.5;box-shadow:var(--schatten);pointer-events:none}
+#tip b{display:block;margin-bottom:4px;font-size:13px}
+[data-e]{cursor:help}
+span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(--muted) 80%,transparent);text-underline-offset:3px;text-decoration-thickness:1px}
+.i{color:var(--muted);font-size:11px;margin-left:3px}
+
+/* Fuß und Handy-Navigation */
+.fussnote{margin-top:28px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.unten-nav{display:none}
+@media (max-width:900px){
+  body{overflow:hidden}
+  .kopf{gap:8px;padding:8px 10px;min-height:56px}
+  .marke span{display:none}
+  .kopf-rechts{gap:6px}
+  .knopf-ikon{padding:0 9px}
+  #k-lesen{display:none}
+  .suchfeld{height:40px}
+  .suchfeld kbd,.knopf-ikon .txt,.plakette .lang{display:none}
+  .plakette{padding:0 9px}
+  #layout,#layout.lesen-offen{grid-template-columns:minmax(0,1fr)}
+  #layout>.trenner{display:none}
+  #liste-bereich,#haupt,#lese-bereich{display:none}
+  body[data-ansicht="liste"] #liste-bereich{display:flex}
+  body[data-ansicht="haupt"] #haupt{display:block}
+  body[data-ansicht="lesen"] #lese-bereich{display:block}
+  #haupt{padding:12px 12px 24px}
+  .wert-kopf{grid-template-columns:1fr;padding:14px}
+  .gauge{margin:0 auto;order:-1;transform:scale(.9);margin-bottom:-8px}
+  .chart-flaeche{height:min(var(--g-chart,540px),68vh)}
+  .unten-nav{display:grid;grid-template-columns:repeat(4,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .unten-nav button{background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 7px;color:var(--muted);font-size:11px;font-weight:600}
+  .unten-nav button svg{width:21px;height:21px}
+  .unten-nav button[aria-current="page"]{color:var(--akzent)}
+  .wtab{font-size:12px}
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .fk{left:6px;top:4px;padding:3px 7px;font-size:10.5px;line-height:1.4;max-width:calc(100% - 64px)}
+  .fk .r:nth-child(2){display:none}
+}
 </style>
 </head>
-<body>
-<header>
-  <h1>Aktien-Kaufplan</h1><span class="stand" id="stand">lädt …</span>
-  <span class="hinweis">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts.</span>
-</header>
-<details id="lesehilfe" class="lesehilfe">
-  <summary>So liest du das Tool <span class="klein">– was die Ampel kann und was nicht</span></summary>
-  <div class="lese">
-    <div class="merke" id="lesehilfe-kern"></div>
-    <h4>Was „historisch günstig“ bedeutet</h4>
-    <p>Die Ampel vergleicht den heutigen Stand eines Werts mit seiner eigenen Geschichte: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI. Ab Ampel 80 steht ein Wert im Mittel dieser Messgrößen günstiger als in etwa 80 % seiner bisherigen Wochen. Das ist eine Beschreibung, keine Vorhersage.</p>
-    <h4>Was die Prüfung zeigt</h4>
-    <div id="lesehilfe-zahlen"><div class="klein">rechnet …</div></div>
-    <h4>Wie du das Tool liest</h4>
-    <ul>
-      <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht.</li>
-      <li>Aussagekräftiger ist die Spalte „Vorteil“ – aber nur, wenn sie deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Spalte „Phasen“ in der Tabelle im Detail; unter 3 Phasen ist das meist Zufall).</li>
-      <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
-      <li>Ob die angezeigten Quoten früher gestimmt hätten, zeigen die Kachel „Prüfung der Ampel“ und der Reiter „Prüfung“.</li>
-    </ul>
-    <p class="klein">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts; in den Aktiendaten fehlen Firmen, die pleite gingen.</p>
+<body data-ansicht="haupt">
+<a class="skip" href="#haupt">Zum Inhalt springen</a>
+<header class="kopf">
+  <button class="marke" id="k-start" aria-label="Zur Übersicht">
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="var(--akzent)"/><path d="M6 17.5 11 12l4 4 7-8" fill="none" stroke="var(--auf-akzent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 21h14" stroke="var(--auf-akzent)" stroke-width="2.4" stroke-linecap="round" opacity=".55"/></svg>
+    <span>minus <b>mit stil</b></span>
+  </button>
+  <button class="suchfeld" id="such-knopf" aria-label="Wert suchen (Taste / oder Strg+K)" aria-haspopup="dialog">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Wert suchen – Name oder Kürzel, Tippfehler erlaubt</span><kbd>/</kbd><kbd>Strg K</kbd>
+  </button>
+  <div class="kopf-rechts">
+    <span id="stand" class="plakette" data-e="datenstand" tabindex="0"><i></i><span>lädt …</span></span>
+    <button class="knopf-ikon" id="k-lesen" aria-pressed="false" aria-controls="lese-bereich">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg><span class="txt">So liest du das Tool</span></button>
+    <button class="knopf-ikon" id="k-thema" aria-label="Hell oder dunkel umschalten" title="Hell/Dunkel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" id="thema-ikon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   </div>
-</details>
-<div id="kacheln"></div>
-<main>
-  <section class="box">
-    <div class="filter">
-      <input id="suche" placeholder="Suche Name oder Kürzel" size="18">
-      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Rohstoffe</option><option>Nasdaq</option><option>FTSE All-World</option></select><span class="i" data-e="f_gruppe" tabindex="0">ⓘ</span>
-      <label><span data-e="f_minj" tabindex="0">min. Jahre</span> <input id="minj" type="number" value="10" min="0" style="width:52px"></label>
-      <label><input id="nurq" type="checkbox" checked> <span data-e="f_stabil" tabindex="0">nur stabiler Aufwärtstrend</span></label>
-      <label><span data-e="f_umsatz" tabindex="0">min. Umsatz/Tag</span> <select id="minu"><option value="0">egal</option><option value="1e6">1 Mio $</option><option value="1e7" selected>10 Mio $</option><option value="1e8">100 Mio $</option></select></label>
+</header>
+<div id="warnband" hidden></div>
+<div id="layout">
+  <aside id="liste-bereich" aria-label="Werteliste">
+    <div class="reiter-liste" role="tablist" id="listen-reiter"></div>
+    <div class="listen-werkzeug">
+      <input type="search" id="listen-filter" placeholder="Liste filtern …" aria-label="Liste filtern">
+      <select id="sortierung" aria-label="Sortierung">
+        <option value="score">Ampel (günstig zuerst)</option><option value="score_auf">Ampel (teuer zuerst)</option>
+        <option value="delta">Änderung 4 Wochen</option><option value="cagr20">Ø Jahresrendite</option>
+        <option value="vorteil">Vorteil (3 J.)</option><option value="p3">3 J. höher</option>
+        <option value="rueck">Rückschlagrisiko (klein zuerst)</option><option value="dd">Abstand zum Hoch</option><option value="name">Name A–Z</option>
+      </select>
     </div>
-    <div class="tabelle"><table>
-      <thead><tr>
-        <th data-s="name">Wert</th><th data-s="score" data-e="ampel">Ampel ▼</th>
-        <th data-s="cagr20" data-e="cagr20">Ø Jahr</th>
-        <th data-s="p3" data-e="p3">3J höher</th>
-        <th data-s="vorteil" data-e="vorteil">Vorteil</th>
-        <th data-s="rueck" data-e="rueckschlag">Rückschlag</th>
-        <th data-s="dd" data-e="vom_hoch">vom Hoch</th><th data-s="delta" data-e="w4">4W</th>
-      </tr></thead><tbody id="zeilen"></tbody></table>
-      <div class="mehr"><button id="mehr">mehr anzeigen</button> <span id="anzahl" class="stand"></span></div>
+    <div class="filter-aktien" id="filter-aktien" hidden>
+      <label><span data-e="f_minj" tabindex="0">min. Jahre</span><input id="minj" type="number" value="10" min="0" max="60"></label>
+      <label><input id="nurq" type="checkbox" checked><span data-e="f_stabil" tabindex="0">nur stabiler Aufwärtstrend</span></label>
+      <label><span data-e="f_umsatz" tabindex="0">Umsatz/Tag</span><select id="minu"><option value="0">egal</option><option value="1e6">ab 1 Mio $</option><option value="1e7" selected>ab 10 Mio $</option><option value="1e8">ab 100 Mio $</option></select></label>
     </div>
-  </section>
-  <section class="box" id="detail"><div class="leer">Wert in der Liste anklicken.</div></section>
-</main>
+    <div class="liste-kopf" id="liste-kopf">
+      <button data-s="name">Wert</button><button data-s="score" data-e="ampel">Ampel</button><button data-s="score" data-e="sparkline">1 Jahr</button>
+      <button data-s="cagr20" class="c-cagr" data-e="cagr20">Ø Jahr</button><button data-s="vorteil" class="c-vorteil" data-e="vorteil">Vorteil</button>
+      <button data-s="rueck" class="c-rueck" data-e="rueckschlag">Rückschl.</button><button data-s="dd" class="c-dd" data-e="vom_hoch">vom Hoch</button>
+      <button data-s="delta" data-e="w4">4W</button>
+    </div>
+    <div id="liste" tabindex="0" role="listbox" aria-label="Werte"><div id="liste-innen"></div></div>
+    <div class="liste-fuss" id="anzahl"></div>
+  </aside>
+  <div class="trenner senkrecht" data-trenner="liste" role="separator" aria-orientation="vertical" aria-label="Breite der Liste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
+  <main id="haupt" tabindex="-1"></main>
+  <div class="trenner senkrecht" data-trenner="lesen" role="separator" aria-orientation="vertical" aria-label="Breite der Seitenleiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück" hidden></div>
+  <aside id="lese-bereich" aria-label="So liest du das Tool" hidden>
+    <div class="lese-kopf"><h2>So liest du das Tool</h2><button class="knopf-ikon" id="lese-zu" aria-label="Seitenleiste schließen">✕</button></div>
+    <div class="lese">
+      <div class="merke" id="lesehilfe-kern"></div>
+      <h4>Was „historisch günstig“ bedeutet</h4>
+      <p>Die Ampel vergleicht den heutigen Stand eines Werts mit seiner eigenen Geschichte: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI. Ab Ampel 80 steht ein Wert im Mittel dieser Messgrößen günstiger als in etwa 80 % seiner bisherigen Wochen. Das ist eine Beschreibung, keine Vorhersage.</p>
+      <h4>Was die Prüfung zeigt</h4>
+      <div id="lesehilfe-zahlen"><div class="lade" style="height:90px"></div></div>
+      <h4>Wie du das Tool liest</h4>
+      <ul>
+        <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (blaugrün = günstig, orange = teuer).</li>
+        <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Kurs höher nach …“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
+        <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
+        <li>Der violette <b>Prognose-Kegel</b> im Chart ist eine Simulation aus vergangenen Wochen (50 % und 90 % der Wege), keine Vorhersage.</li>
+        <li>Ob die angezeigten Quoten früher gestimmt hätten, zeigen die Seite „Prüfung der Ampel“ und der Reiter „Prüfung“.</li>
+      </ul>
+      <h4>Bedienung</h4>
+      <ul>
+        <li><b>Suche:</b> Taste <kbd>/</kbd> oder <kbd>Strg K</kbd>, Tippfehler sind erlaubt.</li>
+        <li><b>Bereiche verstellen:</b> die feinen Linien zwischen Liste, Chart und Seitenleiste ziehen; Doppelklick setzt zurück. Die Größen werden in diesem Browser gemerkt.</li>
+        <li><b>Chart:</b> Zeitraum oben wählen, Linien über die Chips ein- und ausschalten, mit der Maus über den Chart fahren für genaue Werte, Mausrad zoomt.</li>
+        <li><b>Favoriten:</b> Stern im Detail, Liste unter „Meine“.</li>
+      </ul>
+      <p class="klein">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts; in den Aktiendaten fehlen Firmen, die pleite gingen.</p>
+    </div>
+  </aside>
+</div>
+<nav class="unten-nav" aria-label="Ansicht">
+  <button data-ansicht="uebersicht"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Übersicht</button>
+  <button data-ansicht="liste"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Liste</button>
+  <button data-ansicht="haupt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 14 4-4 3 3 5-6"/></svg>Wert</button>
+  <button data-ansicht="lesen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17h.01"/></svg>Lesen</button>
+</nav>
+<dialog id="suche-dlg" aria-label="Suche">
+  <div class="suche-box">
+    <div class="suche-feld">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="suche-eingabe" placeholder="Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="suche-treffer">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="suche-treffer" id="suche-treffer" role="listbox"></div>
+    <div class="suche-fuss"><span><kbd>↑</kbd> <kbd>↓</kbd> wählen</span><span><kbd>Enter</kbd> öffnen</span><span><kbd>Esc</kbd> schließen</span></div>
+  </div>
+</dialog>
 <script>
 const $ = s => document.querySelector(s);
-let ALLE = [], ANZEIGE = 200, SORT = {k:"score", dir:-1}, AKTIV = null;
-const fmt = (x, n=1, suf="") => x==null ? "–" : (Math.round(x*10**n)/10**n).toLocaleString("de-DE",{minimumFractionDigits:n,maximumFractionDigits:n})+suf;
-const farbe = s => s==null ? "#555" : s>=80 ? "#089981" : s>=60 ? "#26a69a99" : s>40 ? "#5d606b" : s>15 ? "#ef535099" : "#ef5350";
+const $$ = s => [...document.querySelectorAll(s)];
+let ALLE = [], SORT = {k:"score", dir:-1}, AKTIV = null, SEITE = "uebersicht";
+const fmt = (x, n=1, suf="") => x==null || Number.isNaN(x) ? "–" : (Math.round(x*10**n)/10**n).toLocaleString("de-DE",{minimumFractionDigits:n,maximumFractionDigits:n})+suf;
+// Ampel-Farben: blaugrün = günstig, grau = neutral, orange = teuer (für Farbenblinde unterscheidbar; Zahl und Wort stehen immer dabei)
+const AMPEL_FARBEN = ["#ff8a3d", "#ffb67f", "#a3abbb", "#86d9c6", "#2ec4a6"];
+const stufe = s => s==null ? -1 : s>=80 ? 4 : s>=60 ? 3 : s>40 ? 2 : s>15 ? 1 : 0;
+const farbe = s => s==null ? "#6b7280" : AMPEL_FARBEN[stufe(s)];
 const zonen = {"historisch sehr guenstig":"historisch sehr günstig","guenstig":"günstig","neutral":"neutral","teuer":"teuer","historisch sehr teuer":"historisch sehr teuer","keine Daten":"keine Daten"};
+const zonenWort = s => s==null ? "keine Ampel" : ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"][stufe(s)];
 const umlaut = t => (t||"").replace(/ae/g,"ä").replace(/oe/g,"ö").replace(/ue/g,"ü").replace(/Standardabw\./g,"Standardabw.");
+const kurzname = w => umlaut(w.name).replace(" (ETF)","");
 const p3 = w => w.p && w.p["3"] ? w.p["3"] : null;
-const wert = (w,k) => ({score:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
-  rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:w.name})[k];
+const wert = (w,k) => ({score:w.score, score_auf:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
+  rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:kurzname(w)})[k];
+const pille = (s, gross=false) => s==null ? `<span class="pille leer${gross?" gross":""}" title="keine Ampel">–</span>`
+  : `<span class="pille${gross?" gross":""}" style="background:${farbe(s)}" title="Ampel ${fmt(s,0)}: ${zonenWort(s)}">${fmt(s,0)}</span>`;
+const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
+const datumDe = s => s ? s.slice(0,10).split("-").reverse().join(".") : "–";
+const tDe = t => new Date(t*1000).toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC"});
 
+// Merken im Browser (darf fehlen: privates Fenster, gesperrter Speicher)
+const lade = (k, std) => { try { const v = localStorage.getItem(k); return v == null ? std : JSON.parse(v); } catch(e) { return std; } };
+const sichere = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e) {} };
+const istHandy = () => matchMedia("(max-width:900px)").matches;
+
+// Farben aus dem aktuellen Thema (für die Charts)
+let _F = null;
+const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
+  return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -213,22 +568,6 @@ async function apiMc(id, wochen, jahre, preise){
     eigene:preise.filter(x => x > 0).map(wahr), vorab:true};
 }
 
-// Datenstand oben: lokal "live" (Server rechnet beim Anklicken), online mehrmals täglich
-function datenstand(stand){
-  const kurseBis = ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop();
-  const de = s => s ? s.split(" ")[0].split("-").reverse().join(".") + (s.includes(" ") ? " " + s.split(" ")[1] : "") : "–";
-  let txt = `Kurse bis ${de(kurseBis)} · berechnet ${de(stand)}${STAT_INFO?.zeitzone ? " " + STAT_INFO.zeitzone : ""} · ${ALLE.length.toLocaleString("de-DE")} Werte`;
-  let warn = "";
-  if (STATISCH) {
-    txt += " · Online-Fassung: wird mehrmals täglich aktualisiert, keine Echtzeitkurse";
-    const lauf = STAT_INFO?.kurse_lauf;
-    if (lauf && (lauf.abgebrochen || lauf.ohne_daten > 0.2 * lauf.gesamt))
-      warn = `Beim letzten Lauf lieferte Yahoo nur ${lauf.geladen} von ${lauf.gesamt} Werten – angezeigt wird teils der ältere Stand.`;
-  }
-  const alter = kurseBis ? (Date.now() - Date.parse(kurseBis)) / 86400000 : 0;
-  if (alter > 4) warn = (warn ? warn + " " : "") + `Achtung: Kursdaten sind ${Math.floor(alter)} Tage alt.`;
-  $("#stand").innerHTML = txt + (warn ? ` <b style="color:var(--gelb)">${warn}</b>` : "");
-}
 const geld = x => x==null ? "–" : Math.round(x).toLocaleString("de-DE");
 const vz = (x, n=1, suf="") => x==null ? "–" : (x>0?"+":"") + fmt(x,n,suf);
 const klasse = x => x==null ? "" : x>0 ? "pos" : x<0 ? "neg" : "";
@@ -244,7 +583,7 @@ function tvWidget(el, symbol){
   const s = document.createElement("script");
   s.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"; s.async = true;
   // immer Monatsansicht; 200-Wochen-Linie im Monatsbild = gleitender Durchschnitt über 46 Monate (200 Wochen ≈ 46 Monate)
-  s.text = JSON.stringify({autosize:true, symbol, interval:"M", range:"ALL", timezone:"Europe/Berlin", theme:"dark", style:"1", locale:"de_DE",
+  s.text = JSON.stringify({autosize:true, symbol, interval:"M", range:"ALL", timezone:"Europe/Berlin", theme:document.documentElement.dataset.theme === "light" ? "light" : "dark", style:"1", locale:"de_DE",
     allow_symbol_change:false, hide_side_toolbar:true, calendar:false, support_host:"https://www.tradingview.com",
     studies:[{id:"MASimple@tv-basicstudies", inputs:{length:46}}]});
   box.appendChild(s); el.appendChild(box);
@@ -253,7 +592,7 @@ function zeichneOnline(w, c){
   const el = $("#chart");
   if (w.tv) tvWidget(el, w.tv);
   else el.innerHTML = `<div class="leer">Für diesen Wert gibt es online keinen Kurs-Chart (im kostenlosen TradingView-Widget nicht verfügbar). Ampel und Auswertungen unten gelten trotzdem.</div>`;
-  const ch2 = LightweightCharts.createChart($("#chart2"), {...chartBasis(), timeScale:{borderColor:"#363a45", minBarSpacing:0.02}});
+  const ch2 = LightweightCharts.createChart($("#chart2"), {...chartBasis(), timeScale:{borderColor:F().line, minBarSpacing:0.02}});
   if (c.pi_zone) {
     const zone = ch2.addHistogramSeries({priceScaleId:"pizone", color:"#e040fb33", priceLineVisible:false, lastValueVisible:false});
     ch2.priceScale("pizone").applyOptions({scaleMargins:{top:0,bottom:0}, visible:false});
@@ -261,10 +600,10 @@ function zeichneOnline(w, c){
   }
   const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
   sc.setData(c.t.map((t,i) => c.score[i]==null ? {time:t} : {time:t, value:c.score[i], color:farbe(c.score[i])}));
-  [80,15].forEach(v => sc.createPriceLine({price:v, color:v===80?"#089981":"#ef5350", lineWidth:1, lineStyle:2, axisLabelVisible:true}));
+  [80,15].forEach(v => sc.createPriceLine({price:v, color:v===80?F().guenstig:F().teuer, lineWidth:1, lineStyle:2, axisLabelVisible:true}));
   sc.setMarkers(c.marken.map(([t,art,s]) => ({
-    kauf:     {time:t,position:"aboveBar",color:"#089981",shape:"arrowDown",text:String(s)},
-    teuer:    {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)},
+    kauf:     {time:t,position:"aboveBar",color:F().guenstig,shape:"arrowDown",text:String(s)},
+    teuer:    {time:t,position:"aboveBar",color:F().teuer,shape:"arrowDown",text:String(s)},
     pi_beginn:{time:t,position:"aboveBar",color:"#e040fb",shape:"circle",text:"Bodenbildung beginnt"},
     pi_boden: {time:t,position:"aboveBar",color:"#00e676",shape:"arrowDown",text:"Pi Boden-Signal"},
   })[art]));
@@ -321,7 +660,7 @@ async function tabRechnerOnline(w){
       <div class="text">Block-Bootstrap: Aus den echten Wochenrenditen der letzten 20 Jahre werden zufällig Stücke von ${m.block} Wochen zu ${m.pfade.toLocaleString("de-DE")} möglichen Wegen aneinandergehängt. „Wird erreicht“ zählt auch kurze Berührungen innerhalb einer Woche. Die Zukunft muss der Vergangenheit nicht ähneln; die heutige Ampel fließt nicht ein.</div>`;
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), localization:{locale:"de-DE", priceFormatter:p => (p>0?"+":"") + Math.round(p) + " %"}});
-    [["q5","#b39ddb88",2],["q25","#b39ddb",0],["q50","#b39ddb",0],["q75","#b39ddb",0],["q95","#b39ddb88",2]].forEach(([k,f,st]) => {
+    [["q5",F().kegel+"88",2],["q25",F().kegel,0],["q50",F().kegel,0],["q75",F().kegel,0],["q95",F().kegel+"88",2]].forEach(([k,f,st]) => {
       const s = ch.addLineSeries({color:f, lineWidth:k==="q50"?2:1, lineStyle:st, priceLineVisible:false, lastValueVisible:k!=="q50"?false:true});
       s.setData(m.t.map((t,i) => ({time:t, value:(m.kegel[k][i]-1)*100})));
     });
@@ -336,12 +675,12 @@ async function tabRechnerOnline(w){
 // Schlüssel -> {titel, text}. text darf eine Funktion sein (dann mit aktuellen Prüfergebnissen).
 const pruefSatz = () => {
   const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
-  if (!e || !s) return "Ob die Ampel früher gestimmt hätte, zeigt die Kachel „Prüfung der Ampel“.";
+  if (!e || !s) return "Ob die Ampel früher gestimmt hätte, zeigt die Seite „Prüfung der Ampel“.";
   return `Ehrlich: In der Prüfung ohne Zukunftswissen hat die Ampel bei ETFs ${e.skill > 2 ? "etwas besser" : e.skill < -2 ? "schlechter" : "nicht besser"} vorhergesagt als die einfache Basis-Quote, und Kaufen nur bei hoher Ampel brachte bei ETFs im Mittel ${s.median_diff_staffel > 0 ? "nur wenig mehr" : "nicht mehr"} als ein gleichmäßiger Sparplan (${vz(s.median_diff_staffel,2)} Prozentpunkte pro Jahr).`;
 };
 const ERKLAERUNG = {
   // --- Liste und Filter
-  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. Die Ampel allein ist kein Kaufsignal. ${pruefSatz()} Mehr dazu oben unter „So liest du das Tool“.`},
+  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. Die Ampel allein ist kein Kaufsignal. ${pruefSatz()} Mehr dazu in der Seitenleiste „So liest du das Tool“.`},
   zonen: {titel:"Ampel-Zonen", text:"Ab 80: historisch sehr günstig. 60–80: günstig. 40–60: neutral. 15–40: teuer. Bis 15: historisch sehr teuer. Die Grenzen sind eine feste Einteilung, keine Kaufempfehlung; „günstig“ heißt nur, dass der Kurs gemessen an seiner eigenen Geschichte tief steht."},
   cagr20: {titel:"Ø Jahresrendite", text:"Durchschnittlicher jährlicher Zuwachs (mit Zinseszins) über die letzten 20 Jahre, bei kürzerer Historie über die verfügbare Zeit. „Mit Dividenden“ heißt: ausgeschüttete Dividenden stecken im bereinigten Kurs, als wären sie wieder angelegt. Reine Kursindizes und Rohstoffe haben keine Dividenden. Vor Steuern und Kosten; die Vergangenheit garantiert nichts."},
   cagr_max: {titel:"Ø seit Beginn", text:"Durchschnittlicher jährlicher Zuwachs über die gesamte vorhandene Historie. Bei ETFs zählt die vorgeschaltete Index-Historie mit. Sehr lange Zeiträume glätten Krisen, sehr kurze (z. B. junge Kryptowährungen) sind kaum aussagekräftig."},
@@ -372,10 +711,10 @@ const ERKLAERUNG = {
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
-  l_pfeile: {titel:"Pfeile im Chart", text:"Grüner Pfeil mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Roter Pfeil: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
-  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Grün = günstig, rot = teuer. Die gestrichelten Linien markieren 80 und 15."},
+  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „günstig“ mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „teuer“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
+  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Die gestrichelten Linien markieren 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 12 Monate: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
-  tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien (Trendkanal, Pi-Cycle-Linien) gibt es nur in der lokalen Fassung."},
+  tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Pfeile und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
   // --- Wahrscheinlichkeitstabelle
   t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel höchstens 7,5 Punkte vom heutigen Wert entfernt war. Für jede wird geschaut, wie der Kurs nach 1, 3 und 5 Jahren stand."},
   t_hoeher: {titel:"Kurs höher", text:"Anteil der ähnlichen Wochen, nach denen der Kurs am Ende des Zeitraums höher stand. Das ist eine Häufigkeit aus der Vergangenheit, keine Zusage. In der Prüfung ohne Zukunftswissen war diese Quote nicht treffsicherer als die Quote „an allen Tagen“."},
@@ -429,19 +768,8 @@ const ERKLAERUNG = {
   tagebuch: {titel:"Signal-Tagebuch", text:"Jeden Tag wird festgehalten, was das Tool anzeigt, und nie geändert. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen. Das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet."},
 };
 
-// ------------------------------------------------------------ „So liest du das Tool“ (Zahlen live aus dem Server)
 const LESE_WERTE = [["SPY","S&P 500"],["QQQ","Nasdaq-100"],["GOLD","Gold"],["BTC","Bitcoin"]];
 let leseGeladen = false;
-function leseInit(){
-  const d = $("#lesehilfe"); let zu = false;
-  try { zu = localStorage.getItem("lesehilfe_zu") === "1"; } catch(e) {}
-  d.open = !zu;                                   // beim ersten Besuch offen
-  d.addEventListener("toggle", () => {
-    try { localStorage.setItem("lesehilfe_zu", d.open ? "0" : "1"); } catch(e) {}
-    if (d.open) leseLaden();
-  });
-  if (d.open) leseLaden();
-}
 const zoneSumme = (zonen, namen) => {
   const z = zonen.filter(x => namen.includes(x.zone) && x.n > 0);
   const n = z.reduce((a,x) => a + x.n, 0);
@@ -496,19 +824,6 @@ async function leseLaden(){
   ziel.querySelectorAll("tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
 }
 
-// ------------------------------------------------------------ Lohnt-sich-Check je Wert
-async function lohntSichCheck(id){
-  const el = $("#check"); if (!el) return;
-  const s = await apiStrategie(id);
-  if (AKTIV !== id || !$("#check")) return;
-  if (!s || s.fehler) { el.innerHTML = `<b>Lohnt-sich-Check:</b> zu wenig Jahre mit Ampel für einen Vergleich mit dem Sparplan.`; return; }
-  const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0;
-  el.className = "check " + (ja ? "ja" : "nein");
-  el.innerHTML = `<b>${ek("check", "Lohnt-sich-Check")}: ${ja ? "Ja" : "Nein"}</b> – Warten auf eine günstige Ampel (60/75/90) hätte hier seit ${s.von.slice(0,4)} ${ja ? "mehr" : "weniger"} gebracht als der Sparplan:
-    ${geld(e.staffel.netto)} statt ${geld(e.spar.netto)} nach Kosten und Steuer (${vz(d,0," %")}). <a href="#" id="check-mehr">Details</a>`;
-  $("#check-mehr").onclick = ev => { ev.preventDefault(); reiter("strategie"); $("#tab").scrollIntoView({behavior:"smooth"}); };
-}
-
 function leseKern(){
   const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
   const schwach = !e || !s || (e.skill <= 2 && s.median_diff_staffel <= 0.1);
@@ -557,138 +872,750 @@ document.addEventListener("focusout", () => { if (Date.now() - zeigerZeit < 600)
 addEventListener("scroll", () => { if (letzterZeiger === "mouse") tipWeg(); else if (tipZiel) tipZeigen(tipZiel); }, true);
 addEventListener("keydown", ev => { if (ev.key === "Escape") tipWeg(); });
 
+// ------------------------------------------------------------ Datenstand (Plakette oben)
+let STAND_TEXT = "";
+function datenstand(stand){
+  const kurseBis = ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop();
+  const de = s => s ? s.split(" ")[0].split("-").reverse().join(".") + (s.includes(" ") ? " " + s.split(" ")[1] : "") : "–";
+  STAND_TEXT = `Kurse bis ${de(kurseBis)} · berechnet ${de(stand)}${STAT_INFO?.zeitzone ? " " + STAT_INFO.zeitzone : ""} · ${ALLE.length.toLocaleString("de-DE")} Werte.`
+    + (STATISCH ? " Online-Fassung: wird mehrmals täglich aktualisiert, keine Echtzeitkurse." : " Lokale Fassung: die Auswertung läuft täglich, Details rechnet der Server beim Anklicken.");
+  let warn = "";
+  if (STATISCH) {
+    const lauf = STAT_INFO?.kurse_lauf;
+    if (lauf && (lauf.abgebrochen || lauf.ohne_daten > 0.2 * lauf.gesamt))
+      warn = `Beim letzten Lauf lieferte Yahoo nur ${lauf.geladen} von ${lauf.gesamt} Werten – angezeigt wird teils der ältere Stand.`;
+  }
+  const alter = kurseBis ? (Date.now() - Date.parse(kurseBis)) / 86400000 : 0;
+  if (alter > 4) warn = (warn ? warn + " " : "") + `Achtung: Kursdaten sind ${Math.floor(alter)} Tage alt.`;
+  const p = $("#stand");
+  p.classList.toggle("alt", !!warn);
+  p.querySelector("span").innerHTML = `<span class="lang">Stand </span>${de(stand).slice(0,5)}${stand && stand.includes(" ") ? " " + stand.split(" ")[1] : ""}${STATISCH ? '<span class="lang"> · online</span>' : '<span class="lang"> · lokal</span>'}`;
+  const wb = $("#warnband"); wb.hidden = !warn; wb.textContent = warn;
+}
+
+// ------------------------------------------------------------ zusätzliche Erklärungen der neuen Oberfläche
+const ERKLAERUNG_NEU = {
+  datenstand: {titel:"Datenstand", text:() => STAND_TEXT || "lädt …"},
+  sparkline: {titel:"Ampel im letzten Jahr", text:"Kleine Linie: die Ampel alle 4 Wochen über das letzte Jahr. Steigt sie, ist der Wert gemessen an seiner Geschichte günstiger geworden (meist, weil der Kurs gefallen ist)."},
+  gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
+  klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
+  zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
+  skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
+  quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Pfeile und Kegel gibt es dort nicht."},
+  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Gestrichelt: 80 und 15. Die Trennlinie darüber lässt sich ziehen."},
+  l_pitop: {titel:"Pi Cycle Top (gestrichelt)", text:"111-Tage-Durchschnitt (orange) und 2 × 350-Tage-Durchschnitt (rosa). Stieg die 111-Tage-Linie darüber, lag bei Bitcoin früher ein Zyklushoch nahe (Markierung „Pi Top“). Nur für Bitcoin geeicht, sehr wenige Fälle."},
+  l_mayer: {titel:"Mayer Multiple (unten, linke Skala)", text:"Kurs geteilt durch den 200-Tage-Durchschnitt, je Woche. Gestrichelt: 0,8 (früher tief) und 2,4 (früher überhitzt) – Grenzen aus der Bitcoin-Geschichte, für andere Coins nicht erprobt."},
+  prognose: {titel:"Prognose (Simulation, 12 Monate)", text:"Monte-Carlo-Simulation: Aus echten Wochenrenditen der letzten 20 Jahre (bei kürzerer Historie der vorhandenen) werden 10.000 mögliche Wege gebaut. Gezeigt werden der mittlere Weg und die Spanne, in der 90 % der Wege enden. Keine Vorhersage: die Zukunft muss der Vergangenheit nicht ähneln, die heutige Ampel fließt nicht ein."},
+  signale: {titel:"Signale", text:"Letzter Pfeil (Ampel stieg auf 80 oder fiel auf 15), Lage zur 200-Wochen-Linie und Wochen-RSI; bei Kryptowährungen das Mayer Multiple, bei Bitcoin der Pi Cycle. Rückblickend sehen Signale oft gut aus – wie viel sie wirklich brachten, zeigt die Prüfung."},
+  heatmap: {titel:"Heatmap", text:"Alle Index-ETFs, Kryptowährungen und Rohstoffe nach ihrer heutigen Ampel. Blaugrün = historisch günstig, orange = historisch teuer. Antippen öffnet den Wert."},
+  auffaellig: {titel:"Heute auffällig", text:"Werte, deren Ampel sich stark bewegt hat oder neu eine Grenze überschritten hat. Auffällig heißt nicht kaufenswert: die Prüfung zeigt, dass Warten auf eine günstige Ampel meist weniger brachte als ein Sparplan."},
+  favorit: {titel:"Favorit", text:"Merkt den Wert in diesem Browser unter „Meine“. Nichts wird hochgeladen."},
+};
+
+// ------------------------------------------------------------ verstellbare Bereiche (Breite der Liste, Seitenleiste, Chart-Höhe, Ampel-Leiste)
+const GROESSE_STD = {liste:390, lesen:400, chart:560, ampel:120};
+const GROESSE_GRENZEN = {liste:[260, () => innerWidth * 0.65], lesen:[300, () => innerWidth * 0.5], chart:[260, () => 1600], ampel:[60, () => 400]};
+const GROESSE = {...GROESSE_STD, ...lade("groessen", {})};
+function groesseAnwenden(k){   // gewünschte Größe merken, angezeigt wird sie passend zum Fenster begrenzt
+  const [lo, hi] = GROESSE_GRENZEN[k];
+  const g = Math.round(Math.min(Math.max(GROESSE[k], lo), Math.max(lo, hi())));
+  document.documentElement.style.setProperty("--g-" + k, g + "px");
+  return g;
+}
+function groesseSetzen(k, v, merken=true){
+  GROESSE[k] = v; GROESSE[k] = groesseAnwenden(k);
+  if (merken) sichere("groessen", GROESSE);
+}
+Object.keys(GROESSE).forEach(groesseAnwenden);
+// Richtung: +1 = Ziehen nach rechts/unten vergrößert, -1 = verkleinert (Bereich liegt rechts bzw. unter dem Trenner)
+const TRENNER_ART = {liste:["x", 1], lesen:["x", -1], chart:["y", 1], ampel:["y", -1]};
+document.addEventListener("pointerdown", ev => {
+  const t = ev.target.closest(".trenner"); if (!t || ev.button > 0) return;
+  const k = t.dataset.trenner, [achse, richtung] = TRENNER_ART[k];
+  ev.preventDefault(); t.setPointerCapture(ev.pointerId); t.classList.add("zieht"); document.body.classList.add("zieht-" + achse);
+  const start = achse === "x" ? ev.clientX : ev.clientY, g0 = GROESSE[k];
+  const zug = e => groesseSetzen(k, g0 + richtung * ((achse === "x" ? e.clientX : e.clientY) - start), false);
+  const ende = () => { t.removeEventListener("pointermove", zug); t.classList.remove("zieht"); document.body.classList.remove("zieht-" + achse); sichere("groessen", GROESSE); };
+  t.addEventListener("pointermove", zug);
+  t.addEventListener("pointerup", ende, {once:true}); t.addEventListener("pointercancel", ende, {once:true});
+});
+document.addEventListener("dblclick", ev => { const t = ev.target.closest(".trenner"); if (t) groesseSetzen(t.dataset.trenner, GROESSE_STD[t.dataset.trenner]); });
+document.addEventListener("keydown", ev => {   // Tastatur: Pfeiltasten verstellen, Enter setzt zurück
+  const t = ev.target.closest?.(".trenner"); if (!t) return;
+  const k = t.dataset.trenner, [achse, richtung] = TRENNER_ART[k];
+  const d = {ArrowLeft:-1, ArrowRight:1, ArrowUp:-1, ArrowDown:1}[ev.key];
+  if (d && ((achse === "x") === (ev.key === "ArrowLeft" || ev.key === "ArrowRight"))) { ev.preventDefault(); groesseSetzen(k, GROESSE[k] + richtung * d * (ev.shiftKey ? 64 : 16)); }
+  if (ev.key === "Enter") groesseSetzen(k, GROESSE_STD[k]);
+});
+addEventListener("resize", () => ["liste", "lesen"].forEach(groesseAnwenden));
+
+// ------------------------------------------------------------ Thema hell/dunkel
+function themaIkon(){
+  const hell = document.documentElement.dataset.theme === "light";
+  $("#thema-ikon").innerHTML = hell ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
+    : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  $("#k-thema").setAttribute("aria-label", hell ? "Dunkles Thema einschalten" : "Helles Thema einschalten");
+}
+$("#k-thema").onclick = () => {
+  const neu = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+  document.documentElement.dataset.theme = neu; try { localStorage.setItem("thema", neu); } catch(e) {}
+  _F = null; themaIkon(); neuZeichnen();
+};
+themaIkon();
+function neuZeichnen(){   // Charts übernehmen die Farben nur beim Anlegen
+  if (AKTIV) zeige(AKTIV, {ohneScroll:true});
+  else if (SEITE === "umfeld") zeigeUmfeld(); else if (SEITE === "pruefung") zeigePruefungGesamt(); else if (SEITE === "uebersicht") zeigeUebersicht();
+  else if (typeof zeigeDepot === "function" && SEITE === "depot") zeigeDepot();
+}
+
+// ------------------------------------------------------------ Handy: eine Spalte, untere Reiterleiste
+function ansicht(name){
+  if (name === "uebersicht") { zeigeUebersicht(); name = "haupt"; }
+  document.body.dataset.ansicht = name;
+  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", b.dataset.ansicht === name || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : "uebersicht")) ? "page" : "false"));
+  if (name === "lesen") leseLaden();
+  if (name === "liste") listeZeichnen();
+}
+$$(".unten-nav button").forEach(b => b.onclick = () => ansicht(b.dataset.ansicht));
+
+// ------------------------------------------------------------ Seitenleiste „So liest du das Tool“
+let LESE_OFFEN = false;
+function leseOeffnen(auf){
+  if (istHandy()) { ansicht(document.body.dataset.ansicht === "lesen" && auf !== true ? "haupt" : "lesen"); return; }
+  LESE_OFFEN = auf ?? !LESE_OFFEN;
+  $("#layout").classList.toggle("lesen-offen", LESE_OFFEN);
+  $("#lese-bereich").hidden = !LESE_OFFEN; $('.trenner[data-trenner="lesen"]').hidden = !LESE_OFFEN;
+  $("#k-lesen").setAttribute("aria-pressed", String(LESE_OFFEN));
+  try { localStorage.setItem("lesehilfe_zu", LESE_OFFEN ? "0" : "1"); } catch(e) {}
+  if (LESE_OFFEN) leseLaden();
+}
+function leseInit(){
+  let v = null;
+  try { v = localStorage.getItem("lesehilfe_zu"); } catch(e) {}
+  if (istHandy()) return;
+  if (v === "0" || (v == null && innerWidth >= 1680)) leseOeffnen(true);   // zuletzt offen – oder erster Besuch mit genug Platz
+}
+$("#k-lesen").onclick = () => leseOeffnen();
+$("#lese-zu").onclick = () => leseOeffnen(false);
+
+// ------------------------------------------------------------ Favoriten
+let FAV = new Set(lade("favoriten", []));
+function favUmschalten(id){
+  FAV.has(id) ? FAV.delete(id) : FAV.add(id); sichere("favoriten", [...FAV]);
+  const b = $("#stern"); if (b) { b.setAttribute("aria-pressed", String(FAV.has(id))); b.lastChild.textContent = FAV.has(id) ? " Gemerkt" : " Merken"; }
+  reiterZahlen(); if (LISTE_REITER === "meine") listeNeu(); else listeZeichnen();
+}
+
+// ------------------------------------------------------------ Liste links (virtuell: flüssig auch bei 3.000 Zeilen)
+const LISTEN_REITER = [["uebersicht","Übersicht"],["etf","ETFs"],["krypto","Krypto"],["rohstoffe","Rohstoffe"],["aktien","Aktien"],["meine","★ Meine"]];
+let LISTE_REITER = lade("liste_reiter", "uebersicht"), GEFILTERT = [], ZEILE_H = 54, FOKUS_I = -1;
+const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
+function imReiter(w, r){
+  return r === "uebersicht" ? SONDERGRUPPE(w) : r === "etf" ? w.gruppe === "ETF" : r === "krypto" ? w.gruppe === "Krypto"
+    : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
+}
+function reiterZahlen(){
+  $("#listen-reiter").innerHTML = LISTEN_REITER.map(([k, t]) => `<button role="tab" data-r="${k}" aria-selected="${k === LISTE_REITER}">${t}<span class="zahl">${
+    k === "aktien" ? "" : ALLE.filter(w => imReiter(w, k)).length || ""}</span></button>`).join("");
+  $$("#listen-reiter button").forEach(b => b.onclick = () => { LISTE_REITER = b.dataset.r; sichere("liste_reiter", LISTE_REITER); reiterZahlen(); listeNeu(); $("#liste").scrollTop = 0;
+    if (LISTE_REITER === "uebersicht" && !istHandy()) zeigeUebersicht(); });
+}
+function gefiltert(){
+  const q = norm($("#listen-filter").value), r = LISTE_REITER, aktien = r === "aktien";
+  const mj = +$("#minj").value || 0, nq = $("#nurq").checked, mu = +$("#minu").value;
+  return ALLE.filter(w => imReiter(w, r)
+    && (!q || w._such.includes(q))
+    && (!aktien || (w.score != null && (w.jahre_daten || 0) >= mj && (!nq || w.qualitaet) && (w.umsatz_usd || 0) >= mu)));
+}
+function listeNeu(){
+  $("#filter-aktien").hidden = LISTE_REITER !== "aktien";
+  const k = SORT.k, dir = SORT.k === "score_auf" ? 1 : SORT.dir;
+  GEFILTERT = gefiltert().sort((a, b) => {
+    const x = wert(a, k), y = wert(b, k);
+    if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+    return (typeof x === "string" ? x.localeCompare(y, "de") : (x > y ? 1 : x < y ? -1 : 0)) * dir;
+  });
+  $("#liste-innen").style.height = GEFILTERT.length * ZEILE_H + "px";
+  const alleImReiter = ALLE.filter(w => imReiter(w, LISTE_REITER)).length;
+  $("#anzahl").textContent = LISTE_REITER === "meine" && !FAV.size ? "Noch keine Favoriten – im Detail eines Werts auf „Merken“ tippen."
+    : `${GEFILTERT.length.toLocaleString("de-DE")} von ${alleImReiter.toLocaleString("de-DE")} Werten` + (LISTE_REITER === "aktien" ? " (nach Filter)" : "");
+  $$("#liste-kopf button").forEach(b => b.classList.toggle("an", b.dataset.s === (k === "score_auf" ? "score" : k)));
+  FOKUS_I = GEFILTERT.findIndex(w => w.id === AKTIV);
+  listeZeichnen();
+}
+function spark(sv, s){
+  const v = (sv || []).map(x => x == null ? null : x); if (v.filter(x => x != null).length < 2) return `<svg class="spark" width="60" height="24" aria-hidden="true"></svg>`;
+  const x = i => 2 + i * 56 / (v.length - 1), y = s => 21 - s / 100 * 18;
+  let d = "", neu = true;
+  v.forEach((s, i) => { if (s == null) { neu = true; return; } d += (neu ? "M" : "L") + x(i).toFixed(1) + " " + y(s).toFixed(1); neu = false; });
+  const li = v.length - 1 - [...v].reverse().findIndex(x => x != null);
+  return `<svg class="spark" width="60" height="24" viewBox="0 0 60 24" aria-hidden="true"><line x1="2" x2="58" y1="${y(50)}" y2="${y(50)}" stroke="var(--line2)" stroke-dasharray="2 2"/><path d="${d}" fill="none" stroke="${farbe(s)}" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(li)}" cy="${y(v[li])}" r="2.3" fill="${farbe(s)}"/></svg>`;
+}
+const w4Html = de => de == null ? `<span class="klein">–</span>` : `<span class="${de > 0 ? "pos" : de < 0 ? "neg" : ""}" title="${de > 0 ? "günstiger geworden" : de < 0 ? "teurer geworden" : "unverändert"}">${de > 0 ? "▲" : de < 0 ? "▼" : "•"} ${Math.abs(Math.round(de))}</span>`;
+let _listeRaf = 0;
+function listeZeichnen(){
+  cancelAnimationFrame(_listeRaf);
+  _listeRaf = requestAnimationFrame(() => {
+    const el = $("#liste"), h = el.clientHeight || 600, top = el.scrollTop;
+    const von = Math.max(0, Math.floor(top / ZEILE_H) - 8), bis = Math.min(GEFILTERT.length, Math.ceil((top + h) / ZEILE_H) + 8);
+    if (!GEFILTERT.length) { $("#liste-innen").innerHTML = `<div class="leer-liste">${LISTE_REITER === "meine" ? "Hier erscheinen deine Favoriten (Stern im Detail)." : "Keine Werte für diesen Filter."}</div>`; return; }
+    let html = "";
+    for (let i = von; i < bis; i++) {
+      const w = GEFILTERT[i], p = p3(w), v = p ? p.quote - p.basis : null;
+      html += `<div class="zeile${w.id === AKTIV ? " aktiv" : ""}${i === FOKUS_I ? " fokus" : ""}" role="option" aria-selected="${w.id === AKTIV}" id="z-${i}" data-i="${i}" style="top:${i * ZEILE_H}px">
+        <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${esc(w.symbol)} · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
+        <div style="text-align:right">${pille(w.score)}</div>
+        <div>${spark(w.sv, w.score)}</div>
+        <div class="zahl-r c-cagr ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1,"%")}</div>
+        <div class="zahl-r c-vorteil ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v == null ? "–" : (v > 0 ? "+" : "") + fmt(v,0)}</div>
+        <div class="zahl-r c-rueck">${fmt(w.p?.rueckschlag10,0,"%")}</div>
+        <div class="zahl-r c-dd">${fmt(w.dd,0,"%")}</div>
+        <div class="w4">${w4Html(wert(w, "delta"))}</div></div>`;
+    }
+    $("#liste-innen").innerHTML = html;
+    if (FOKUS_I >= 0) $("#liste").setAttribute("aria-activedescendant", "z-" + FOKUS_I);
+  });
+}
+$("#liste").addEventListener("scroll", listeZeichnen, {passive:true});
+new ResizeObserver(() => listeZeichnen()).observe($("#liste"));
+$("#liste-innen").addEventListener("click", ev => { const z = ev.target.closest(".zeile"); if (z) { FOKUS_I = +z.dataset.i; zeige(GEFILTERT[FOKUS_I].id); } });
+let _tastZeit = 0;
+$("#liste").addEventListener("keydown", ev => {   // Pfeiltasten wandern durch die Liste
+  const d = {ArrowDown:1, ArrowUp:-1, PageDown:10, PageUp:-10}[ev.key];
+  if (d) {
+    ev.preventDefault(); FOKUS_I = Math.max(0, Math.min(GEFILTERT.length - 1, (FOKUS_I < 0 ? -1 : FOKUS_I) + d));
+    const el = $("#liste"), y = FOKUS_I * ZEILE_H;
+    if (y < el.scrollTop) el.scrollTop = y; else if (y + ZEILE_H > el.scrollTop + el.clientHeight) el.scrollTop = y + ZEILE_H - el.clientHeight;
+    listeZeichnen(); clearTimeout(_tastZeit); const id = GEFILTERT[FOKUS_I]?.id;
+    _tastZeit = setTimeout(() => id && zeige(id, {ohneScroll:true, ohneAnsicht:true}), 280);
+  } else if (ev.key === "Enter" && GEFILTERT[FOKUS_I]) zeige(GEFILTERT[FOKUS_I].id);
+});
+$("#listen-filter").addEventListener("input", () => listeNeu());
+["#minj","#nurq","#minu"].forEach(s => $(s).addEventListener("input", listeNeu));
+$("#sortierung").addEventListener("change", ev => { const k = ev.target.value; SORT = {k, dir: (k === "name" || k === "rueck") ? 1 : -1}; listeNeu(); });
+$$("#liste-kopf button").forEach(b => b.addEventListener("click", () => {
+  const k = b.dataset.s; SORT = {k, dir: SORT.k === k ? -SORT.dir : (k === "name" || k === "rueck" ? 1 : -1)};
+  $("#sortierung").value = [...$("#sortierung").options].some(o => o.value === k) ? k : "score"; listeNeu();
+}));
+function listeMarkieren(){ FOKUS_I = GEFILTERT.findIndex(w => w.id === AKTIV); listeZeichnen(); }
+
+// ------------------------------------------------------------ Suche (tippfehlertolerant)
+const norm = s => (s || "").toLowerCase().replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss").replace(/[^a-z0-9&]+/g, " ").trim();
+const ALIAS = {SPY:"sp500 s&p500 s&p 500 standard poors us usa amerika", QQQ:"nasdaq100 ndx tech", ONEQ:"nasdaq composite", DIA:"dow jones djia", IWM:"russell 2000 small caps nebenwerte",
+  URTH:"msci world welt weltweit", IWDA:"msci world welt euro amsterdam ishares core", VWRL:"ftse all world vanguard welt", ACWI:"msci acwi welt all country", EEM:"schwellenlaender emerging markets em",
+  EXS1:"dax deutschland germany", SX5E:"euro stoxx 50 eurostoxx europa", ISF:"ftse 100 england uk grossbritannien", EWJ:"japan nikkei", BTC:"btc bitcoin krypto crypto",
+  "ETH-USD":"eth ethereum ether", "SOL-USD":"sol solana", "LINK-USD":"link chainlink", "XLM-USD":"xlm stellar lumens", GOLD:"gold xau", SILBER:"silber silver xag", PLATIN:"platin platinum",
+  PALLADIUM:"palladium", KUPFER:"kupfer copper", WTI:"oel oil rohoel crude wti", BRENT:"oel oil rohoel brent", ERDGAS:"gas erdgas natural gas", WEIZEN:"weizen wheat", MAIS:"mais corn",
+  SOJA:"soja soy sojabohnen", KAFFEE:"kaffee coffee", ZUCKER:"zucker sugar", KAKAO:"kakao cocoa", DBC:"rohstoffe korb commodities"};
+function suchIndex(){
+  for (const w of ALLE) {
+    w._n = norm(umlaut(w.name) + " " + w.name); w._sym = norm(w.symbol); w._id = norm(w.id);
+    w._such = (w._n + " " + w._sym + " " + w._id + " " + norm(ALIAS[w.id] || "")).trim();
+    w._worte = [...new Set(w._such.split(" "))];
+  }
+}
+function abstand(a, b, max){   // Levenshtein mit früher Abbruchgrenze
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  let v = Array.from({length:b.length + 1}, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let prev = v[0], best; v[0] = i; best = i;
+    for (let j = 1; j <= b.length; j++) { const t = v[j]; v[j] = Math.min(v[j] + 1, v[j-1] + 1, prev + (a[i-1] === b[j-1] ? 0 : 1)); prev = t; if (v[j] < best) best = v[j]; }
+    if (best > max) return max + 1;
+  }
+  return v[b.length];
+}
+function suchPunkte(w, q, qw){
+  if (w._sym === q || w._id === q) return 1000;
+  let p = 0;
+  if (w._sym.startsWith(q)) p = 820 - w._sym.length;
+  else if (w._n.startsWith(q)) p = 760;
+  else if ((" " + w._such).includes(" " + q)) p = 640;
+  else if (w._such.includes(q)) p = 520;
+  else {   // jedes Suchwort muss zu einem Wort passen: Anfang oder wenige Tippfehler
+    let summe = 0;
+    for (const s of qw) {
+      const max = s.length <= 3 ? 0 : s.length <= 5 ? 1 : 2; let bestes = 99;
+      for (const x of w._worte) {
+        if (x.startsWith(s)) { bestes = 0; break; }
+        if (max) { const d = Math.min(abstand(s, x, max), x.length > s.length ? abstand(s, x.slice(0, s.length), max) : 99); if (d < bestes) bestes = d; }
+      }
+      if (bestes > max) return 0; summe += bestes;
+    }
+    p = 380 - summe * 60;
+  }
+  if (SONDERGRUPPE(w)) p += 60;
+  return p + Math.min(40, Math.log10((w.umsatz_usd || 1)) * 3);
+}
+const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
+let TREFFER = [], TREFFER_I = 0;
+function sucheOeffnen(){ const d = $("#suche-dlg"); if (d.open) return; d.showModal(); $("#suche-eingabe").value = ""; sucheRechnen(); $("#suche-eingabe").focus(); }
+function sucheRechnen(){
+  const q = norm($("#suche-eingabe").value), qw = q.split(" ").filter(Boolean);
+  let werte = [];
+  if (q) werte = ALLE.map(w => [suchPunkte(w, q, qw), w]).filter(x => x[0] > 0).sort((a, b) => b[0] - a[0]).slice(0, 12).map(x => x[1]);
+  else werte = [...ALLE.filter(w => FAV.has(w.id)), ...["SPY","QQQ","EXS1","URTH","BTC","GOLD"].map(id => ALLE.find(w => w.id === id))].filter(Boolean).filter((w, i, a) => a.indexOf(w) === i).slice(0, 8);
+  const seiten = SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
+  TREFFER = [...werte.map(w => ({art:"wert", w})), ...seiten.map(s => ({art:"seite", s}))]; TREFFER_I = 0;
+  const html = [];
+  if (werte.length) html.push(`<div class="suche-gruppe">${q ? "Werte" : "Favoriten und beliebte Werte"}</div>`);
+  TREFFER.forEach((t, i) => {
+    if (t.art === "seite" && (i === 0 || TREFFER[i-1].art !== "seite")) html.push(`<div class="suche-gruppe">Seiten</div>`);
+    html.push(t.art === "wert"
+      ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${t.w.gruppe === "Nasdaq" ? "Aktie (Nasdaq)" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
+      : `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><span class="t-ikon">→</span><div class="t-n"><b>${t.s[1]}</b><span>${t.s[2]}</span></div></div>`);
+  });
+  $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel oder einen Teil des Namens probieren.</div>`;
+}
+function trefferOeffnen(i){
+  const t = TREFFER[i]; if (!t) return; $("#suche-dlg").close();
+  if (t.art === "wert") zeige(t.w.id);
+  else ({uebersicht:() => { zeigeUebersicht(); ansicht("haupt"); }, umfeld:() => { zeigeUmfeld(); ansicht("haupt"); }, pruefung:() => { zeigePruefungGesamt(); ansicht("haupt"); }, lesen:() => leseOeffnen(true), depot:() => { zeigeDepot(); ansicht("haupt"); }})[t.s[0]]();
+}
+$("#suche-eingabe").addEventListener("input", sucheRechnen);
+$("#suche-eingabe").addEventListener("keydown", ev => {
+  const d = {ArrowDown:1, ArrowUp:-1}[ev.key];
+  if (d) { ev.preventDefault(); TREFFER_I = (TREFFER_I + d + TREFFER.length) % Math.max(1, TREFFER.length);
+    $$("#suche-treffer .treffer").forEach(e => e.setAttribute("aria-selected", String(+e.dataset.i === TREFFER_I)));
+    $(`#suche-treffer [data-i="${TREFFER_I}"]`)?.scrollIntoView({block:"nearest"}); }
+  if (ev.key === "Enter") { ev.preventDefault(); trefferOeffnen(TREFFER_I); }
+});
+$("#suche-treffer").addEventListener("click", ev => { const t = ev.target.closest(".treffer"); if (t) trefferOeffnen(+t.dataset.i); });
+$("#suche-dlg").addEventListener("click", ev => { if (ev.target === $("#suche-dlg")) $("#suche-dlg").close(); });
+$("#such-knopf").onclick = sucheOeffnen;
+document.addEventListener("keydown", ev => {
+  const imFeld = ev.target.closest?.("input,textarea,select,[contenteditable]");
+  if ((ev.key === "k" || ev.key === "K") && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); sucheOeffnen(); }
+  else if (ev.key === "/" && !imFeld) { ev.preventDefault(); sucheOeffnen(); }
+});
+$("#k-start").onclick = () => { zeigeUebersicht(); ansicht("haupt"); };
+
+// ------------------------------------------------------------ Start
 async function start(){
   await modusErmitteln();
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json"].map(holeJson));
-  ALLE = d.werte; datenstand(d.stand);
-  kacheln(); liste(); leseKern(); leseInit();
-  const h = new URLSearchParams(location.hash.slice(1));
-  if (h.get("seite") === "umfeld") zeigeUmfeld();
-  else if (h.get("seite") === "pruefung") zeigePruefungGesamt();
-  else zeige(h.get("w") || "SPY");
+  ALLE = d.werte; suchIndex(); datenstand(d.stand);
+  Object.assign(ERKLAERUNG, ERKLAERUNG_NEU);
+  reiterZahlen(); listeNeu(); leseKern(); leseInit();
+  route();
+  addEventListener("hashchange", () => { if (location.hash !== _eigenerHash) route(); });
 }
+let _eigenerHash = "";
+const hashSetzen = h => { _eigenerHash = "#" + h; if (location.hash !== _eigenerHash) location.hash = h; };
+function route(){
+  const h = new URLSearchParams(location.hash.slice(1));
+  const s = h.get("seite");
+  if (s === "umfeld") zeigeUmfeld();
+  else if (s === "pruefung") zeigePruefungGesamt();
+  else if (s === "depot" && typeof zeigeDepot === "function") zeigeDepot();
+  else if (h.get("w")) zeige(h.get("w"), {ohneAnsicht:false});
+  else zeigeUebersicht();
+  if (!h.get("w")) ansicht(istHandy() && !s ? "haupt" : "haupt");
+}
+function seiteAnfang(name){
+  SEITE = name; AKTIV = null; alleChartsWeg(); listeMarkieren();
+  $("#haupt").scrollTop = 0;
+  $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", String(b.dataset.ansicht === "uebersicht" && name === "uebersicht" ? "page" : false)));
+}
+
+// ------------------------------------------------------------ Übersicht: Marktwetter, Heatmap, Heute auffällig
 function vixWort(v){ return v==null ? "" : v<15 ? "ruhig" : v<25 ? "normal" : v<35 ? "nervös" : "Panik"; }
 function breiteWort(b){ return b==null ? "" : b<30 ? "schwach" : b<70 ? "gemischt" : "breit"; }
-function kacheln(){
-  let sonder = "";
-  if (UMFELD) {
-    const b = UMFELD.breite, v = UMFELD.vix, z = UMFELD.zinskurve;
-    sonder += `<div class="kachel breit sonder" id="k-umfeld">
-      <div class="n">Marktumfeld · Stand ${(v||b||z||{}).datum||""}</div>
-      <div class="drei">
-        <div><b>${b?fmt(b.wert,0,"%"):"–"}</b><span data-e="u_breite">Marktbreite · ${b?breiteWort(b.wert):""}</span></div>
-        <div><b style="color:${v&&(v.wert>=25||["nervös","Panik"].includes(v.stufe))?"var(--rot)":"inherit"}">${v?(v.wert!=null?fmt(v.wert,1):v.stufe):"–"}</b><span data-e="u_vix">VIX · ${v?(v.wert!=null?vixWort(v.wert):`höher als ${fmt(v.perzentil,0)} %`):""}</span></div>
-        <div><b style="color:${z&&z.invertiert?"var(--rot)":"inherit"}">${z?vz(z.wert,2):"–"}</b><span data-e="u_zinskurve">Zinskurve · ${z?(z.invertiert?"invertiert":"normal"):""}</span></div>
-      </div></div>`;
-  }
-  if (PRUEF) {
-    const e = PRUEF.kalibrierung?.etf?.["3"], s = PRUEF.strategie?.zusammen?.etf;
-    sonder += `<div class="kachel sonder" id="k-pruefung">
-      <div class="n">${ek("k_pruefung","Prüfung der Ampel")}</div>
-      <div class="s" style="font-size:15px;margin-top:3px">${e && e.skill!=null ? (e.skill>0?"hilft etwas":"kein Vorteil") : "–"}</div>
-      <div class="z" style="color:var(--muted)">ETFs, 3 J., außerhalb der Lernzeit${s?` · Staffel besser bei ${fmt(s.staffel_besser,0)} %`:""}</div></div>`;
-  }
-  const kachel = w => `<div class="kachel" data-id="${w.id}">
-    <div class="n">${umlaut(w.name).replace(" (ETF)","")}</div>
-    <div class="s" style="color:${farbe(w.score)}">${fmt(w.score,0)}</div>
-    <div class="z">${w.score==null ? `noch keine Ampel (${fmt(w.jahre_daten,1)} J. Daten)` : zonen[w.zone]} · Ø ${fmt(w.cagr20,1,"%")}/J</div></div>`;
-  const block = (titel, g) => { const k = ALLE.filter(w => w.gruppe===g); return k.length ? `<div class="kopfzeile">${titel}</div>` + k.map(kachel).join("") : ""; };
-  $("#kacheln").innerHTML = sonder + block("Index-ETFs", "ETF") + block("Krypto", "Krypto") + block("Rohstoffe", "Rohstoffe");
-  document.querySelectorAll(".kachel[data-id]").forEach(e => e.onclick = () => zeige(e.dataset.id));
-  if ($("#k-umfeld")) $("#k-umfeld").onclick = () => zeigeUmfeld();
-  if ($("#k-pruefung")) $("#k-pruefung").onclick = () => zeigePruefungGesamt();
+function miniSpark(reihe, farbeLinie, wochen=156){
+  if (!reihe?.v?.length) return "";
+  const v = reihe.v.slice(-wochen).filter(x => x != null); if (v.length < 2) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), y = x => 34 - (x - lo) / ((hi - lo) || 1) * 30;
+  const d = v.map((x, i) => (i ? "L" : "M") + (i / (v.length - 1) * 200).toFixed(1) + " " + y(x).toFixed(1)).join("");
+  return `<svg viewBox="0 0 200 38" preserveAspectRatio="none" aria-hidden="true"><path d="${d} L200 38 L0 38Z" fill="${farbeLinie}" opacity=".12"/><path d="${d}" fill="none" stroke="${farbeLinie}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
 }
-const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
-function gefiltert(){
-  const q = $("#suche").value.trim().toLowerCase(), g = $("#gruppe").value, mj = +$("#minj").value||0,
-        nq = $("#nurq").checked, mu = +$("#minu").value;
-  return ALLE.filter(w => w.score!=null
-    && (!q || w.name.toLowerCase().includes(q) || w.symbol.toLowerCase().includes(q))
-    && (!g || w.gruppe.includes(g))
-    && (w.jahre_daten||0) >= mj
-    && (!nq || w.qualitaet || SONDERGRUPPE(w))
-    && (SONDERGRUPPE(w) || (w.umsatz_usd||0) >= mu));
+function zeigeUebersicht(){
+  seiteAnfang("uebersicht"); hashSetzen("seite=uebersicht");
+  const f = F(), u = UMFELD, b = u?.breite, v = u?.vix, z = u?.zinskurve;
+  const sonder = ALLE.filter(SONDERGRUPPE);
+  const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
+  const wetter = `
+    <div class="karte" id="w-breite" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_breite">Marktbreite</span><span>${b ? datumDe(b.datum) : ""}</span></div>
+      <div class="wk-wert">${b ? fmt(b.wert,0," %") : "–"}</div><div class="wk-wort">${b ? breiteWort(b.wert) : "keine Daten"}<span class="klein"> · Aktien über 40-Wochen-Linie</span></div>${miniSpark(b?.reihe, f.guenstig)}</div>
+    <div class="karte" id="w-vix" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_vix">VIX · Angstbarometer</span><span>${v ? datumDe(v.datum) : ""}</span></div>
+      <div class="wk-wert" style="color:${v && (v.wert >= 25 || ["nervös","Panik"].includes(v.stufe)) ? "var(--teuer)" : "inherit"}">${v ? (v.wert != null ? fmt(v.wert,1) : v.stufe) : "–"}</div><div class="wk-wort">${v ? (v.wert != null ? vixWort(v.wert) : `höher als an ${fmt(v.perzentil,0)} % der Tage`) : "keine Daten"}</div>${miniSpark(v?.reihe, f.teuer, 750)}</div>
+    <div class="karte" id="w-zins" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_zinskurve">Zinskurve 10 J. – 2 J.</span><span>${z ? datumDe(z.datum) : ""}</span></div>
+      <div class="wk-wert" style="color:${z && z.invertiert ? "var(--teuer)" : "inherit"}">${z ? vz(z.wert,2) : "–"}</div><div class="wk-wort">${z ? (z.invertiert ? "invertiert" : "normal") : "keine Daten"}<span class="klein"> · Prozentpunkte</span></div>${miniSpark(z?.reihe, f.akzent, 750)}</div>
+    <div class="karte" id="w-pruefung" tabindex="0" role="button"><div class="karte-kopf"><span data-e="k_pruefung">Prüfung der Ampel</span><span>ETFs, 3 J.</span></div>
+      <div class="wk-wert" style="font-size:22px;margin-top:4px">${e && e.skill != null ? (e.skill > 2 ? "hilft etwas" : "kein Vorteil") : "–"}</div>
+      <div class="wk-wort" style="font-weight:400;color:var(--text2)">außerhalb der Lernzeit${s ? ` · Warten besser bei ${fmt(s.staffel_besser,0)} % der ETFs` : ""}</div>
+      <p class="klein" style="margin:8px 0 0">Ehrlich: Warten auf eine günstige Ampel brachte meist weniger als ein Sparplan.</p></div>`;
+  const gruppe = (titel, g) => { const k = sonder.filter(w => w.gruppe === g).sort((a, b) => (b.score ?? -1) - (a.score ?? -1)); return k.length ? `<div class="heat-gruppe"><h3>${titel}</h3><div class="heat">${k.map(kachel).join("")}</div></div>` : ""; };
+  const kachel = w => { const de = wert(w, "delta");
+    return `<button class="kachel" data-id="${w.id}" style="--kf:${farbe(w.score)}" aria-label="${esc(kurzname(w))}: Ampel ${fmt(w.score,0)}, ${zonenWort(w.score)}">
+      <div class="n">${esc(kurzname(w))}</div><div class="s"><b>${fmt(w.score,0)}</b><span class="z">${w.score == null ? `noch keine Ampel` : zonenWort(w.score)}</span></div>
+      <div class="d">${w.score == null ? `${fmt(w.jahre_daten,1)} J. Daten` : `4W ${de == null ? "–" : (de > 0 ? "+" : "") + fmt(de,0)} · Ø ${fmt(w.cagr20,1," %")}/J.`}</div></button>`; };
+  // Heute auffällig (nur beschreibend)
+  const mitD = sonder.filter(w => wert(w, "delta") != null).sort((a, b) => Math.abs(wert(b, "delta")) - Math.abs(wert(a, "delta"))).slice(0, 5);
+  const neuGuenstig = ALLE.filter(w => w.score >= 80 && w.score_vor4w != null && w.score_vor4w < 80 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
+    .sort((a, b) => b.score - a.score).slice(0, 6);
+  const neuTeuer = ALLE.filter(w => w.score != null && w.score <= 15 && w.score_vor4w != null && w.score_vor4w > 15 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
+    .sort((a, b) => a.score - b.score).slice(0, 6);
+  const afZeile = (w, rechts) => `<div class="af-zeile" data-id="${w.id}" tabindex="0" role="button"><div class="af-n">${esc(kurzname(w))}<span class="klein">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie" : w.gruppe}</span></div>${rechts}${pille(w.score)}</div>`;
+  const afKarte = (titel, liste, rechts, leer) => `<div class="karte"><div class="karte-kopf"><span>${titel}</span></div>${liste.length ? liste.map(w => afZeile(w, rechts(w))).join("") : `<p class="klein">${leer}</p>`}</div>`;
+  const anzahlStabil = ALLE.filter(w => !SONDERGRUPPE(w) && w.qualitaet && w.score >= 80 && (w.umsatz_usd || 0) >= 1e7).length;
+  $("#haupt").innerHTML = `
+    <h1 class="seiten-titel">Marktüberblick</h1>
+    <p class="seiten-unter">Wie günstig stehen die großen Märkte gemessen an ihrer <b>eigenen</b> Geschichte? Die Ampel (0–100) beschreibt die Lage – sie ist kein Kaufsignal.</p>
+    <div class="kern" id="kern-uebersicht"></div>
+    <div class="wetter">${wetter}</div>
+    <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
+    <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
+    ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
+    <h2 class="abschnitt-titel"><span data-e="auffaellig">Heute auffällig</span><span class="klein">auffällig heißt nicht kaufenswert</span></h2>
+    <div class="auffaellig">
+      ${afKarte("Größte Bewegung in 4 Wochen", mitD, w => { const d = wert(w, "delta"); return `<span class="w4">${w4Html(d)}</span>`; }, "keine Daten")}
+      ${afKarte("Neu historisch sehr günstig (≥ 80)", neuGuenstig, w => `<span class="klein">vor 4 W. ${fmt(w.score_vor4w,0)}</span>`, "Diese Woche keiner neu über 80 (ETFs, Krypto, Rohstoffe, Aktien mit stabilem Trend).")}
+      ${afKarte("Neu historisch sehr teuer (≤ 15)", neuTeuer, w => `<span class="klein">vor 4 W. ${fmt(w.score_vor4w,0)}</span>`, "Diese Woche keiner neu unter 15.")}
+    </div>
+    <p class="klein" style="margin-top:10px">Aktien mit stabilem Aufwärtstrend und Ampel ab 80 (Umsatz ab 10 Mio $/Tag): <b>${anzahlStabil}</b> – <button class="linkknopf" id="zu-aktien">im Screener ansehen</button>. Bei Einzelaktien fehlen Firmen, die pleite gingen; die Quoten wirken deshalb zu gut.</p>
+    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. Daten: Yahoo Finance, FRED, Cboe; ${STAND_TEXT}</div>`;
+  $("#kern-uebersicht").innerHTML = $("#lesehilfe-kern").innerHTML + ` <button class="linkknopf" id="kern-mehr">Mehr in „So liest du das Tool“</button>`;
+  $("#kern-mehr").onclick = () => leseOeffnen(true);
+  $$("#haupt [data-id]").forEach(e => { e.onclick = () => zeige(e.dataset.id); e.onkeydown = ev => { if (ev.key === "Enter") zeige(e.dataset.id); }; });
+  const geh = (id, fn) => { const e = $(id); if (e) { e.onclick = fn; e.onkeydown = ev => { if (ev.key === "Enter") fn(); }; } };
+  ["#w-breite","#w-vix","#w-zins"].forEach(id => geh(id, () => zeigeUmfeld()));
+  geh("#w-pruefung", () => zeigePruefungGesamt());
+  $("#zu-aktien").onclick = () => { LISTE_REITER = "aktien"; sichere("liste_reiter", LISTE_REITER); $("#nurq").checked = true; $("#minu").value = "1e7"; SORT = {k:"score", dir:-1}; $("#sortierung").value = "score"; reiterZahlen(); listeNeu(); if (istHandy()) ansicht("liste"); };
 }
-function liste(){
-  const f = gefiltert().sort((a,b) => {
-    const x = wert(a,SORT.k), y = wert(b,SORT.k);
-    if (x==null) return 1; if (y==null) return -1;
-    return (x>y?1:x<y?-1:0) * SORT.dir;
-  });
-  $("#anzahl").textContent = `${Math.min(ANZEIGE,f.length)} von ${f.length}`;
-  $("#mehr").style.display = f.length > ANZEIGE ? "" : "none";
-  $("#zeilen").innerHTML = f.slice(0,ANZEIGE).map(w => {
-    const p = p3(w), v = p ? p.quote-p.basis : null, de = wert(w,"delta");
-    return `<tr data-id="${w.id}" class="${w.id===AKTIV?"aktiv":""}">
-      <td><span class="nm">${umlaut(w.name)}</span><span class="sym">${w.symbol} · ${w.gruppe}</span></td>
-      <td><span class="ampel" style="background:${farbe(w.score)}">${fmt(w.score,0)}</span></td>
-      <td class="${w.cagr20>0?"pos":"neg"}" title="${fmt(w.cagr_jahre,0)} Jahre${w.cagr20_div?", mit Dividenden":", ohne Dividenden"}">${fmt(w.cagr20,1,"%")}</td>
-      <td title="${p?p.episoden+" Phasen, "+p.wochen+" Wochen":""}">${p?fmt(p.quote,0,"%"):"–"}</td>
-      <td class="${v>0?"pos":v<0?"neg":""}">${v==null?"–":(v>0?"+":"")+fmt(v,0)}</td>
-      <td>${fmt(w.p?.rueckschlag10,0,"%")}</td>
-      <td>${fmt(w.dd,0,"%")}</td>
-      <td class="${de>0?"pos":de<0?"neg":""}">${de==null?"–":(de>0?"+":"")+fmt(de,0)}</td></tr>`;
-  }).join("");
-  document.querySelectorAll("#zeilen tr").forEach(e => e.onclick = () => zeige(e.dataset.id));
-}
-["#suche","#gruppe","#minj","#nurq","#minu"].forEach(s => $(s).addEventListener("input", () => {ANZEIGE=200; liste();}));
-$("#mehr").onclick = () => {ANZEIGE += 300; liste();};
-document.querySelectorAll("th[data-s]").forEach(th => th.onclick = () => {
-  const k = th.dataset.s; SORT = {k, dir: SORT.k===k ? -SORT.dir : (k==="name"||k==="rueck" ? 1 : -1)};
-  document.querySelectorAll("th[data-s]").forEach(t => t.textContent = t.textContent.replace(/ [▲▼]$/,""));
-  th.textContent += SORT.dir<0 ? " ▼" : " ▲"; liste();
-});
 
-let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, KEGEL = [], LIMITLINIEN = [], INFO = null, REITER = "kennzahlen";
-const chartBasis = () => ({autoSize:true, layout:{background:{color:"#1e222d"},textColor:"#d1d4dc"},grid:{vertLines:{color:"#2a2e39"},horzLines:{color:"#2a2e39"}},
-  timeScale:{borderColor:"#363a45",minBarSpacing:0.02},rightPriceScale:{borderColor:"#363a45"},crosshair:{mode:0},
-  localization:{locale:"de-DE",priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}});
-function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; LIMITLINIEN = []; KERZEN = null; HAUPT = null; }
+// ------------------------------------------------------------ Lohnt-sich-Check als große Karte
+async function lohntSichCheck(id){
+  const el = $("#check"); if (!el) return;
+  const s = await apiStrategie(id);
+  if (AKTIV !== id || !$("#check")) return;
+  const kopf = `<div class="karte-kopf"><span data-e="check" tabindex="0">Lohnt-sich-Check</span><span>Warten oder Sparplan?</span></div>`;
+  if (!s || s.fehler) { el.innerHTML = kopf + `<p>Zu wenig Jahre mit Ampel für einen Vergleich mit dem Sparplan.</p>`; return; }
+  const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
+  el.innerHTML = kopf + `
+    <div class="urteil"><span class="punkt" style="background:${ja ? "var(--guenstig)" : "var(--teuer)"}"></span>${ja ? "Ja" : "Nein"}</div>
+    <p>Warten auf eine günstige Ampel (60/75/90) hätte hier seit ${s.von.slice(0,4)} <b>${ja ? "mehr" : "weniger"}</b> gebracht als ein Sparplan (${vz(d,0," %")}).</p>
+    <div class="vgl">
+      <span data-e="s_spar">Sparplan</span><div class="balken"><i style="width:${e.spar.netto / mx * 100}%;background:var(--akzent)"></i></div><b>${geld(e.spar.netto)}</b>
+      <span data-e="s_staffel">Warten</span><div class="balken"><i style="width:${e.staffel.netto / mx * 100}%;background:${ja ? "var(--guenstig)" : "var(--neutral)"}"></i></div><b>${geld(e.staffel.netto)}</b>
+    </div>
+    <p class="klein">500 je Monat, ${fmt(s.jahre,0)} Jahre, nach Kosten und Steuer, in der Währung des Werts. Größter Rückgang: Sparplan ${fmt(e.spar.max_verlust,0," %")}, Warten ${fmt(e.staffel.max_verlust,0," %")}. Ein Rückblick auf einen einzigen Weg der Geschichte.</p>
+    <button class="linkknopf" id="check-mehr">Strategie-Vergleich ansehen →</button>`;
+  $("#check-mehr").onclick = () => { reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
+}
 
-async function zeige(id){
-  AKTIV = id; location.hash = "w=" + encodeURIComponent(id);
-  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.toggle("aktiv", e.dataset.id===id));
+// ------------------------------------------------------------ Detail eines Werts
+let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
+let SERIEN = {}, ZEIT_I = new Map();
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
+const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:getComputedStyle(document.body).fontFamily, fontSize:11},
+  grid:{vertLines:{color:f.grid}, horzLines:{color:f.grid}},
+  timeScale:{borderColor:f.line, minBarSpacing:0.02, rightOffset:4}, rightPriceScale:{borderColor:f.line}, leftPriceScale:{borderColor:f.line},
+  crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.akzent}},
+  localization:{locale:"de-DE", dateFormat:"dd.MM.yyyy", priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}}; };
+function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
+
+function gaugeSvg(s){
+  const cx = 115, cy = 112, r = 92, w = 16;
+  const pt = (v, rr) => { const a = Math.PI * (1 - v / 100); return [cx + rr * Math.cos(a), cy - rr * Math.sin(a)]; };
+  const bogen = (a, b, farbe) => { const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r); return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${farbe}" stroke-width="${w}" fill="none" opacity="${s == null ? .35 : .9}"/>`; };
+  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${s == null ? "keine" : fmt(s,0)} von 100: ${zonenWort(s)}">`
+    + bogen(0, 14.6, AMPEL_FARBEN[0]) + bogen(15.4, 39.6, AMPEL_FARBEN[1]) + bogen(40.4, 59.6, AMPEL_FARBEN[2]) + bogen(60.4, 79.6, AMPEL_FARBEN[3]) + bogen(80.4, 100, AMPEL_FARBEN[4]);
+  if (s != null) { const [x, y] = pt(s, r), [xi, yi] = pt(s, r - 26);
+    svg += `<line x1="${xi.toFixed(1)}" y1="${yi.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--panel)" stroke="var(--text)" stroke-width="3"/>`; }
+  svg += `<text x="23" y="135" font-size="11" fill="var(--muted)" text-anchor="middle">teuer</text><text x="207" y="135" font-size="11" fill="var(--muted)" text-anchor="middle">günstig</text></svg>`;
+  return svg;
+}
+function klartext(w){
+  if (w.score == null) return `Für ${esc(kurzname(w))} gibt es noch keine Ampel: dafür braucht es mindestens 5 Jahre Kursdaten, hier sind es ${fmt(w.jahre_daten,1)} Jahre.`;
+  const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
+  let t = `${esc(kurzname(w))} steht gemessen an der eigenen Geschichte <b style="white-space:nowrap">${zonenWort(w.score)}</b> (Ampel ${fmt(w.score,0)} von 100). `;
+  if (w.dd != null) t += w.dd > -1 ? `Der Kurs ist nahe am Allzeithoch` : `Der Kurs liegt ${fmt(-w.dd,0)} % unter dem Allzeithoch`;
+  if (w.zu200w != null) t += ` und ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % über" : fmt(-w.zu200w,0) + " % unter"} der 200-Wochen-Linie. `; else t += ". ";
+  if (de != null && Math.abs(de) >= 5) t += `In den letzten 4 Wochen ist er ${de > 0 ? "günstiger" : "teurer"} geworden (${vz(de,0)} Punkte). `;
+  return t + `Das beschreibt die Lage – ein Kaufsignal ist es nicht.`;
+}
+function wahrKarte(w){
+  const zeile = (k, txt) => { const p = w.p && w.p[k];
+    if (!p) return `<div class="wz"><div class="lbl">${txt}</div><div class="klein">zu wenig ähnliche Fälle</div></div>`;
+    const d = p.quote - p.basis, wenig = p.episoden < 3;
+    return `<div class="wz"><div class="lbl">${txt}<span class="klein">${p.episoden} Phase${p.episoden === 1 ? "" : "n"}${wenig ? " · wenig!" : ""}</span></div>
+      <div class="bb"><div class="balken" title="ähnliche Lage"><i style="width:${p.quote}%"></i></div><b>${fmt(p.quote,0," %")}</b>
+      <div class="balken" title="beliebiger Tag"><i class="grau" style="width:${p.basis}%"></i></div><b style="color:var(--text2);font-weight:500">${fmt(p.basis,0," %")}</b>
+      <span class="klein" style="grid-column:1/-1">Vorteil <b class="${d > 0 ? "pos" : d < 0 ? "neg" : ""}" style="font-weight:650">${vz(d,0)} Punkte</b>${wenig ? " – kaum aussagekräftig" : ""}</span></div></div>`; };
+  return `<div class="karte-kopf"><span data-e="t_hoeher" tabindex="0">Kurs höher nach …</span><span>${w.p?.["1"] ? "Ampel ±7,5" : ""}</span></div>
+    <div class="klein" style="margin:-4px 0 4px"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--akzent);vertical-align:-1px"></i> <span data-e="t_aehnlich">ähnliche Lage früher</span> &nbsp; <i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--neutral);vertical-align:-1px"></i> <span data-e="t_alle">beliebiger Tag</span></div>
+    ${zeile("1","1 Jahr")}${zeile("3","3 Jahren")}${zeile("5","5 Jahren")}
+    <p class="klein" style="margin-top:8px">Häufigkeiten aus der Vergangenheit. In der Prüfung ohne Zukunftswissen waren sie nicht treffsicherer als „beliebiger Tag“.</p>`;
+}
+function signalKarte(w, c){
+  const marken = (c?.marken || []).filter(m => m[1] === "kauf" || m[1] === "teuer");
+  const letzte = marken[marken.length - 1];
+  const zeilen = [
+    [`<span data-e="l_pfeile">Letzter Pfeil</span>`, letzte ? `<span class="${letzte[1] === "kauf" ? "pos" : "neg"}">${letzte[1] === "kauf" ? "▲ günstig" : "▼ teuer"} ${letzte[2]}</span> · ${tDe(letzte[0])}` : "noch keiner"],
+    [`<span data-e="zu200w">zur 200-Wochen-Linie</span>`, `<span class="${w.zu200w < 0 ? "pos" : ""}">${vz(w.zu200w,0," %")}</span>`],
+    [`<span data-e="rsi">Wochen-RSI</span>`, `${fmt(w.rsi,0)}${w.rsi < 30 ? " · überverkauft" : w.rsi > 70 ? " · überkauft" : ""}`],
+    [`<span data-e="trend_z">zum Langfristtrend</span>`, `${vz(w.trend_z,1)} Standardabw.`],
+  ];
+  if (w.gruppe === "Krypto") zeilen.push([`<span data-e="mayer">Mayer Multiple</span>`, `${fmt(w.mayer,2)}${w.mayer < 0.8 ? " · tief" : w.mayer > 2.4 ? " · überhitzt" : ""}`]);
+  if (w.pi) {
+    zeilen.push([`<span data-e="pi_bottom">Pi Cycle Bottom</span>`, w.pi_bottom_aktiv ? `<b style="color:var(--lila)">Bodenbildungszone</b>` : `keine Zone (${vz(w.pi_abstand,1," %")})`]);
+    zeilen.push([`<span data-e="pi_top">Pi Cycle Top</span>`, w.pi_top_aktiv ? `<b class="neg">AKTIV</b>` : "aus"]);
+  }
+  return `<div class="karte-kopf"><span data-e="signale" tabindex="0">Signale</span><span>${marken.filter(m => m[1] === "kauf").length} × ▲ · ${marken.filter(m => m[1] === "teuer").length} × ▼</span></div>`
+    + zeilen.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("");
+}
+function prognoseKarte(m){
+  const el = $("#prognose"); if (!el) return;
+  const kopf = `<div class="karte-kopf"><span data-e="prognose" tabindex="0">Prognose · 12 Monate</span><span>Simulation</span></div>`;
+  if (!m) { el.innerHTML = kopf + `<p class="klein">Keine Simulation möglich.</p>`; return; }
+  if (m.fehler) { el.innerHTML = kopf + `<p class="klein">${esc(m.fehler)}</p>`; return; }
+  const k0 = m.kurs, n = m.t.length - 1, q = k => (m.kegel[k][n] / k0 - 1) * 100;
+  const lo = q("q5"), hi = q("q95"), mid = q("q50"), lo50 = q("q25"), hi50 = q("q75");
+  const span = Math.max(Math.abs(lo), Math.abs(hi), 10), x = v => 50 + v / span * 48;
+  el.innerHTML = kopf + `
+    <div style="display:flex;align-items:baseline;gap:10px"><span class="gross-zahl ${mid >= 0 ? "pos" : "neg"}">${vz(mid,0," %")}</span><span class="klein">mittlerer Weg</span></div>
+    <svg viewBox="0 0 100 26" style="width:100%;height:34px;margin:8px 0 2px" aria-hidden="true">
+      <line x1="50" x2="50" y1="2" y2="24" stroke="var(--line2)" stroke-dasharray="2 2"/>
+      <rect x="${x(lo)}" y="9" width="${x(hi) - x(lo)}" height="8" rx="4" fill="var(--kegel)" opacity=".28"/>
+      <rect x="${x(lo50)}" y="9" width="${x(hi50) - x(lo50)}" height="8" rx="4" fill="var(--kegel)" opacity=".6"/>
+      <circle cx="${x(mid)}" cy="13" r="3.4" fill="var(--kegel)"/></svg>
+    <div class="kv"><span>90 % der Wege enden zwischen</span><b>${vz(lo,0," %")} und ${vz(hi,0," %")}</b></div>
+    <div class="kv"><span>50 % der Wege</span><b>${vz(lo50,0," %")} bis ${vz(hi50,0," %")}</b></div>
+    <div class="kv"><span data-e="mc_minus">am Ende im Minus</span><b>${fmt(m.verlust_wahrsch,0," %")}</b></div>
+    <p class="klein" style="margin-top:8px">${m.pfade.toLocaleString("de-DE")} Wege aus ${fmt(m.hist_jahre,0)} Jahren echter Wochen seit ${m.hist_von.slice(0,4)}. Keine Vorhersage. <button class="linkknopf" id="zu-rechner">Kurs-Rechner →</button></p>`;
+  $("#zu-rechner").onclick = () => { reiter("rechner"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
+}
+
+async function zeige(id, opt={}){
+  AKTIV = id; SEITE = "wert"; hashSetzen("w=" + encodeURIComponent(id));
+  listeMarkieren();
+  if (!opt.ohneAnsicht) ansicht("haupt");
+  const vorher = ALLE.find(w => w.id === id);
+  if (!opt.ohneScroll || !$("#wert-kopf")) {   // Ladezustand
+    alleChartsWeg();
+    $("#haupt").innerHTML = `<div class="karte wert-kopf"><div><div class="lade" style="height:28px;width:45%"></div><div class="lade" style="height:14px;width:30%;margin-top:10px"></div><div class="lade" style="height:44px;margin-top:14px"></div></div><div class="lade" style="width:230px;height:128px;border-radius:14px"></div></div>
+      <div class="abstand"></div><div class="karte lade" style="height:var(--g-chart,540px)"></div>`;
+    if (!opt.ohneScroll) $("#haupt").scrollTop = 0;
+  }
   const daten = await apiWert(id);
-  if (!daten) { if (AKTIV === id) $("#detail").innerHTML = '<div class="leer">Keine Daten für ' + id + '</div>'; return; }
-  const {info:w, chart:c} = daten;
   if (AKTIV !== id) return;
-  alleChartsWeg(); INFO = w;
-  const btc = !!w.pi;   // Pi Cycle nur fuer Bitcoin
-  $("#detail").innerHTML = `
-    <div id="kopf"><h2>${umlaut(w.name)} <span class="sym">${w.symbol}</span>
-      <span class="ampel" data-e="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
-      <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${ek("zonen", zonen[w.zone])}</span></h2>
-      <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div>
-      <div id="check" class="check"><span class="klein">Lohnt-sich-Check rechnet …</span></div></div>
-    <div id="chart"></div><div id="tvchart" style="height:430px;display:none"></div><div id="chart2"></div>
-    <div class="legende">${!c.c ? legendeOnline(w) : `${STATISCH && w.tv ? '<button class="knopf leise" id="tv-umschalter" style="padding:2px 10px">TradingView-Chart zeigen</button>' : ""}
-      <span data-e="l_200w"><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
-      <span data-e="l_trend"><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
-      ${btc?'<span data-e="l_ema150"><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span data-e="l_sma471"><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▲ Pi Boden-Signal</span>':''}
-      <span data-e="l_kegel"><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
-      <span data-e="l_pfeile">▲ Ampel ≥ 80 · ▼ Ampel ≤ 15</span> · <span data-e="l_ampelverlauf">unten: Ampel im Zeitverlauf</span>`}
+  if (!daten) { $("#haupt").innerHTML = `<div class="leer">Keine Daten für ${esc(id)}.</div>`; return; }
+  const {info:w, chart:c} = daten;
+  const scrollY = $("#haupt").scrollTop;
+  alleChartsWeg(); INFO = w; CDATA = c;
+  const btc = !!w.pi, krypto = w.gruppe === "Krypto", eigen = !!c.c;
+  if (!eigen || !w.tv) CHARTQUELLE = "eigen";
+  const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
+  const chips = [
+    ["w200", "200-Wochen-Linie", `<i style="color:var(--gelb)"></i>`, "l_200w", eigen],
+    ["trend", "Trendkanal", `<i style="color:var(--akzent)"></i>`, "l_trend", eigen],
+    ["kegel", "Prognose-Kegel", `<i class="flaeche" style="color:var(--kegel)"></i>`, "l_kegel", eigen],
+    ["pfeile", "Pfeile günstig/teuer", `<i class="pfeil"><span style="color:var(--guenstig)">▲</span><span style="color:var(--teuer)">▼</span></i>`, "l_pfeile", true],
+    ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
+    ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
+    ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
+    ["ampel", "Ampel-Verlauf", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
+  ].filter(x => x[4]);
+  $("#haupt").innerHTML = `
+    <section class="karte wert-kopf" id="wert-kopf">
+      <div style="min-width:0">
+        <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
+          <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
+        <div class="wk-meta">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie (Nasdaq)" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
+        <p class="klartext" data-e="klartext">${klartext(w)}</p>
+        <div class="grund-chips">${umlaut(w.grund).split(" · ").map(g => `<span>${grundMitErklaerung(g)}</span>`).join("")}</div>
+      </div>
+      <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
+        <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
+        <div class="g-vor">${de == null ? "&nbsp;" : `vor 4 Wochen ${fmt(w.score_vor4w,0)} (${w4Html(de)})`}</div></div>
+    </section>
+    <div class="abstand"></div>
+    <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
+      <div class="chart-leiste">
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        <div class="segment" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+        ${eigen && w.tv ? `<div class="segment rechts" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">${chips.map(([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`).join("")}</div>
+      <div class="chart-flaeche">
+        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div></div>
+        <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
+        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}</span></div>
+      </div>
+      <div class="tv-hinweis" id="tv-hinweis" hidden>TradingView: Monatskerzen, 200-Wochen-Linie als Durchschnitt über 46 Monate. Pfeile, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart; die Ampel-Leiste darunter gilt weiter.</div>
+      ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
+      <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
+    </section>
+    <div class="abstand"></div>
+    <div id="hinweise"></div>
+    <div class="raster">
+      <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
+      <section class="karte" id="wahr">${wahrKarte(w)}</section>
+      <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
+      <section class="karte"><div class="karte-kopf"><span data-e="rueckschlag" tabindex="0">Rückschlagrisiko</span><span>1 Jahr</span></div>
+        <div class="gross-zahl">${fmt(w.p?.rueckschlag10,0," %")}</div>
+        <p>So oft fiel der Kurs nach ähnlicher Lage innerhalb eines Jahres noch um 10 % oder mehr. Typischer Tiefpunkt: <b>${fmt(w.p?.median_tiefer,0," %")}</b>.</p>
+        <div class="kv"><span data-e="vom_hoch">vom Allzeithoch</span><b>${fmt(w.dd,1," %")}</b></div></section>
+      <section class="karte"><div class="karte-kopf"><span data-e="cagr20" tabindex="0">Ø Jahresrendite</span><span>${fmt(w.cagr_jahre,0)} J.</span></div>
+        <div class="gross-zahl ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1," %")}</div>
+        <p>${w.cagr20_div ? "mit Dividenden" : "ohne Dividenden"}, vor Steuern und Kosten</p>
+        <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
+        <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
+        <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></section>
+      <section class="karte" id="signale">${signalKarte(w, c)}</section>
     </div>
-    <div class="reiter">
-      <button data-r="kennzahlen" data-e="r_kennzahlen">Kennzahlen</button><button data-r="rechner" data-e="r_rechner">Kurs-Rechner</button>
-      <button data-r="pruefung" data-e="r_pruefung">Prüfung</button><button data-r="strategie" data-e="r_strategie">Strategie-Vergleich</button>
-    </div>
-    <div id="tab"></div>`;
-  document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
-  if (c.c) zeichne(c, btc); else zeichneOnline(w, c);
+    <div class="abstand"></div>
+    <section class="karte vertiefung" id="vertiefung">
+      <div class="reiter" role="tablist">
+        <button data-r="kennzahlen" data-e="r_kennzahlen">Details</button><button data-r="rechner" data-e="r_rechner">Kurs-Rechner</button>
+        <button data-r="pruefung" data-e="r_pruefung">Prüfung</button><button data-r="strategie" data-e="r_strategie">Strategie-Vergleich</button>
+      </div>
+      <div id="tab"></div>
+    </section>
+    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. ${eigen ? "Kurse: Yahoo Finance (Wochenkerzen)." : ""}</div>`;
+  $("#stern").onclick = () => favUmschalten(id);
+  $$("#vertiefung .reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
+  $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
+  $$("#chips .chip").forEach(b => b.onclick = () => chipUmschalten(b.dataset.chip, b));
+  if (eigen) zeichne(c, w); else zeichneOnline(w, c);
+  if (CHARTQUELLE === "tv" && w.tv) chartQuelle("tv");
   reiter(REITER);
   lohntSichCheck(id);
-  if (c.c) ladeKegel(52, 20, []);
-  const um = $("#tv-umschalter");
-  if (um) um.onclick = () => {   // zwischen eigenem Chart und TradingView-Chart wechseln
-    const tv = $("#tvchart"), zeigeTv = tv.style.display === "none";
-    if (zeigeTv && !tv.dataset.geladen) { tvWidget(tv, w.tv); tv.dataset.geladen = "1"; }
-    tv.style.display = zeigeTv ? "" : "none"; $("#chart").style.display = zeigeTv ? "none" : "";
-    um.textContent = zeigeTv ? "Eigenen Chart zeigen" : "TradingView-Chart zeigen";
-  };
+  if (eigen) ladeKegel(52, 20, [], true).then(m => { if (AKTIV === id) prognoseKarte(m); });
+  else prognoseOnline(id);
+  if (opt.ohneScroll) $("#haupt").scrollTop = scrollY;
+}
+async function prognoseOnline(id){   // reduzierter Export ohne Kurse: Prognose aus den Verhältnissen
+  const d = await exportLaden(id); if (AKTIV !== id) return;
+  const m = d?.mc; if (!m || m.fehler) { prognoseKarte(m || null); return; }
+  prognoseKarte({...m, kurs:1, kegel:m.kegel, verlust_wahrsch:Math.round(anteilBis(m.ende, 1) * 1000) / 10});
+}
+function chipUmschalten(k, b){
+  CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
+  if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
+  if (k === "pfeile" || k === "pi" || k === "pitop") markenSetzen();
+  (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
+  if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
+}
+function chartQuelle(q){
+  CHARTQUELLE = q;
+  $$("#chart-karte [data-q]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.q === q)));
+  const tv = $("#tvchart"); if (!tv) return;
+  if (q === "tv" && !tv.dataset.geladen) { tvWidget(tv, INFO.tv); tv.dataset.geladen = "1"; }
+  tv.hidden = q !== "tv"; $("#chart").style.visibility = q === "tv" ? "hidden" : ""; $("#fk").hidden = q === "tv";
+  $("#tv-hinweis").hidden = q !== "tv";
+  $$("#chips .chip, #chart-karte [data-z], #chart-karte [data-sk]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
 }
 
+function reiter(name){
+  REITER = name;
+  if (!$("#tab") || !INFO) return;
+  tabCharts.forEach(ch => { try { ch.remove(); } catch(e){} }); tabCharts = [];
+  $$("#vertiefung .reiter button").forEach(b => { b.classList.toggle("an", b.dataset.r === name); b.setAttribute("aria-selected", String(b.dataset.r === name)); });
+  ({kennzahlen:tabKennzahlen, rechner:STATISCH && INFO.kurs == null ? tabRechnerOnline : tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
+}
+
+// ------------------------------------------------------------ Hauptchart (eigener Chart)
+function markenSetzen(){
+  if (!KERZEN || !CDATA) return;
+  const f = F();
+  const m = CDATA.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
+  KERZEN.setMarkers(m.map(([t, art, s]) => ({
+    kauf:     {time:t, position:"belowBar", color:f.guenstig, shape:"arrowUp", text:String(s)},
+    teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
+    pi_beginn:{time:t, position:"aboveBar", color:f.lila, shape:"circle", text:"Bodenbildung beginnt"},
+    pi_boden: {time:t, position:"belowBar", color:f.lila, shape:"arrowUp", text:"Pi Boden-Signal"},
+    pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
+  })[art]));
+  if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CDATA.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
+}
+function zeichne(c, w){
+  const f = F(), basis = chartBasis();
+  ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
+  const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[]};
+  // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
+  const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
+      ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
+    s.setData(c.t.map((t,i) => ({time:t, value:werte[i]})).filter(p => p.value != null)); SERIEN[key].push(s); return s; };
+  if (c.pi_zone) {   // Pi-Cycle-Bodenbildungszone als Fläche über die ganze Höhe (eigene, unsichtbare Skala)
+    const zone = ch.addHistogramSeries({priceScaleId:"pizone", color:f.lila + "2e", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.pi});
+    ch.priceScale("pizone").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
+    zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(zone);
+  }
+  const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
+  kerzen.setData(c.t.map((t,i) => ({time:t, open:c.o[i] ?? c.c[i], high:c.h[i] ?? c.c[i], low:c.l[i] ?? c.c[i], close:c.c[i]})));
+  linie("trend", c.trend_o, f.akzent + "66", 1, 2, true); linie("trend", c.trend, f.akzent, 1, 0, true); linie("trend", c.trend_u, f.akzent + "66", 1, 2, true);
+  const w200 = linie("w200", c.sma200w, f.gelb, 2);
+  w200.applyOptions({lastValueVisible:true, title:"200W"});
+  if (c.pi_ema150) { linie("pi", c.pi_ema150, f.lila, 2); linie("pi", c.pi_sma471, f.cyan, 2); }
+  if (c.pi_top111) { linie("pitop", c.pi_top111, f.pitop1, 1, 2, true); linie("pitop", c.pi_top350x2, f.pitop2, 1, 2, true); }
+  KERZEN = kerzen; HAUPT = ch;
+  // Ampel-Leiste unten (mit Mayer Multiple bei Krypto auf der linken Skala)
+  const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, layout:{...basis.layout, attributionLogo:false}, timeScale:{...basis.timeScale, visible:false}, rightPriceScale:{...basis.rightPriceScale, scaleMargins:{top:0.18, bottom:0.02}},
+    leftPriceScale:{...basis.leftPriceScale, visible:!!c.mayer && CHIPS.mayer, scaleMargins:{top:0.18, bottom:0.02}}, handleScale:false, handleScroll:false});
+  if (c.pi_zone) {
+    const z2 = ch2.addHistogramSeries({priceScaleId:"pizone", color:f.lila + "2e", priceLineVisible:false, lastValueVisible:false, visible:CHIPS.pi});
+    ch2.priceScale("pizone").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
+    z2.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(z2);
+  }
+  const sc = ch2.addHistogramSeries({priceLineVisible:false, lastValueVisible:true, priceFormat:{type:"price", precision:0, minMove:1}});
+  sc.setData(c.t.map((t,i) => c.score[i] == null ? {time:t} : {time:t, value:c.score[i], color:farbe(c.score[i])}));
+  [80, 15].forEach(v => sc.createPriceLine({price:v, color:v === 80 ? f.guenstig : f.teuer, lineWidth:1, lineStyle:2, axisLabelVisible:true}));
+  if (c.mayer) {
+    const my = ch2.addLineSeries({priceScaleId:"left", color:f.mayer, lineWidth:1.5, priceLineVisible:false, lastValueVisible:true, visible:CHIPS.mayer, priceFormat:{type:"price", precision:2, minMove:0.01}});
+    my.setData(c.t.map((t,i) => ({time:t, value:c.mayer[i]})).filter(p => p.value != null));
+    [0.8, 2.4].forEach(v => my.createPriceLine({price:v, color:f.mayer, lineWidth:1, lineStyle:3, axisLabelVisible:false}));
+    SERIEN.mayer.push(my);
+    const orig = my.applyOptions.bind(my);
+    my.applyOptions = o => { orig(o); if ("visible" in o) ch2.priceScale("left").applyOptions({visible:o.visible}); };
+  }
+  ch2._sc = sc; ZWEI = ch2;
+  markenSetzen();
+  // Zeitachsen koppeln (beide Richtungen) und gleiche Breite der Preisskalen
+  let sperre = false;
+  const sync = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (sperre || !r) return; sperre = true; b.timeScale().setVisibleLogicalRange(r); sperre = false; });
+  sync(ch, ch2); sync(ch2, ch);
+  // Fadenkreuz mit Werten
+  const fk = $("#fk");
+  const fkZeigen = t => {
+    const i = t == null ? c.t.length - 1 : ZEIT_I.get(t);
+    if (i == null) {   // in der Zukunft: Prognose-Kegel
+      const m = KEGEL_M; const k = m ? m.t.indexOf(t) : -1;
+      if (k < 0) { fk.innerHTML = ""; return; }
+      fk.innerHTML = `<div class="r"><b>${tDe(t)}</b><span style="color:var(--kegel)">Prognose (Simulation)</span></div>
+        <div class="r"><span>Median <b>${fmt(m.kegel.q50[k], m.kurs >= 100 ? 0 : 2)}</b></span><span>50 %: ${fmt(m.kegel.q25[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q75[k], m.kurs >= 100 ? 0 : 2)}</span><span>90 %: ${fmt(m.kegel.q5[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q95[k], m.kurs >= 100 ? 0 : 2)}</span></div>`;
+      return;
+    }
+    const nk = c.c[i] >= 100 ? 2 : 4, v = i > 0 && c.c[i-1] ? (c.c[i] / c.c[i-1] - 1) * 100 : null;
+    const sc_ = c.score[i];
+    fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
+      <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
+      <span>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> ${zonenWort(sc_)}`}</span>
+      ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
+      ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
+      ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}</div>`;
+  };
+  fkZeigen(null);
+  ch.subscribeCrosshairMove(p => fkZeigen(p && p.time != null && p.point ? p.time : null));
+  ch2.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null);
+    if (p?.time != null && p.point && ch.setCrosshairPosition) { const i = ZEIT_I.get(p.time); if (i != null) try { ch.setCrosshairPosition(c.c[i], p.time, kerzen); } catch(e){} }
+    else if (ch.clearCrosshairPosition) try { ch.clearCrosshairPosition(); } catch(e){} });
+  charts = [ch, ch2];
+  setTimeout(() => zeitraumSetzen(ZEITRAUM, false), 30);
+}
+function zeitraumSetzen(z, merken=true){
+  ZEITRAUM = z; if (merken) sichere("zeitraum", z);
+  if (!HAUPT || !CDATA) return;
+  const t = CDATA.t, letzte = t[t.length - 1], ende = KEGEL_M && CHIPS.kegel ? KEGEL_M.t[KEGEL_M.t.length - 1] : letzte;
+  if (z === "alle") { HAUPT.timeScale().fitContent(); return; }
+  const von = Math.max(t[0], letzte - (+z) * 365.25 * 86400);
+  try { HAUPT.timeScale().setVisibleRange({from:von, to:ende}); } catch(e) { HAUPT.timeScale().fitContent(); }
+}
 function grundMitErklaerung(g){
   return umlaut(g)
     .replace(/(\d+ % unter Allzeithoch)/, (m) => ek("vom_hoch", m))
@@ -698,13 +1625,6 @@ function grundMitErklaerung(g){
     .replace(/(Mayer Multiple [\d.,]+)/, (m) => ek("mayer", m))
     .replace(/(Pi Cycle: [^·]+)/, (m) => ek("pi_bottom", m.trim()) + " ")
     .replace(/(Pi Cycle Top AKTIV)/, (m) => ek("pi_top", m));
-}
-
-function reiter(name){
-  REITER = name;
-  tabCharts.forEach(ch => { try { ch.remove(); } catch(e){} }); tabCharts = [];
-  document.querySelectorAll(".reiter button").forEach(b => b.classList.toggle("an", b.dataset.r===name));
-  ({kennzahlen:tabKennzahlen, rechner:STATISCH && INFO.kurs == null ? tabRechnerOnline : tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
 }
 
 function tabKennzahlen(w){
@@ -722,15 +1642,8 @@ function tabKennzahlen(w){
   if (w.score == null) hinweise.push(`<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
   else if ((w.jahre_daten||0) < 10) hinweise.push(`<b>Kurze Historie:</b> nur ${fmt(w.jahre_daten,1)} Jahre Daten. Ampel und Vergleichsfälle beruhen auf sehr wenigen Phasen und sind entsprechend unsicher.`);
   if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");
-  $("#tab").innerHTML = (hinweise.length ? `<div class="merke" style="margin-top:12px">${hinweise.join("<br>")}</div>` : "") + `
-    <div class="werte">
-      <div class="wert"><div class="k">${ek("cagr20","Ø Jahresrendite")}</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
-      <div class="wert"><div class="k">${ek("cagr_max","Ø seit Beginn")}</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
-      <div class="wert"><div class="k">${ek("vom_hoch","Abstand zum Hoch")}</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">${ek("zu200w","zur 200-Wochen-Linie")} ${fmt(w.zu200w,0,"%")}</div></div>
-      <div class="wert"><div class="k">${ek("rueckschlag","Rückschlagrisiko")}</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
-      <div class="wert"><div class="k">${ek("r2","Trendgüte (R²)")}</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${ek("stabil", w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher")}</div></div>
-      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">${ek("mayer","Mayer")} ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`${ek("pi_bottom", umlaut(w.pi_status).replace("Pi Cycle: ","Pi Cycle Bottom: "))} · ${ek("pi_top","Pi Top")} ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
-    </div>
+  $("#hinweise").innerHTML = hinweise.length ? `<div class="merke" style="margin:0 0 14px">${hinweise.join("<br>")}</div>` : "";
+  $("#tab").innerHTML = `<h3>Ähnliche Lagen früher</h3>
     <table class="wtab"><thead><tr><th style="text-align:left" data-e="t_aehnlich">Ähnliche Lage früher (Ampel ±7,5)</th><th data-e="t_hoeher">Kurs höher</th><th data-e="t_alle">an allen Tagen</th><th data-e="vorteil">Vorteil</th><th data-e="t_median">Median p.a. (ähnlich / alle)</th><th data-e="t_phasen">Phasen</th></tr></thead>
     <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
     ${w.pi ? piRueckblick(w) : ""}
@@ -753,16 +1666,23 @@ function piRueckblick(w){
 }
 
 // ------------------------------------------------------------ Monte Carlo
-async function ladeKegel(wochen, jahre, preise){
+async function ladeKegel(wochen, jahre, preise, erst=false){
   const id = AKTIV;
   const m = await apiMc(id, wochen, jahre, preise);
-  if (!m || AKTIV !== id || !HAUPT) return null;
+  if (!m || AKTIV !== id || !HAUPT) return m || null;
   if (m.fehler) return m;
-  KEGEL.forEach(s => HAUPT.removeSeries(s)); KEGEL = [];
-  [["q5","#b39ddb88",2],["q25","#b39ddb",0],["q50","#b39ddb",0],["q75","#b39ddb",0],["q95","#b39ddb88",2]].forEach(([k,f,st]) => {
-    const s = HAUPT.addLineSeries({color:f,lineWidth:k==="q50"?2:1,lineStyle:st,priceLineVisible:false,lastValueVisible:k==="q50",crosshairMarkerVisible:false,title:k==="q50"?"Median":""});
-    s.setData(m.t.map((t,i)=>({time:t,value:m.kegel[k][i]}))); KEGEL.push(s);
+  const f = F();
+  KEGEL.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} }); KEGEL = []; KEGEL_M = m;
+  const daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i]}));
+  // 90-%-Band als Fläche: oben getönt, darunter mit Hintergrundfarbe abgedeckt (ab der ersten Zukunftswoche)
+  const flaeche = (k, farbe) => { const s = HAUPT.addAreaSeries({lineColor:"rgba(0,0,0,0)", topColor:farbe, bottomColor:farbe, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.kegel});
+    s.setData(daten(k).slice(1)); KEGEL.push(s); };
+  flaeche("q95", f.kegel + "30"); flaeche("q5", f.bg);
+  [["q5",f.kegel+"aa",2,1],["q25",f.kegel,0,1],["q50",f.kegel,0,2],["q75",f.kegel,0,1],["q95",f.kegel+"aa",2,1]].forEach(([k,col,st,br]) => {
+    const s = HAUPT.addLineSeries({color:col, lineWidth:br, lineStyle:st, priceLineVisible:false, lastValueVisible:k==="q50", crosshairMarkerVisible:false, title:k==="q50"?"Median":"", visible:CHIPS.kegel});
+    s.setData(daten(k)); KEGEL.push(s);
   });
+  if (erst) zeitraumSetzen(ZEITRAUM, false);
   return m;
 }
 function wTabelle(liste){
@@ -787,7 +1707,7 @@ function tabRechner(w){
     if (!m) return;
     if (m.fehler) { $("#mc-erg").innerHTML = `<div class="text">${m.fehler}</div>`; return; }
     LIMITLINIEN.forEach(l => KERZEN.removePriceLine(l)); LIMITLINIEN = [];
-    m.eigene.forEach(x => LIMITLINIEN.push(KERZEN.createPriceLine({price:x.preis,color:x.art==="Kauflimit"?"#26a69a":"#ef5350",lineWidth:1,lineStyle:1,axisLabelVisible:true,title:x.art})));
+    m.eigene.forEach(x => LIMITLINIEN.push(KERZEN.createPriceLine({price:x.preis,color:x.art==="Kauflimit"?F().guenstig:F().teuer,lineWidth:1,lineStyle:1,axisLabelVisible:true,title:x.art})));
     const monate = Math.round(m.wochen/4.345);
     HAUPT.timeScale().setVisibleRange({from: m.t[0] - 5*365*86400, to: m.t[m.t.length-1]});   // Kegel sichtbar machen
     $("#mc-erg").innerHTML = `
@@ -816,9 +1736,9 @@ function svgKal(kurven){
   const x = v => L + v/100*(W-L-R), y = v => H-B - v/100*(H-B-T);
   const maxN = Math.max(1, ...kurven.flatMap(k => k.bins.map(b => b.n)));
   let s = `<svg class="kal" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  for (const v of [0,25,50,75,100]) s += `<line x1="${x(0)}" y1="${y(v)}" x2="${x(100)}" y2="${y(v)}" stroke="#363a45"/><line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(100)}" stroke="#363a45"/>
+  for (const v of [0,25,50,75,100]) s += `<line x1="${x(0)}" y1="${y(v)}" x2="${x(100)}" y2="${y(v)}" stroke=F().line/><line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(100)}" stroke=F().line/>
     <text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text><text x="${x(v)}" y="${H-B+13}" text-anchor="middle">${v}</text>`;
-  s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(100)}" y2="${y(100)}" stroke="#868993" stroke-dasharray="4 3"/>
+  s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(100)}" y2="${y(100)}" style="stroke:var(--muted)" stroke-dasharray="4 3"/>
     <text x="${x(50)}" y="${H-4}" text-anchor="middle">angezeigt (%)</text><text x="11" y="${y(50)}" text-anchor="middle" transform="rotate(-90 11 ${y(50)})">eingetreten (%)</text>`;
   for (const k of kurven) {
     const pk = k.bins.filter(b => b.angezeigt!=null);
@@ -909,8 +1829,8 @@ function tabStrategie(w){
       Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
       Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts). Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
       Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
-    const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:"#363a45"}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
-    [["ein","#868993",2],["spar","#2962ff",0],["staffel","#26a69a",0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {
+    const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:F().line}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
+    [["ein","#868993",2],["spar","#2962ff",0],["staffel",F().guenstig,0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {
       const s = ch.addLineSeries({color:f,lineWidth:k==="ein"?1:2,lineStyle:st,priceLineVisible:false,lastValueVisible:false});
       s.setData(d.reihe.t.map((t,i) => ({time:t,value:d.reihe[k][i]})));
     });
@@ -925,42 +1845,9 @@ function tabStrategie(w){
   los();
 }
 
-// ------------------------------------------------------------ Hauptchart
-function zeichne(c, btc){
-  const basis = chartBasis();
-  const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:1}});
-  const linie = (werte, farbe, breite=1, stil=0) => { const s = ch.addLineSeries({color:farbe,lineWidth:breite,lineStyle:stil,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
-    s.setData(c.t.map((t,i)=>({time:t,value:werte[i]})).filter(p=>p.value!=null)); return s; };
-  if (c.pi_zone) {   // Pi-Cycle-Bodenbildungszone als Flaeche ueber die ganze Hoehe (eigene, unsichtbare Skala)
-    const zone = ch.addHistogramSeries({priceScaleId:"pizone", color:"#e040fb26", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
-    ch.priceScale("pizone").applyOptions({scaleMargins:{top:0,bottom:0}, visible:false});
-    zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t}));
-  }
-  const kerzen = ch.addCandlestickSeries({upColor:"#26a69a",downColor:"#ef5350",borderVisible:false,wickUpColor:"#26a69a",wickDownColor:"#ef5350"});
-  kerzen.setData(c.t.map((t,i)=>({time:t,open:c.o[i]??c.c[i],high:c.h[i]??c.c[i],low:c.l[i]??c.c[i],close:c.c[i]})));
-  linie(c.trend_o,"#2962ff55",1,2); linie(c.trend,"#2962ff",1,0); linie(c.trend_u,"#2962ff55",1,2);
-  linie(c.sma200w,"#f0b90b",2);
-  if (btc && c.pi_ema150) { linie(c.pi_ema150,"#e040fb",1); linie(c.pi_sma471,"#00bcd4",1); }
-  kerzen.setMarkers(c.marken.map(([t,art,s]) => ({
-    kauf:     {time:t,position:"belowBar",color:"#089981",shape:"arrowUp",text:String(s)},
-    teuer:    {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)},
-    pi_beginn:{time:t,position:"aboveBar",color:"#e040fb",shape:"circle",text:"Bodenbildung beginnt"},
-    pi_boden: {time:t,position:"belowBar",color:"#00e676",shape:"arrowUp",text:"Pi Boden-Signal"},
-  })[art]));
-  const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, timeScale:{...basis.timeScale, visible:false}});
-  const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
-  sc.setData(c.t.map((t,i)=> c.score[i]==null ? {time:t} : {time:t,value:c.score[i],color:farbe(c.score[i])}));
-  [80,15].forEach(v => sc.createPriceLine({price:v,color:v===80?"#089981":"#ef5350",lineWidth:1,lineStyle:2,axisLabelVisible:true}));
-  let sperre = false;
-  const sync = (a,b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (sperre||!r) return; sperre = true; b.timeScale().setVisibleLogicalRange(r); sperre = false; });
-  sync(ch,ch2); sync(ch2,ch);
-  setTimeout(() => ch.timeScale().fitContent(), 50);
-  charts = [ch, ch2]; KERZEN = kerzen; HAUPT = ch;
-}
-
 // ------------------------------------------------------------ Seiten: Marktumfeld und Gesamtprüfung
 function miniChart(el, reihe, farbe, linien=[]){
-  const ch = LightweightCharts.createChart(el, {...chartBasis(), timeScale:{borderColor:"#363a45",minBarSpacing:0.01}});
+  const ch = LightweightCharts.createChart(el, {...chartBasis(), timeScale:{borderColor:F().line,minBarSpacing:0.01}});
   const s = ch.addAreaSeries({lineColor:farbe, topColor:farbe+"55", bottomColor:farbe+"05", lineWidth:1, priceLineVisible:false});
   s.setData(reihe.t.map((t,i) => ({time:t, value:reihe.v[i]})));
   linien.forEach(([p,f,txt]) => s.createPriceLine({price:p,color:f,lineWidth:1,lineStyle:2,axisLabelVisible:true,title:txt}));
@@ -968,27 +1855,25 @@ function miniChart(el, reihe, farbe, linien=[]){
   charts.push(ch);
 }
 function zeigeUmfeld(){
-  AKTIV = null; location.hash = "seite=umfeld"; alleChartsWeg();
-  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.remove("aktiv"));
+  seiteAnfang("umfeld"); hashSetzen("seite=umfeld");
   const u = UMFELD;
-  if (!u) { $("#detail").innerHTML = '<div class="leer">Marktumfeld noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
+  if (!u) { $("#haupt").innerHTML = '<div class="leer">Marktumfeld noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
   const b = u.breite, v = u.vix, z = u.zinskurve;
   const teil = (titel, x, wert, wort, text, id, nk=1) => x ? `<h3>${titel}: ${wert} <span style="font-weight:400;color:var(--muted)">· ${wort} · Stand ${x.datum.split("-").reverse().join(".")} · vor 4 Wochen ${x.vor4w==null?"–":fmt(x.vor4w, nk)}</span></h3>
       <div class="mini" id="${id}"></div><div class="text">${text} Quelle: ${x.quelle}.</div>` : `<h3>${titel}: keine Daten</h3>`;
-  $("#detail").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
+  $("#haupt").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
     ${teil(ek("u_breite","Marktbreite"), b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
     ${teil(ek("u_vix","VIX"), v, v?(v.wert!=null?fmt(v.wert,1):v.stufe):"", v?(v.wert!=null?vixWort(v.wert):`höher als an ${fmt(v.perzentil,0)} % der Tage`):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). ${v.median!=null?`Median seit 1990: ${fmt(v.median,1)}; `:"Online nur als Stufe, ohne Kursreihe. "}höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
     ${teil(ek("u_zinskurve","Zinskurve 10 J. – 2 J."), z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
     ${u.zins3m?`<div class="text">${ek("u_zins3m","US-Geldmarkt 3 Monate")} (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
-  if (b) miniChart($("#m-breite"), b.reihe, "#26a69a", [[50,"#868993",""],[30,"#ef5350",""]]);
-  if (v && v.reihe) miniChart($("#m-vix"), v.reihe, "#ef5350", [[v.median,"#868993","Median"]]);
+  if (b) miniChart($("#m-breite"), b.reihe, F().guenstig, [[50,"#868993",""],[30,F().teuer,""]]);
+  if (v && v.reihe) miniChart($("#m-vix"), v.reihe, F().teuer, [[v.median,"#868993","Median"]]);
   else if ($("#m-vix")) $("#m-vix").remove();
-  if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,"#ef5350",""]]);
+  if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,F().teuer,""]]);
 }
 function zeigePruefungGesamt(gruppe="etf", h="3"){
-  AKTIV = null; location.hash = "seite=pruefung"; alleChartsWeg();
-  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.remove("aktiv"));
-  if (!PRUEF) { $("#detail").innerHTML = '<div class="leer">Prüfung noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
+  seiteAnfang("pruefung"); hashSetzen("seite=pruefung");
+  if (!PRUEF) { $("#haupt").innerHTML = '<div class="leer">Prüfung noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
   const k = PRUEF.kalibrierung, s = PRUEF.strategie, e = k[gruppe]?.[h];
   const zus = (t, x) => x ? `<tr><td style="text-align:left">${t}</td><td>${x.werte.toLocaleString("de-DE")}</td><td>${fmt(x.median_irr_spar,1,"%")}</td><td>${fmt(x.staffel_besser,0,"%")}</td><td class="${klasse(x.median_diff_staffel)}">${vz(x.median_diff_staffel,2)}</td><td>${fmt(x.staffel_vk_besser,0,"%")}</td><td class="${klasse(x.median_diff_staffel_vk)}">${vz(x.median_diff_staffel_vk,2)}</td></tr>` : "";
   const tb = TAGEBUCH;
@@ -998,9 +1883,9 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
     tbHtml = `<div class="text">Seit ${tb.erster_tag?tb.erster_tag.split("-").reverse().join("."):"–"} hält das Tool jeden Tag fest, was es angezeigt hat (${tb.tage} Tage, ${tb.signale.toLocaleString("de-DE")} Signale, ${tb.werte||0} Werte). Diese Einträge werden nie geändert und später mit dem echten Kursverlauf verglichen – das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet.</div>
       <table class="wtab"><thead><tr><th style="text-align:left">Nachprüfung</th><th>erste fällig ab</th><th>fällig</th><th>geprüft</th><th>Kurs höher</th></tr></thead><tbody>${
       ["1","3","5"].map(j => { const x = erg[j] || {}; return `<tr><td style="text-align:left">nach ${j} Jahr${j==="1"?"":"en"}</td><td>${(tb.faellig_ab||{})[j]?.split("-").reverse().join(".")||"–"}</td><td>${x.faellig||0}</td><td>${x.geprueft||0}</td><td>${x.quote==null?"–":fmt(x.quote,0,"%")}</td></tr>`; }).join("")}</tbody></table>
-      ${["1","3","5"].map(j => (erg[j]?.zonen||[]).length ? `<h3>Nach ${j} Jahr${j==="1"?"":"en"} je Zone</h3><table class="wtab"><thead><tr><th style="text-align:left">Zone</th><th>Signale</th><th>Werte</th><th>Kurs höher</th><th>Median</th></tr></thead><tbody>${erg[j].zonen.map(z => `<tr><td style="text-align:left">${zonen[z.zone]||z.zone}</td><td>${z.signale}</td><td>${z.werte}</td><td>${fmt(z.quote,0,"%")}</td><td>${fmt(z.median,1,"%")}</td></tr>`).join("")}</tbody></table>${(erg[j].kalibrierung||[]).length?`<div style="padding:0 12px">${svgKal([{name:"Tagebuch",farbe:"#26a69a",bins:erg[j].kalibrierung}])}</div>`:""}` : "").join("")}`;
+      ${["1","3","5"].map(j => (erg[j]?.zonen||[]).length ? `<h3>Nach ${j} Jahr${j==="1"?"":"en"} je Zone</h3><table class="wtab"><thead><tr><th style="text-align:left">Zone</th><th>Signale</th><th>Werte</th><th>Kurs höher</th><th>Median</th></tr></thead><tbody>${erg[j].zonen.map(z => `<tr><td style="text-align:left">${zonen[z.zone]||z.zone}</td><td>${z.signale}</td><td>${z.werte}</td><td>${fmt(z.quote,0,"%")}</td><td>${fmt(z.median,1,"%")}</td></tr>`).join("")}</tbody></table>${(erg[j].kalibrierung||[]).length?`<div style="padding:0 12px">${svgKal([{name:"Tagebuch",farbe:F().guenstig,bins:erg[j].kalibrierung}])}</div>`:""}` : "").join("")}`;
   }
-  $("#detail").innerHTML = `<div id="kopf"><h2>Prüfung der Ampel</h2><div class="grund">Hätte die Ampel früher gestimmt? Rückblick ohne Zukunftswissen über alle Werte, Strategie-Vergleich und Signal-Tagebuch. Stand ${PRUEF.stand}.</div></div>
+  $("#haupt").innerHTML = `<div id="kopf"><h2>Prüfung der Ampel</h2><div class="grund">Hätte die Ampel früher gestimmt? Rückblick ohne Zukunftswissen über alle Werte, Strategie-Vergleich und Signal-Tagebuch. Stand ${PRUEF.stand}.</div></div>
     <h3>1. ${ek("walkforward","Walk-forward-Kalibrierung")} über viele Werte</h3>
     <div class="eingabe">${Object.entries(k).map(([g,x]) => `<button class="knopf leise ${g===gruppe?"an":""}" data-g="${g}">${x.name.replace(" (Auswahl mit Rückblick!)","*")}</button>`).join("")}
       <span style="width:16px"></span>${["1","3","5"].map(j => `<button class="knopf leise ${j===h?"an":""}" data-h="${j}">${j} J.</button>`).join("")}</div>
@@ -1015,9 +1900,9 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
       s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
     <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}`;
-  document.querySelectorAll("#detail [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
-  document.querySelectorAll("#detail [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
-  document.querySelectorAll("#detail tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
+  document.querySelectorAll("#haupt [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
+  document.querySelectorAll("#haupt [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
+  document.querySelectorAll("#haupt tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
 }
 start();
 </script>

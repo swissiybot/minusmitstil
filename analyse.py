@@ -223,7 +223,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         mayer_tag = tag_c / tag_c.rolling(200).mean()
         mayer_w = mayer_tag.resample("W-FRI").last().reindex(w.index).values
         komponenten["mayer"] = expandierendes_perzentil(mayer_w, 104)
-        extra = {"mayer": r(mayer_tag.iloc[-1])}
+        extra = {"mayer": r(mayer_tag.iloc[-1]), "mayer_w": mayer_w}
     if bitcoin:
         ema150 = tag_c.ewm(span=150, adjust=False).mean()
         sma471 = tag_c.rolling(471).mean() * 0.745
@@ -263,6 +263,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
             "pi_top_daten": [d.strftime("%Y-%m-%d") for d in pi_top],
             "pi_ema150": ema150.resample("W-FRI").last().reindex(w.index).values,
             "pi_sma471": sma471.resample("W-FRI").last().reindex(w.index).values,
+            "pi_top111": sma111.resample("W-FRI").last().reindex(w.index).values,
+            "pi_top350x2": sma350x2.resample("W-FRI").last().reindex(w.index).values,
+            "mayer_w": mayer_w,
         }
     teile = np.vstack(list(komponenten.values()))
     with np.errstate(invalid="ignore"):
@@ -316,8 +319,10 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "p": stat, "umsatz_usd": r(umsatz, 0),
         "grund": " · ".join(grund),
         "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
-        **{k: v for k, v in extra.items() if not k.startswith("pi_") or k.endswith("aktiv") or k.endswith("daten")
-           or k in ("pi_status", "pi_abstand", "pi_rueckblick")},
+        **{k: v for k, v in extra.items() if k != "mayer_w" and (not k.startswith("pi_") or k.endswith("aktiv") or k.endswith("daten")
+           or k in ("pi_status", "pi_abstand", "pi_rueckblick"))},
+        # Ampel des letzten Jahres alle 4 Wochen (Sparkline in der Liste)
+        "sv": [None if math.isnan(x) else int(round(x)) for x in score[-53::4]],
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -341,15 +346,19 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    if krypto and "mayer_w" in extra:
+        chart["mayer"] = rund(extra["mayer_w"], 3)
     if bitcoin:
         chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
+        chart["pi_top111"] = rund(extra["pi_top111"]); chart["pi_top350x2"] = rund(extra["pi_top350x2"])
         chart["pi_zone"] = [1 if z else None for z in extra["pi_zone_w"]]
         # Kreuzungen als Markierung an der Wochenkerze, in der sie lagen
         def woche(d):
             i = min(int(w.index.searchsorted(pd.Timestamp(d))), len(t_unix) - 1)
             return t_unix[i]
         chart["marken"] = sorted(marken + [[woche(d), "pi_beginn", None] for d in extra["pi_bottom_daten"]]
-                                 + [[woche(d), "pi_boden", None] for d in extra["pi_signal_daten"]], key=lambda m: m[0])
+                                 + [[woche(d), "pi_boden", None] for d in extra["pi_signal_daten"]]
+                                 + [[woche(d), "pi_top", None] for d in extra["pi_top_daten"]], key=lambda m: m[0])
     return zeile_out, chart, {"w": w, "score": score}
 
 
