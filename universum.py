@@ -1,4 +1,4 @@
-"""Baut die Liste aller Werte: Nasdaq-Aktien, FTSE All-World (aus Vanguard-Excel), ETFs, Bitcoin.
+"""Baut die Liste aller Werte: Nasdaq-Aktien, FTSE All-World (aus Vanguard-Excel), ETFs, Krypto, Rohstoffe.
 
 Ergebnis: daten/universum.csv mit Spalten
     id, symbol, name, gruppe, land, branche
@@ -88,8 +88,11 @@ def ftse_all_world() -> pd.DataFrame:
 
 def etfs_und_bitcoin() -> pd.DataFrame:
     zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + " (ETF)", "gruppe": "ETF", "land": "", "branche": "Index"} for e in E.ETFS]
-    b = E.BITCOIN
-    zeilen.append({"id": b["id"], "symbol": b["symbol"], "name": b["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
+    for k in E.KRYPTO:
+        zeilen.append({"id": k["id"], "symbol": k["symbol"], "name": k["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
+    for r in E.ROHSTOFFE:
+        zeilen.append({"id": r["id"], "symbol": r["symbol"], "name": r["name"], "gruppe": "Rohstoffe", "land": "",
+                       "branche": "Future" if r["art"] == "rohstoff" else "Rohstoff-ETF"})
     return pd.DataFrame(zeilen)
 
 

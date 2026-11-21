@@ -38,6 +38,7 @@ QUELLEN_TEXT = {
     "etf": ("ETF", True),
     "aktie": ("Aktie", True),
     "krypto": ("Krypto", False),
+    "rohstoff": ("Endlos-Future (Spruenge beim Kontraktwechsel, ohne Rollkosten)", False),
 }
 
 
@@ -212,12 +213,15 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "rsi": expandierendes_perzentil(rs, WARMUP),
     }
     krypto = zeile["gruppe"] == "Krypto"
+    bitcoin = zeile["symbol"] == E.BITCOIN["symbol"]   # Pi Cycle ist nur fuer Bitcoin geeicht
     tag_c = tag["Close"]
     extra = {}
     if krypto:
         mayer_tag = tag_c / tag_c.rolling(200).mean()
         mayer_w = mayer_tag.resample("W-FRI").last().reindex(w.index).values
         komponenten["mayer"] = expandierendes_perzentil(mayer_w, 104)
+        extra = {"mayer": r(mayer_tag.iloc[-1])}
+    if bitcoin:
         ema150 = tag_c.ewm(span=150, adjust=False).mean()
         sma471 = tag_c.rolling(471).mean() * 0.745
         sma111 = tag_c.rolling(111).mean(); sma350x2 = tag_c.rolling(350).mean() * 2
@@ -227,6 +231,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         pi_top = list(tag_c.index[(oben & ~oben.shift(1, fill_value=False))])
         extra = {
             "mayer": r(mayer_tag.iloc[-1]),
+            "pi": True,
             "pi_bottom_aktiv": bool(unten.iloc[-1]),
             "pi_top_aktiv": bool(oben.iloc[-1]),
             "pi_bottom_daten": [d.strftime("%Y-%m-%d") for d in pi_bottom],
@@ -269,8 +274,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     grund.append(f"Wochen-RSI {rs[-1]:.0f}")
     if krypto:
         grund.append(f"Mayer Multiple {extra['mayer']}")
-        if extra["pi_bottom_aktiv"]: grund.append("Pi Cycle Bottom AKTIV")
-        if extra["pi_top_aktiv"]: grund.append("Pi Cycle Top AKTIV")
+        if extra.get("pi_bottom_aktiv"): grund.append("Pi Cycle Bottom AKTIV")
+        if extra.get("pi_top_aktiv"): grund.append("Pi Cycle Top AKTIV")
     vor4 = score[-5] if len(score) > 5 else np.nan
 
     zeile_out = {
@@ -310,7 +315,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
-    if krypto:
+    if bitcoin:
         chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
     return zeile_out, chart, {"w": w, "score": score}
 
@@ -326,7 +331,7 @@ def tagebuch(zeilen):
         {k: z.get(k) for k in ("id", "symbol", "datum", "kurs", "score", "zone", "qualitaet")}
         | {f"p{h}": (z["p"].get(h) or {}).get("quote") if z.get("p") else None for h in ("1", "3", "5")}
         for z in zeilen
-        if z["gruppe"] in ("ETF", "Krypto") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
+        if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
     datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "signale": eintraege}, ensure_ascii=False, indent=0))
 
@@ -335,13 +340,18 @@ def _etfs():
     return {e["id"]: e for e in E.ETFS}
 
 
+def _rohstoff_art():
+    return {r["id"]: r["art"] for r in E.ROHSTOFFE}
+
+
 def werte_eines(z: dict):
     """Ampel, Kennzahlen und Chartdaten fuer einen Eintrag aus universum.csv (oder None)."""
     if z["gruppe"] == "ETF":
         tag, seg = verketten(_etfs()[z["id"]])
     else:
         tag = lade_lokal(z["symbol"])
-        seg = [(tag.index[0], "krypto" if z["gruppe"] == "Krypto" else "aktie", z["symbol"])] if tag is not None and not tag.empty else []
+        art = {"Krypto": "krypto", "Rohstoffe": _rohstoff_art().get(z["id"], "rohstoff")}.get(z["gruppe"], "aktie")
+        seg = [(tag.index[0], art, z["symbol"])] if tag is not None and not tag.empty else []
     if tag is None or tag.empty:
         return None
     tag = tag[tag["Close"] > 0]
@@ -352,7 +362,7 @@ def universum() -> pd.DataFrame:
     return pd.read_csv(E.DATEN / "universum.csv").fillna("")
 
 
-PRUEF_GRUPPEN = {"etf": "ETFs / Indizes", "krypto": "Bitcoin", "aktien": "Aktien (alle)",
+PRUEF_GRUPPEN = {"etf": "ETFs / Indizes", "krypto": "Krypto", "rohstoffe": "Rohstoffe", "aktien": "Aktien (alle)",
                  "aktien_stabil": "Aktien mit stabilem Aufwärtstrend (Auswahl mit Rückblick!)"}
 
 
@@ -370,12 +380,12 @@ class Stufe2:
         import strategie
         w, score = roh["w"], roh["score"]
         c = w["Close"].values.astype(float)
-        aktie = z["gruppe"] not in ("ETF", "Krypto")
+        aktie = z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe")
         if aktie:
             self.breite.add(w["Close"])
         if zeile["score"] is None:
             return
-        gruppen = ["etf"] if z["gruppe"] == "ETF" else ["krypto"] if z["gruppe"] == "Krypto" else \
+        gruppen = ["etf"] if z["gruppe"] == "ETF" else ["krypto"] if z["gruppe"] == "Krypto" else ["rohstoffe"] if z["gruppe"] == "Rohstoffe" else \
             ["aktien"] + (["aktien_stabil"] if zeile.get("qualitaet") else [])
         for g in gruppen:
             self.sammler[g].add(c, score, w.index.year.values)
@@ -407,6 +417,7 @@ class Stufe2:
                 "annahmen": "500 je Monat, bis 20 Jahre (ab erster gültiger Ampel), 1 je Order, Abgeltungssteuer 26,375 %, Zins US-Geldmarkt 3 Monate",
                 "einzeln": self.strat_einzeln,
                 "zusammen": {"etf": zus([r for r in self.strat_einzeln if r["gruppe"] == "ETF"]),
+                             "rohstoffe": zus([r for r in self.strat_einzeln if r["gruppe"] == "Rohstoffe"]),
                              "aktien": zus(self.strat_aktien), "aktien_stabil": zus([r for r in self.strat_aktien if r["qualitaet"]]),
                              "aktien_20j": zus([r for r in self.strat_aktien if r["jahre"] >= 19.5])},
             },

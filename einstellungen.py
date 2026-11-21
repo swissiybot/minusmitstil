@@ -37,4 +37,33 @@ ETFS = [
     {"id": "EWJ",  "name": "Japan (Nikkei 225)", "etf": "EWJ",      "index": "^N225",     "index_tr": None},
 ]
 
-BITCOIN = {"id": "BTC", "name": "Bitcoin", "symbol": "BTC-USD"}
+# Kryptowaehrungen (Yahoo, Kurse in USD). Pi Cycle ist nur fuer Bitcoin geeicht und wird nur dort berechnet.
+# Daten bei Yahoo: BTC ab 2014, ETH/LINK/XLM ab 11/2017, SOL ab 04/2020 (Ampel braucht 5 Jahre Vorlauf).
+KRYPTO = [
+    {"id": "BTC", "name": "Bitcoin", "symbol": "BTC-USD"},
+    {"id": "ETH-USD", "name": "Ethereum", "symbol": "ETH-USD"},
+    {"id": "SOL-USD", "name": "Solana", "symbol": "SOL-USD"},
+    {"id": "LINK-USD", "name": "Chainlink", "symbol": "LINK-USD"},   # Kuerzel LINK ist bei der Nasdaq schon vergeben
+    {"id": "XLM-USD", "name": "Stellar", "symbol": "XLM-USD"},
+]
+BITCOIN = KRYPTO[0]
+
+# Rohstoffe: Endlos-Futures von Yahoo (Spruenge beim Kontraktwechsel, keine Anlegerrendite) und ein breiter Korb-ETF.
+# Daten bei Yahoo meist ab 2000 (Platin 1997, Palladium 1998, Brent 2007, DBC 2006).
+ROHSTOFFE = [
+    {"id": "GOLD", "name": "Gold", "symbol": "GC=F", "art": "rohstoff"},
+    {"id": "SILBER", "name": "Silber", "symbol": "SI=F", "art": "rohstoff"},
+    {"id": "PLATIN", "name": "Platin", "symbol": "PL=F", "art": "rohstoff"},
+    {"id": "PALLADIUM", "name": "Palladium", "symbol": "PA=F", "art": "rohstoff"},
+    {"id": "KUPFER", "name": "Kupfer", "symbol": "HG=F", "art": "rohstoff"},
+    {"id": "WTI", "name": "Rohoel WTI", "symbol": "CL=F", "art": "rohstoff"},
+    {"id": "BRENT", "name": "Rohoel Brent", "symbol": "BZ=F", "art": "rohstoff"},
+    {"id": "ERDGAS", "name": "Erdgas (Henry Hub)", "symbol": "NG=F", "art": "rohstoff"},
+    {"id": "WEIZEN", "name": "Weizen", "symbol": "ZW=F", "art": "rohstoff"},
+    {"id": "MAIS", "name": "Mais", "symbol": "ZC=F", "art": "rohstoff"},
+    {"id": "SOJA", "name": "Sojabohnen", "symbol": "ZS=F", "art": "rohstoff"},
+    {"id": "KAFFEE", "name": "Kaffee", "symbol": "KC=F", "art": "rohstoff"},
+    {"id": "ZUCKER", "name": "Zucker", "symbol": "SB=F", "art": "rohstoff"},
+    {"id": "KAKAO", "name": "Kakao", "symbol": "CC=F", "art": "rohstoff"},
+    {"id": "DBC", "name": "Rohstoff-Korb (ETF DBC)", "symbol": "DBC", "art": "etf"},
+]

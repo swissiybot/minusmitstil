@@ -60,6 +60,7 @@ td .sym{color:var(--muted);font-size:11px}
 .pos{color:var(--gruen)} .neg{color:var(--rot)}
 .leer{padding:40px;text-align:center;color:var(--muted)}
 .kachel.breit{grid-column:span 2}
+.kopfzeile{grid-column:1/-1;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;margin:4px 0 -2px}
 .kachel.sonder{border-color:#2962ff66}
 .kachel .drei{display:flex;gap:12px;margin-top:2px}
 .kachel .drei div{flex:1;min-width:0}
@@ -96,7 +97,7 @@ h3{font-size:13px;margin:12px 12px 6px;font-weight:600}
   <section class="box">
     <div class="filter">
       <input id="suche" placeholder="Suche Name oder Kürzel" size="18">
-      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Nasdaq</option><option>FTSE All-World</option></select>
+      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Rohstoffe</option><option>Nasdaq</option><option>FTSE All-World</option></select>
       <label>min. Jahre <input id="minj" type="number" value="10" min="0" style="width:52px"></label>
       <label><input id="nurq" type="checkbox" checked> nur stabiler Aufwärtstrend</label>
       <label>min. Umsatz/Tag <select id="minu"><option value="0">egal</option><option value="1e6">1 Mio $</option><option value="1e7" selected>10 Mio $</option><option value="1e8">100 Mio $</option></select></label>
@@ -146,7 +147,6 @@ async function start(){
 function vixWort(v){ return v==null ? "" : v<15 ? "ruhig" : v<25 ? "normal" : v<35 ? "nervös" : "Panik"; }
 function breiteWort(b){ return b==null ? "" : b<30 ? "schwach" : b<70 ? "gemischt" : "breit"; }
 function kacheln(){
-  const k = ALLE.filter(w => w.gruppe==="ETF" || w.gruppe==="Krypto");
   let sonder = "";
   if (UMFELD) {
     const b = UMFELD.breite, v = UMFELD.vix, z = UMFELD.zinskurve;
@@ -165,14 +165,17 @@ function kacheln(){
       <div class="s" style="font-size:15px;margin-top:3px">${e && e.skill!=null ? (e.skill>0?"hilft etwas":"kein Vorteil") : "–"}</div>
       <div class="z" style="color:var(--muted)">ETFs, 3 J., außerhalb der Lernzeit${s?` · Staffel besser bei ${fmt(s.staffel_besser,0)} %`:""}</div></div>`;
   }
-  $("#kacheln").innerHTML = sonder + k.map(w => `<div class="kachel" data-id="${w.id}">
-    <div class="n">${w.name.replace(" (ETF)","")}</div>
+  const kachel = w => `<div class="kachel" data-id="${w.id}">
+    <div class="n">${umlaut(w.name).replace(" (ETF)","")}</div>
     <div class="s" style="color:${farbe(w.score)}">${fmt(w.score,0)}</div>
-    <div class="z">${zonen[w.zone]} · Ø ${fmt(w.cagr20,1,"%")}/J</div></div>`).join("");
+    <div class="z">${w.score==null ? `noch keine Ampel (${fmt(w.jahre_daten,1)} J. Daten)` : zonen[w.zone]} · Ø ${fmt(w.cagr20,1,"%")}/J</div></div>`;
+  const block = (titel, g) => { const k = ALLE.filter(w => w.gruppe===g); return k.length ? `<div class="kopfzeile">${titel}</div>` + k.map(kachel).join("") : ""; };
+  $("#kacheln").innerHTML = sonder + block("Index-ETFs", "ETF") + block("Krypto", "Krypto") + block("Rohstoffe", "Rohstoffe");
   document.querySelectorAll(".kachel[data-id]").forEach(e => e.onclick = () => zeige(e.dataset.id));
   if ($("#k-umfeld")) $("#k-umfeld").onclick = () => zeigeUmfeld();
   if ($("#k-pruefung")) $("#k-pruefung").onclick = () => zeigePruefungGesamt();
 }
+const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
 function gefiltert(){
   const q = $("#suche").value.trim().toLowerCase(), g = $("#gruppe").value, mj = +$("#minj").value||0,
         nq = $("#nurq").checked, mu = +$("#minu").value;
@@ -180,8 +183,8 @@ function gefiltert(){
     && (!q || w.name.toLowerCase().includes(q) || w.symbol.toLowerCase().includes(q))
     && (!g || w.gruppe.includes(g))
     && (w.jahre_daten||0) >= mj
-    && (!nq || w.qualitaet || w.gruppe==="ETF" || w.gruppe==="Krypto")
-    && (w.gruppe==="ETF" || w.gruppe==="Krypto" || (w.umsatz_usd||0) >= mu));
+    && (!nq || w.qualitaet || SONDERGRUPPE(w))
+    && (SONDERGRUPPE(w) || (w.umsatz_usd||0) >= mu));
 }
 function liste(){
   const f = gefiltert().sort((a,b) => {
@@ -194,7 +197,7 @@ function liste(){
   $("#zeilen").innerHTML = f.slice(0,ANZEIGE).map(w => {
     const p = p3(w), v = p ? p.quote-p.basis : null, de = wert(w,"delta");
     return `<tr data-id="${w.id}" class="${w.id===AKTIV?"aktiv":""}">
-      <td><span class="nm">${w.name}</span><span class="sym">${w.symbol} · ${w.gruppe}</span></td>
+      <td><span class="nm">${umlaut(w.name)}</span><span class="sym">${w.symbol} · ${w.gruppe}</span></td>
       <td><span class="ampel" style="background:${farbe(w.score)}">${fmt(w.score,0)}</span></td>
       <td class="${w.cagr20>0?"pos":"neg"}" title="${fmt(w.cagr_jahre,0)} Jahre${w.cagr20_div?", mit Dividenden":", ohne Dividenden"}">${fmt(w.cagr20,1,"%")}</td>
       <td title="${p?p.episoden+" Phasen, "+p.wochen+" Wochen":""}">${p?fmt(p.quote,0,"%"):"–"}</td>
@@ -227,9 +230,9 @@ async function zeige(id){
   const {info:w, chart:c} = await r.json();
   if (AKTIV !== id) return;
   alleChartsWeg(); INFO = w;
-  const btc = w.gruppe === "Krypto";
+  const btc = !!w.pi;   // Pi Cycle nur fuer Bitcoin
   $("#detail").innerHTML = `
-    <div id="kopf"><h2>${w.name} <span class="sym">${w.symbol}</span>
+    <div id="kopf"><h2>${umlaut(w.name)} <span class="sym">${w.symbol}</span>
       <span class="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
       <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${zonen[w.zone]}</span></h2>
       <div class="grund">${umlaut(w.grund)}</div></div>
@@ -266,15 +269,22 @@ function tabKennzahlen(w){
     return `<tr><td style="text-align:left">${txt}</td><td><b>${fmt(p.quote,0,"%")}</b></td><td>${fmt(p.basis,0,"%")}</td>
       <td class="${klasse(v)}">${vz(v,0)}</td><td>${fmt(p.median_pa,1,"%")} / ${fmt(p.basis_median_pa,1,"%")}</td><td>${p.episoden} (${p.wochen} Wo.)</td></tr>`; };
   const seg = w.segmente.map(s => `ab ${s.ab.slice(0,4)}: ${umlaut(s.art)} (${s.symbol})`).join(" → ");
-  const btc = w.gruppe === "Krypto";
-  $("#tab").innerHTML = `
+  const krypto = w.gruppe === "Krypto";
+  const hinweise = [];
+  if (w.gruppe === "Rohstoffe") hinweise.push(w.branche === "Future"
+    ? "<b>Rohstoff (Endlos-Future):</b> Der Kurs ist der jeweils vorderste Terminkontrakt. Beim Wechsel auf den nächsten Kontrakt springt die Reihe, und wer einen Rohstoff über Futures oder ETCs hält, zahlt Rollkosten (z. B. hat der Öl-ETF USO deutlich schlechter abgeschnitten als der Ölpreis). Die Ø Rendite hier ist also die Preisentwicklung, nicht die Rendite eines Anlegers. Außer Gold haben Rohstoffe langfristig kaum einen echten Aufwärtstrend; Trendkanal, Ø Rendite und „Kurs höher“-Quoten sind deshalb weniger aussagekräftig als bei Aktienindizes."
+    : "<b>Rohstoff-Korb (ETF):</b> enthält Rollkosten und Gebühren, ist also näher an der Anlegerrendite als die Einzel-Futures. Rohstoffe haben (außer Gold) langfristig kaum einen echten Aufwärtstrend; Trendkanal und Ø Rendite sind weniger aussagekräftig.");
+  if (w.score == null) hinweise.push(`<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
+  else if ((w.jahre_daten||0) < 10) hinweise.push(`<b>Kurze Historie:</b> nur ${fmt(w.jahre_daten,1)} Jahre Daten. Ampel und Vergleichsfälle beruhen auf sehr wenigen Phasen und sind entsprechend unsicher.`);
+  if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");
+  $("#tab").innerHTML = (hinweise.length ? `<div class="merke" style="margin-top:12px">${hinweise.join("<br>")}</div>` : "") + `
     <div class="werte">
       <div class="wert"><div class="k">Ø Jahresrendite</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
       <div class="wert"><div class="k">Ø seit Beginn</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
       <div class="wert"><div class="k">Abstand zum Hoch</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">zur 200-Wochen-Linie ${fmt(w.zu200w,0,"%")}</div></div>
       <div class="wert"><div class="k">Rückschlagrisiko</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
       <div class="wert"><div class="k">Trendgüte (R²)</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher"}</div></div>
-      ${btc?`<div class="wert"><div class="k">Bitcoin-Signale</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">Pi Bottom ${w.pi_bottom_aktiv?"<b class=pos>AKTIV</b>":"aus"} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}</div></div>`:""}
+      ${krypto?`<div class="wert"><div class="k">${w.pi?"Bitcoin-Signale":"Krypto-Signal"}</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">${w.pi?`Pi Bottom ${w.pi_bottom_aktiv?"<b class=pos>AKTIV</b>":"aus"} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}`:"Kurs / 200-Tage-Linie · Pi Cycle nur bei Bitcoin"}</div></div>`:""}
     </div>
     <table class="wtab"><thead><tr><th style="text-align:left">Ähnliche Lage früher (Ampel ±7,5)</th><th>Kurs höher</th><th>an allen Tagen</th><th>Vorteil</th><th>Median p.a. (ähnlich / alle)</th><th>Phasen</th></tr></thead>
     <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
@@ -528,9 +538,9 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
     <h3>2. Strategie-Vergleich über viele Werte</h3>
     <div class="text">${s.annahmen}. Unterschied im internen Zinsfuß in Prozentpunkten gegenüber dem Sparplan (Median).</div>
     <table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th>Sparplan p.a.</th><th>Staffel besser</th><th>Staffel ±</th><th>+ Teilverkauf besser</th><th>+ Teilverkauf ±</th></tr></thead><tbody>
-      ${zus("ETFs / Indizes", s.zusammen.etf)}${zus("Aktien (alle)", s.zusammen.aktien)}${zus("Aktien mit 20 Jahren Vergleich", s.zusammen.aktien_20j)}${zus("Aktien stabiler Trend*", s.zusammen.aktien_stabil)}</tbody></table>
-    <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto</th><th>ab</th><th>Sparplan</th><th>Staffel</th><th>+ Teilverkauf</th><th>größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
-      s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${r.name.replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
+      ${zus("ETFs / Indizes", s.zusammen.etf)}${zus("Rohstoffe", s.zusammen.rohstoffe)}${zus("Aktien (alle)", s.zusammen.aktien)}${zus("Aktien mit 20 Jahren Vergleich", s.zusammen.aktien_20j)}${zus("Aktien stabiler Trend*", s.zusammen.aktien_stabil)}</tbody></table>
+    <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th>Sparplan</th><th>Staffel</th><th>+ Teilverkauf</th><th>größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
+      s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
     <h3>3. Signal-Tagebuch</h3>${tbHtml}`;
   document.querySelectorAll("#detail [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
