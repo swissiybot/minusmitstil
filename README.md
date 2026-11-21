@@ -21,6 +21,8 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 - **Suche** oben (Taste `/` oder `Strg K`), verzeiht Tippfehler („bitcon“ findet Bitcoin).
 - **Liste** links mit Reitern Übersicht · ETFs · Krypto · Rohstoffe · Aktien (Screener mit Filtern, flüssig bei 3.000 Zeilen) · Meine (Favoriten-Stern); je Zeile Ampel, Verlauf des letzten Jahres und Änderung in 4 Wochen. Breiter ziehen zeigt mehr Spalten.
 - **Detail**: Ampel-Halbkreis mit Klartext-Satz, Chart mit Zeitraum-Knöpfen (1J/5J/10J/Alles), Log/Linear, Fadenkreuz mit Werten und ein-/ausschaltbaren Linien (200-Wochen-Linie, Trendkanal, Prognose-Kegel, Pfeile, bei Bitcoin Pi Cycle Bottom/Top und Mayer); Umschalter auf den TradingView-Chart (Monat, 200-Wochen-Linie). Darunter Karten: Lohnt-sich-Check, Wahrscheinlichkeiten gegen „beliebiger Tag“, Prognose, Rückschlag, Ø Rendite, Signale – und Reiter für Details, Kurs-Rechner, Prüfung und Strategie-Vergleich.
+- **Zeitebenen**: Monat, Woche, Tag im eigenen Chart (Tag: letzte 15 Jahre; online für ETFs, Krypto und Rohstoffe), 1 Std., 30 und 15 Min. über das TradingView-Widget (eigene Intraday-Kurse gibt es nicht). Die Ampel wird immer aus Wochenkursen berechnet.
+- **Werkzeuge**: Lineal (zwei Klicks: Prozent, Betrag, Dauer, Zahl der Kerzen), Bollinger-Bänder (20, 2), Fibonacci-Zonen des sichtbaren Ausschnitts und eine Fläche für die ganze Günstig-/Teuer-Phase (Ampel ≥ 80 bzw. ≤ 15) – alles ein- und ausschaltbar.
 - **Bereiche verstellen**: Trennlinien zwischen Liste, Chart, Ampel-Leiste und Seitenleiste ziehen, Doppelklick setzt zurück (wird im Browser gemerkt). Hell/Dunkel oben rechts. Auf dem Handy eine Spalte mit unterer Reiterleiste.
 - Bildschirmfotos: `web/screenshots/`.
 

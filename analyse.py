@@ -359,7 +359,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         chart["marken"] = sorted(marken + [[woche(d), "pi_beginn", None] for d in extra["pi_bottom_daten"]]
                                  + [[woche(d), "pi_boden", None] for d in extra["pi_signal_daten"]]
                                  + [[woche(d), "pi_top", None] for d in extra["pi_top_daten"]], key=lambda m: m[0])
-    return zeile_out, chart, {"w": w, "score": score}
+    return zeile_out, chart, {"w": w, "score": score, "tag": tag}
 
 
 def tagebuch(zeilen):
@@ -384,6 +384,40 @@ def _etfs():
 
 def _rohstoff_art():
     return {r["id"]: r["art"] for r in E.ROHSTOFFE}
+
+
+TAGE_JAHRE = 15   # Tageskerzen: so viele Jahre zurück (ältere Zeit zeigt der Wochen- bzw. Monatschart)
+
+
+def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
+    """Tageskerzen der letzten TAGE_JAHRE Jahre mit 200-Wochen-Linie und Ampel (beide wöchentlich, je Tag fortgeschrieben),
+    bei Krypto Mayer Multiple, bei Bitcoin die Pi-Cycle-Linien aus Tageskursen."""
+    tag = roh.get("tag")
+    if tag is None or tag.empty:
+        return None
+    tag = tag[tag["Close"] > 0]
+    voll = tag["Close"].astype(float)
+    ab = tag.index[-1] - pd.DateOffset(years=TAGE_JAHRE)
+    t = tag[tag.index >= ab]
+    wt = pd.to_datetime(chart["t"], unit="s")
+    woche = lambda werte: pd.Series(werte, index=wt, dtype="float64").reindex(t.index, method="ffill").values
+    rund = lambda a, n=4: [None if (x is None or (isinstance(x, float) and math.isnan(x))) else float(f"{x:.{n}g}") for x in a]
+    out = {
+        "t": [int(x) for x in (t.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)],
+        "o": rund(t["Open"].values), "h": rund(t["High"].values), "l": rund(t["Low"].values), "c": rund(t["Close"].values),
+        "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
+        **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
+    }
+    if info.get("gruppe") == "Krypto":
+        out["mayer"] = rund((voll / voll.rolling(200).mean()).reindex(t.index).values, 3)
+    if info.get("pi"):
+        out["pi_ema150"] = rund(voll.ewm(span=150, adjust=False).mean().reindex(t.index).values)
+        out["pi_sma471"] = rund((voll.rolling(471).mean() * 0.745).reindex(t.index).values)
+        out["pi_top111"] = rund(voll.rolling(111).mean().reindex(t.index).values)
+        out["pi_top350x2"] = rund((voll.rolling(350).mean() * 2).reindex(t.index).values)
+        if "pi_zone" in chart:
+            out["pi_zone"] = [1 if z == 1 else None for z in woche([1 if z else 0 for z in chart["pi_zone"]])]
+    return out
 
 
 def werte_eines(z: dict):

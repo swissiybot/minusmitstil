@@ -6,6 +6,7 @@
 - /api/pruefung?id=SPY      Walk-forward-Pruefung und Kalibrierung dieses Werts
 - /api/strategie?id=SPY&betrag=500&jahre=20&kfix=1&kproz=0&zins=echt|2.5   Sparplan gegen Staffelkauf
 - /api/mc?id=SPY&wochen=52&jahre=20&preise=500,800   Monte-Carlo-Kegel und Wahrscheinlichkeiten
+- /api/tag?id=SPY           Tageskerzen der letzten 15 Jahre (Zeitebene „Tag“ im Chart)
 Nur auf diesem Rechner erreichbar (127.0.0.1).
 """
 import gzip
@@ -70,6 +71,14 @@ def wert_json(wid: str) -> bytes | None:
         return daten
 
 
+def tag_json(wid: str, q) -> bytes | None:
+    with _sperre:
+        erg = _berechnen(wid)
+        if erg is None:
+            return None
+        return _gz(analyse.tageschart(erg[0], erg[1], erg[2]) or {"fehler": "keine Tageskurse"})
+
+
 def _zahl(q, name, standard, lo, hi):
     try:
         x = float(q.get(name, [standard])[0])
@@ -121,7 +130,7 @@ def mc_json(wid: str, q) -> bytes | None:
 
 API = {"/api/ping": lambda wid, q: _gz({"server": True}),   # zeigt dem Dashboard: lokaler Server laeuft
        "/api/wert": lambda wid, q: wert_json(wid), "/api/pruefung": pruefung_json,
-       "/api/strategie": strategie_json, "/api/mc": mc_json}
+       "/api/strategie": strategie_json, "/api/mc": mc_json, "/api/tag": tag_json}
 
 
 class Anfrage(SimpleHTTPRequestHandler):

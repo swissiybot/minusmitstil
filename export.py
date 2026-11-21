@@ -118,6 +118,8 @@ def main():
     ids = {w["id"] for w in rl["werte"]}
     tmp = SITE / "daten" / "werte"
     tmp.mkdir()
+    tage_ordner = SITE / "daten" / "tage"
+    tage_ordner.mkdir()
     zins = umfeld.zins_monatlich()
     n = fehler = groesse = 0
     for z in analyse.universum().to_dict("records"):
@@ -139,6 +141,10 @@ def main():
                 out["pruefung"] = pruefung.fuer_wert(w["Close"].values.astype(float), score, w.index.year.values)
                 out["strategie"] = strategie.vergleich(w, score, zins) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
             groesse += schreiben(tmp / f"{dateiname(z['id'])}.json", out)
+            if KURSE_OEFFENTLICH and z["gruppe"] in ("ETF", "Krypto", "Rohstoffe"):
+                tc = analyse.tageschart(info, chart, roh)
+                if tc:
+                    groesse += schreiben(tage_ordner / f"{dateiname(z['id'])}.json", tc)
             n += 1
         except Exception as ex:
             fehler += 1

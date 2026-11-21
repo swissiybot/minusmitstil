@@ -21,7 +21,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
   --pos:#3fd0b2; --neg:#ff9a57;
   --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff;
-  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d;
+  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a;
   --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
   --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
   --r:14px; --r-klein:9px;
@@ -35,7 +35,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
   --pos:#0b8a73; --neg:#c4530a;
   --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad;
-  --kerze-auf:#0f9d84; --kerze-ab:#e0532a;
+  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a;
   --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
   --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
 }
@@ -179,6 +179,13 @@ h1,h2,h3{letter-spacing:-.015em}
 .segment button:hover{color:var(--text)}
 .segment button[aria-pressed="true"]{background:var(--panel);color:var(--text);box-shadow:var(--schatten-klein)}
 .chart-leiste .rechts{margin-left:auto}
+.werkzeug{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:12.5px;font-weight:600}
+.werkzeug:hover{color:var(--text)}
+.werkzeug[aria-pressed="true"]{color:var(--text);border-color:var(--akzent);background:var(--akzent-weich)}
+.werkzeug svg{width:16px;height:16px}
+.lineal-an #chart{cursor:crosshair}
+#lineal-box{position:absolute;z-index:3;pointer-events:none;border:1px solid;border-radius:3px}
+#lineal-text{position:absolute;z-index:5;pointer-events:none;font-size:12px;font-weight:650;padding:5px 9px;border-radius:9px;color:#0b0e14;white-space:nowrap;box-shadow:var(--schatten-klein)}
 .chip:disabled,.segment button:disabled{opacity:.4;cursor:default}
 .chips{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line)}
 .chip{display:inline-flex;align-items:center;gap:7px;height:28px;padding:0 10px;border-radius:999px;border:1px solid var(--line2);background:transparent;color:var(--muted);font-size:12.5px;white-space:nowrap}
@@ -521,7 +528,7 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -578,7 +585,8 @@ const klasse = x => x==null ? "" : x>0 ? "pos" : x<0 ? "neg" : "";
 
 // ------------------------------------------------------------ Online-Fassung (Variante b): TradingView-Widget, Ampel-Verlauf, Rechner in Prozent
 // Kurse zeigt online nur das offizielle TradingView-Widget (Branding unverändert, Pflicht laut TradingView).
-function tvWidget(el, symbol){
+function tvWidget(el, symbol, iv="M"){
+  const ma = {M:46, W:200, D:INFO?.gruppe === "Krypto" ? 1400 : 1000}[iv];   // 200-Wochen-Linie je Zeitebene
   el.innerHTML = "";
   const box = document.createElement("div");
   box.className = "tradingview-widget-container"; box.style.height = "100%";
@@ -587,9 +595,9 @@ function tvWidget(el, symbol){
   const s = document.createElement("script");
   s.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"; s.async = true;
   // immer Monatsansicht; 200-Wochen-Linie im Monatsbild = gleitender Durchschnitt über 46 Monate (200 Wochen ≈ 46 Monate)
-  s.text = JSON.stringify({autosize:true, symbol, interval:"M", range:"ALL", timezone:"Europe/Berlin", theme:document.documentElement.dataset.theme === "light" ? "light" : "dark", style:"1", locale:"de_DE",
+  s.text = JSON.stringify({autosize:true, symbol, interval:iv, ...(iv === "M" ? {range:"ALL"} : {}), timezone:"Europe/Berlin", theme:document.documentElement.dataset.theme === "light" ? "light" : "dark", style:"1", locale:"de_DE",
     allow_symbol_change:false, hide_side_toolbar:true, calendar:false, support_host:"https://www.tradingview.com",
-    studies:[{id:"MASimple@tv-basicstudies", inputs:{length:46}}]});
+    studies:ma ? [{id:"MASimple@tv-basicstudies", inputs:{length:ma}}] : []});
   box.appendChild(s); el.appendChild(box);
 }
 function zeichneOnline(w, c){
@@ -715,7 +723,7 @@ const ERKLAERUNG = {
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
-  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „günstig“ mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „teuer“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
+  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „günstig“ mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „teuer“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Ein Pfeil steht nur in der Woche, in der die Grenze überschritten wird – bleibt die Ampel danach über 80 (oder unter 15), kommt kein weiterer Pfeil. Die Farbe der Balken in der Ampel-Leiste zeigt jede Woche. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
   l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Die gestrichelten Linien markieren 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 12 Monate: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
   tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Pfeile und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
@@ -903,6 +911,11 @@ const ERKLAERUNG_NEU = {
   sparkline: {titel:"Ampel im letzten Jahr", text:"Kleine Linie: die Ampel alle 4 Wochen über das letzte Jahr. Steigt sie, ist der Wert gemessen an seiner Geschichte günstiger geworden (meist, weil der Kurs gefallen ist)."},
   gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
   klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
+  lineal: {titel:"Lineal", text:"Messen im Chart: einmal klicken (Start), Maus bewegen, noch einmal klicken (Ende). Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
+  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (blaugrün) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
+  l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
+  l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts (0 % = Hoch, 100 % = Tief). Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
+  intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
   skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
   quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Pfeile und Kegel gibt es dort nicht."},
@@ -1318,14 +1331,19 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, bb:false, fib:false, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [];
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
+// Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
+let INTERVALL = lade("intervall", "W"), CD = null, KEGEL_D = null;
+const INTRADAY = ["60", "30", "15"], TAG_CACHE = new Map();
+const INTERVALLE = [["M","Monat"],["W","Woche"],["D","Tag"],["60","1 Std"],["30","30 Min"],["15","15 Min"]];
 const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:getComputedStyle(document.body).fontFamily, fontSize:11},
   grid:{vertLines:{color:f.grid}, horzLines:{color:f.grid}},
   timeScale:{borderColor:f.line, minBarSpacing:0.02, rightOffset:4}, rightPriceScale:{borderColor:f.line}, leftPriceScale:{borderColor:f.line},
   crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.akzent}},
   localization:{locale:"de-DE", dateFormat:"dd.MM.yyyy", priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}}; };
-function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
+function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; KEGEL_D = null; CD = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
 
 function gaugeSvg(s){
   const cx = 115, cy = 112, r = 92, w = 16;
@@ -1424,6 +1442,9 @@ async function zeige(id, opt={}){
     ["trend", "Trendkanal", `<i style="color:var(--akzent)"></i>`, "l_trend", eigen],
     ["kegel", "Prognose-Kegel", `<i class="flaeche" style="color:var(--kegel)"></i>`, "l_kegel", eigen],
     ["pfeile", "Pfeile günstig/teuer", `<i class="pfeil"><span style="color:var(--guenstig)">▲</span><span style="color:var(--teuer)">▼</span></i>`, "l_pfeile", true],
+    ["phasen", "Günstig-/Teuer-Phasen", `<i class="flaeche" style="color:var(--guenstig);opacity:.5"></i>`, "l_phasen", eigen],
+    ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
+    ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
     ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
@@ -1445,17 +1466,19 @@ async function zeige(id, opt={}){
     <div class="abstand"></div>
     <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
+        <div class="segment" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
         <div class="segment" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+        ${eigen ? `<button class="werkzeug" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
         ${eigen && w.tv ? `<div class="segment rechts" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
       </div>
       <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">${chips.map(([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`).join("")}</div>
       <div class="chart-flaeche">
-        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div></div>
+        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
         <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}</span></div>
       </div>
-      <div class="tv-hinweis" id="tv-hinweis" hidden>TradingView: Monatskerzen, 200-Wochen-Linie als Durchschnitt über 46 Monate. Pfeile, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart; die Ampel-Leiste darunter gilt weiter.</div>
+      <div class="tv-hinweis" id="tv-hinweis" hidden></div><div class="tv-hinweis" id="chart-meldung" hidden></div>
       ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
       <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
     </section>
@@ -1485,15 +1508,19 @@ async function zeige(id, opt={}){
       </div>
       <div id="tab"></div>
     </section>
-    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. ${eigen ? "Kurse: Yahoo Finance (Wochenkerzen)." : ""}</div>`;
+    <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. ${eigen ? "Kurse: Yahoo Finance (Monats-, Wochen- und Tageskerzen, Tag: letzte 15 Jahre)." : ""}</div>`;
   $("#stern").onclick = () => favUmschalten(id);
   $$("#vertiefung .reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
   $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
+  $$("#chart-karte [data-iv]").forEach(b => b.onclick = () => intervallSetzen(b.dataset.iv));
+  if ($("#lineal-knopf")) $("#lineal-knopf").onclick = () => linealUmschalten();
+  LINEAL = {an:false, a:null, b:null, fertig:false};
   $$("#chips .chip").forEach(b => b.onclick = () => chipUmschalten(b.dataset.chip, b));
-  if (eigen) zeichne(c, w); else zeichneOnline(w, c);
-  if (CHARTQUELLE === "tv" && w.tv) chartQuelle("tv");
+  if (!w.tv && INTRADAY.includes(INTERVALL)) INTERVALL = "W";
+  if (eigen) eigenNeu(); else zeichneOnline(w, c);
+  if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
   reiter(REITER);
   lohntSichCheck(id);
   if (eigen) ladeKegel(52, 20, [], true).then(m => { if (AKTIV === id) prognoseKarte(m); });
@@ -1509,19 +1536,105 @@ function chipUmschalten(k, b){
   CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop") markenSetzen();
+  if (k === "fib") fibAktualisieren();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
 }
 function chartQuelle(q){
+  if (q === "eigen" && INTRADAY.includes(INTERVALL)) { CHARTQUELLE = "eigen"; intervallSetzen("W"); return; }   // eigener Chart kann kein Intraday
   CHARTQUELLE = q;
   $$("#chart-karte [data-q]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.q === q)));
   const tv = $("#tvchart"); if (!tv) return;
-  if (q === "tv" && !tv.dataset.geladen) { tvWidget(tv, INFO.tv); tv.dataset.geladen = "1"; }
+  if (q === "tv" && tv.dataset.geladen !== INTERVALL) { tvWidget(tv, INFO.tv, INTERVALL); tv.dataset.geladen = INTERVALL; }
   tv.hidden = q !== "tv"; $("#chart").style.visibility = q === "tv" ? "hidden" : ""; $("#fk").hidden = q === "tv";
   $("#tv-hinweis").hidden = q !== "tv";
+  $("#tv-hinweis").innerHTML = tvHinweis();
   $$("#chips .chip, #chart-karte [data-z], #chart-karte [data-sk]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
 }
 
+function tvHinweis(){
+  const krypto = INFO?.gruppe === "Krypto";
+  const art = {M:"Monatskerzen, 200-Wochen-Linie als Durchschnitt über 46 Monate.", W:"Wochenkerzen mit 200-Wochen-Linie.",
+    D:`Tageskerzen, 200-Wochen-Linie als Durchschnitt über ${krypto ? "1.400 Tage (Krypto wird täglich gehandelt)" : "1.000 Handelstage"}.`,
+    "60":"Stundenkerzen.", "30":"30-Minuten-Kerzen.", "15":"15-Minuten-Kerzen."}[INTERVALL] || "";
+  return `TradingView: ${art} ${INTRADAY.includes(INTERVALL) ? "Eine 200-Wochen-Linie lässt sich hier nicht sinnvoll zeigen (sie bräuchte mehrere Tausend Kerzen) – sie steht im Monats-, Wochen- und Tageschart. " : ""}Pfeile, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart (Monat, Woche, Tag); die Ampel-Leiste darunter ist wöchentlich und gilt weiter.`;
+}
+function meldung(text){ const m = $("#chart-meldung"); if (!m) return; m.hidden = !text; m.textContent = text || ""; }
+async function intervallSetzen(iv){
+  INTERVALL = iv; sichere("intervall", iv); meldung("");
+  $$("#chart-karte [data-iv]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.iv === iv)));
+  if (INTRADAY.includes(iv)) { if (INFO?.tv) chartQuelle("tv"); return; }
+  if (CHARTQUELLE === "tv") { chartQuelle("tv"); return; }
+  await eigenNeu();
+}
+// ------------------------------------------------------------ Zeitebenen für den eigenen Chart
+function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","trend","trend_o","trend_u","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer"].filter(k => c[k]);
+  linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
+  const zuMonat = new Map(); let schl = null, i0 = 0;
+  const abschliessen = i1 => {   // Wochen i0..i1-1
+    const j = i1 - 1; let hi = -Infinity, lo = Infinity, zone = null;
+    for (let i = i0; i < i1; i++) { const h = c.h[i] ?? c.c[i], l = c.l[i] ?? c.c[i]; if (h > hi) hi = h; if (l < lo) lo = l; if (c.pi_zone?.[i]) zone = 1; }
+    out.t.push(c.t[j]); out.o.push(c.o[i0] ?? c.c[i0]); out.h.push(hi); out.l.push(lo); out.c.push(c.c[j]);
+    linien.forEach(k => out[k].push(c[k][j])); if (out.pi_zone) out.pi_zone.push(zone);
+    for (let i = i0; i < i1; i++) zuMonat.set(c.t[i], c.t[j]);
+  };
+  c.t.forEach((t, i) => { const d = new Date(t * 1000), k = d.getUTCFullYear() * 12 + d.getUTCMonth(); if (schl !== null && k !== schl) { abschliessen(i); i0 = i; } schl = k; });
+  abschliessen(c.t.length);
+  out.marken = markenAuf(c.marken, t => zuMonat.get(t));
+  return out;
+}
+function markenAuf(marken, zu){   // Markierungen auf die Kerzen der Zeitebene legen (doppelte zusammenfassen)
+  const gesehen = new Set(), out = [];
+  for (const [t, art, s] of marken) { const t2 = zu(t); if (t2 == null) continue; const k = t2 + art; if (gesehen.has(k)) continue; gesehen.add(k); out.push([t2, art, s]); }
+  return out.sort((a, b) => a[0] - b[0]);
+}
+async function tagesDaten(id){
+  if (!TAG_CACHE.has(id)) TAG_CACHE.set(id, STATISCH ? holeJson("daten/tage/" + encodeURIComponent(dateiId(id)) + ".json") : holeJson("api/tag?id=" + encodeURIComponent(id)));
+  const d = await TAG_CACHE.get(id);
+  if (!d || d.fehler || !d.t?.length) { TAG_CACHE.delete(id); return null; }
+  if (!d.marken) {   // Wochen-Markierung auf den letzten Handelstag dieser Woche legen
+    const t = d.t;
+    d.marken = markenAuf(CDATA.marken, wt => { let lo = 0, hi = t.length - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (t[m] <= wt) { r = m; lo = m + 1; } else hi = m - 1; } return r >= 0 && wt - t[r] < 8 * 86400 ? t[r] : null; });
+  }
+  return d;
+}
+function kegelAnzeige(m){   // Prognose-Kegel passend zur Zeitebene (Monat: Monatsschritte, Tag: Tagesschritte, log-linear dazwischen)
+  const iv = INTRADAY.includes(INTERVALL) ? "W" : INTERVALL;
+  if (iv === "W" || !CD) return m;
+  const keys = Object.keys(m.kegel), wo = m.t.length - 1, out = {t:[], kegel:Object.fromEntries(keys.map(k => [k, []]))};
+  const wert = (k, x) => { const i = Math.min(Math.floor(x), wo - 1), f = x - i, a = m.kegel[k][i], b = m.kegel[k][i + 1]; return Math.exp(Math.log(a) * (1 - f) + Math.log(b) * f); };
+  if (iv === "M") {
+    for (let j = 0; j * 52.18 / 12 <= wo + 1e-9; j++) { const x = Math.min(wo, j * 52.18 / 12); out.t.push(m.t[0] + Math.round(x * 7 * 86400)); keys.forEach(k => out.kegel[k].push(wert(k, x))); }
+  } else {
+    const t0 = CD.t[CD.t.length - 1], krypto = INFO?.gruppe === "Krypto";
+    for (let d = 0; d <= wo * 7; d++) {
+      const t = t0 + d * 86400, tag = new Date(t * 1000).getUTCDay();
+      if (!krypto && d > 0 && (tag === 0 || tag === 6)) continue;
+      out.t.push(t); keys.forEach(k => out.kegel[k].push(wert(k, d / 7)));
+    }
+  }
+  return {...m, ...out};
+}
+function hauptChartWeg(){
+  FIB_LINIEN = []; if (LINEAL) { LINEAL.a = LINEAL.b = null; LINEAL.fertig = false; linealZeichnen(); }
+  charts.forEach(ch => { try { ch.remove(); } catch(e){} }); charts = [];
+  KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; KEGEL = []; LIMITLINIEN = [];
+}
+async function eigenNeu(){
+  const id = AKTIV, iv = INTRADAY.includes(INTERVALL) ? "W" : INTERVALL;
+  let cd = iv === "M" ? monatsDaten(CDATA) : CDATA;
+  if (iv === "D") {
+    const d = await tagesDaten(id);
+    if (AKTIV !== id) return;
+    if (d) cd = d;
+    else { meldung(STATISCH ? "Tageskerzen gibt es online nur für ETFs, Krypto und Rohstoffe – für Aktien den TradingView-Chart (Tag) nutzen." : "Tageskerzen gerade nicht verfügbar – den lokalen Server einmal neu starten (neue Funktion)."); }
+  }
+  if (!$("#chart")) return;
+  hauptChartWeg(); CD = cd;
+  zeichne(cd, INFO);
+  if (KEGEL_M) { kegelZeichnen(); zeitraumSetzen(ZEITRAUM, false); }
+}
 function reiter(name){
   REITER = name;
   if (!$("#tab") || !INFO) return;
@@ -1532,9 +1645,9 @@ function reiter(name){
 
 // ------------------------------------------------------------ Hauptchart (eigener Chart)
 function markenSetzen(){
-  if (!KERZEN || !CDATA) return;
+  if (!KERZEN || !CD) return;
   const f = F();
-  const m = CDATA.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
+  const m = CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
   KERZEN.setMarkers(m.map(([t, art, s]) => ({
     kauf:     {time:t, position:"belowBar", color:f.guenstig, shape:"arrowUp", text:String(s)},
     teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
@@ -1542,15 +1655,15 @@ function markenSetzen(){
     pi_boden: {time:t, position:"belowBar", color:f.lila, shape:"arrowUp", text:"Pi Boden-Signal"},
     pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
   })[art]));
-  if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CDATA.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
+  if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CD.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
 }
 function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[]};
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], phasen:[], bb:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
-  const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
+  const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
     s.setData(c.t.map((t,i) => ({time:t, value:werte[i]})).filter(p => p.value != null)); SERIEN[key].push(s); return s; };
   if (c.pi_zone) {   // Pi-Cycle-Bodenbildungszone als Fläche über die ganze Höhe (eigene, unsichtbare Skala)
@@ -1558,11 +1671,27 @@ function zeichne(c, w){
     ch.priceScale("pizone").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
     zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(zone);
   }
+  {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
+    const ph = ch.addHistogramSeries({priceScaleId:"phasen", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.phasen});
+    ch.priceScale("phasen").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
+    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "1f"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
+    SERIEN.phasen.push(ph);
+  }
   const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
   kerzen.setData(c.t.map((t,i) => ({time:t, open:c.o[i] ?? c.c[i], high:c.h[i] ?? c.c[i], low:c.l[i] ?? c.c[i], close:c.c[i]})));
   linie("trend", c.trend_o, f.akzent + "66", 1, 2, true); linie("trend", c.trend, f.akzent, 1, 0, true); linie("trend", c.trend_u, f.akzent + "66", 1, 2, true);
   const w200 = linie("w200", c.sma200w, f.gelb, 2);
   w200.applyOptions({lastValueVisible:true, title:"200W"});
+  {   // Bollinger-Bänder (20 Kerzen, ±2 Standardabweichungen) auf der gewählten Zeitebene
+    const n = 20, mitte = [], oben = [], unten = [];
+    for (let i = 0; i < c.c.length; i++) {
+      if (i < n - 1) { mitte.push(null); oben.push(null); unten.push(null); continue; }
+      let s = 0, q = 0; for (let j = i - n + 1; j <= i; j++) { s += c.c[j]; q += c.c[j] * c.c[j]; }
+      const m = s / n, sd = Math.sqrt(Math.max(0, q / n - m * m)); mitte.push(m); oben.push(m + 2 * sd); unten.push(m - 2 * sd > 0 ? m - 2 * sd : null);
+    }
+    c._bb = {mitte, oben, unten};
+    linie("bb", oben, f.bb, 1, 0, true); linie("bb", mitte, f.bb + "99", 1, 2, true); linie("bb", unten, f.bb, 1, 0, true);
+  }
   if (c.pi_ema150) { linie("pi", c.pi_ema150, f.lila, 2); linie("pi", c.pi_sma471, f.cyan, 2); }
   if (c.pi_top111) { linie("pitop", c.pi_top111, f.pitop1, 1, 2, true); linie("pitop", c.pi_top350x2, f.pitop2, 1, 2, true); }
   KERZEN = kerzen; HAUPT = ch;
@@ -1591,12 +1720,16 @@ function zeichne(c, w){
   let sperre = false;
   const sync = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (sperre || !r) return; sperre = true; b.timeScale().setVisibleLogicalRange(r); sperre = false; });
   sync(ch, ch2); sync(ch2, ch);
+  // Fibonacci neu, wenn sich der sichtbare Ausschnitt ändert; Lineal folgt Zoom und Verschieben
+  let fibZeit = 0;
+  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(fibAktualisieren, 120); linealZeichnen(); });
+  ch.subscribeClick(p => linealKlick(p));
   // Fadenkreuz mit Werten
   const fk = $("#fk");
   const fkZeigen = t => {
     const i = t == null ? c.t.length - 1 : ZEIT_I.get(t);
     if (i == null) {   // in der Zukunft: Prognose-Kegel
-      const m = KEGEL_M; const k = m ? m.t.indexOf(t) : -1;
+      const m = KEGEL_D; const k = m ? m.t.indexOf(t) : -1;
       if (k < 0) { fk.innerHTML = ""; return; }
       fk.innerHTML = `<div class="r"><b>${tDe(t)}</b><span style="color:var(--kegel)">Prognose (Simulation)</span></div>
         <div class="r"><span>Median <b>${fmt(m.kegel.q50[k], m.kurs >= 100 ? 0 : 2)}</b></span><span>50 %: ${fmt(m.kegel.q25[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q75[k], m.kurs >= 100 ? 0 : 2)}</span><span>90 %: ${fmt(m.kegel.q5[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q95[k], m.kurs >= 100 ? 0 : 2)}</span></div>`;
@@ -1609,20 +1742,90 @@ function zeichne(c, w){
       <span>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> ${zonenWort(sc_)}`}</span>
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
-      ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}</div>`;
+      ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
+      ${CHIPS.bb && c._bb?.mitte[i] != null ? `<span><i class="sw" style="background:var(--bb)"></i>Bollinger ${c._bb.unten[i] == null ? "–" : fmt(c._bb.unten[i],nk)} – ${fmt(c._bb.oben[i],nk)}</span>` : ""}</div>`;
   };
   fkZeigen(null);
-  ch.subscribeCrosshairMove(p => fkZeigen(p && p.time != null && p.point ? p.time : null));
+  ch.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null); linealZiehen(p); });
   ch2.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null);
     if (p?.time != null && p.point && ch.setCrosshairPosition) { const i = ZEIT_I.get(p.time); if (i != null) try { ch.setCrosshairPosition(c.c[i], p.time, kerzen); } catch(e){} }
     else if (ch.clearCrosshairPosition) try { ch.clearCrosshairPosition(); } catch(e){} });
-  charts = [ch, ch2];
-  setTimeout(() => zeitraumSetzen(ZEITRAUM, false), 30);
+  charts = [ch, ch2]; FIB_LINIEN = [];
+  setTimeout(() => { zeitraumSetzen(ZEITRAUM, false); fibAktualisieren(); }, 30);
 }
+// ------------------------------------------------------------ Fibonacci-Zonen (Hoch und Tief des sichtbaren Ausschnitts)
+const FIB_STUFEN = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+function fibAktualisieren(){
+  if (!KERZEN) return;
+  FIB_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); FIB_LINIEN = [];
+  if (!CHIPS.fib || !CD || !HAUPT) return;
+  const r = HAUPT.timeScale().getVisibleLogicalRange(); if (!r) return;
+  const von = Math.max(0, Math.floor(r.from)), bis = Math.min(CD.c.length - 1, Math.ceil(r.to));
+  let hoch = -Infinity, tief = Infinity;
+  for (let i = von; i <= bis; i++) { const h = CD.h[i] ?? CD.c[i], l = CD.l[i] ?? CD.c[i]; if (h > hoch) hoch = h; if (l < tief) tief = l; }
+  if (!(hoch > tief)) return;
+  const f = F();
+  FIB_STUFEN.forEach(s => FIB_LINIEN.push(KERZEN.createPriceLine({price:hoch - (hoch - tief) * s, color:f.fib + (s === 0.618 || s === 0.382 ? "" : "99"), lineWidth:1, lineStyle:s === 0 || s === 1 ? 0 : 2, axisLabelVisible:true, title:"Fib " + fmt(s * 100, s === 0.5 || s === 0 || s === 1 ? 0 : 1) + " %"})));
+}
+
+// ------------------------------------------------------------ Lineal: zwei Klicks, misst Prozent, Betrag und Zeit
+function linealUmschalten(an){
+  LINEAL = {an:an ?? !LINEAL.an, a:null, b:null, fertig:false};
+  $("#lineal-knopf")?.setAttribute("aria-pressed", String(LINEAL.an));
+  $("#chart-karte")?.classList.toggle("lineal-an", LINEAL.an);
+  if (LINEAL.an) meldung("Lineal: in den Chart klicken (Start), Maus bewegen, noch einmal klicken (Ende). Esc beendet.");
+  else meldung("");
+  linealZeichnen();
+}
+function linealPunkt(p){
+  if (!p?.point || !HAUPT || !KERZEN) return null;
+  const t = p.time ?? HAUPT.timeScale().coordinateToTime(p.point.x), preis = KERZEN.coordinateToPrice(p.point.y);
+  return t == null || preis == null ? null : {t, p:preis};
+}
+function linealKlick(p){
+  if (!LINEAL.an) return;
+  const pkt = linealPunkt(p); if (!pkt) return;
+  if (!LINEAL.a || LINEAL.fertig) { LINEAL.a = pkt; LINEAL.b = pkt; LINEAL.fertig = false; }
+  else { LINEAL.b = pkt; LINEAL.fertig = true; meldung(""); }
+  linealZeichnen();
+}
+function linealZiehen(p){
+  if (!LINEAL.an || !LINEAL.a || LINEAL.fertig) return;
+  const pkt = linealPunkt(p); if (pkt) { LINEAL.b = pkt; linealZeichnen(); }
+}
+function dauerText(sek){
+  const tage = Math.abs(sek) / 86400;
+  if (tage < 1) return Math.round(tage * 24) + " Std.";
+  if (tage < 60) return Math.round(tage) + " Tage";
+  if (tage < 730) return fmt(tage / 30.44, 0) + " Monate";
+  return fmt(tage / 365.25, 1) + " Jahre";
+}
+function linealZeichnen(){
+  const box = $("#lineal-box"), txt = $("#lineal-text"); if (!box) return;
+  const L = LINEAL;
+  if (!L.an || !L.a || !L.b || !HAUPT || !KERZEN) { box.hidden = txt.hidden = true; return; }
+  const ts = HAUPT.timeScale(), x1 = ts.timeToCoordinate(L.a.t), x2 = ts.timeToCoordinate(L.b.t), y1 = KERZEN.priceToCoordinate(L.a.p), y2 = KERZEN.priceToCoordinate(L.b.p);
+  if ([x1, x2, y1, y2].some(v => v == null)) { box.hidden = txt.hidden = true; return; }
+  const auf = L.b.p >= L.a.p, farbeBox = auf ? "var(--guenstig)" : "var(--teuer)";
+  Object.assign(box.style, {left:Math.min(x1, x2) + "px", top:Math.min(y1, y2) + "px", width:Math.max(1, Math.abs(x2 - x1)) + "px", height:Math.max(1, Math.abs(y2 - y1)) + "px",
+    borderColor:farbeBox, background:`color-mix(in srgb, ${farbeBox} 16%, transparent)`});
+  box.hidden = false;
+  const d = L.b.p - L.a.p, proz = (L.b.p / L.a.p - 1) * 100, nk = Math.abs(L.a.p) >= 100 ? 2 : 4;
+  const i1 = CD?.t.indexOf(L.a.t), i2 = CD?.t.indexOf(L.b.t), kerzen = i1 >= 0 && i2 >= 0 ? Math.abs(i2 - i1) : null;
+  const ivName = {M:"Monatskerzen", W:"Wochenkerzen", D:"Tageskerzen"}[INTRADAY.includes(INTERVALL) ? "W" : INTERVALL];
+  txt.innerHTML = `${vz(proz, 1, " %")} · ${d >= 0 ? "+" : "−"}${fmt(Math.abs(d), nk)} · ${dauerText(L.b.t - L.a.t)}${kerzen != null ? ` · ${kerzen} ${ivName}` : ""}`;
+  txt.style.background = auf ? "var(--guenstig)" : "var(--teuer)";
+  txt.hidden = false;
+  const w = txt.offsetWidth, breite = $("#chart").clientWidth;
+  txt.style.left = Math.max(4, Math.min(x2 + 8, breite - w - 70)) + "px";
+  txt.style.top = Math.max(4, (auf ? Math.min(y1, y2) - 30 : Math.max(y1, y2) + 6)) + "px";
+}
+addEventListener("keydown", ev => { if (ev.key === "Escape" && LINEAL.an) linealUmschalten(false); });
+
 function zeitraumSetzen(z, merken=true){
   ZEITRAUM = z; if (merken) sichere("zeitraum", z);
-  if (!HAUPT || !CDATA) return;
-  const t = CDATA.t, letzte = t[t.length - 1], ende = KEGEL_M && CHIPS.kegel ? KEGEL_M.t[KEGEL_M.t.length - 1] : letzte;
+  if (!HAUPT || !CD) return;
+  const t = CD.t, letzte = t[t.length - 1], ende = KEGEL_D && CHIPS.kegel ? KEGEL_D.t[KEGEL_D.t.length - 1] : letzte;
   if (z === "alle") { HAUPT.timeScale().fitContent(); return; }
   const von = Math.max(t[0], letzte - (+z) * 365.25 * 86400);
   try { HAUPT.timeScale().setVisibleRange({from:von, to:ende}); } catch(e) { HAUPT.timeScale().fitContent(); }
@@ -2104,12 +2307,18 @@ function piRueckblick(w){
 async function ladeKegel(wochen, jahre, preise, erst=false){
   const id = AKTIV;
   const m = await apiMc(id, wochen, jahre, preise);
-  if (!m || AKTIV !== id || !HAUPT) return m || null;
+  if (!m || AKTIV !== id) return m || null;
   if (m.fehler) return m;
-  const f = F();
-  KEGEL.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} }); KEGEL = []; KEGEL_M = m;
+  KEGEL_M = m; kegelZeichnen();
+  if (erst) zeitraumSetzen(ZEITRAUM, false);
+  return m;
+}
+function kegelZeichnen(){
+  if (!HAUPT || !KEGEL_M) return;
+  const f = F(), m = KEGEL_D = kegelAnzeige(KEGEL_M);
+  KEGEL.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} }); KEGEL = [];
   const daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i]}));
-  // 90-%-Band als Fläche: oben getönt, darunter mit Hintergrundfarbe abgedeckt (ab der ersten Zukunftswoche)
+  // 90-%-Band als Fläche: oben getönt, darunter mit Hintergrundfarbe abgedeckt (ab dem ersten Zukunftsschritt)
   const flaeche = (k, farbe) => { const s = HAUPT.addAreaSeries({lineColor:"rgba(0,0,0,0)", topColor:farbe, bottomColor:farbe, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.kegel});
     s.setData(daten(k).slice(1)); KEGEL.push(s); };
   flaeche("q95", f.kegel + "30"); flaeche("q5", f.bg);
@@ -2117,8 +2326,6 @@ async function ladeKegel(wochen, jahre, preise, erst=false){
     const s = HAUPT.addLineSeries({color:col, lineWidth:br, lineStyle:st, priceLineVisible:false, lastValueVisible:k==="q50", crosshairMarkerVisible:false, title:k==="q50"?"Median":"", visible:CHIPS.kegel});
     s.setData(daten(k)); KEGEL.push(s);
   });
-  if (erst) zeitraumSetzen(ZEITRAUM, false);
-  return m;
 }
 function wTabelle(liste){
   return `<table class="wtab"><thead><tr><th style="text-align:left">Kurs</th><th>Abstand</th><th>Art</th><th data-e="mc_erreicht">wird erreicht</th><th data-e="mc_ende">steht am Ende jenseits</th></tr></thead><tbody>${
