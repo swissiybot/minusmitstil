@@ -171,8 +171,12 @@ let STATISCH = false, STAT_INFO = null;
 const WERT_CACHE = new Map();
 const dateiId = id => id.replace(/[^A-Za-z0-9._-]/g, "_");   // wie export.py
 async function modusErmitteln(){
-  try { const r = await fetch("api/ping", {cache:"no-store"}); STATISCH = !r.ok; } catch(e) { STATISCH = true; }
-  if (STATISCH) STAT_INFO = await holeJson("daten/statisch.json");
+  // Online-Fassung nur, wenn kein lokaler Server antwortet UND die Export-Datei da ist
+  // (ein älterer lokaler Server kennt /api/ping noch nicht, liefert aber /api/wert)
+  let server = false;
+  try { server = (await fetch("api/ping", {cache:"no-store"})).ok; } catch(e) {}
+  if (!server) STAT_INFO = await holeJson("daten/statisch.json");
+  STATISCH = !server && !!STAT_INFO;
 }
 function exportLaden(id){
   if (!WERT_CACHE.has(id)) {
