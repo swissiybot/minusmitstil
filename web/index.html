@@ -186,6 +186,9 @@ h1,h2,h3{letter-spacing:-.015em}
 .segment button:hover{color:var(--text)}
 .segment button[aria-pressed="true"]{background:var(--panel);color:var(--text);box-shadow:var(--schatten-klein)}
 .chart-leiste .rechts{margin-left:auto}
+.hm-leiste{padding:10px 0}
+.hm-leiste .segment{flex-wrap:wrap;max-width:100%}
+#karte-legende{flex-wrap:wrap}
 .werkzeug{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);font-size:12.5px;font-weight:600}
 .werkzeug:hover{color:var(--text)}
 .werkzeug[aria-pressed="true"]{color:var(--text);border-color:var(--akzent);background:var(--akzent-weich)}
@@ -1360,7 +1363,7 @@ function zeigeKarte(opt = {}){
   wurzel.innerHTML = `
     ${ziel ? "" : '<h1 class="seiten-titel">Heatmap</h1>'}
     <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
-    <div class="chart-leiste" style="margin-bottom:8px">
+    <div class="chart-leiste hm-leiste" style="margin-bottom:8px">
       <div class="segment" role="group" aria-label="Zeitraum">${knopf("farbe","t","Tag")}${knopf("farbe","w","Woche")}${knopf("farbe","m","Monat")}${knopf("farbe","j","Jahr")}${knopf("farbe","ampel","Ampel")}${knopf("farbe","mp","Trend")}</div>
       <div class="segment" role="group" aria-label="Titel">${knopf("titel","n100","Nasdaq-100")}${knopf("titel","ETF","Index-ETFs")}${knopf("titel","Krypto","Krypto")}${knopf("titel","Rohstoffe","Rohstoffe")}${knopf("titel","alle","Alle")}</div>
       ${KARTE.titel === "n100" || KARTE.titel === "alle" ? `<div class="segment" role="group" aria-label="Gruppen">${knopf("gruppe","branche","nach Branche")}${knopf("gruppe","zone","nach Ampel")}${knopf("gruppe","keine","ohne Gruppen")}</div>` : ""}
