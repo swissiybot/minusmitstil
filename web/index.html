@@ -41,6 +41,8 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.fk-ampel{padding:1px 6px;border-radius:5px;color:#0b0f16}
+.fk-kz{flex-basis:100%;color:var(--text2)}
 .hm-stufe{display:inline-block;min-width:46px;padding:3px 6px;border-radius:4px;color:#fff;font-size:11.5px;font-weight:600;text-align:center}
 .karte-tip{position:absolute;z-index:5;max-width:250px;padding:8px 10px;border-radius:8px;background:var(--panel2);color:var(--text);border:1px solid var(--rand);font-size:12px;line-height:1.45;pointer-events:none;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .mp-kopf{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
@@ -958,6 +960,7 @@ const ERKLAERUNG_NEU = {
   l_ema: {titel:"EMA 20/50/100/200", text:"Exponentielle gleitende Durchschnitte über 20, 50, 100 und 200 Kerzen der gewählten Zeitebene (wie der beliebte TradingView-Indikator). Neuere Kurse zählen stärker als ältere, deshalb folgt die EMA dem Kurs schneller als ein einfacher Durchschnitt. Achtung: Im Wochenchart ist EMA 200 ≈ 4 Jahre, im Tageschart ≈ 10 Monate. Viele lesen „Kurs über EMA 200“ oder „EMA 50 über EMA 200“ als Aufwärtstrend. Die Trendstudie im Tool (23 Regeln, Prüfzeit ab 2005) fand für solche Linien keinen verlässlichen Vorteil bei der Richtung, nur kleinere Rückgänge auf Kosten von Rendite."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
+  l_kaufzonen: {titel:"Kaufzonen", text:"Waagerechte Linien: zu welchem Kurs der Wert HEUTE gemessen an seiner eigenen Geschichte günstig oder teuer wäre. Unter der dunkel-blaugrünen Linie stünde die Ampel bei 80 oder mehr (historisch sehr günstig), unter der hellen bei 60 (günstig); über der hell-orangen bei 40 oder weniger (teuer), über der dunkel-orangen bei 15 (historisch sehr teuer). Gerechnet mit denselben Bausteinen wie die Ampel (Abstand zum Hoch, zur 200-Wochen-Linie, zum Langfristtrend, RSI). Die Linien verschieben sich jede Woche. Beschreibung, keine Kaufempfehlung – „günstig“ hat in der Prüfung nicht verlässlich mehr Rendite gebracht."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
@@ -1518,7 +1521,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1635,6 +1638,7 @@ async function zeige(id, opt={}){
     ["tiefhoch", "Tief-/Hochpunkte", `<i class="pfeil"><span style="color:var(--guenstig)">●</span><span style="color:var(--teuer)">●</span></i>`, "l_tiefhoch", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
     ["ema", "EMA 20/50/100/200", `<i style="color:var(--ema20)"></i>`, "l_ema", eigen],
+    ["kaufzonen", "Kaufzonen", `<i style="background:linear-gradient(${AMPEL_FARBEN[4]},${AMPEL_FARBEN[0]})"></i>`, "l_kaufzonen", eigen && !!w.kz],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["gp", "Golden Pocket", `<i class="flaeche" style="color:var(--fib)"></i>`, "l_gp", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
@@ -1735,6 +1739,7 @@ function chipUmschalten(k, b){
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
+  if (k === "kaufzonen") kaufzonenLinien();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
 }
@@ -1845,6 +1850,29 @@ function reiter(name){
 // Viele Kerzen im Bild: lange Beschriftungen kürzen, damit sie sich nicht überlagern
 let MARKEN_ENG = null;
 const eng = () => { const r = HAUPT?.timeScale().getVisibleLogicalRange(); return !!r && (r.to - r.from) > 220; };
+// Rückblick im Fadenkreuz: was ein Kauf zum Schlusskurs dieser Kerze nach 1 und 3 Jahren gebracht hätte
+function danachText(c, i){
+  const nach = jahre => { const ziel = c.t[i] + jahre * 365.25 * 86400; if (ziel > c.t[c.t.length - 1]) return null;
+    let lo = i, hi = c.t.length - 1; while (lo < hi) { const m = (lo + hi) >> 1; if (c.t[m] < ziel) lo = m + 1; else hi = m; } return (c.c[lo] / c.c[i] - 1) * 100; };
+  const r1 = nach(1), r3 = nach(3);
+  if (r1 == null) {
+    const kz = INFO?.kz; if (!kz || i < c.t.length - 2) return "";
+    const p = x => x == null ? "–" : fmt(x, x >= 100 ? 0 : 2);
+    return `<span class="fk-kz">Heute: sehr günstig unter <b>${p(kz["80"])}</b> · günstig unter <b>${p(kz["60"])}</b> · teuer über <b>${p(kz["40"])}</b> · sehr teuer über <b>${p(kz["15"])}</b></span>`;
+  }
+  return `<span>danach: 1 J. <b class="${klasse(r1)}">${vz(r1,0," %")}</b>${r3 != null ? ` · 3 J. <b class="${klasse(r3)}">${vz(r3,0," %")}</b>` : ""}</span>`;
+}
+// Kaufzonen: Kurse, bei denen die Ampel HEUTE 80 / 60 / 40 / 15 zeigen würde (als waagerechte Linien)
+let KZ_LINIEN = [];
+function kaufzonenLinien(){
+  if (!KERZEN) return;
+  KZ_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); KZ_LINIEN = [];
+  const kz = INFO?.kz; if (!CHIPS.kaufzonen || !kz) return;
+  [["80", 4, "sehr günstig darunter"], ["60", 3, "günstig darunter"], ["40", 1, "teuer darüber"], ["15", 0, "sehr teuer darüber"]].forEach(([k, st, t]) => {
+    if (kz[k] == null) return;
+    KZ_LINIEN.push(KERZEN.createPriceLine({price:kz[k], color:AMPEL_FARBEN[st], lineWidth:k === "80" || k === "15" ? 2 : 1, lineStyle:k === "40" || k === "60" ? 1 : 0, axisLabelVisible:true, title:t}));
+  });
+}
 function markenSetzen(){
   if (!KERZEN || !CD) return;
   MARKEN_ENG = eng();
@@ -2078,7 +2106,8 @@ function zeichne(c, w){
     const sc_ = c.score[i];
     fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
-      <span>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> ${zonenWort(sc_)}`}</span>
+      <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}`}">Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}`}</span>
+      ${danachText(c, i)}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
@@ -2091,7 +2120,7 @@ function zeichne(c, w){
     if (p?.time != null && p.point && ch.setCrosshairPosition) { const i = ZEIT_I.get(p.time); if (i != null) try { ch.setCrosshairPosition(c.c[i], p.time, kerzen); } catch(e){} }
     else if (ch.clearCrosshairPosition) try { ch.clearCrosshairPosition(); } catch(e){} });
   charts = [ch, ch2]; FIB_LINIEN = [];
-  setTimeout(() => { zeitraumSetzen(ZEITRAUM, false); fibAktualisieren(); }, 30);
+  setTimeout(() => { zeitraumSetzen(ZEITRAUM, false); fibAktualisieren(); kaufzonenLinien(); }, 30);
 }
 // ------------------------------------------------------------ Fibonacci-Zonen (Hoch und Tief des sichtbaren Ausschnitts)
 const FIB_STUFEN = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];

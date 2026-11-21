@@ -133,6 +133,80 @@ def jahresrendite(tag: pd.Series, jahre: int):
     return (s.iloc[-1] / s.iloc[0]) ** (1 / j) - 1, j, s.index[0]
 
 
+def kaufzonen(c: np.ndarray, komponenten: dict, rsi_n: int = 14, mayer_sma: float | None = None) -> dict | None:
+    """Zu welchem Kurs stuende die Ampel HEUTE bei 80 / 60 / 40 / 15?
+    Rechnet die Ampel der letzten Woche fuer gedachte Schlusskurse p neu (gleiche Bausteine, gleiche Vergleichsgeschichte
+    bis zur Vorwoche) und sucht p per Halbierung. Hoeherer Kurs = teurer, die Ampel faellt also mit p."""
+    n = len(c)
+    if n < 210:
+        return None
+    vor = c[:-1]
+    hist = {}
+    for k, arr in komponenten.items():
+        h = arr[:-1]
+        h = np.sort(h[~np.isnan(h)])
+        if len(h) < 50 or math.isnan(arr[-1]):
+            continue
+        hist[k] = h
+    if len(hist) < 2:
+        return None
+    ath_vor = float(np.max(vor))
+    summe199 = float(np.sum(c[-200:-1]))
+    logp = np.log(vor)
+    t = np.arange(n, dtype=float)
+    S1, St, Stt = n, t.sum(), (t * t).sum()
+    Sy0, Sty0, Syy0 = logp.sum(), (t[:-1] * logp).sum(), (logp * logp).sum()
+    d = np.diff(vor)
+    alpha = 1 / rsi_n
+    auf = ab = None
+    for x in d:   # RSI-Glaettung bis zur Vorwoche (wie pandas ewm adjust=False)
+        a_, b_ = max(x, 0.0), max(-x, 0.0)
+        auf = a_ if auf is None else auf * (1 - alpha) + alpha * a_
+        ab = b_ if ab is None else ab * (1 - alpha) + alpha * b_
+    def wert(k, p):
+        if k == "dd":
+            return p / max(ath_vor, p) - 1
+        if k == "ratio":
+            return p / ((summe199 + p) / 200)
+        if k == "trend":
+            lp = math.log(p); tn = n - 1
+            Sy, Sty, Syy = Sy0 + lp, Sty0 + tn * lp, Syy0 + lp * lp
+            nen = S1 * Stt - St * St
+            b = (S1 * Sty - St * Sy) / nen; a = (Sy - b * St) / S1
+            sd = math.sqrt(max(Syy - a * Sy - b * Sty, 0) / max(S1 - 2, 1))
+            return (lp - (a + b * tn)) / sd if sd > 0 else 0.0
+        if k == "rsi":
+            dx = p - vor[-1]
+            au = auf * (1 - alpha) + alpha * max(dx, 0); abw = ab * (1 - alpha) + alpha * max(-dx, 0)
+            return 100.0 if abw == 0 else 100 - 100 / (1 + au / abw)
+        if k == "mayer" and mayer_sma:
+            return p / mayer_sma
+        return None
+    def ampel(p):
+        teile = []
+        for k, h in hist.items():
+            v = wert(k, p)
+            if v is None or math.isnan(v):
+                continue
+            teile.append(bisect.bisect_left(h, v) / (len(h) + 1))
+        return (1 - sum(teile) / len(teile)) * 100 if len(teile) >= 2 else float("nan")
+    p0 = float(c[-1])
+    out = {"jetzt": r(ampel(p0), 1)}
+    for ziel in (80, 60, 40, 15):
+        lo, hi = p0 * 0.02, p0 * 50
+        if not (ampel(lo) >= ziel >= ampel(hi)):
+            out[str(ziel)] = None
+            continue
+        for _ in range(60):
+            mid = math.sqrt(lo * hi)
+            if ampel(mid) >= ziel:
+                lo = mid
+            else:
+                hi = mid
+        out[str(ziel)] = float(f"{math.sqrt(lo * hi):.4g}")
+    return out
+
+
 def trendguete(w: pd.Series, jahre: int = 20) -> float:
     s = w[w.index >= w.index[-1] - pd.DateOffset(years=jahre)]
     if len(s) < 104:
@@ -288,6 +362,14 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         return QUELLEN_TEXT.get(art, ("", True))[1]
 
     stat = statistik(c, w["Low"].values.astype(float), score, s_jetzt) if not math.isnan(s_jetzt) else {}
+    # Kaufzonen: Kurse, bei denen die Ampel heute 80 / 60 / 40 / 15 zeigen wuerde
+    try:
+        roh_k = {"dd": dd, "ratio": ratio, "trend": tz, "rsi": rs}
+        if krypto and "mayer_w" in extra:
+            roh_k["mayer"] = extra["mayer_w"]
+        kz = kaufzonen(c, roh_k, mayer_sma=float(tag_c.rolling(200).mean().iloc[-1]) if krypto else None) if not math.isnan(s_jetzt) else None
+    except Exception:
+        kz = None
     r2 = trendguete(w["Close"])
     qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
@@ -339,6 +421,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "sv": [None if math.isnan(x) else int(round(x)) for x in score[-53::4]],
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
+        "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
