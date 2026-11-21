@@ -13,6 +13,7 @@ daten/kurse_lauf.json
 daten/fred/
 daten/*.log
 web/daten/
+site/
 
 # Vanguard-Bestandsliste: Datei von Vanguard, nicht weitergeben
 daten/eingang/*

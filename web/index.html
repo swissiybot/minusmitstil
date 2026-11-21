@@ -197,56 +197,7 @@ async function apiStrategie(id, q=""){
 }
 async function apiMc(id, wochen, jahre, preise){
   if (!STATISCH) return holeJson(`api/mc?id=${encodeURIComponent(id)}&wochen=${wochen}&jahre=${jahre}&preise=${preise.join(",")}`);
-  const d = await exportLaden(id);
-  return d ? mcImBrowser(d.chart, wochen, jahre, preise, id) : null;
-}
-
-// Monte Carlo im Browser (gleiches Verfahren wie montecarlo.py: Block-Bootstrap echter Wochenrenditen
-// mit Wochentief/-hoch, Blöcke à 13 Wochen, 10.000 Wege, fester Zufallsstart je Wert)
-function mcImBrowser(c, wochen=52, jahre=20, preise=[], id=""){
-  const ende = c.t[c.t.length-1], ab = ende - jahre * 365.25 * 86400;
-  const idx = c.t.map((t,i) => i).filter(i => c.t[i] >= ab && c.c[i] > 0);
-  if (idx.length < 104) return {fehler:"zu wenig Kursdaten (mind. 2 Jahre)"};
-  const rc = [], rl = [], rh = [];
-  for (let k = 1; k < idx.length; k++) {
-    const v = c.c[idx[k-1]], i = idx[k], x = Math.log(c.c[i] / v);
-    let lo = c.l[i] > 0 ? Math.log(c.l[i] / v) : Math.min(x, 0), hi = c.h[i] > 0 ? Math.log(c.h[i] / v) : Math.max(x, 0);
-    rc.push(x); rl.push(Math.min(lo, x, 0)); rh.push(Math.max(hi, x, 0));
-  }
-  const m = rc.length, block = Math.min(13, Math.floor(m / 4)), pfade = 10000;
-  let s = 2166136261; for (const ch of id + "|" + m) s = Math.imul(s ^ ch.charCodeAt(0), 16777619);   // Startwert je Wert
-  const zufall = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
-  const p0 = c.c[idx[idx.length-1]];
-  const endw = new Float64Array(pfade), tief = new Float64Array(pfade), hoch = new Float64Array(pfade);
-  const spalten = Array.from({length: wochen}, () => new Float64Array(pfade));
-  for (let p = 0; p < pfade; p++) {
-    let lg = 0, mn = 0, mx = 0, k = 0;
-    while (k < wochen) {
-      const st = Math.floor(zufall() * (m - block + 1));
-      for (let b = 0; b < block && k < wochen; b++, k++) {
-        const j = st + b;
-        mn = Math.min(mn, lg + rl[j]); mx = Math.max(mx, lg + rh[j]);
-        lg += rc[j]; spalten[k][p] = lg;
-      }
-    }
-    endw[p] = Math.exp(lg) * p0; tief[p] = Math.exp(mn) * p0; hoch[p] = Math.exp(mx) * p0;
-  }
-  const qs = [5,25,50,75,95], kegel = Object.fromEntries(qs.map(q => ["q"+q, [p0]]));
-  for (let k = 0; k < wochen; k++) {
-    const a = spalten[k].slice().sort();
-    qs.forEach(q => kegel["q"+q].push(+(Math.exp(a[Math.min(pfade-1, Math.floor(q/100*(pfade-1)))]) * p0).toPrecision(5)));
-  }
-  const wahr = preis => {
-    const unten = preis <= p0; let b = 0, e = 0;
-    for (let p = 0; p < pfade; p++) { if (unten ? tief[p] <= preis : hoch[p] >= preis) b++; if (unten ? endw[p] <= preis : endw[p] >= preis) e++; }
-    return {preis, abstand: Math.round((preis/p0-1)*1000)/10, art: unten ? "Kauflimit" : "Verkaufsziel", beruehrt: Math.round(b/pfade*1000)/10, ende: Math.round(e/pfade*1000)/10};
-  };
-  const sortEnde = endw.slice().sort();
-  const t = [ende]; for (let k = 1; k <= wochen; k++) t.push(ende + k * 7 * 86400);
-  return {kurs: p0, wochen, pfade, block, hist_von: new Date(c.t[idx[0]]*1000).toISOString().slice(0,10),
-    hist_jahre: Math.round((ende - c.t[idx[0]]) / (365.25*86400) * 10) / 10, t, kegel,
-    ende_median: sortEnde[Math.floor(pfade/2)], verlust_wahrsch: Math.round(endw.filter(x => x < p0).length / pfade * 1000) / 10,
-    standard: [0.7,0.8,0.9,0.95,1.05,1.1,1.2,1.3].map(f => wahr(p0*f)), eigene: preise.filter(x => x > 0).map(wahr), im_browser: true};
+  return null;   // online: Rechner nutzt die vorab gerechneten Verteilungen (tabRechnerOnline)
 }
 
 // Datenstand oben: lokal "live" (Server rechnet beim Anklicken), online mehrmals täglich
@@ -268,6 +219,104 @@ function datenstand(stand){
 const geld = x => x==null ? "–" : Math.round(x).toLocaleString("de-DE");
 const vz = (x, n=1, suf="") => x==null ? "–" : (x>0?"+":"") + fmt(x,n,suf);
 const klasse = x => x==null ? "" : x>0 ? "pos" : x<0 ? "neg" : "";
+
+// ------------------------------------------------------------ Online-Fassung (Variante b): TradingView-Widget, Ampel-Verlauf, Rechner in Prozent
+// Kurse zeigt online nur das offizielle TradingView-Widget (Branding unverändert, Pflicht laut TradingView).
+function tvWidget(el, symbol){
+  el.innerHTML = "";
+  const box = document.createElement("div");
+  box.className = "tradingview-widget-container"; box.style.height = "100%";
+  box.innerHTML = `<div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+    <div class="tradingview-widget-copyright"><a href="https://de.tradingview.com/symbols/${symbol.replace(":", "-")}/" rel="noopener nofollow" target="_blank"><span class="blue-text">Chart von TradingView</span></a></div>`;
+  const s = document.createElement("script");
+  s.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js"; s.async = true;
+  s.text = JSON.stringify({autosize:true, symbol, interval:"W", timezone:"Europe/Berlin", theme:"dark", style:"1", locale:"de_DE",
+    allow_symbol_change:false, hide_side_toolbar:true, calendar:false, support_host:"https://www.tradingview.com",
+    studies:[{id:"MASimple@tv-basicstudies", inputs:{length:200}}]});
+  box.appendChild(s); el.appendChild(box);
+}
+function zeichneOnline(w, c){
+  const el = $("#chart");
+  if (w.tv) tvWidget(el, w.tv);
+  else el.innerHTML = `<div class="leer">Für diesen Wert gibt es online keinen Kurs-Chart (im kostenlosen TradingView-Widget nicht verfügbar). Ampel und Auswertungen unten gelten trotzdem.</div>`;
+  const ch2 = LightweightCharts.createChart($("#chart2"), {...chartBasis(), timeScale:{borderColor:"#363a45", minBarSpacing:0.02}});
+  if (c.pi_zone) {
+    const zone = ch2.addHistogramSeries({priceScaleId:"pizone", color:"#e040fb33", priceLineVisible:false, lastValueVisible:false});
+    ch2.priceScale("pizone").applyOptions({scaleMargins:{top:0,bottom:0}, visible:false});
+    zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t}));
+  }
+  const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
+  sc.setData(c.t.map((t,i) => c.score[i]==null ? {time:t} : {time:t, value:c.score[i], color:farbe(c.score[i])}));
+  [80,15].forEach(v => sc.createPriceLine({price:v, color:v===80?"#089981":"#ef5350", lineWidth:1, lineStyle:2, axisLabelVisible:true}));
+  sc.setMarkers(c.marken.map(([t,art,s]) => ({
+    kauf:     {time:t,position:"aboveBar",color:"#089981",shape:"arrowDown",text:String(s)},
+    teuer:    {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)},
+    pi_beginn:{time:t,position:"aboveBar",color:"#e040fb",shape:"circle",text:"Bodenbildung beginnt"},
+    pi_boden: {time:t,position:"aboveBar",color:"#00e676",shape:"arrowDown",text:"Pi Boden-Signal"},
+  })[art]));
+  setTimeout(() => ch2.timeScale().fitContent(), 50);
+  charts = [ch2];
+}
+const legendeOnline = (w) => `
+  <span data-e="tv_chart">Kurs-Chart: TradingView (Wochenkerzen, gleitender Durchschnitt 200)</span>
+  <span data-e="l_ampelverlauf">darunter: Ampel im Zeitverlauf</span>
+  <span data-e="l_pfeile">Pfeile: Ampel ≥ 80 (grün) · ≤ 15 (rot)</span>
+  ${w.pi ? '<span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Pi-Cycle-Bodenbildungszone</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▼ Pi Boden-Signal</span>' : ""}`;
+
+// Monte Carlo online: Verteilungen als Verhältnis zum heutigen Kurs (Export), Eingaben in Prozent
+const anteilBis = (tab, x) => {   // Anteil der Wege mit Wert <= x (tab = 101 Perzentile)
+  if (x <= tab[0]) return 0; if (x >= tab[100]) return 1;
+  let i = 0; while (tab[i+1] < x) i++;
+  return (i + (x - tab[i]) / ((tab[i+1] - tab[i]) || 1)) / 100;
+};
+function mcOnlineWahr(m, prozent){
+  const r = 1 + prozent / 100, unten = r <= 1;
+  const b = unten ? anteilBis(m.tief, r) : 1 - anteilBis(m.hoch, r);
+  const e = unten ? anteilBis(m.ende, r) : 1 - anteilBis(m.ende, r);
+  return {abstand: prozent, art: unten ? "Kauflimit" : "Verkaufsziel", beruehrt: Math.round(b*1000)/10, ende: Math.round(e*1000)/10};
+}
+function wTabelleProzent(liste){
+  return `<table class="wtab"><thead><tr><th style="text-align:left">Abstand zu heute</th><th>Art</th><th data-e="mc_erreicht">wird erreicht</th><th data-e="mc_ende">steht am Ende jenseits</th></tr></thead><tbody>${
+    liste.map(x => `<tr><td style="text-align:left" class="${klasse(x.abstand)}">${vz(x.abstand,0," %")}</td><td>${x.art}</td><td><b>${fmt(x.beruehrt,0,"%")}</b></td><td>${fmt(x.ende,0,"%")}</td></tr>`).join("")}</tbody></table>`;
+}
+async function tabRechnerOnline(w){
+  const id = AKTIV;
+  $("#tab").innerHTML = `
+    <div class="eingabe">
+      <label>${ek("mc_limit","Kauflimit: % unter heute")}<input id="mc-limit" type="number" step="1" value="10" min="1" max="90"></label>
+      <label>${ek("mc_ziel","Verkaufsziel: % über heute")}<input id="mc-ziel" type="number" step="1" value="20" min="1" max="500"></label>
+      <button id="mc-los">Berechnen</button>
+      <span class="klein" style="align-self:center">Online: 12 Monate, Historie 20 Jahre, Eingabe in Prozent (die Seite veröffentlicht keine Kurse). Frei einstellbar in der lokalen Fassung.</span>
+    </div><div id="mc-erg"><div class="text">lädt …</div></div>`;
+  const d = await exportLaden(id);
+  if (AKTIV !== id || REITER !== "rechner") return;
+  const m = d?.mc;
+  if (!m || m.fehler) { $("#mc-erg").innerHTML = `<div class="text">${m?.fehler || "Keine Daten."}</div>`; return; }
+  const los = () => {
+    const lim = Math.abs(+$("#mc-limit").value || 10), ziel = Math.abs(+$("#mc-ziel").value || 20);
+    const med = m.ende[50];
+    $("#mc-erg").innerHTML = `
+      <h3>Deine Marken (12 Monate)</h3>${wTabelleProzent([mcOnlineWahr(m, -lim), mcOnlineWahr(m, ziel)])}
+      <div class="werte">
+        <div class="wert"><div class="k">${ek("mc_median","Median in 12 Monaten")}</div><div class="v">${vz((med-1)*100,0," %")}</div><div class="u">gegenüber heute</div></div>
+        <div class="wert"><div class="k">${ek("mc_minus","Am Ende im Minus")}</div><div class="v">${fmt(anteilBis(m.ende, 1)*100,0,"%")}</div><div class="u">der simulierten Wege</div></div>
+        <div class="wert"><div class="k">${ek("mc_grundlage","Grundlage")}</div><div class="v">${m.pfade.toLocaleString("de-DE")} Wege</div><div class="u">${fmt(m.hist_jahre,0)} Jahre echte Wochen seit ${m.hist_von.slice(0,4)}, Blöcke à ${m.block} Wochen</div></div>
+      </div>
+      <h3>${ek("l_kegel","Wahrscheinlichkeitskegel")} (Veränderung gegenüber heute)</h3><div id="chart3"></div>
+      <h3>Übliche Abstände</h3>${wTabelleProzent([-30,-20,-10,-5,5,10,20,30].map(p => mcOnlineWahr(m, p)))}
+      <div class="text">Block-Bootstrap: Aus den echten Wochenrenditen der letzten 20 Jahre werden zufällig Stücke von ${m.block} Wochen zu ${m.pfade.toLocaleString("de-DE")} möglichen Wegen aneinandergehängt. „Wird erreicht“ zählt auch kurze Berührungen innerhalb einer Woche. Die Zukunft muss der Vergangenheit nicht ähneln; die heutige Ampel fließt nicht ein.</div>`;
+    tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
+    const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), localization:{locale:"de-DE", priceFormatter:p => (p>0?"+":"") + Math.round(p) + " %"}});
+    [["q5","#b39ddb88",2],["q25","#b39ddb",0],["q50","#b39ddb",0],["q75","#b39ddb",0],["q95","#b39ddb88",2]].forEach(([k,f,st]) => {
+      const s = ch.addLineSeries({color:f, lineWidth:k==="q50"?2:1, lineStyle:st, priceLineVisible:false, lastValueVisible:k!=="q50"?false:true});
+      s.setData(m.t.map((t,i) => ({time:t, value:(m.kegel[k][i]-1)*100})));
+    });
+    setTimeout(() => ch.timeScale().fitContent(), 50);
+    tabCharts.push(ch);
+  };
+  $("#mc-los").onclick = los;
+  los();
+}
 
 // ------------------------------------------------------------ Erklärungen (zentral gepflegt)
 // Schlüssel -> {titel, text}. text darf eine Funktion sein (dann mit aktuellen Prüfergebnissen).
@@ -312,6 +361,7 @@ const ERKLAERUNG = {
   l_pfeile: {titel:"Pfeile im Chart", text:"Grüner Pfeil mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Roter Pfeil: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
   l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Grün = günstig, rot = teuer. Die gestrichelten Linien markieren 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 12 Monate: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
+  tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView (Wochenkerzen mit gleitendem Durchschnitt über 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien (Trendkanal, Pi-Cycle-Linien) gibt es nur in der lokalen Fassung."},
   // --- Wahrscheinlichkeitstabelle
   t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel höchstens 7,5 Punkte vom heutigen Wert entfernt war. Für jede wird geschaut, wie der Kurs nach 1, 3 und 5 Jahren stand."},
   t_hoeher: {titel:"Kurs höher", text:"Anteil der ähnlichen Wochen, nach denen der Kurs am Ende des Zeitraums höher stand. Das ist eine Häufigkeit aus der Vergangenheit, keine Zusage. In der Prüfung ohne Zukunftswissen war diese Quote nicht treffsicherer als die Quote „an allen Tagen“."},
@@ -515,7 +565,7 @@ function kacheln(){
       <div class="n">Marktumfeld · Stand ${(v||b||z||{}).datum||""}</div>
       <div class="drei">
         <div><b>${b?fmt(b.wert,0,"%"):"–"}</b><span data-e="u_breite">Marktbreite · ${b?breiteWort(b.wert):""}</span></div>
-        <div><b style="color:${v&&v.wert>=25?"var(--rot)":"inherit"}">${v?fmt(v.wert,1):"–"}</b><span data-e="u_vix">VIX · ${v?vixWort(v.wert):""}</span></div>
+        <div><b style="color:${v&&(v.wert>=25||["nervös","Panik"].includes(v.stufe))?"var(--rot)":"inherit"}">${v?(v.wert!=null?fmt(v.wert,1):v.stufe):"–"}</b><span data-e="u_vix">VIX · ${v?(v.wert!=null?vixWort(v.wert):`höher als ${fmt(v.perzentil,0)} %`):""}</span></div>
         <div><b style="color:${z&&z.invertiert?"var(--rot)":"inherit"}">${z?vz(z.wert,2):"–"}</b><span data-e="u_zinskurve">Zinskurve · ${z?(z.invertiert?"invertiert":"normal"):""}</span></div>
       </div></div>`;
   }
@@ -599,12 +649,12 @@ async function zeige(id){
       <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div>
       <div id="check" class="check"><span class="klein">Lohnt-sich-Check rechnet …</span></div></div>
     <div id="chart"></div><div id="chart2"></div>
-    <div class="legende">
+    <div class="legende">${STATISCH ? legendeOnline(w) : `
       <span data-e="l_200w"><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
       <span data-e="l_trend"><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
       ${btc?'<span data-e="l_ema150"><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span data-e="l_sma471"><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▲ Pi Boden-Signal</span>':''}
       <span data-e="l_kegel"><i style="background:#b39ddb"></i>Kegel: 12 Monate, 50 % / 90 % der simulierten Wege</span>
-      <span data-e="l_pfeile">▲ Ampel ≥ 80 · ▼ Ampel ≤ 15</span> · <span data-e="l_ampelverlauf">unten: Ampel im Zeitverlauf</span>
+      <span data-e="l_pfeile">▲ Ampel ≥ 80 · ▼ Ampel ≤ 15</span> · <span data-e="l_ampelverlauf">unten: Ampel im Zeitverlauf</span>`}
     </div>
     <div class="reiter">
       <button data-r="kennzahlen" data-e="r_kennzahlen">Kennzahlen</button><button data-r="rechner" data-e="r_rechner">Kurs-Rechner</button>
@@ -612,10 +662,10 @@ async function zeige(id){
     </div>
     <div id="tab"></div>`;
   document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
-  zeichne(c, btc);
+  if (STATISCH) zeichneOnline(w, c); else zeichne(c, btc);
   reiter(REITER);
   lohntSichCheck(id);
-  ladeKegel(52, 20, []);
+  if (!STATISCH) ladeKegel(52, 20, []);
 }
 
 function grundMitErklaerung(g){
@@ -633,7 +683,7 @@ function reiter(name){
   REITER = name;
   tabCharts.forEach(ch => { try { ch.remove(); } catch(e){} }); tabCharts = [];
   document.querySelectorAll(".reiter button").forEach(b => b.classList.toggle("an", b.dataset.r===name));
-  ({kennzahlen:tabKennzahlen, rechner:tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
+  ({kennzahlen:tabKennzahlen, rechner:STATISCH ? tabRechnerOnline : tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
 }
 
 function tabKennzahlen(w){
@@ -675,8 +725,8 @@ function piRueckblick(w){
   return `<h3>${ek("pi_bottom","Pi Cycle Bottom")}: Kurs nach jedem ${ek("pi_signal","Boden-Signal")}</h3>
     <div class="text" style="padding-bottom:6px">Fällt die 150-Tage-EMA unter die 471-Tage-SMA × 0,745, beginnt die Bodenbildungszone (lila Fläche im Chart). Steigt sie wieder darüber, ist das das Boden-Signal; der Boden liegt laut Indikator zwischen beiden Kreuzungen. Liegt die EMA über der Linie, ist der Markt im Aufwärtstrend oder die Bodenbildung hat noch nicht begonnen.
     <b>Heute: ${umlaut(w.pi_status).replace("Pi Cycle: ","")}.</b></div>
-    <table class="wtab"><thead><tr><th style="text-align:left">Boden-Signal</th><th>Zone ab</th><th>Kurs</th><th>nach 1 Jahr</th><th>nach 2 Jahren</th><th>nach 3 Jahren</th></tr></thead><tbody>${
-      rb.length ? rb.map(x => `<tr><td style="text-align:left">${d(x.datum)}</td><td>${d(x.zone_ab)}</td><td>${fmt(x.kurs,0)}</td>${["r1","r2","r3"].map(k => `<td class="${klasse(x[k])}">${x[k]==null?"noch offen":vz(x[k],0,"%")}</td>`).join("")}</tr>`).join("")
+    <table class="wtab"><thead><tr><th style="text-align:left">Boden-Signal</th><th>Zone ab</th>${rb.some(x => x.kurs != null) ? "<th>Kurs</th>" : ""}<th>nach 1 Jahr</th><th>nach 2 Jahren</th><th>nach 3 Jahren</th></tr></thead><tbody>${
+      rb.length ? rb.map(x => `<tr><td style="text-align:left">${d(x.datum)}</td><td>${d(x.zone_ab)}</td>${x.kurs != null ? `<td>${fmt(x.kurs,0)}</td>` : ""}${["r1","r2","r3"].map(k => `<td class="${klasse(x[k])}">${x[k]==null?"noch offen":vz(x[k],0,"%")}</td>`).join("")}</tr>`).join("")
       : `<tr><td colspan="6">noch kein Boden-Signal in den Daten</td></tr>`}</tbody></table>
     <div class="text">Nur ${rb.length} Boden-Signal${rb.length===1?"":"e"} seit 2014 (Yahoo-Daten ab September 2014, die Zone 2015 fehlt deshalb). So wenige Fälle sagen statistisch kaum etwas; sie zeigen nur, wie es bisher lief.</div>`;
 }
@@ -902,11 +952,12 @@ function zeigeUmfeld(){
       <div class="mini" id="${id}"></div><div class="text">${text} Quelle: ${x.quelle}.</div>` : `<h3>${titel}: keine Daten</h3>`;
   $("#detail").innerHTML = `<div id="kopf"><h2>Marktumfeld</h2><div class="grund">Wie steht der Gesamtmarkt? Drei einfache Messgrößen, nur beschreibend – kein Kauf- oder Verkaufssignal.</div></div>
     ${teil(ek("u_breite","Marktbreite"), b, b?fmt(b.wert,0,"%"):"", b?breiteWort(b.wert):"", b?`Anteil der ${b.aktien.toLocaleString("de-DE")} Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Niedrig heißt: die meisten Aktien sind im Abwärtstrend. Seit 2000 war der Wert nur in ${fmt(b.perzentil,0)} % der Wochen niedriger. Achtung: nur heute noch gelistete Aktien (Pleitefirmen fehlen), frühere Jahre wirken deshalb zu gut.`:"", "m-breite")}
-    ${teil(ek("u_vix","VIX"), v, v?fmt(v.wert,1):"", v?vixWort(v.wert):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). Median seit 1990: ${fmt(v.median,1)}; höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
+    ${teil(ek("u_vix","VIX"), v, v?(v.wert!=null?fmt(v.wert,1):v.stufe):"", v?(v.wert!=null?vixWort(v.wert):`höher als an ${fmt(v.perzentil,0)} % der Tage`):"", v?`Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage („Angstbarometer“). ${v.median!=null?`Median seit 1990: ${fmt(v.median,1)}; `:"Online nur als Stufe, ohne Kursreihe. "}höher als heute nur in ${fmt(100-v.perzentil,0)} % der Tage. Grob: unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik.`:"", "m-vix")}
     ${teil(ek("u_zinskurve","Zinskurve 10 J. – 2 J."), z, z?vz(z.wert,2," Pp."):"", z?z.text:"", z?`Zinsdifferenz zwischen 10- und 2-jährigen US-Staatsanleihen. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve vorher invertiert, der Abstand bis zur Rezession schwankte aber stark (Monate bis Jahre).`:"", "m-zins", 2)}
     ${u.zins3m?`<div class="text">${ek("u_zins3m","US-Geldmarkt 3 Monate")} (FRED TB3MS): ${fmt(u.zins3m.wert,2,"%")} (${u.zins3m.datum}) – wird im Strategie-Vergleich als Zins auf wartendes Geld verwendet.</div>`:""}`;
   if (b) miniChart($("#m-breite"), b.reihe, "#26a69a", [[50,"#868993",""],[30,"#ef5350",""]]);
-  if (v) miniChart($("#m-vix"), v.reihe, "#ef5350", [[v.median,"#868993","Median"]]);
+  if (v && v.reihe) miniChart($("#m-vix"), v.reihe, "#ef5350", [[v.median,"#868993","Median"]]);
+  else if ($("#m-vix")) $("#m-vix").remove();
   if (z) miniChart($("#m-zins"), z.reihe, "#2962ff", [[0,"#ef5350",""]]);
 }
 function zeigePruefungGesamt(gruppe="etf", h="3"){

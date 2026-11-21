@@ -90,7 +90,7 @@ jobs:
             else
               echo "Kursdownload lief nicht."
             fi
-            test -d web/daten/werte && echo "Seite: $(du -sh web | cut -f1), $(ls web/daten/werte | wc -l) Werte"
+            test -d site/daten/werte && echo "Seite: $(du -sh site | cut -f1), $(ls site/daten/werte | wc -l) Werte"
           } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.kurse.outcome }}" != "success" ]; then echo "::warning::Kursdownload fehlgeschlagen – veröffentlicht wird der letzte Stand"; fi
           if [ -f daten/kurse_lauf.json ] && python -c "import json,sys;d=json.load(open('daten/kurse_lauf.json'));sys.exit(0 if d['abgebrochen'] or d['ohne_daten']>0.2*d['gesamt'] else 1)"; then
@@ -118,7 +118,7 @@ jobs:
 
       - uses: actions/upload-pages-artifact@v4
         with:
-          path: web
+          path: site    # reduzierte Online-Fassung ohne Kursreihen (export.py)
 
       - name: Veröffentlichen
         id: veroeffentlichen
