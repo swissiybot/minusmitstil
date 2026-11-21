@@ -29,7 +29,8 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 - Bildschirmfotos: `web/screenshots/`.
 
 ## Mein Depot
-Vermögensübersicht laden (von Hand, CSV-Datei oder kopierte Tabelle mit Spalten-Zuordnung) und eine Prognose fürs ganze Depot rechnen – **nur im Browser**: die Datei wird nie hochgeladen, es gibt keine Broker-Logins, gespeichert wird nur auf Wunsch („In diesem Browser merken“), „Depot vergessen“ löscht alles.
+Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopierte Tabelle mit Spalten-Zuordnung) und eine Prognose fürs ganze Depot rechnen – **nur im Browser**: die Datei wird nie hochgeladen, es gibt keine Broker-Logins, gespeichert wird nur auf Wunsch („In diesem Browser merken“), „Depot vergessen“ löscht alles.
+- **PDF-Import:** erkennt Positionen über die ISIN (mit Prüfziffer), dazu Name, Stückzahl und Kurswert (geprüft über Stück × Kurs) und gleicht mit der Summe der PDF ab; Vorschau zum Korrigieren. Gelesen wird mit [pdf.js](https://github.com/mozilla/pdf.js) (Apache-2.0, liegt in `web/lib/pdfjs/`) nur im Browser. Gescannte PDFs (nur Bild) gehen nicht.
 - **Mehrere Depots:** mehrere CSV-Dateien auf einmal wählen; jede Datei wird ein eigenes Depot mit Namen (umbenennen, entfernen, mit neuer Datei gleichen Namens ersetzen). Die Spaltenzuordnung wird für Dateien mit gleichem Aufbau gemerkt (nur Spaltenköpfe, im Browser). Prognose für alle Depots zusammen oder für eines; derselbe Wert in mehreren Depots wird dafür zu einer Position zusammengefasst, damit er gemeinsam schwankt.
 - Zuordnung automatisch nur über sicher bekannte ISINs großer Index-ETFs/ETCs (gleicher Index), exakte Kürzel und exakte Namen; für alles andere wählt man einen Ersatz. Der Anteil ohne Zuordnung wird angezeigt.
 - Sparplan individuell: Betrag (0 = keiner), Verteilung, jährliche Erhöhung, Laufzeit, Einmalbeträge/Entnahmen, Kosten je Kauf, laufende Kosten, Abgeltungssteuer mit Sparerpauschbetrag und Teilfreistellung, Inflation, Zielbetrag.
@@ -62,7 +63,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 - Nasdaq-Werteliste: nasdaqtrader.com · Zinsen: FRED (Federal Reserve Bank of St. Louis).
 - Geschäftszahlen: SEC EDGAR (US-Börsenaufsicht, gemeinfrei). Die SEC verlangt bei automatischen Abrufen eine Kontaktangabe im User-Agent; sie kommt aus der Umgebungsvariable `SEC_KONTAKT` (auf GitHub als geheime Einstellung) und steht nicht im Code. Ohne sie wird nichts geladen.
 - CAPE: Robert J. Shiller, [shillerdata.com](https://shillerdata.com/) (`ie_data.xls`, frei zum Herunterladen; Datei wird nicht mitgeliefert, sondern bei jedem Lauf selbst geladen).
-- Charts: [TradingView Lightweight Charts](https://github.com/tradingview/lightweight-charts) (Apache-2.0), liegt in `web/lib/`.
+- Charts: [TradingView Lightweight Charts](https://github.com/tradingview/lightweight-charts) (Apache-2.0), liegt in `web/lib/`. PDF-Leser: [pdf.js](https://github.com/mozilla/pdf.js) 3.11.174 (Apache-2.0, Mozilla), liegt in `web/lib/pdfjs/`.
 - Eigener Code: MIT-Lizenz, siehe `LICENSE`.
 
 ## Aufbau

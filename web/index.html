@@ -931,7 +931,7 @@ const ERKLAERUNG_NEU = {
   gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
   klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
   lineal: {titel:"Lineal", text:"Messen im Chart: einmal klicken (Start), Maus bewegen, noch einmal klicken (Ende). Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
-  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (blaugrün) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
+  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (kräftig blaugrün, „sehr günstig“), zwischen 60 und 80 (hell blaugrün, „günstig“) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts (0 % = Hoch, 100 % = Tief). Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
@@ -1697,10 +1697,10 @@ function zeichne(c, w){
     ch.priceScale("pizone").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
     zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(zone);
   }
-  {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
+  {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 (kräftig), 60–80 (hell) bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
     const ph = ch.addHistogramSeries({priceScaleId:"phasen", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.phasen});
     ch.priceScale("phasen").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
-    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "1f"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
+    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "40"} : s >= 60 ? {time:t, value:1, color:f.guenstig + "1f"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
     SERIEN.phasen.push(ph);
   }
   const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
@@ -1879,7 +1879,7 @@ function depotLaden(){
 function depotSichern(){ if (DEPOT.merken) sichere(DEPOT_SCHLUESSEL, {positionen:DEPOT.positionen, e:DEPOT.e, zuordnungen:DEPOT.zuordnungen}); }
 function depotVergessen(){
   try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(e) {}
-  DEPOT = {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false}; DEPOT_ERG = null; CSV_WARTESCHLANGE = []; zeigeDepot();
+  DEPOT = {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false}; DEPOT_ERG = null; CSV_WARTESCHLANGE = []; PDF_WARTESCHLANGE = []; zeigeDepot();
 }
 const zahlDe = s => {   // "1.234,56 €" / "1,234.56" / "1234.5" → Zahl
   if (typeof s === "number") return s;
@@ -2010,7 +2010,7 @@ function zeigeDepot(){
     </div>
     <section class="karte seite-karte">
       <div class="reiter" role="tablist" id="d-import-reiter">
-        <button data-imp="manuell" class="an">Von Hand eintragen</button><button data-imp="csv">CSV-Datei</button><button data-imp="text">CSV-Text einfügen</button>
+        <button data-imp="manuell" class="an">Von Hand eintragen</button><button data-imp="csv">CSV-Datei</button><button data-imp="pdf">PDF-Datei</button><button data-imp="text">CSV-Text einfügen</button>
       </div>
       <div id="d-import" style="padding:12px 14px"></div>
     </section>
@@ -2096,7 +2096,10 @@ function zeigeDepot(){
   $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
   $("#d-rechnen").onclick = depotRechnen;
   if (DEPOT_ERG) depotErgebnisZeigen(DEPOT_ERG);
-  if (CSV_WARTESCHLANGE.length) {   // mehrere Dateien: mit der nächsten weitermachen
+  if (PDF_WARTESCHLANGE.length) {   // mehrere PDF-Dateien: mit der nächsten weitermachen
+    $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x.dataset.imp === "pdf")); depotImport("pdf"); naechstePdf();
+    $("#d-import").scrollIntoView({block:"start"});
+  } else if (CSV_WARTESCHLANGE.length) {   // mehrere Dateien: mit der nächsten weitermachen
     $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x.dataset.imp === "csv")); depotImport("csv"); naechsteDatei();
     $("#d-import").scrollIntoView({block:"start"});
   }
@@ -2135,12 +2138,147 @@ function depotImport(art){
     $("#d-datei").onchange = async ev => { const fs = [...ev.target.files]; if (!fs.length) return;
       CSV_WARTESCHLANGE = await Promise.all(fs.map(async f => ({name:f.name, text:await lesen(f)}))); CSV_GESAMT = CSV_WARTESCHLANGE.length;
       naechsteDatei(); };
+  } else if (art === "pdf") {
+    z.innerHTML = `<p style="margin:0 0 8px">Depotauszug bzw. Vermögensübersicht deiner Bank als <b>PDF</b> wählen (mehrere auf einmal möglich). Die Datei wird <b>nur in diesem Browser</b> gelesen – das Lese-Programm (pdf.js) liegt auf dieser Seite, nichts wird hochgeladen.</p>
+      <input type="file" id="d-pdf" accept=".pdf,application/pdf" multiple><div id="pdf-ergebnis" style="margin-top:10px"></div>
+      <p class="klein">Erkannt werden Positionen mit <b>ISIN</b>; dazu Name, Stückzahl und Kurswert. Jede Bank baut ihre PDF anders auf – bitte die Vorschau prüfen und Werte notfalls korrigieren. Gescannte PDFs (nur Bild, kein Text) gehen nicht.</p>`;
+    $("#d-pdf").onchange = async ev => { const fs = [...ev.target.files]; if (!fs.length) return;
+      PDF_WARTESCHLANGE = fs; PDF_GESAMT = fs.length; naechstePdf(); };
   } else {
     z.innerHTML = `<p style="margin:0 0 8px">Tabelle aus Excel oder der Bank-Webseite kopieren und hier einfügen (erste Zeile = Spaltenköpfe).</p>
       <textarea id="d-text" rows="6" style="width:100%;border-radius:10px;background:var(--panel2);border:1px solid var(--line2);padding:10px;font:12.5px/1.45 ui-monospace,monospace;color:var(--text)" placeholder="Name;ISIN;Wert&#10;iShares Core MSCI World;IE00B4L5Y983;12.345,67"></textarea>
       <button class="knopf leise" id="d-text-los" style="margin-top:8px">Spalten zuordnen</button><div id="csv-zuordnung" style="margin-top:10px"></div>`;
     $("#d-text-los").onclick = () => { CSV_WARTESCHLANGE = []; CSV_GESAMT = 1; csvVorschau($("#d-text").value); };
   }
+}
+// ------------------------------------------------------------ PDF-Import (nur im Browser, pdf.js liegt in lib/pdfjs)
+let PDF_WARTESCHLANGE = [], PDF_GESAMT = 0, PDF_POS = [];
+function pdfjsLaden(){
+  if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+  return new Promise((ok, fehler) => { const s = document.createElement("script"); s.src = "lib/pdfjs/pdf.min.js";
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = "lib/pdfjs/pdf.worker.min.js"; ok(pdfjsLib); };
+    s.onerror = () => fehler(new Error("PDF-Leser (pdf.js) konnte nicht geladen werden.")); document.head.appendChild(s); });
+}
+function isinGueltig(s){   // Prüfziffer (Luhn über Buchstaben → Zahlen)
+  if (!/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(s)) return false;
+  const ziffern = s.split("").map(c => /[A-Z]/.test(c) ? String(c.charCodeAt(0) - 55) : c).join("");
+  let summe = 0, doppelt = true;
+  for (let i = ziffern.length - 2; i >= 0; i--) { let d = +ziffern[i]; if (doppelt) { d *= 2; if (d > 9) d -= 9; } summe += d; doppelt = !doppelt; }
+  return (10 - summe % 10) % 10 === +ziffern[ziffern.length - 1];
+}
+async function pdfZeilen(datei){   // Text je Zeile (nach Höhe gruppiert, von links nach rechts)
+  const lib = await pdfjsLaden();
+  const doc = await lib.getDocument({data: await datei.arrayBuffer(), isEvalSupported:false}).promise;
+  const zeilen = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    const inhalt = await (await doc.getPage(n)).getTextContent();
+    const items = inhalt.items.filter(it => it.str && it.str.trim()).map(it => ({s:it.str, x:it.transform[4], y:it.transform[5], b:it.width || 0}));
+    items.sort((a, b) => b.y - a.y || a.x - b.x);
+    let akt = null;
+    for (const it of items) {
+      if (!akt || Math.abs(akt.y - it.y) > 2.5) { akt = {y:it.y, teile:[]}; zeilen.push(akt); }
+      akt.teile.push(it);
+    }
+  }
+  return zeilen.map(z => { z.teile.sort((a, b) => a.x - b.x); let txt = "", ende = null;
+    for (const it of z.teile) { if (ende != null) { const luecke = it.x - ende; txt += luecke > 12 ? "   " : luecke > 1 ? " " : ""; } txt += it.s; ende = it.x + it.b; }
+    return txt.replace(/\s+$/, ""); });
+}
+const PDF_ZAHL = /(?<![\d.,])-?\d{1,3}(?:\.\d{3})*,\d{1,6}(?![\d,])|(?<![\d.,])-?\d+,\d{1,6}(?![\d,])/g;
+function pdfPositionen(zeilen){
+  const ISIN = /\b([A-Z]{2}[A-Z0-9]{9}\d)\b/g;
+  const treffer = [];
+  zeilen.forEach((z, i) => { for (const m of z.matchAll(ISIN)) if (isinGueltig(m[1])) treffer.push({i, isin:m[1]}); });
+  const isinZeilen = new Set(treffer.map(t => t.i));
+  const pos = new Map();
+  treffer.forEach((t, k) => {
+    // Block: ISIN-Zeile, bis zu 2 Zeilen davor und 1 danach (ohne fremde ISIN, nicht über die vorige ISIN hinaus)
+    const vorige = k > 0 ? treffer[k - 1].i : -1;
+    const idx = [t.i];
+    for (let j = t.i - 1; j >= Math.max(vorige + 1, t.i - 2); j--) { if (isinZeilen.has(j)) break; idx.unshift(j); }
+    if (t.i + 1 < zeilen.length && !isinZeilen.has(t.i + 1)) idx.push(t.i + 1);
+    const text = idx.map(j => zeilen[j]).join("   ");
+    const ohneDatum = text.replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ");
+    // Stückzahl: Zahl direkt vor/nach „Stk“/„Stück“/„St.“
+    let anzahl = null;
+    const st = ohneDatum.match(/(-?[\d.]+(?:,\d+)?)\s*(?:Stk\.?|Stück|St\.)/i) || ohneDatum.match(/(?:Stk\.?|Stück|St\.)\s*(-?[\d.]+(?:,\d+)?)/i);
+    if (st) anzahl = zahlDe(st[1]);
+    const zahlen = [...ohneDatum.replace(/-?\d+(?:,\d+)?\s*%/g, " ").matchAll(PDF_ZAHL)].map(m => ({t:m[0], v:zahlDe(m[0]), nk:(m[0].split(",")[1] || "").length}));
+    const geld = zahlen.filter(z => z.nk === 2 && z.v > 0 && (anzahl == null || Math.abs(z.v - anzahl) > 1e-9));
+    let wert = null, sicher = false;
+    if (anzahl) {   // Kurswert = Stück × Kurs (±2 %)?
+      for (const a of geld) for (const b of zahlen) if (b !== a && b.v > 0 && Math.abs(anzahl * b.v / a.v - 1) < 0.02) { if (!wert || a.v > wert) { wert = a.v; sicher = true; } }
+    } else {        // Stückzahl ohne „Stk“: ganze Zahl × Kurs = Wert in derselben Zeile?
+      const zeileOhne = zeilen[t.i].replace(t.isin, " ").replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ");
+      const ganz = [...zeileOhne.matchAll(/(?<![\d.,])\d{1,3}(?:\.\d{3})*(?![\d,.])/g)].map(m => zahlDe(m[0])).filter(v => v > 0);
+      for (const n of ganz) for (const a of geld) for (const b of zahlen) if (b !== a && b.v > 0 && Math.abs(n * b.v / a.v - 1) < 0.005) { if (!wert || a.v > wert) { wert = a.v; anzahl = n; sicher = true; } }
+    }
+    if (!wert && geld.length) wert = Math.max(...geld.map(z => z.v));
+    // Name: längster Textteil ohne Zahlen, ISIN, Kennwörter
+    const nameTeile = txt => txt.replace(t.isin, " ").split(/ {3,}/).map(s => s.replace(/\b(ISIN|WKN)\s*:?\s*[A-Z0-9]{6,12}\b/gi, " ").replace(PDF_ZAHL, " ")
+      .replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ").replace(/\b(Stk\.?|Stück|St\.|ISIN:?|WKN:?|Lagerland:?|Girosammelverwahrung|Wertpapierrechnung|%)\b/gi, " ")
+      .replace(/[|:]/g, " ").replace(/\s+/g, " ").trim()).filter(s => /[A-Za-zÄÖÜäöü]{3,}/.test(s) && !/^(EUR|USD|CHF|GBP)$/i.test(s));
+    // Name bevorzugt aus der ISIN-Zeile (Tabellen), sonst aus den Zeilen davor/danach (Depotauszüge)
+    const eigene = nameTeile(zeilen[t.i]), alle = nameTeile(text);
+    const name = (eigene.length ? eigene : alle).sort((a, b) => b.length - a.length)[0] || t.isin;
+    const alt = pos.get(t.isin);
+    if (!alt || (!alt.wert && wert)) pos.set(t.isin, {isin:t.isin, name:name.slice(0, 80), anzahl, wert, sicher, an:!!wert});
+  });
+  // Summe laut PDF (zum Abgleich)
+  let summe = null;
+  for (const z of zeilen) if (/(summe|gesamt|depotwert|gesamtwert|total)/i.test(z) && !/[A-Z]{2}[A-Z0-9]{9}\d/.test(z)) {
+    const v = [...z.matchAll(PDF_ZAHL)].filter(m => (m[0].split(",")[1] || "").length === 2).map(m => zahlDe(m[0])).filter(v => v > 0);
+    if (v.length) summe = Math.max(summe || 0, ...v);
+  }
+  return {positionen:[...pos.values()], summe};
+}
+async function naechstePdf(){
+  const ziel = $("#pdf-ergebnis"); if (!ziel) return;
+  const datei = PDF_WARTESCHLANGE.shift(); if (!datei) return;
+  const nr = PDF_GESAMT > 1 ? `<b>Datei ${PDF_GESAMT - PDF_WARTESCHLANGE.length} von ${PDF_GESAMT} („${esc(datei.name)}“):</b> ` : "";
+  ziel.innerHTML = `<p class="klein">${nr}wird gelesen …</p>`;
+  let erg;
+  try { erg = pdfPositionen(await pdfZeilen(datei)); }
+  catch(ex) { ziel.innerHTML = `<p class="neg">${nr}PDF nicht lesbar: ${esc(ex.message)}</p>${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Nächste Datei</button>` : ""}`; if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf; return; }
+  PDF_POS = erg.positionen;
+  if (!PDF_POS.length) { ziel.innerHTML = `<p class="neg">${nr}Keine Positionen mit ISIN gefunden. Ist es ein Depotauszug mit ISINs? Gescannte PDFs (nur Bild) gehen nicht – dann bitte „Von Hand eintragen“ oder einen CSV-Export der Bank nutzen.</p>${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Nächste Datei</button>` : ""}`; if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf; return; }
+  const vorName = datei.name.replace(/\.pdf$/i, "").trim() || neuerDepotName();
+  const zeichnen = () => {
+    const summe = PDF_POS.filter(p => p.an && p.wert > 0).reduce((a, p) => a + p.wert, 0);
+    $("#pdf-summe").innerHTML = `Erkannt zusammen: <b>${geld(summe)} €</b>${erg.summe ? ` · Summe laut PDF (vermutlich): ${geld(erg.summe)} €${Math.abs(summe / erg.summe - 1) < 0.01 ? ' <span class="pos">✓ passt</span>' : ' <span class="neg">– bitte prüfen</span>'}` : ""}`;
+  };
+  ziel.innerHTML = `<p class="klein">${nr}${PDF_POS.length} Position${PDF_POS.length === 1 ? "" : "en"} mit ISIN gefunden. Bitte prüfen: Name und Wert lassen sich ändern, Häkchen weg = nicht übernehmen.</p>
+    <div class="eingabe" style="padding:4px 0 6px">
+      <label>${ek("d_depotname","Depot-Name")}<input id="pdf-depot" list="pdf-depots" value="${esc(vorName)}" style="width:200px"><datalist id="pdf-depots">${depotNamen().filter(() => DEPOT.positionen.length).map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
+      <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px;align-self:flex-end;padding-bottom:8px"><input type="checkbox" id="pdf-ersetzen" checked> <span id="pdf-ersetzen-text"></span></label>
+    </div>
+    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Name</th><th style="text-align:left">ISIN</th><th>Stück</th><th>Wert €</th><th></th></tr></thead><tbody>${
+      PDF_POS.map((p, i) => `<tr><td><input type="checkbox" data-pa="${i}" ${p.an ? "checked" : ""} aria-label="übernehmen"></td>
+        <td style="text-align:left"><input class="feld" data-pn="${i}" value="${esc(p.name)}" style="width:190px" aria-label="Name"></td>
+        <td style="text-align:left" class="klein">${esc(p.isin)}</td><td>${p.anzahl != null ? fmt(p.anzahl, p.anzahl % 1 ? 3 : 0) : "–"}</td>
+        <td><input class="feld" data-pv="${i}" value="${p.wert ? fmt(p.wert,2) : ""}" style="width:110px;text-align:right" aria-label="Wert in Euro"></td>
+        <td class="klein">${p.wert ? (p.sicher ? '<span class="pos" title="Stück × Kurs passt zum Wert">✓</span>' : '<span title="größter Geldbetrag in der Zeile – bitte prüfen">?</span>') : '<span class="neg">Wert fehlt</span>'}</td></tr>`).join("")}</tbody></table></div>
+    <p class="klein" id="pdf-summe"></p>
+    <button class="knopf" id="pdf-uebernehmen">Positionen übernehmen</button> ${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Diese Datei überspringen</button>` : ""} <span class="klein" id="pdf-info"></span>`;
+  const ersetzenText = () => { const n = $("#pdf-depot").value.trim(), vorhanden = DEPOT.positionen.filter(p => depotName(p) === n).length;
+    $("#pdf-ersetzen").parentElement.style.visibility = vorhanden ? "visible" : "hidden";
+    $("#pdf-ersetzen-text").textContent = vorhanden ? `vorhandenes Depot „${n}“ ersetzen (${vorhanden} Position${vorhanden === 1 ? "" : "en"}) – sonst dazulegen` : ""; };
+  $("#pdf-depot").oninput = ersetzenText; ersetzenText(); zeichnen();
+  $$("#pdf-ergebnis [data-pa]").forEach(c => c.onchange = () => { PDF_POS[+c.dataset.pa].an = c.checked; zeichnen(); });
+  $$("#pdf-ergebnis [data-pn]").forEach(c => c.onchange = () => { PDF_POS[+c.dataset.pn].name = c.value.trim() || PDF_POS[+c.dataset.pn].isin; });
+  $$("#pdf-ergebnis [data-pv]").forEach(c => c.onchange = () => { const v = zahlDe(c.value); const p = PDF_POS[+c.dataset.pv]; p.wert = v > 0 ? v : null; if (p.wert) { p.an = true; $(`#pdf-ergebnis [data-pa="${c.dataset.pv}"]`).checked = true; } zeichnen(); });
+  if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf;
+  $("#pdf-uebernehmen").onclick = () => {
+    const depot = $("#pdf-depot").value.trim() || DEPOT_NAME_STD;
+    const neu = PDF_POS.filter(p => p.an && p.wert > 0).map(p => { const pos = {name:p.name, isin:p.isin, kuerzel:"", wert:Math.round(p.wert * 100) / 100, depot}; return {...pos, ...zuordnen(pos)}; });
+    if (!neu.length) { $("#pdf-info").textContent = "Keine Position mit Wert ausgewählt."; return; }
+    if ($("#pdf-ersetzen").checked) {
+      const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
+      neu.forEach(n => { if (!n.id) { const a = alt.find(x => x.id && x.isin === n.isin); if (a) { n.id = a.id; n.quelle = a.quelle; } } });
+      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
+    }
+    DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
+  };
 }
 function ersatzWaehlen(i){   // Suche im Auswahl-Modus: der gewählte Wert wird der Position zugeordnet
   sucheOeffnen(); ERSATZ_FUER = i;
