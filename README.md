@@ -40,6 +40,9 @@ Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopier
 - Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
 - Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
 
+### Neue Ampel (zusätzlich, seit 21.11.2026)
+Neben der bisherigen Ampel gibt es eine zweite, violett und gestrichelt abgesetzt (Wertkopf, Linie im Ampel-Bereich, Fadenkreuz, Liste). Gleiche Skala 0–100, andere Bausteine je Gruppe, ermittelt in einer Studie mit bis zu 1.585 Varianten (expandierende Perzentile, Auswahl nur in der Lernzeit, Stabilitätsmaß und Jahres-Bootstrap): Aktien = Abstand zum Allzeithoch + 3- und 5-Jahres-Rendite; Indizes/ETFs/Rohstoffe = Abstand zum Hoch + 200-Wochen-Linie + Langfristtrend + 5-Jahres-Rendite; Krypto = Langfristtrend + 3-Jahres-Rendite (+ MVRV bei Bitcoin). Die alte Ampel bleibt unverändert; Rangliste, Prüfungen und Signale nutzen weiter die alte (`NEUE_AMPEL` in `analyse.py`).
+
 ## Das ehrliche Ergebnis
 Das Tool erkennt zuverlässig, wann etwas **historisch günstig** ist. Ob es sich **lohnt zu kaufen**, kann es nicht zuverlässig sagen: In der Prüfung brachte „nur bei günstiger Ampel kaufen, sonst warten“ bei S&P 500, Nasdaq-100, Gold und Bitcoin **weniger** als ein stumpfer monatlicher Sparplan. Märkte steigen meistens, und wer wartet, verpasst das. Die genauen, täglich neu berechneten Zahlen stehen im Dashboard unter „So liest du das Tool“.
 

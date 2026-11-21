@@ -274,6 +274,35 @@ def r(x, n=2):
     return None if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))) else round(float(x), n)
 
 
+NEUE_AMPEL = {   # Bausteine der neuen Ampel je Gruppe (Ergebnis der Ampel-Studie vom 21.11.2026, siehe README)
+    "aktien": ["dd", "r3j", "r5j"],                   # Abstand zum Allzeithoch, 3- und 5-Jahres-Rendite
+    "index":  ["dd", "ratio", "trend", "r5j"],        # Wochen-RSI durch 5-Jahres-Rendite ersetzt
+    "krypto": ["trend", "r3j", "mvrv"],               # Langfristtrend, 3-Jahres-Rendite, MVRV (nur Bitcoin)
+}
+
+
+def neue_ampel(zeile: dict, w: pd.DataFrame, c: np.ndarray, komponenten: dict, krypto: bool, bitcoin: bool) -> np.ndarray:
+    """Zweite, zusätzliche Ampel (0–100, hoch = günstig) mit je Gruppe in der Studie besser abschneidenden Bausteinen.
+    Die alte Ampel bleibt unverändert; Rangliste, Prüfungen und Signale nutzen weiter die alte."""
+    s = w["Close"]
+    teile = {"dd": komponenten["dd"], "ratio": komponenten["ratio"], "trend": komponenten["trend"],
+             "r3j": expandierendes_perzentil(c / s.shift(156).values - 1, WARMUP),
+             "r5j": expandierendes_perzentil(c / s.shift(260).values - 1, WARMUP)}
+    if bitcoin:
+        try:
+            import mvrv as _mv
+            d = _mv.reihe()
+            if d is not None and "mvrv" in d:
+                teile["mvrv"] = expandierendes_perzentil(d["mvrv"].resample("W-FRI").last().reindex(w.index, method="ffill").values.astype(float), 104)
+        except Exception:
+            pass
+    art = "krypto" if krypto else "index" if zeile["gruppe"] in ("ETF", "Rohstoffe") else "aktien"
+    m = np.vstack([teile[k] for k in NEUE_AMPEL[art] if k in teile])
+    with np.errstate(invalid="ignore"):
+        anz = np.sum(~np.isnan(m), axis=0)
+        return np.where(anz >= 2, (1 - np.nanmean(m, axis=0)) * 100, np.nan)
+
+
 def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     w = wochen(tag)
     if len(w) < 156:
@@ -361,6 +390,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         score_v = np.where(anz_v >= 2, (1 - np.nanmean(tv, axis=0)) * 100, np.nan)
     score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
+    score2 = neue_ampel(zeile, w, c, komponenten, krypto, bitcoin)
 
     jahre_daten = (tag.index[-1] - tag.index[0]).days / 365.25
     cagr20, j20, start20 = jahresrendite(tag_c, 20)
@@ -420,6 +450,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "datum": tag.index[-1].strftime("%Y-%m-%d"),
         "kurs": r(tag_c.iloc[-1], 4),
         "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
+        "score2": r(score2[-1], 1), "score2_vor4w": r(score2[-5] if len(score2) > 5 else np.nan, 1),   # neue Ampel (zusätzlich)
         "cagr20": r(cagr20 * 100 if cagr20 is not None else None, 1), "cagr_jahre": r(j20, 1),
         "cagr20_div": mit_div(start20), "cagr10": r(cagr10 * 100 if cagr10 is not None else None, 1),
         "cagr_max": r(cagr_max * 100 if cagr_max is not None else None, 1), "jahre_daten": r(jmax, 1),
@@ -458,6 +489,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    if not np.all(np.isnan(score2)):
+        chart["score2"] = rund(score2, 3)   # neue Ampel (zusätzlich, Studie 21.11.2026)
     if not np.all(np.isnan(score_v)):
         chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)
     if mp:
@@ -536,6 +569,7 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "o": rund(t["Open"].values), "h": rund(t["High"].values), "l": rund(t["Low"].values), "c": rund(t["Close"].values),
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
         **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
+        **({"score2": rund(woche(chart["score2"]), 3)} if "score2" in chart else {}),
         **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
     }
     if info.get("gruppe") == "Krypto":

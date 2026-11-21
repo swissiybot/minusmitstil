@@ -21,7 +21,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
   --pos:#3fd0b2; --neg:#ff9a57;
   --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff; --mvrv:#93c5fd;
-  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --ema20:#5ad1ff; --ema50:#a6e35a; --ema100:#ff8fc8; --ema200:#ff5f5f; --marke-gut:#9ff5e2;
+  --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --neu:#b48cff; --ema20:#5ad1ff; --ema50:#a6e35a; --ema100:#ff8fc8; --ema200:#ff5f5f; --marke-gut:#9ff5e2;
   --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
   --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
   --r:14px; --r-klein:9px;
@@ -35,7 +35,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
   --pos:#0b8a73; --neg:#c4530a;
   --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad; --mvrv:#1d4ed8;
-  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --ema20:#0277bd; --ema50:#4c8a00; --ema100:#c2185b; --ema200:#c62828; --marke-gut:#06604f;
+  --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --neu:#7c3aed; --ema20:#0277bd; --ema50:#4c8a00; --ema100:#c2185b; --ema200:#c62828; --marke-gut:#06604f;
   --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
   --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
 }
@@ -175,6 +175,14 @@ h1,h2,h3{letter-spacing:-.015em}
 .stern:hover{color:var(--text);background:var(--hover)}
 .stern[aria-pressed="true"]{color:var(--gelb);border-color:color-mix(in srgb,var(--gelb) 55%,transparent);background:color-mix(in srgb,var(--gelb) 10%,transparent)}
 .gauge{width:230px;text-align:center}
+.wert-kopf.mit-neu{grid-template-columns:minmax(0,1fr) auto auto}
+.neu-ampel{width:150px;align-self:stretch;display:flex;flex-direction:column;justify-content:center;text-align:center;border:2px dashed var(--neu);border-radius:var(--r);padding:10px 8px;background:color-mix(in srgb,var(--neu) 8%,transparent)}
+.neu-ampel .n-titel{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--neu);text-transform:uppercase}
+.neu-ampel .n-zahl{font-size:38px;font-weight:750;line-height:1.05;color:var(--neu);margin:4px 0 2px}
+.neu-ampel .n-wort{font-size:13px;font-weight:650}
+.neu-ampel .n-klein{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35}
+.neu-mini{font-size:10.5px;font-weight:650;color:var(--neu);margin-top:2px;white-space:nowrap}
+.fk-neu{border:1.5px dashed var(--neu);color:var(--neu);border-radius:6px;padding:0 6px;font-weight:600}
 .gauge svg{display:block;width:230px;height:140px}
 .gauge .g-zahl{font-size:38px;font-weight:750;letter-spacing:-.03em;line-height:1;margin-top:-80px}
 .gauge .g-wort{font-weight:650;font-size:14px;margin-top:44px}
@@ -549,7 +557,7 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), neu:g("neu"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -969,6 +977,7 @@ const ERKLAERUNG_NEU = {
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
   skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
   quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Pfeile und Kegel gibt es dort nicht."},
+  neue_ampel: {titel:"Neue Ampel (zusätzlich)", text:"Eine zweite Ampel neben der bisherigen, violett und gestrichelt umrandet. Gleiche Skala 0–100 (ab 80 sehr günstig, bis 15 sehr teuer), aber andere Bausteine je Gruppe – gewählt in einer Studie mit bis zu 1.585 Varianten, Auswahl nur in der Lernzeit, Prüfung danach. Aktien: Abstand zum Allzeithoch + 3- und 5-Jahres-Rendite (in der Prüfzeit klar und stabil besser als die alte Ampel). Indizes/ETFs/Rohstoffe: Abstand zum Hoch + 200-Wochen-Linie + Langfristtrend + 5-Jahres-Rendite statt Wochen-RSI (etwas besser und ruhiger). Krypto: Langfristtrend + 3-Jahres-Rendite, bei Bitcoin zusätzlich MVRV (nur wenige Zyklen – unsicher). Beim Nasdaq-100 sagte keine der Varianten die spätere Rendite voraus. Die alte Ampel bleibt unverändert; Listen, Prüfungen und Signale nutzen weiter die alte."},
   c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Gestrichelt: 80 und 15. Die Trennlinie darüber lässt sich ziehen. Blasse Balken am Anfang = vorläufige Ampel: Die normale Ampel braucht 5 Jahre eigene Kursgeschichte; vorher rechnet das Tool ab 2 Jahren schon eine vorläufige mit weniger Vergleichsgeschichte (und meist noch ohne 200-Wochen-Linie). Sie ist weniger verlässlich und zählt nicht in Prüfungen, Ranglisten und Signalen."},
   l_pitop: {titel:"Pi Cycle Top (gestrichelt)", text:"111-Tage-Durchschnitt (orange) und 2 × 350-Tage-Durchschnitt (rosa). Stieg die 111-Tage-Linie darüber, lag bei Bitcoin früher ein Zyklushoch nahe (Markierung „Pi Top“). Nur für Bitcoin geeicht, sehr wenige Fälle."},
   l_mayer: {titel:"Mayer Multiple (unten, linke Skala)", text:"Kurs geteilt durch den 200-Tage-Durchschnitt, je Woche. Gestrichelt: 0,8 (früher tief) und 2,4 (früher überhitzt) – Grenzen aus der Bitcoin-Geschichte, für andere Coins nicht erprobt."},
@@ -1136,7 +1145,7 @@ function listeZeichnen(){
       const w = GEFILTERT[i], p = p3(w), v = p ? p.quote - p.basis : null;
       html += `<div class="zeile${w.id === AKTIV ? " aktiv" : ""}${i === FOKUS_I ? " fokus" : ""}" role="option" aria-selected="${w.id === AKTIV}" id="z-${i}" data-i="${i}" style="top:${i * ZEILE_H}px">
         <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Ampel günstig, Geschäft schwach">⚠</span> ' : ""}${esc(w.symbol)} · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
-        <div style="text-align:right">${pille(w.score)}</div>
+        <div style="text-align:right">${pille(w.score)}${w.score2 != null ? `<div class="neu-mini" title="Neue Ampel (zusätzlich)">neu ${fmt(w.score2,0)}</div>` : ""}</div>
         <div>${spark(w.sv, w.score)}</div>
         <div class="zahl-r c-cagr ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1,"%")}</div>
         <div class="zahl-r c-vorteil ${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${v == null ? "–" : (v > 0 ? "+" : "") + fmt(v,0)}</div>
@@ -1536,7 +1545,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
+let CHIPS = {neu:true, w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1661,9 +1670,10 @@ async function zeige(id, opt={}){
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
     ["mvrv", "MVRV-Z", `<i style="color:var(--mvrv)"></i>`, "l_mvrv", !!c.mvrv],
     ["ampel", "Ampel-Verlauf", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
+    ["neu", "Neue Ampel", `<i style="color:var(--neu)"></i>`, "neue_ampel", eigen && !!c.score2],
   ].filter(x => x[4]);
   $("#haupt").innerHTML = `
-    <section class="karte wert-kopf" id="wert-kopf">
+    <section class="karte wert-kopf${w.score2 != null ? " mit-neu" : ""}" id="wert-kopf">
       <div style="min-width:0">
         <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
           <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
@@ -1674,6 +1684,8 @@ async function zeige(id, opt={}){
       <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
         <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
         <div class="g-vor">${de == null ? "&nbsp;" : `vor 4 Wochen ${fmt(w.score_vor4w,0)} (${w4Html(de)})`}</div></div>
+      ${w.score2 != null ? `<div class="neu-ampel" data-e="neue_ampel" tabindex="0"><div class="n-titel">Neue Ampel</div><div class="n-zahl">${fmt(w.score2,0)}</div>
+        <div class="n-wort">${zonenWort(w.score2)}</div><div class="n-klein">${w.score2_vor4w != null ? `vor 4 Wochen ${fmt(w.score2_vor4w,0)} · ` : ""}zusätzlich, aus der Studie 2026</div></div>` : ""}
     </section>
     <div class="abstand"></div>
     <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
@@ -2086,7 +2098,7 @@ function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[]};
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[], neu:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
   const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
@@ -2142,6 +2154,11 @@ function zeichne(c, w){
   const sc = ch2.addHistogramSeries({priceLineVisible:false, lastValueVisible:true, priceFormat:{type:"price", precision:0, minMove:1}});
   sc.setData(c.t.map((t,i) => c.score[i] != null ? {time:t, value:c.score[i], color:farbe(c.score[i])} : c.score_v?.[i] != null ? {time:t, value:c.score_v[i], color:farbe(c.score_v[i]) + "66"} : {time:t}));   // blass = vorläufig
   [80, 15].forEach(v => sc.createPriceLine({price:v, color:v === 80 ? f.guenstig : f.teuer, lineWidth:1, lineStyle:2, axisLabelVisible:true}));
+  if (c.score2) {   // neue Ampel: violette Linie über den Balken der alten Ampel (eigener Schalter)
+    const s2 = ch2.addLineSeries({color:f.neu, lineWidth:2, priceLineVisible:false, lastValueVisible:true, crosshairMarkerVisible:false, title:"Neu", visible:CHIPS.neu !== false,
+      priceFormat:{type:"price", precision:0, minMove:1}});
+    s2.setData(c.t.map((t,i) => ({time:t, value:c.score2[i]})).filter(p => p.value != null)); SERIEN.neu.push(s2);
+  }
   if (c.mayer) {
     const my = ch2.addLineSeries({priceScaleId:"left", color:f.mayer, lineWidth:1.5, priceLineVisible:false, lastValueVisible:true, visible:CHIPS.mayer, priceFormat:{type:"price", precision:2, minMove:0.01}});
     my.setData(c.t.map((t,i) => ({time:t, value:c.mayer[i]})).filter(p => p.value != null));
@@ -2182,7 +2199,7 @@ function zeichne(c, w){
     const sc_ = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null;
     fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
-      <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>
+      <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>${c.score2?.[i] != null && CHIPS.neu !== false ? ` <span class="fk-neu" title="Neue Ampel (zusätzlich, Studie 2026)">Neu <b>${fmt(c.score2[i],0)}</b></span>` : ""}
       ${danachText(c, i)}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
