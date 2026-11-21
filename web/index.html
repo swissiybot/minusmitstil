@@ -1260,7 +1260,7 @@ async function start(){
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH, BEWERTUNG] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
-  ALLE = d.werte; suchIndex(); datenstand(d.stand);
+  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; suchIndex(); datenstand(d.stand);
   Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
   route();
@@ -1305,6 +1305,7 @@ function mpKachel(){
 }
 // ------------------------------------------------------------ Aktien-Karte: alle Aktien als Kacheln (Treemap)
 let KARTE = {farbe:"t", titel:"alle", gruppe:"branche", ...lade("karte", {})}, KARTE_KACHELN = [], KARTE_RO = null;
+let HEATMAP_EXTRA = [];   // Nasdaq-100-Mitglieder mit zu kurzer Historie für die Ampel (z. B. junge Börsengänge) – nur in der Heatmap
 function quadrate(werte, x, y, w, h){   // „Squarified Treemap“: Kacheln möglichst quadratisch
   const summe = werte.reduce((a, b) => a + b, 0), out = new Array(werte.length);
   if (!summe || w <= 0 || h <= 0) return werte.map(() => ({x, y, w:0, h:0}));
@@ -1332,7 +1333,7 @@ function zeigeKarte(){
   const istAktie = w => !SONDERGRUPPE(w);
   // Nur Nasdaq-100 (Mitglieder laut Wikipedia-Liste), Index-ETFs, Krypto und Rohstoffe
   const titelOk = w => KARTE.titel === "alle" ? (w.n100 || SONDERGRUPPE(w)) : KARTE.titel === "n100" ? !!w.n100 : w.gruppe === KARTE.titel;
-  const werte = ALLE.filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
+  const werte = [...ALLE, ...HEATMAP_EXTRA].filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
   const aktien = werte.filter(istAktie), mitMw = aktien.filter(w => w.f?.mw > 0).length, nachMw = mitMw >= aktien.length * 0.5 && mitMw > 0;
   const mitBranche = aktien.filter(w => w.branche).length;
   const stand = werte.reduce((a, w) => w.datum > a ? w.datum : a, "");
@@ -1416,11 +1417,11 @@ function zeigeKarte(){
   cv.onmousemove = ev => { const k = finde(ev); if (!k) { tip.hidden = true; return; } const w = k.w_, r = box.getBoundingClientRect(), p = w.perf || [];
     tip.innerHTML = `<b>${esc(kurzname(w))}</b> <span class="klein">${esc(w.symbol)}${w.branche ? " · " + esc(w.branche) + (w.untersektor ? " / " + esc(w.untersektor) : "") : ""}</span><br>
       Tag <b class="${klasse(p[0])}">${vz(p[0],2," %")}</b> · Woche <b class="${klasse(p[1])}">${vz(p[1],1," %")}</b><br>Monat <b class="${klasse(p[2])}">${vz(p[2],1," %")}</b> · Jahr <b class="${klasse(p[3])}">${vz(p[3],1," %")}</b><br>
-      Ampel <b>${fmt(w.score,0)}</b> · ${zonenWort(w.score)} · Trend ${w.mp != null ? MP_PFEIL[w.mp] + " " + MP_KURZ[w.mp] : "–"}${w.f?.mw ? `<br>Börsenwert ${fmt(w.f.mw / 1000, 1)} Mrd $` : ""}${w.f?.falle ? "<br>⚠ Fallen-Warnung: Geschäft schwach" : ""}`;
+      Ampel <b>${fmt(w.score,0)}</b> · ${zonenWort(w.score)} · Trend ${w.mp != null ? MP_PFEIL[w.mp] + " " + MP_KURZ[w.mp] : "–"}${w.f?.mw ? `<br>Börsenwert ${fmt(w.f.mw / 1000, 1)} Mrd $` : ""}${w.f?.falle ? "<br>⚠ Fallen-Warnung: Geschäft schwach" : ""}${w.kurz ? `<br><span class="klein">an der Börse seit ${datumDe(w.seit)} – für Ampel und Detailseite braucht es 3 Jahre Kurse</span>` : ""}`;
     tip.hidden = false; const tx = ev.clientX - r.left + 14, ty = ev.clientY - r.top + 14;
     tip.style.left = Math.min(tx, r.width - 255) + "px"; tip.style.top = Math.min(ty, r.height - 120) + "px"; };
   cv.onmouseleave = () => { tip.hidden = true; };
-  cv.onclick = ev => { const k = finde(ev); if (k) zeige(k.w_.id); };
+  cv.onclick = ev => { const k = finde(ev); if (k && !k.w_.kurz) zeige(k.w_.id); else if (k) cv.onmousemove(ev); };
   KARTE_RO?.disconnect(); KARTE_RO = new ResizeObserver(() => { if (SEITE === "karte" && $("#karte-cv")) zeichnen(); }); KARTE_RO.observe(box);
   zeichnen();
 }

@@ -461,6 +461,32 @@ def werte_eines(z: dict):
     return erg
 
 
+def heatmap_zeile(z: dict, tag: pd.DataFrame, n100: dict, f: dict | None) -> dict | None:
+    """Minimalzeile fuer die Heatmap (Nasdaq-100-Mitglieder mit weniger als 3 Jahren Kursen, z. B. junge Boersengaenge):
+    nur Kurs, Kursveraenderung, Branche und Boersenwert – keine Ampel, keine Detailseite."""
+    if tag is None or tag.empty:
+        return None
+    c = tag["Close"][tag["Close"] > 0]
+    if len(c) < 2:
+        return None
+    def seit(versatz):
+        t0 = c.index[-1] - versatz
+        return None if t0 < c.index[0] else r((float(c.iloc[-1]) / float(c.asof(t0)) - 1) * 100, 1)
+    zeile = {k: z[k] for k in ("id", "symbol", "name", "gruppe")}
+    zeile.update({"datum": c.index[-1].strftime("%Y-%m-%d"), "kurs": r(c.iloc[-1], 4), "score": None, "kurz": True,
+                  "seit": c.index[0].strftime("%Y-%m-%d"), "n100": True, "branche": n100.get("branche"), "untersektor": n100.get("untersektor", ""),
+                  "perf": [r((float(c.iloc[-1]) / float(c.iloc[-2]) - 1) * 100, 2), seit(pd.Timedelta(days=7)),
+                           seit(pd.DateOffset(months=1)), seit(pd.DateOffset(years=1))],
+                  "umsatz_usd": r(float((tag["Close"] * tag["Volume"]).tail(63).mean()), 0) if "Volume" in tag else 0.0})
+    if f is not None:
+        try:
+            import fundamente
+            zeile["f"] = fundamente.fuer_zeile(f, zeile["kurs"], None) or None
+        except Exception:
+            pass
+    return zeile
+
+
 def universum() -> pd.DataFrame:
     return pd.read_csv(E.DATEN / "universum.csv").fillna("")
 
@@ -545,7 +571,7 @@ def main(argv):
         uni = uni[uni["id"].isin(argv) | uni["symbol"].isin(argv)]
     else:
         alle_laden()   # einmal alles in den Arbeitsspeicher, dann geht es schnell
-    zeilen, fehler = [], 0
+    zeilen, fehler, heatmap_extra = [], 0, []
     s2 = None if argv else Stufe2()
     try:
         import fundamente
@@ -562,6 +588,10 @@ def main(argv):
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
+            if erg is None and "Nasdaq" in z["gruppe"] and z["symbol"] in n100:
+                hz = heatmap_zeile(z, lade_lokal(z["symbol"]), n100[z["symbol"]], fund.get(z["symbol"]))
+                if hz:
+                    heatmap_extra.append(hz)
             if erg is not None and "Nasdaq" in z["gruppe"] and z["symbol"] in n100:
                 m = n100[z["symbol"]]
                 erg[0]["n100"] = True
@@ -588,7 +618,8 @@ def main(argv):
         if (i + 1) % 250 == 0:
             print(f"  {i + 1}/{len(uni)} ausgewertet", flush=True)
     if not argv:
-        out = {"stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "werte": zeilen}
+        out = {"stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "werte": zeilen,
+               "heatmap_extra": heatmap_extra}   # Nasdaq-100-Mitglieder mit zu kurzer Historie (nur Heatmap)
         tmp = E.WEB_DATEN / "rangliste.tmp"
         tmp.write_text(json.dumps(out, separators=(",", ":")))
         tmp.replace(E.WEB_DATEN / "rangliste.json")
