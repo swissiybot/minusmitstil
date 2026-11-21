@@ -20,7 +20,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --akzent:#7c93ff; --akzent-stark:#5b75f5; --akzent-weich:rgba(124,147,255,.14); --auf-akzent:#0b0e14;
   --guenstig:#2ec4a6; --teuer:#ff8a3d; --neutral:#9aa3b5;
   --pos:#3fd0b2; --neg:#ff9a57;
-  --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff;
+  --gelb:#f5c242; --lila:#d36bff; --cyan:#22c3e6; --kegel:#a99bff; --pitop1:#ffb020; --pitop2:#ff5c8a; --mayer:#e2b8ff; --mvrv:#93c5fd;
   --kerze-auf:#2ec4a6; --kerze-ab:#f2643d; --bb:#8fb4dc; --fib:#e0b85a; --ema20:#5ad1ff; --ema50:#a6e35a; --ema100:#ff8fc8; --ema200:#ff5f5f; --marke-gut:#9ff5e2;
   --chart-bg:#131822; --chart-grid:#1c2230; --chart-text:#aab2c2;
   --schatten:0 10px 40px rgba(0,0,0,.45); --schatten-klein:0 2px 10px rgba(0,0,0,.25);
@@ -34,7 +34,7 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
   --akzent:#3d5af1; --akzent-stark:#2f49d6; --akzent-weich:rgba(61,90,241,.10); --auf-akzent:#ffffff;
   --guenstig:#0f9d84; --teuer:#d9600f; --neutral:#6b7486;
   --pos:#0b8a73; --neg:#c4530a;
-  --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad;
+  --gelb:#b7860b; --lila:#a523d6; --cyan:#0a8fb0; --kegel:#6a55e0; --pitop1:#c27a00; --pitop2:#d6336c; --mayer:#8e44ad; --mvrv:#1d4ed8;
   --kerze-auf:#0f9d84; --kerze-ab:#e0532a; --bb:#4f6f93; --fib:#a0700a; --ema20:#0277bd; --ema50:#4c8a00; --ema100:#c2185b; --ema200:#c62828; --marke-gut:#06604f;
   --chart-bg:#ffffff; --chart-grid:#eef1f6; --chart-text:#4b5566;
   --schatten:0 10px 40px rgba(20,30,60,.14); --schatten-klein:0 2px 10px rgba(20,30,60,.08);
@@ -549,7 +549,7 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), panel:g("panel"), bb:g("bb"), fib:g("fib"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -961,6 +961,7 @@ const ERKLAERUNG_NEU = {
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
   l_kaufzonen: {titel:"Kaufzonen", text:"Waagerechte Linien: zu welchem Kurs der Wert HEUTE gemessen an seiner eigenen Geschichte günstig oder teuer wäre. Unter der dunkel-blaugrünen Linie stünde die Ampel bei 80 oder mehr (historisch sehr günstig), unter der hellen bei 60 (günstig); über der hell-orangen bei 40 oder weniger (teuer), über der dunkel-orangen bei 15 (historisch sehr teuer). Gerechnet mit denselben Bausteinen wie die Ampel (Abstand zum Hoch, zur 200-Wochen-Linie, zum Langfristtrend, RSI). Die Linien verschieben sich jede Woche. Beschreibung, keine Kaufempfehlung – „günstig“ hat in der Prüfung nicht verlässlich mehr Rendite gebracht."},
+  l_mvrv: {titel:"MVRV-Z-Score (Bitcoin)", text:"Vergleicht den Marktwert aller Bitcoin mit dem „Realized Value“: jeder Coin zu dem Preis bewertet, zu dem er zuletzt bewegt wurde – grob der Durchschnittseinstand aller Besitzer. Z-Score = (Marktwert − Einstand) / Schwankung des Marktwerts. Unter 0: Kurs unter dem Ø-Einstand, die meisten Besitzer liegen im Minus – das war 2011, 2015, 2018/19, März 2020 und 2022 der Fall (Böden). Über 7: überhitzt (2013, 2017, 2021). In der Prüfung ohne Zukunftswissen leicht besser als die Grundquote; nur wenige Fälle. Blaue Linie im Ampel-Bereich, gestrichelte Linie im Kurs-Chart = Ø-Einstand."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
@@ -1523,7 +1524,7 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1535,7 +1536,7 @@ const chartBasis = () => { const f = F(); return {autoSize:true, layout:{backgro
   timeScale:{borderColor:f.line, minBarSpacing:0.02, rightOffset:4}, rightPriceScale:{borderColor:f.line}, leftPriceScale:{borderColor:f.line},
   crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.akzent}},
   localization:{locale:"de-DE", dateFormat:"dd.MM.yyyy", priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}}; };
-function alleChartsWeg(){ charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; KEGEL_D = null; CD = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
+function alleChartsWeg(){ KZ_LINIEN = []; charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; KEGEL_D = null; CD = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
 
 function gaugeSvg(s){
   const cx = 115, cy = 112, r = 92, w = 16;
@@ -1646,6 +1647,7 @@ async function zeige(id, opt={}){
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
     ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
+    ["mvrv", "MVRV-Z", `<i style="color:var(--mvrv)"></i>`, "l_mvrv", !!c.mvrv],
     ["ampel", "Ampel-Verlauf", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
   ].filter(x => x[4]);
   $("#haupt").innerHTML = `
@@ -1674,7 +1676,7 @@ async function zeige(id, opt={}){
       <div class="chart-flaeche">
         <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
-        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}</span></div>
+        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
       </div>
       <div class="tv-hinweis" id="tv-hinweis" hidden></div><div class="tv-hinweis" id="chart-meldung" hidden></div>
       ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
@@ -1686,6 +1688,7 @@ async function zeige(id, opt={}){
     <div class="raster">
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
       ${marktphaseKarte(w, c)}
+      ${mvrvKarte(c)}
       ${phasenKarte(c)}
       <section class="karte" id="wahr">${wahrKarte(w)}</section>
       <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
@@ -1741,7 +1744,7 @@ function chipUmschalten(k, b){
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
-  if (k === "kaufzonen") kaufzonenLinien();
+  if (k === "kaufzonen" || k === "mvrv") kaufzonenLinien();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
 }
@@ -1774,7 +1777,7 @@ async function intervallSetzen(iv){
 }
 // ------------------------------------------------------------ Zeitebenen für den eigenen Chart
 function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
-  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","trend","trend_o","trend_u","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer"].filter(k => c[k]);
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","trend","trend_o","trend_u","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
   linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
   const zuMonat = new Map(); let schl = null, i0 = 0;
   const abschliessen = i1 => {   // Wochen i0..i1-1
@@ -1822,7 +1825,7 @@ function kegelAnzeige(m){   // Prognose-Kegel passend zur Zeitebene (Monat: Mona
   return {...m, ...out};
 }
 function hauptChartWeg(){
-  FIB_LINIEN = []; if (LINEAL) { LINEAL.a = LINEAL.b = null; LINEAL.fertig = false; linealZeichnen(); }
+  FIB_LINIEN = []; KZ_LINIEN = []; if (LINEAL) { LINEAL.a = LINEAL.b = null; LINEAL.fertig = false; linealZeichnen(); }
   charts.forEach(ch => { try { ch.remove(); } catch(e){} }); charts = [];
   KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; KEGEL = []; LIMITLINIEN = [];
 }
@@ -1869,6 +1872,8 @@ let KZ_LINIEN = [];
 function kaufzonenLinien(){
   if (!KERZEN) return;
   KZ_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); KZ_LINIEN = [];
+  const mi = CDATA?.mvrv_info;
+  if (CHIPS.mvrv && mi?.realisiert_kurs) KZ_LINIEN.push(KERZEN.createPriceLine({price:mi.realisiert_kurs, color:F().mvrv, lineWidth:2, lineStyle:2, axisLabelVisible:true, title:"Ø-Einstand aller Besitzer (MVRV-Z 0)"}));
   const kz = INFO?.kz; if (!CHIPS.kaufzonen || !kz) return;
   [["80", 4, "sehr günstig darunter"], ["60", 3, "günstig darunter"], ["40", 1, "teuer darüber"], ["15", 0, "sehr teuer darüber"]].forEach(([k, st, t]) => {
     if (kz[k] == null) return;
@@ -1964,6 +1969,19 @@ function mpStreifen(verlauf, t){
   for (let i = 0; i < n; i++) { const j = new Date(t[ab + i] * 1000).getUTCFullYear(); if (j !== letztes) { if (letztes != null && j % 2 === 0) jahre.push(`<text x="${(i * b).toFixed(1)}" y="31" font-size="10" fill="var(--muted)">${j}</text>`); letztes = j; } }
   return `<svg viewBox="0 0 600 34" width="100%" role="img" aria-label="Phasen der letzten ${Math.round(n / 52)} Jahre" data-e="mp_streifen" tabindex="0" style="display:block;margin:10px 0 2px">${r}${jahre.join("")}</svg>`;
 }
+function mvrvKarte(c){
+  const m = c?.mvrv_info; if (!m) return "";
+  const p = m.pruefung, q = m.quote;
+  const zeilen = [...m.unter_null].reverse().map(x => `<tr><td style="text-align:left">${datumDe(x.von)} – ${datumDe(x.bis)}</td><td>${fmt(x.z_extrem,2)}</td><td>${fmt(x.kurs, x.kurs >= 100 ? 0 : 2)}</td><td class="${klasse(x.r1)}">${x.r1 == null ? "noch offen" : vz(x.r1,0," %")}</td></tr>`).join("");
+  const farbeZ = m.z < 0 ? "var(--guenstig)" : m.z > 7 ? "var(--teuer)" : "inherit";
+  return `<section class="karte breit2" id="mvrv-karte"><div class="karte-kopf"><span data-e="l_mvrv" tabindex="0">MVRV-Z-Score · Bewertung auf der Blockchain</span><span>${datumDe(m.datum)}</span></div>
+    <div class="mp-kopf"><div class="gross-zahl" style="color:${farbeZ}">${fmt(m.z,2)}</div><div class="klein">${m.z < 0 ? "Kurs unter dem Durchschnittseinstand aller Besitzer – historisch günstig" : m.z > 7 ? "überhitzt – historisch teuer" : "zwischen 0 (günstig) und 7 (überhitzt)"}</div></div>
+    <div class="mp-kv"><div class="kv"><span>Ø-Einstand aller Besitzer</span><b>${fmt(m.realisiert_kurs,0)} $</b></div><div class="kv"><span>MVRV (Marktwert / Einstand)</span><b>${fmt(m.mvrv,2)}</b></div></div>
+    <h4 style="margin:12px 0 4px">Phasen unter 0 (Kurs unter dem Ø-Einstand) und was 1 Jahr später kam</h4>
+    <div class="tab-scroll"><table class="wtab mp-tab"><thead><tr><th style="text-align:left">Phase</th><th>tiefster Z</th><th>Kurs zu Beginn</th><th>1 Jahr später</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <p style="margin:10px 0 4px"><b data-e="mp_pruefung" tabindex="0">Ehrlich geprüft</b> (ohne Zukunftswissen, ${p ? `${p.von}–${p.bis}` : "–"}): nach Tagen unter 0 stand Bitcoin ein Jahr später in <b>${fmt(p?.unter_null?.hoeher,0," %")}</b> der Fälle höher (${fmt(p?.unter_null?.tage,0)} Tage), nach Tagen dazwischen in ${fmt(p?.dazwischen?.hoeher,0," %")}, nach über 7 in ${fmt(p?.ueber_sieben?.hoeher,0," %")} (${fmt(p?.ueber_sieben?.tage,0)} Tage). Vorteil gegenüber der einfachen Grundquote: <b>${p?.skill == null ? "–" : vz(p.skill,1," %")}</b> – klein, und er beruht auf nur ${m.unter_null.filter(x => x.r1 != null).length} Tiefphasen.</p>
+    <p class="klein" style="margin:6px 0 0">Quelle: Coin Metrics Community-Daten (CapMVRVCur), Z-Score nur mit der Vergangenheit berechnet. Keine Anlageberatung.</p></section>`;
+}
 function marktphaseKarte(w, c){
   const m = c?.mp;
   const kopf = `<div class="karte-kopf"><span data-e="mp_karte" tabindex="0">Marktphase · steigt oder fällt es?</span><span>Trend heute</span></div>`;
@@ -2020,7 +2038,7 @@ function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], phasen:[], bb:[], ema:[]};
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
   const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
@@ -2083,6 +2101,13 @@ function zeichne(c, w){
     const orig = my.applyOptions.bind(my);
     my.applyOptions = o => { orig(o); if ("visible" in o) ch2.priceScale("left").applyOptions({visible:o.visible}); };
   }
+  if (c.mvrv) {   // MVRV-Z-Score (Bitcoin): eigene, unsichtbare Skala im Ampel-Bereich, Linien bei 0 und 7
+    const mv = ch2.addLineSeries({priceScaleId:"mvrv", color:f.mvrv, lineWidth:1.5, priceLineVisible:false, lastValueVisible:false, visible:CHIPS.mvrv, priceFormat:{type:"price", precision:2, minMove:0.01}});
+    ch2.priceScale("mvrv").applyOptions({scaleMargins:{top:0.1, bottom:0.05}, visible:false});
+    mv.setData(c.t.map((t,i) => ({time:t, value:c.mvrv[i]})).filter(p => p.value != null));
+    [[0, "MVRV-Z 0"], [7, "MVRV-Z 7"]].forEach(([v, t]) => mv.createPriceLine({price:v, color:f.mvrv, lineWidth:1, lineStyle:3, axisLabelVisible:false, title:t}));
+    SERIEN.mvrv.push(mv);
+  }
   ch2._sc = sc; ZWEI = ch2;
   markenSetzen();
   // Zeitachsen koppeln (beide Richtungen) und gleiche Breite der Preisskalen
@@ -2113,6 +2138,7 @@ function zeichne(c, w){
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
+      ${c.mvrv && CHIPS.mvrv && c.mvrv[i] != null ? `<span><i class="sw" style="background:var(--mvrv)"></i>MVRV-Z <b>${fmt(c.mvrv[i],2)}</b>${c.mvrv[i] < 0 ? " · unter Ø-Einstand" : c.mvrv[i] > 7 ? " · überhitzt" : ""}</span>` : ""}
       ${CHIPS.ema && c._ema ? [20, 50, 100, 200].filter(n => c._ema[n][i] != null).map(n => `<span><i class="sw" style="background:var(--ema${n})"></i>EMA${n} ${fmt(c._ema[n][i],nk)}</span>`).join("") : ""}
       ${CHIPS.bb && c._bb?.mitte[i] != null ? `<span><i class="sw" style="background:var(--bb)"></i>Bollinger ${c._bb.unten[i] == null ? "–" : fmt(c._bb.unten[i],nk)} – ${fmt(c._bb.oben[i],nk)}</span>` : ""}</div>`;
   };

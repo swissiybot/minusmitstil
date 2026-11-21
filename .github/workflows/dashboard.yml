@@ -69,6 +69,10 @@ jobs:
         continue-on-error: true
         run: python btc_alt.py
 
+      - name: Bitcoin MVRV-Z (Coin Metrics)
+        continue-on-error: true
+        run: python mvrv.py
+
       - name: Kurse (Yahoo)
         id: kurse
         continue-on-error: true

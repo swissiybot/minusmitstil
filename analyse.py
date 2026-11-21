@@ -453,6 +453,18 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
         chart["pi_top111"] = rund(extra["pi_top111"]); chart["pi_top350x2"] = rund(extra["pi_top350x2"])
         chart["pi_zone"] = [1 if z else None for z in extra["pi_zone_w"]]
+        # MVRV-Z-Score (Bewertung auf der Blockchain, Coin Metrics) – nur Bitcoin
+        try:
+            import mvrv as _mv
+            d_mv = _mv.reihe()
+            if d_mv is not None and d_mv["z"].notna().any():
+                chart["mvrv"] = rund(d_mv["z"].reindex(w.index, method="ffill").values, 3)
+                mi = _mv.auswerten(d_mv, tag_c)
+                mi["pruefung"] = _mv.pruefung(d_mv, tag_c)
+                chart["mvrv_info"] = mi
+                zeile_out["mvrv_z"] = mi["z"]
+        except Exception as ex:
+            print(f"MVRV nicht auswertbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
         # Kreuzungen als Markierung an der Wochenkerze, in der sie lagen
         def woche(d):
             i = min(int(w.index.searchsorted(pd.Timestamp(d))), len(t_unix) - 1)
@@ -519,6 +531,12 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         out["pi_top350x2"] = rund((voll.rolling(350).mean() * 2).reindex(t.index).values)
         if "pi_zone" in chart:
             out["pi_zone"] = [1 if z == 1 else None for z in woche([1 if z else 0 for z in chart["pi_zone"]])]
+        if "mvrv" in chart:
+            try:
+                import mvrv as _mv
+                out["mvrv"] = rund(_mv.reihe()["z"].reindex(t.index, method="ffill").values, 3)
+            except Exception:
+                pass
     return out
 
 
