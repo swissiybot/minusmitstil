@@ -1,11 +1,13 @@
 """Marktphase: steigt oder faellt der Markt gerade – und hilft das bei der Vorhersage?
 
-Phase je Woche, nur mit dem Wissen dieser Woche berechnet:
-  Aufwaertstrend (2): Kurs ueber der 200-Tage-Linie (40-Wochen-Durchschnitt) UND hoeher als vor 12 Monaten
-  Abwaertstrend  (0): Kurs unter der 200-Tage-Linie UND tiefer als vor 12 Monaten
-  Gemischt       (1): sonst (die beiden Zeichen widersprechen sich)
-Warum 200 Tage und nicht 200 Wochen: Die 200-Wochen-Linie bewegt sich so langsam, dass sie fast nie
-die Richtung wechselt (beim S&P 500 lag der Kurs seit 2012 fast immer darueber) – fuer eine Phase taugt sie nicht.
+Phase je Woche, nur mit dem Wissen dieser Woche berechnet (Regel seit 21.11.2026, Ergebnis der Trendstudie):
+  Aufwaertstrend (2): 20-Wochen-Linie ueber der 50-Wochen-Linie (etwa 100- ueber 250-Tage-Linie)
+  Abwaertstrend  (0): 20-Wochen-Linie unter der 50-Wochen-Linie
+Warum diese Regel: In trendstudie.py (23 Kandidaten, ETFs/Rohstoffe/400 Aktien/Krypto, Pruefzeit ab 2005)
+lag sie im Mittel ueber alle Gruppen vorne, wechselt nur etwa einmal im Jahr (wenig Fehlalarme) und war bei
+Aktien schon in der Lernzeit vor 2005 die beste. Sie sagt die Richtung trotzdem nicht besser voraus als die
+Grundquote; ihr Nutzen ist ein kleinerer groesster Rueckgang. Die alte Regel (Kurs/200-Tage-Linie und 12 Monate)
+wechselte 2- bis 3-mal im Jahr.
 
 Zusaetzlich die klassische Lesart: ab 20 % unter dem bisherigen Hoch spricht man von Baerenmarkt.
 
@@ -19,8 +21,8 @@ import math
 import numpy as np
 import pandas as pd
 
-LINIE = 40          # Wochen, entspricht etwa der 200-Tage-Linie
-MOMENTUM = 52       # Wochen (12 Monate)
+KURZ, LANG = 20, 50   # Wochen-Linien der Trendregel
+MOMENTUM = 52         # Wochen (12 Monate, nur zur Anzeige)
 HORIZONTE = {"3m": 13, "1": 52}
 MIN_FAELLE = 26     # so viele Lernwochen je Phase, sonst wird die Grundquote genommen
 NAMEN = {0: "Abwärtstrend", 1: "Gemischt", 2: "Aufwärtstrend"}
@@ -30,13 +32,10 @@ BAER = -0.20
 def phasen(close: np.ndarray) -> np.ndarray:
     """Phase je Woche (0/1/2, NaN solange zu wenig Historie)."""
     s = pd.Series(close)
-    linie = s.rolling(LINIE).mean().values
-    vor = s.shift(MOMENTUM).values
+    kurz, lang = s.rolling(KURZ).mean().values, s.rolling(LANG).mean().values
     with np.errstate(invalid="ignore"):
-        ueber, hoeher = close > linie, close > vor
-        unter, tiefer = close < linie, close < vor
-    p = np.where(ueber & hoeher, 2.0, np.where(unter & tiefer, 0.0, 1.0))
-    p[np.isnan(linie) | np.isnan(vor)] = np.nan
+        p = np.where(kurz > lang, 2.0, 0.0)
+    p[np.isnan(lang)] = np.nan
     return p
 
 
@@ -157,7 +156,8 @@ def fuer_wert(w: pd.DataFrame) -> dict | None:
     i = len(ph) - 1
     while i > 0 and ph[i - 1] == jetzt:
         i -= 1
-    linie = pd.Series(c).rolling(LINIE).mean().values
+    kurz = pd.Series(c).rolling(KURZ).mean().values
+    lang = pd.Series(c).rolling(LANG).mean().values
     hoch = np.maximum.accumulate(c)
     dd = c[-1] / hoch[-1] - 1
     # wie lange schon 20 % unter dem Hoch (klassischer Baerenmarkt)?
@@ -187,8 +187,9 @@ def fuer_wert(w: pd.DataFrame) -> dict | None:
     s.add(c, ph, jahr)
     return {
         "phase": jetzt, "name": NAMEN[jetzt], "seit": w.index[i].strftime("%Y-%m-%d"),
-        "zu_linie": round(float(c[-1] / linie[-1] - 1) * 100, 1),
-        "mom12": round(float(c[-1] / c[-1 - MOMENTUM] - 1) * 100, 1),
+        "abstand": round(float(kurz[-1] / lang[-1] - 1) * 100, 1),     # 20- zur 50-Wochen-Linie
+        "zu_lang": round(float(c[-1] / lang[-1] - 1) * 100, 1),        # Kurs zur 50-Wochen-Linie
+        "mom12": round(float(c[-1] / c[-1 - MOMENTUM] - 1) * 100, 1) if len(c) > MOMENTUM else None,
         "dd": round(float(dd) * 100, 1), "baer_seit": baer_seit,
         "wochen": len(c) - int(np.isnan(ph).sum()), "ab": w.index[int(np.argmax(~np.isnan(ph)))].strftime("%Y-%m-%d"),
         "rueckblick": rueck,

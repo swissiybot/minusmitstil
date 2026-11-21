@@ -94,6 +94,7 @@ jobs:
         run: |
           python analyse.py
           python tagebuch_pruefung.py
+          python trendstudie.py || echo "::warning::Trendstudie nicht gerechnet"
 
       - name: Statischer Export
         run: python export.py

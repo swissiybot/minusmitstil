@@ -7,7 +7,8 @@ cd "$(dirname "$0")"
   .venv/bin/python btc_alt.py   # Bitcoin vor 2014 (einmalig, danach aus daten/btc_alt)
   .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python umfeld.py \
     && .venv/bin/python bewertung.py && .venv/bin/python fundamente.py \
-    && .venv/bin/python analyse.py && .venv/bin/python tagebuch_pruefung.py
+    && .venv/bin/python analyse.py && .venv/bin/python tagebuch_pruefung.py \
+    && { .venv/bin/python trendstudie.py || echo "Trendstudie nicht gerechnet"; }
   rc=$?
   # Signal-Tagebuch lokal in Git festhalten (macht nachtraegliche Aenderungen sichtbar)
   if [ $rc -eq 0 ] && [ -n "$(git status --porcelain daten/tagebuch)" ]; then
