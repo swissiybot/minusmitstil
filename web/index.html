@@ -752,7 +752,7 @@ const ERKLAERUNG = {
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
-  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „günstig“ mit Zahl: Die Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „teuer“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert. Ein Pfeil steht nur in der Woche, in der die Grenze überschritten wird – bleibt die Ampel danach über 80 (oder unter 15), kommt kein weiterer Pfeil. Die Farbe der Balken in der Ampel-Leiste zeigt jede Woche. Rückblickend sieht das oft gut aus; die Prüfung zeigt, wie viel es wirklich brachte."},
+  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „alt 82“: Die alte Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „alt 13“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert in dieser Woche. Violette Pfeile „neu …“ zeigen dasselbe für die neue Ampel (nur wenn der Schalter „Neue Ampel“ an ist). Je Phase gibt es nur einen Pfeil: Ein neuer kommt erst, wenn die Ampel zwischendurch deutlich zurück war (nach „teuer“ über 25, nach „günstig“ unter 70) – sonst blinkt es bei Werten knapp an der Grenze. Der Pfeil steht beim Überschreiten der Grenze, nicht am Hoch oder Tief. Beschreibung, kein Kauf- oder Verkaufssignal."},
   l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Die gestrichelten Linien markieren 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 3 Jahre (die Karte „Prognose“ zeigt die Zahlen nach 12 Monaten). Je weiter in der Zukunft, desto breiter der Kegel: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
   tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Pfeile und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
@@ -1767,7 +1767,7 @@ async function prognoseOnline(id){   // reduzierter Export ohne Kurse: Prognose 
 function chipUmschalten(k, b){
   CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
-  if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
+  if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch" || k === "neu") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
   if (k === "kaufzonen" || k === "mvrv") kaufzonenLinien();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
@@ -1909,7 +1909,29 @@ function markenSetzen(){
   if (!KERZEN || !CD) return;
   MARKEN_ENG = eng();
   const f = F();
-  const m = CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top"));
+  // Pfeile günstig/teuer: nur ein Pfeil je Phase (neuer Pfeil erst, wenn die Ampel zwischendurch deutlich zurück war:
+  // nach „teuer“ über 25, nach „günstig“ unter 70) – sonst blinkt es bei Werten knapp an der Grenze
+  const pfeileOhneFlackern = (marken, reihe) => {
+    if (!reihe || !CDATA?.t) return marken;
+    const idx = tt => { const a = CDATA.t; let lo = 0, hi = a.length - 1; while (lo < hi) { const mi = (lo + hi) >> 1; if (a[mi] < tt) lo = mi + 1; else hi = mi; } return lo; };
+    const letzte = {kauf:-1, teuer:-1}, out = [];
+    for (const mk of marken) {
+      const art = mk[1]; if (art !== "kauf" && art !== "teuer") { out.push(mk); continue; }
+      const i = idx(mk[0]), j = letzte[art];
+      let zurueck = j < 0;
+      for (let k = Math.max(0, j); !zurueck && k < i; k++) { const s = reihe[k]; if (s != null && (art === "teuer" ? s > 25 : s < 70)) zurueck = true; }
+      if (zurueck) { out.push(mk); letzte[art] = i; }
+    }
+    return out;
+  };
+  // Pfeile der neuen Ampel (violett), gleiche Regeln
+  const neuMarken = () => {
+    const s2 = CDATA?.score2; if (!s2 || CHIPS.neu === false || !CHIPS.pfeile) return [];
+    const roh = []; for (let i = 1; i < s2.length; i++) { const a = s2[i], b = s2[i - 1]; if (a == null) continue;
+      if (a >= 80 && !(b >= 80)) roh.push([CDATA.t[i], "kauf", Math.round(a)]); if (a <= 15 && !(b <= 15)) roh.push([CDATA.t[i], "teuer", Math.round(a)]); }
+    return pfeileOhneFlackern(roh, s2).map(([tt, art, s]) => [naechste(tt), art === "kauf" ? "neu_kauf" : "neu_teuer", s]);
+  };
+  const m = pfeileOhneFlackern(CD.marken.filter(([, art]) => (CHIPS.pfeile && (art === "kauf" || art === "teuer")) || (CHIPS.pi && (art === "pi_beginn" || art === "pi_boden")) || (CHIPS.pitop && art === "pi_top")), CDATA?.score);
   // Kauf-Ergebnis je günstiger Phase (Beginn der Phase, Kurs 1 Jahr später) – an die nächste Kerze der aktuellen Ansicht gelegt
   const naechste = tt => { const a = CD.t; let lo = 0, hi = a.length - 1; while (lo < hi) { const mi = (lo + hi) >> 1; if (a[mi] < tt) lo = mi + 1; else hi = mi; } return a[lo]; };
   const kp = CDATA?.c ? kaufPhasen(CDATA).phasen : [];
@@ -1918,12 +1940,14 @@ function markenSetzen(){
   const tiefHoch = !CHIPS.tiefhoch || !CDATA?.c ? [] : [
     ...kp.map(p => [naechste(p.tTief), "tief", p]),
     ...teuerPhasen(CDATA).map(p => [naechste(p.tHoch), "hoch", p])];
-  const alle = [...m, ...tiefHoch].sort((a, b) => a[0] - b[0]);
+  const alle = [...m, ...tiefHoch, ...neuMarken()].sort((a, b) => a[0] - b[0]);
   KERZEN.setMarkers(alle.map(([t, art, s]) => ({
-    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Tief bisher" : "Tief"} · Ampel ${fmt(s.aTief,0)}`} : null,
-    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel ${fmt(s.aHoch,0)}`} : null,
-    kauf:     {time:t, position:"belowBar", color:f.gut, shape:"arrowUp", text:String(s)},
-    teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:String(s)},
+    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Tief bisher" : "Tief"} · Ampel alt ${fmt(s.aTief,0)}`} : null,
+    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel alt ${fmt(s.aHoch,0)}`} : null,
+    kauf:     {time:t, position:"belowBar", color:f.gut, shape:"arrowUp", text:`alt ${s}`},
+    teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:`alt ${s}`},
+    neu_kauf: {time:t, position:"belowBar", color:f.neu, shape:"arrowUp", text:`neu ${s}`},
+    neu_teuer:{time:t, position:"aboveBar", color:f.neu, shape:"arrowDown", text:`neu ${s}`},
     pi_beginn:{time:t, position:"aboveBar", color:f.lila, shape:"circle", text:"Bodenbildung beginnt"},
     pi_boden: {time:t, position:"belowBar", color:f.lila, shape:"arrowUp", text:"Pi Boden-Signal"},
     pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
