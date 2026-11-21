@@ -794,6 +794,7 @@ const ERKLAERUNG = {
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
+  l_schwelle: {titel:"Ab welcher Ampel hat es sich gelohnt?", text:"Für genau diesen Wert: Wie oft stand der Kurs 1, 3 und 5 Jahre nach einer Woche mit dieser Ampel höher, und wie groß war die mittlere Veränderung? Die Zeile „jede Woche“ ist der Vergleich. So siehst du, ob eine höhere Ampel bei diesem Wert früher wirklich besser war (z. B. Bitcoin) oder nicht (z. B. Nasdaq-100, wegen der Dotcom-Krise 2000–2002). Eine Grenze, die zurückblickend perfekt passt, ist auf die Vergangenheit zugeschnitten – sie muss in Zukunft nicht gelten."},
   l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60): Kreis = Einstieg, also der Schlusskurs der ersten Woche mit Ampel ab 60 (Datum und Kurs stehen daneben). Gestrichelte Linie bis zum Quadrat = derselbe Wert genau 52 Wochen später, dort steht das Ergebnis in Prozent (grün = höher, orange = tiefer, grau = noch kein Jahr vergangen). Der Einstieg ist der Phasenbeginn, nicht der Tiefpunkt – der tiefste Kurs kam oft erst später (siehe „Tief-/Hochpunkte“). Rückblick ohne Kosten und Steuern."},
   l_tiefhoch: {titel:"Tief-/Hochpunkte (Rückblick)", text:"Grüner Kreis: die Woche mit dem tiefsten Schlusskurs in jeder günstigen Phase (Ampel ab 60), mit der Ampel dieser Woche. Orange: die Woche mit dem höchsten Schlusskurs in jeder teuren Phase (Ampel bis 15). Achtung: Den Tief- oder Hochpunkt kennt man immer erst hinterher – damals wusste niemand, dass es der tiefste Kurs war. Die Pfeile dagegen erscheinen in der Woche, in der die Ampel die Grenze überschreitet, und waren damals schon sichtbar."},
   l_tief: {titel:"Noch tiefer in der Phase", text:"Wie weit der Kurs nach Beginn der günstigen Phase noch fiel, bevor sie endete (mit Monat des Tiefpunkts). Zeigt, dass „günstig“ nicht „ganz unten“ heißt – den Tiefpunkt kennt man erst im Nachhinein."},
@@ -1701,6 +1702,7 @@ async function zeige(id, opt={}){
       ${marktphaseKarte(w, c)}
       ${mvrvKarte(c)}
       ${phasenKarte(c)}
+      ${schwellenKarte(c)}
       <section class="karte" id="wahr">${wahrKarte(w)}</section>
       <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
       <section class="karte"><div class="karte-kopf"><span data-e="rueckschlag" tabindex="0">Rückschlagrisiko</span><span>1 Jahr</span></div>
@@ -2027,6 +2029,41 @@ function marktphaseKarte(w, c){
     ${risiko ? `<p style="margin:4px 0">${risiko}</p>` : ""}
     <p class="klein" style="margin:6px 0 0">Die Phase beschreibt, wo der Kurs gerade steht – sie sagt nicht voraus, wohin er geht. Grundquote: in ${fmt(alle?.quote,0," %")} aller Wochen stand der Kurs ein Jahr später höher. Keine Anlageberatung.</p>
   </section>`;
+}
+function schwellenKarte(c){   // Ab welcher Ampel hat sich ein Kauf bei DIESEM Wert gelohnt? (Rückblick über alle Wochen, im Browser gerechnet)
+  if (!c?.c || !c.score) return "";
+  const n = c.t.length, H = [52, 156, 260];
+  const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
+  const stat = pruef => {
+    const out = {wochen:0, phasen:0}; let letzte = -99;
+    for (let i = 0; i < n; i++) if (pruef(i)) { out.wochen++; if (i - letzte > 4) out.phasen++; letzte = i; }
+    for (const h of H) { const r = []; for (let i = 0; i + h < n; i++) if (pruef(i) && c.c[i] > 0 && c.c[i + h] > 0) r.push((c.c[i + h] / c.c[i] - 1) * 100);
+      out[h] = r.length >= 4 ? {q:r.filter(x => x > 0).length / r.length * 100, m:med(r), min:Math.min(...r), n:r.length} : null; }
+    const d = []; for (let i = 0; i + 52 < n; i++) if (pruef(i) && c.c[i] > 0) { let mn = c.c[i]; for (let j = i; j <= i + 52; j++) if (c.c[j] > 0 && c.c[j] < mn) mn = c.c[j]; d.push((mn / c.c[i] - 1) * 100); }
+    out.tief = med(d); return out;
+  };
+  const gueltig = i => c.score[i] != null;
+  const zeilen = [["jede Woche", gueltig], ...[50, 60, 70, 80, 90].map(g => [`Ampel ≥ ${g}`, i => c.score[i] != null && c.score[i] >= g])]
+    .map(([name, f]) => ({name, s:stat(f)})).filter(z => z.s.wochen >= 4 && z.s[52]);
+  if (zeilen.length < 2) return "";
+  const basis = zeilen[0].s;
+  const zelle = x => x == null ? `<td class="klein">–</td>` : `<td title="schlechtester Fall ${vz(x.min,0," %")} · ${x.n} Wochen"><b>${fmt(x.q,0," %")}</b> <span class="${klasse(x.m)}">${vz(x.m,0," %")}</span></td>`;
+  // Fazit: Ampel ≥ 80 (sonst ≥ 70) gegen jede Woche, nach 1 und 3 Jahren; Anteil höher (±5 Punkte) und Median.
+  // Liegen fast alle Wochen im Plus (≥ 95 %), entscheidet der Median (± 20 Punkte).
+  const hoch = zeilen.find(z => z.name === "Ampel ≥ 80") || zeilen.find(z => z.name === "Ampel ≥ 70") || zeilen[zeilen.length - 1];
+  const urteil = h => { const a = hoch.s[h], b = basis[h]; if (!a || !b) return 0;
+    if (a.q >= 95 && b.q >= 95) return a.m - b.m >= 20 ? 1 : a.m - b.m <= -20 ? -1 : 0;
+    return a.q - b.q >= 5 && a.m >= b.m ? 1 : a.q - b.q <= -5 ? -1 : 0; };
+  const u = [urteil(52), urteil(156)], txt = h => `${hoch.name} nach ${h === 156 ? "3 Jahren" : "1 Jahr"} in ${fmt(hoch.s[h]?.q,0," %")} der Fälle höher (Median ${vz(hoch.s[h]?.m,0," %")}), an beliebigen Wochen in ${fmt(basis[h]?.q,0," %")} (${vz(basis[h]?.m,0," %")})`;
+  const fazit = u.includes(1) && !u.includes(-1) ? `Bei diesem Wert war eine hohe Ampel früher <b>besser</b>: ${txt(u[0] === 1 ? 52 : 156)}.`
+    : u.includes(-1) && !u.includes(1) ? `Bei diesem Wert war eine hohe Ampel früher <b>nicht besser</b>, eher schlechter: ${txt(u[0] === -1 ? 52 : 156)}. Hohe Ampelwerte gab es oft mitten in langen Abstürzen.`
+    : u.includes(1) ? `Bei diesem Wert ist das Bild <b>gemischt</b>: ${txt(52)}; ${txt(156)}.`
+    : `Bei diesem Wert machte die Höhe der Ampel früher <b>kaum einen Unterschied</b>: ${txt(hoch.s[156] ? 156 : 52)}.`;
+  return `<section class="karte breit2" id="schwellen-karte"><div class="karte-kopf"><span data-e="l_schwelle" tabindex="0">Ab welcher Ampel hat es sich gelohnt?</span><span>Rückblick ${new Date(c.t[c.score.findIndex(x => x != null)] * 1000).getUTCFullYear()}–heute</span></div>
+    <p style="margin:0 0 8px">${fazit}</p>
+    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Kauf bei</th><th>nach 1 Jahr höher · Median</th><th>nach 3 Jahren</th><th>nach 5 Jahren</th><th data-e="l_tief">danach noch tiefer (Median)</th><th>Phasen</th></tr></thead><tbody>${
+      zeilen.map(z => `<tr><td style="text-align:left">${z.name}</td>${zelle(z.s[52])}${zelle(z.s[156])}${zelle(z.s[260])}<td class="klein">${z.s.tief == null ? "–" : vz(z.s.tief,0," %")}</td><td class="klein">${z.name === "jede Woche" ? "–" : z.s.phasen}</td></tr>`).join("")}</tbody></table></div>
+    <p class="klein" style="margin-top:8px">Je Zeile: Anteil der Wochen, nach denen der Kurs höher stand, und mittlere Veränderung (Median); Maus auf eine Zahl zeigt den schlechtesten Fall. „Phasen“ = getrennte Zeiträume mit dieser Ampel – benachbarte Wochen sind fast derselbe Fall, aussagekräftig ist eher die Zahl der Phasen. Ohne Kosten und Steuern, Rückblick über die ganze Geschichte dieses Werts – keine Garantie und keine Anlageberatung.</p></section>`;
 }
 function phasenKarte(c){
   if (!c?.c || !c.score) return "";
