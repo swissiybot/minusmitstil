@@ -1227,7 +1227,11 @@ function sucheRechnen(){
   else werte = [...ALLE.filter(w => FAV.has(w.id)), ...["SPY","QQQ","EXS1","URTH","BTC","GOLD"].map(id => ALLE.find(w => w.id === id))].filter(Boolean).filter((w, i, a) => a.indexOf(w) === i).slice(0, 8);
   {   // Suche per ISIN (z. B. aus dem Depotauszug): Zuordnung aus der ISIN-Liste bzw. den bekannten ETF-ISINs
     const roh = $("#suche-eingabe").value.trim().toUpperCase().replace(/\s+/g, "");
-    if (istIsin(roh)) { const id = ISIN_TABELLE[roh]?.[0] || ISIN_SEC?.[roh]; const w = id && ALLE.find(x => x.id === id); if (w) werte = [w, ...werte.filter(x => x !== w)]; else if (!ISIN_SEC) isinListeLaden().then(() => { if ($("#suche-dlg").open) sucheRechnen(); }); }
+    if (ERSATZ_FUER != null && JUNG && q) {   // im Depot auch junge Aktien (ohne Ampel) anbieten
+      const jt = Object.values(JUNG).filter(j => norm(j.name + " " + j.symbol).includes(q)).slice(0, 4);
+      werte = [...werte, ...jt.filter(j => !werte.includes(j))];
+    }
+    if (istIsin(roh)) { const id = ISIN_TABELLE[roh]?.[0] || ISIN_SEC?.[roh]; const w = id && wertVon(id); if (w) werte = [w, ...werte.filter(x => x !== w)]; else if (!ISIN_SEC) isinListeLaden().then(() => { if ($("#suche-dlg").open) sucheRechnen(); }); }
   }
   const seiten = ERSATZ_FUER != null ? [] : SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
   TREFFER = [...werte.map(w => ({art:"wert", w})), ...seiten.map(s => ({art:"seite", s}))]; TREFFER_I = 0;
@@ -2334,11 +2338,13 @@ const LAND_ERSATZ = [   // Aktie nicht im Tool: breiter Markt ihres Landes/ihrer
   [/^(CN|HK|KY|BM|TW|IN|BR|KR|ZA|MX|ID|TH|MY|PH|SA|AE|QA|KW|CL|PE|CO|TR|PL|HU|CZ|EG|VN|AR)/, "EEM", "Schwellenländer (MSCI EM)"],
 ];
 // ISIN → Wert im Tool für alle US-Aktien/ETFs im Tool (aus SEC-Daten gebaut, isin.py). Wird beim Öffnen von „Mein Depot“ geladen.
-let ISIN_SEC = null, ISIN_SEC_LAEDT = null;
+let ISIN_SEC = null, ISIN_SEC_LAEDT = null, JUNG = null;   // JUNG: junge Aktien (unter 3 Jahren Kurse) mit Wochenkursen, ohne Ampel
+const wertVon = id => ALLE.find(x => x.id === id) || JUNG?.[id] || null;
 function isinListeLaden(){
   if (ISIN_SEC_LAEDT) return ISIN_SEC_LAEDT;
-  ISIN_SEC_LAEDT = holeJson("daten/isin.json").then(d => {
+  ISIN_SEC_LAEDT = Promise.all([holeJson("daten/isin.json"), holeJson("daten/jung.json")]).then(([d, j]) => {
     ISIN_SEC = d || {};
+    JUNG = Object.fromEntries(((j && j.werte) || []).map(w => [w.id, {...w, jung:true, score:null}]));
     // offene Positionen (nicht von Hand gewählt) neu zuordnen
     let geaendert = false;
     if (DEPOT) DEPOT.positionen.forEach(p => { if (!p.id || p.ersatz) { const z = zuordnen(p); if (z.id && (z.id !== p.id || z.quelle !== p.quelle)) { Object.assign(p, {ersatz:false, hinweis:""}, z); geaendert = true; } } });
@@ -2379,6 +2385,9 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
   if (isin && ISIN_TABELLE[isin] && gibt(ISIN_TABELLE[isin][0])) return {id:ISIN_TABELLE[isin][0], quelle:"ISIN (gleicher Index)"};
   if (isin && ISIN_SEC?.[isin] && gibt(ISIN_SEC[isin])) return {id:ISIN_SEC[isin], quelle:"ISIN"};
   // erkannt, aber ohne Ampel (unter 10 Jahre Kursgeschichte, z. B. junge Börsengänge) → offen mit Grund
+  if (isin && ISIN_SEC?.[isin] && JUNG?.[ISIN_SEC[isin]]) {   // junge Aktie: eigene Kurse (Wochen), keine Ampel
+    const j = JUNG[ISIN_SEC[isin]]; return {id:j.id, quelle:`ISIN · junge Aktie, eigene Kurse seit ${datumDe(j.seit)} (${j.wochen} Wochen), noch keine Ampel`, jung:true, ersatz:false};
+  }
   const junger = isin && ISIN_SEC?.[isin] ? ISIN_SEC[isin] : null;   // erkannt, aber unter 10 Jahren Kurse (z. B. junger Börsengang) → unten Ersatz
   if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k || w.id.toUpperCase() === k); if (w) return {id:w.id, quelle:"Kürzel"}; }
   const name = String(pos.name || "");
@@ -2536,11 +2545,11 @@ function zeigeDepot(){
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
           return `<tr class="depot-zeile"><td colspan="6" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
-          teil.map(([p, i]) => { const w = ALLE.find(x => x.id === p.id);
+          teil.map(([p, i]) => { const w = wertVon(p.id);
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
             <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro"></td>
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
-            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")} · ${fmt(w.jahre_daten,0)} J. Daten</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
+            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} J. Daten`}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
             <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
@@ -2826,6 +2835,7 @@ function ersatzWaehlen(i){   // Suche im Auswahl-Modus: der gewählte Wert wird 
 
 // ------------------------------------------------------------ Monte Carlo fürs Depot (Marktfaktor/Beta + Einzelschwankung)
 async function reiheHolen(id){
+  if (JUNG?.[id]) { const j = JUNG[id], m = new Map(); j.t.forEach((t, i) => { if (j.c[i] > 0) m.set(t, j.c[i]); }); return m; }
   const d = await apiWert(id);
   if (!d?.chart?.c) return null;
   const m = new Map(); d.chart.t.forEach((t, i) => { const c = d.chart.c[i]; if (c > 0) m.set(t, c); });
@@ -2864,11 +2874,14 @@ async function depotRechnen(){
     const modelle = P.map(p => {
       const r = rendite(reihen[p.id] || new Map()), xs = [], ys = [];
       for (const t of mWochen) if (r.has(t)) { xs.push(markt.get(t)); ys.push(r.get(t)); }
-      if (xs.length < 104) return {fehler:true, p};
+      const kurz = !!JUNG?.[p.id];   // junge Aktie: wenige Wochen – Beta vorsichtig Richtung 1 ziehen, keine eigene Rendite annehmen
+      if (xs.length < (kurz ? 13 : 104)) return {fehler:true, p};
       const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
       let sxy = 0, sxx = 0; for (let i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
-      const beta = sxx ? sxy / sxx : 1, alpha = my - beta * mx;
-      const res = ys.map((y, i) => y - alpha - beta * xs[i]);
+      let beta = sxx ? sxy / sxx : 1;
+      if (kurz) beta = (xs.length * beta + 52 * 1) / (xs.length + 52);   // wie ein Jahr „Durchschnittsaktie“ (Beta 1) dazugemischt
+      const alpha = kurz ? 0 : my - beta * mx;
+      const res = kurz ? ys.map((y, i) => (y - my) - beta * (xs[i] - mx)) : ys.map((y, i) => y - alpha - beta * xs[i]);
       const mMittel = mR.reduce((a, b) => a + b) / mR.length;
       // vorsichtig: erwartete Rendite höchstens wie der Markt (Alpha gedeckelt); Werte unter dem Markt behalten ihre Historie
       const alphaSim = e.rendite === "eigen" ? alpha : Math.min(alpha, (1 - beta) * mMittel);
@@ -2939,7 +2952,7 @@ async function depotRechnen(){
       netto:{q5:q(endNetto, 5), q50:q(endNetto, 50), q95:q(endNetto, 95)}, brutto50:q(endBrutto, 50), real50:q(real, 50), real5:q(real, 5), real95:q(real, 95),
       verlust:ant(endNetto, x => x < eingezahltEnde), ziel:e.ziel > 0 ? ant(real, x => x >= e.ziel) : null, rueck50:q(maxRueck, 50), rueck95:q(maxRueck, 95),
       depotText:nur ? `Depot „${nur}“` : depotNamen().length > 1 ? `alle ${depotNamen().length} Depots zusammen` : "", zusammengefasst,
-      modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
+      modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, kurz:!!JUNG?.[m.p.id], wochen:m.wochen, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
       offenWert:auswahl.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
     };
     depotErgebnisZeigen(DEPOT_ERG);
@@ -2973,12 +2986,13 @@ function depotErgebnisZeigen(r){
     <div class="abstand"></div>
     <section class="karte seite-karte"><h3>So wurde gerechnet</h3>
       <div class="tab-scroll"><table class="wtab"><thead><tr><th>Position</th><th>gerechnet mit</th><th data-e="d_beta">Beta zum Markt</th><th data-e="d_korr">Gleichlauf</th><th>Ø p.a. (Historie)</th><th data-e="d_simpa">Ø p.a. (Simulation)</th><th>gemeinsame Jahre</th></tr></thead><tbody>${
-        r.modelle.map(m => { const w = ALLE.find(x => x.id === m.id); return `<tr><td style="text-align:left">${esc(m.name)}${m.depots?.length > 1 || (r.depotText && m.depots) ? `<div class="klein">${m.depots.map(esc).join(" + ")}</div>` : ""}</td><td style="text-align:left">${esc(w ? kurzname(w) : m.id)}</td><td>${fmt(m.beta,2)}</td><td>${fmt(m.korr,2)}</td><td>${fmt(m.eigenPa,1," %")}</td><td>${fmt(m.simPa,1," %")}${m.gedeckelt ? ' <span class="klein">gedeckelt</span>' : ""}</td><td>${fmt(m.jahre,0)}${m.jahre < 10 ? ' <span class="neg">kurz!</span>' : ""}</td></tr>`; }).join("")}</tbody></table></div>
+        r.modelle.map(m => { const w = wertVon(m.id); return `<tr><td style="text-align:left">${esc(m.name)}${m.depots?.length > 1 || (r.depotText && m.depots) ? `<div class="klein">${m.depots.map(esc).join(" + ")}</div>` : ""}</td><td style="text-align:left">${esc(w ? kurzname(w) : m.id)}</td><td>${fmt(m.beta,2)}</td><td>${fmt(m.korr,2)}</td><td>${fmt(m.eigenPa,1," %")}</td><td>${fmt(m.simPa,1," %")}${m.gedeckelt ? ' <span class="klein">gedeckelt</span>' : ""}</td><td>${fmt(m.jahre,0)}${m.jahre < 10 ? ' <span class="neg">kurz!</span>' : ""}</td></tr>`; }).join("")}</tbody></table></div>
       <div class="text">Jede Woche wird ein Stück echter Marktgeschichte (S&P 500, Blöcke à 13 Wochen aus den letzten 20 Jahren seit ${new Date(r.mVon * 1000).getFullYear()}) gezogen. Jede Position bewegt sich mit ihrem <b>Beta</b> zum Markt plus einer eigenen, zufällig gezogenen Schwankung aus ihrer Vergangenheit; so fallen in Krisen alle Positionen gemeinsam, wie früher. Achtung: Die letzten 20 Jahre waren für US-Aktien überdurchschnittlich gut; andere Märkte und Jahrzehnte liefen deutlich schlechter (z. B. Japan ab 1990, Europa 2000–2013). Eine Zeit wie diese kommt in der Simulation nur vor, soweit sie in den gezogenen Wochen steckt.
         ${e.rendite === "eigen" ? "Rendite-Annahme „eigene Historie“: der frühere Vorsprung einzelner Werte vor dem Markt wird fortgeschrieben – bei Überfliegern wie großen Tech-Aktien wirkt das meist viel zu gut." : "Rendite-Annahme „vorsichtig“: kein Wert wird besser angenommen als der Markt (S&P 500) in den letzten 20 Jahren; Werte, die früher schwächer waren, behalten ihre schwächere Rendite."}
         Sparplan monatlich${e.dynamik ? `, jährlich +${fmt(e.dynamik,1," %")}` : ""}, Kosten je Kauf ${fmt(e.kfix,2)} € + ${fmt(e.kproz,2," %")}, laufende Kosten ${fmt(e.ter,2," %")} p.a.
         ${e.steuer ? `Abgeltungssteuer 26,375 % auf den Gewinn beim gedachten Verkauf am Ende, abzüglich Sparerpauschbetrag ${geld(e.pausch)} €${e.teilfrei ? ", Teilfreistellung 30 %" : ""}; Vorabpauschale, Kirchensteuer und Steuern unterwegs sind vereinfacht weggelassen.` : "Ohne Steuer."}
         ${r.zusammengefasst ? `<br>${r.zusammengefasst} Wert${r.zusammengefasst === 1 ? "" : "e"} lag${r.zusammengefasst === 1 ? "" : "en"} in mehreren Depots oder mehrfach in der Liste und wurde${r.zusammengefasst === 1 ? "" : "n"} zu einer Position zusammengefasst, damit sie gemeinsam schwanken.` : ""}
+        ${r.modelle.some(m => m.kurz) ? `<br><b>Junge Aktien</b> (${r.modelle.filter(m => m.kurz).map(m => `${esc(m.name)}: ${m.wochen} Wochen`).join(", ")}): gerechnet mit ihren eigenen Kursen. Weil es nur wenige Wochen sind, ist die Schwankung unsicher geschätzt, das Beta vorsichtig Richtung Markt (1) gezogen und keine eigene Rendite über den Markt hinaus angenommen.` : ""}
         ${r.ohne.length ? `<br><b>Nicht gerechnet</b> (zu wenig gemeinsame Daten): ${r.ohne.map(esc).join(", ")}.` : ""}
         ${r.offenWert > 0 ? `<br><b>Ohne Zuordnung</b> und deshalb nicht enthalten: ${geld(r.offenWert)} €.` : ""}
         <br>Das ist eine Simulation aus der Vergangenheit, keine Vorhersage und keine Anlageberatung. Renditen in der Währung der Werte (meist US-Dollar), ohne Wechselkurs.</div></section>`;

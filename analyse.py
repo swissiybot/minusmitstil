@@ -588,6 +588,21 @@ def heatmap_zeile(z: dict, tag: pd.DataFrame, n100: dict, f: dict | None) -> dic
     return zeile
 
 
+def jung_zeile(z: dict, tag: pd.DataFrame | None) -> dict | None:
+    """Junge Aktien (unter 3 Jahren Kurse, mindestens 13 Wochen, aktuell gehandelt, z. B. SpaceX seit 06/2026):
+    keine Ampel, aber Wochenkurse fuer die Depot-Prognose (eigene Schwankung statt Ersatz)."""
+    if tag is None or tag.empty or z["gruppe"] in ("Krypto", "Rohstoffe"):
+        return None
+    c = tag["Close"][tag["Close"] > 0]
+    w = c.resample("W-FRI").last().dropna()
+    if len(w) < 13 or (pd.Timestamp(dt.date.today()) - c.index[-1]).days > 14:
+        return None
+    t = [int((d - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)) for d in w.index]
+    return {"id": z["id"], "symbol": z["symbol"], "name": z["name"], "gruppe": z["gruppe"], "datum": c.index[-1].strftime("%Y-%m-%d"),
+            "kurs": r(c.iloc[-1], 4), "seit": c.index[0].strftime("%Y-%m-%d"), "wochen": len(w),
+            "t": t, "c": [float(f"{x:.6g}") for x in w.values]}
+
+
 def universum() -> pd.DataFrame:
     return pd.read_csv(E.DATEN / "universum.csv").fillna("")
 
@@ -672,7 +687,7 @@ def main(argv):
         uni = uni[uni["id"].isin(argv) | uni["symbol"].isin(argv)]
     else:
         alle_laden()   # einmal alles in den Arbeitsspeicher, dann geht es schnell
-    zeilen, fehler, heatmap_extra = [], 0, []
+    zeilen, fehler, heatmap_extra, jung = [], 0, [], []
     s2 = None if argv else Stufe2()
     try:
         import fundamente
@@ -689,6 +704,10 @@ def main(argv):
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
+            if erg is None and z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe"):
+                jz = jung_zeile(z, lade_lokal(z["symbol"]))
+                if jz:
+                    jung.append(jz)
             if erg is None and "Nasdaq" in z["gruppe"] and z["symbol"] in n100:
                 hz = heatmap_zeile(z, lade_lokal(z["symbol"]), n100[z["symbol"]], fund.get(z["symbol"]))
                 if hz:
@@ -724,6 +743,9 @@ def main(argv):
         tmp = E.WEB_DATEN / "rangliste.tmp"
         tmp.write_text(json.dumps(out, separators=(",", ":")))
         tmp.replace(E.WEB_DATEN / "rangliste.json")
+        # junge Aktien (ohne Ampel) mit Wochenkursen fuer die Depot-Prognose
+        (E.WEB_DATEN / "jung.json").write_text(json.dumps({"stand": out["stand"], "werte": jung}, separators=(",", ":")))
+        print(f"Junge Aktien (unter 3 Jahren Kurse, für die Depot-Prognose): {len(jung)}")
         tagebuch(zeilen)
         s2.schreiben()
     print(f"Fertig: {len(zeilen)} Werte ausgewertet, {fehler} Fehler" + (f", Geschäftszahlen für {sum(1 for z in zeilen if z.get('f'))}" if fund else ""))
