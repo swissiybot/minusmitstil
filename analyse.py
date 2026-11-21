@@ -305,6 +305,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         if extra.get("pi_status"): grund.append(extra["pi_status"])
         if extra.get("pi_top_aktiv"): grund.append("Pi Cycle Top AKTIV")
     vor4 = score[-5] if len(score) > 5 else np.nan
+    import marktphase
+    mp = marktphase.fuer_wert(w)
+    mp_arr = mp.pop("_phase_arr") if mp else None
 
     zeile_out = {
         **{k: zeile[k] for k in ("id", "symbol", "name", "gruppe", "land", "branche")},
@@ -323,6 +326,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
            or k in ("pi_status", "pi_abstand", "pi_rueckblick"))},
         # Ampel des letzten Jahres alle 4 Wochen (Sparkline in der Liste)
         "sv": [None if math.isnan(x) else int(round(x)) for x in score[-53::4]],
+        "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -346,6 +350,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    if mp:
+        chart["mp"] = mp
     if krypto and "mayer_w" in extra:
         chart["mayer"] = rund(extra["mayer_w"], 3)
     if bitcoin:
@@ -359,7 +365,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         chart["marken"] = sorted(marken + [[woche(d), "pi_beginn", None] for d in extra["pi_bottom_daten"]]
                                  + [[woche(d), "pi_boden", None] for d in extra["pi_signal_daten"]]
                                  + [[woche(d), "pi_top", None] for d in extra["pi_top_daten"]], key=lambda m: m[0])
-    return zeile_out, chart, {"w": w, "score": score, "tag": tag}
+    return zeile_out, chart, {"w": w, "score": score, "tag": tag, "mp": mp_arr}
 
 
 def tagebuch(zeilen):
@@ -448,7 +454,9 @@ class Stufe2:
 
     def __init__(self):
         import pruefung, umfeld, fundamente
+        import marktphase
         self.sammler = {k: pruefung.Sammler() for k in PRUEF_GRUPPEN}
+        self.mp_sammler = {k: marktphase.Sammler() for k in PRUEF_GRUPPEN}
         self.fallen = fundamente.Pruefung()
         self.breite = umfeld.Breite()
         self.zins = umfeld.zins_monatlich()
@@ -461,10 +469,13 @@ class Stufe2:
         aktie = z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe")
         if aktie:
             self.breite.add(w["Close"])
-        if zeile["score"] is None:
-            return
         gruppen = ["etf"] if z["gruppe"] == "ETF" else ["krypto"] if z["gruppe"] == "Krypto" else ["rohstoffe"] if z["gruppe"] == "Rohstoffe" else \
             ["aktien"] + (["aktien_stabil"] if zeile.get("qualitaet") else [])
+        if roh.get("mp") is not None:
+            for g in gruppen:
+                self.mp_sammler[g].add(c, roh["mp"], w.index.year.values)
+        if zeile["score"] is None:
+            return
         for g in gruppen:
             self.sammler[g].add(c, score, w.index.year.values)
         st = strategie.vergleich(w, score, self.zins, reihe=False)
@@ -491,6 +502,7 @@ class Stufe2:
         out = {
             "stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"),
             "kalibrierung": {k: {"name": PRUEF_GRUPPEN[k], **s.ergebnis()} for k, s in self.sammler.items()},
+            "marktphase": {k: {"name": PRUEF_GRUPPEN[k], **s.ergebnis()} for k, s in self.mp_sammler.items()},
             "fallen": self.fallen.ergebnis() if self.fallen.aktien["alle"] else None,
             "strategie": {
                 "annahmen": "500 je Monat, bis 20 Jahre (ab erster gültiger Ampel), 1 je Order, Abgeltungssteuer 26,375 %, Zins US-Geldmarkt 3 Monate",

@@ -11,6 +11,7 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 
 - **Ampel 0–100** aus Abstand zum Allzeithoch, 200-Wochen-Linie, Langfristtrend und Wochen-RSI – jeweils nur mit den Daten verglichen, die es zum jeweiligen Zeitpunkt schon gab (kein Blick in die Zukunft).
 - **Ø Jahresrendite** über 20 Jahre (oder so viele, wie es Daten gibt), ETFs mit Index-Historie davor.
+- **Marktphase** (steigt oder fällt es?): Aufwärtstrend = Kurs über der 200-Tage-Linie und höher als vor 12 Monaten, Abwärtstrend = beides umgekehrt, sonst gemischt; dazu klassisch „Bärenmarkt“ ab 20 % unter dem Hoch. Je Wert Rückblick (wie oft danach höher, Median, Absturzrisiko) und Prüfung ohne Zukunftswissen gegen die Grundquote; Ergebnis über alle Gruppen: Die Phase sagt die Richtung **nicht** besser voraus als die Grundquote, zeigt aber das höhere Absturzrisiko nach Abwärtstrends. Kachel in der Übersicht, Abschnitt 4 auf der Prüfungsseite.
 - **Wann hat sich Kaufen gelohnt?** Je Wert alle günstigen Phasen (Ampel ab 60) mit dem Ergebnis eines Kaufs zu Phasenbeginn nach 1/3/5 Jahren, im Vergleich zu beliebigen Wochen; im Chart als Punkt mit dem 1-Jahres-Ergebnis, günstige Phasen hellgrün (ab 80 kräftiger).
 - **Trefferquote**: Wie oft stand der Kurs nach 1/3/5 Jahren höher, wenn die Lage früher ähnlich war – im Vergleich zu einem beliebigen Kauftag.
 - **Bitcoin**: Pi Cycle Bottom (Bodenbildungszone und Boden-Signal), Pi Cycle Top, Mayer Multiple.

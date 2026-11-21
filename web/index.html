@@ -41,6 +41,11 @@ try { const t = localStorage.getItem("thema"); if (t === "light" || t === "dark"
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+.mp-kopf{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.mp-kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:2px 18px;margin-top:6px}
+.mp-tab tr.mp-jetzt td{background:color-mix(in srgb,var(--akzent) 12%,transparent);font-weight:600}
+.wtab.mp-tab th{white-space:normal;line-height:1.2;vertical-align:bottom}
+.wtab.mp-tab td,.wtab.mp-tab th{padding:4px 6px}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--text);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
   font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;overflow:hidden}
@@ -928,6 +933,11 @@ function datenstand(stand){
 
 // ------------------------------------------------------------ zusätzliche Erklärungen der neuen Oberfläche
 const ERKLAERUNG_NEU = {
+  mp_karte: {titel:"Marktphase", text:"Beschreibt, ob der Kurs gerade steigt oder fällt – nur mit dem Wissen von heute. Aufwärtstrend: Kurs über der 200-Tage-Linie (40-Wochen-Durchschnitt) UND höher als vor 12 Monaten. Abwärtstrend: unter der Linie UND tiefer als vor 12 Monaten. Gemischt: die beiden Zeichen widersprechen sich. Die 200-Wochen-Linie ist dafür zu träge – sie wechselt fast nie die Richtung. Die Phase sagt, wo wir stehen, nicht wohin es geht."},
+  mp_baer: {titel:"Bärenmarkt (klassisch)", text:"Übliche Faustregel: ab 20 % unter dem bisherigen Hoch spricht man von Bärenmarkt, ab 20 % über dem Tief von Bullenmarkt. Das steht immer erst fest, wenn ein großer Teil der Bewegung schon vorbei ist – zur Vorhersage taugt es nicht."},
+  mp_tabelle: {titel:"Was danach kam", text:"Rückblick über alle Wochen dieses Werts: Wie oft stand der Kurs 3 Monate bzw. 1 Jahr später höher, wie groß war die mittlere Veränderung (Median), und wie oft fiel er im folgenden Jahr irgendwann um 20 % oder mehr unter den Kurs der Woche? Die Zeile „alle Wochen“ ist die Grundquote zum Vergleich. Benachbarte Wochen sind fast derselbe Fall, die echte Zahl unabhängiger Fälle ist viel kleiner."},
+  mp_pruefung: {titel:"Prüfung ohne Zukunftswissen", text:"Für jedes Jahr werden die Quoten je Phase nur aus Wochen gelernt, deren Ergebnis damals schon feststand, und dann die Wochen des Jahres vorhergesagt. Verglichen wird mit der einfachen Grundquote (Anteil aller bisherigen Wochen mit höherem Kurs). Skill über 0 %: die Phase hat besser vorhergesagt; um 0 % oder darunter: kein Vorteil."},
+  mp_streifen: {titel:"Phasen-Verlauf", text:"Jeder Strich ist eine Woche der letzten 10 Jahre: blau = Aufwärtstrend, grau = gemischt, orange = Abwärtstrend."},
   datenstand: {titel:"Datenstand", text:() => STAND_TEXT || "lädt …"},
   sparkline: {titel:"Ampel im letzten Jahr", text:"Kleine Linie: die Ampel alle 4 Wochen über das letzte Jahr. Steigt sie, ist der Wert gemessen an seiner Geschichte günstiger geworden (meist, weil der Kurs gefallen ist)."},
   gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
@@ -1275,6 +1285,14 @@ function miniSpark(reihe, farbeLinie, wochen=156){
   const d = v.map((x, i) => (i ? "L" : "M") + (i / (v.length - 1) * 200).toFixed(1) + " " + y(x).toFixed(1)).join("");
   return `<svg viewBox="0 0 200 38" preserveAspectRatio="none" aria-hidden="true"><path d="${d} L200 38 L0 38Z" fill="${farbeLinie}" opacity=".12"/><path d="${d}" fill="none" stroke="${farbeLinie}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`;
 }
+function mpKachel(){
+  const w = ALLE.find(x => x.id === "SPY"); if (!w || w.mp == null) return "";
+  const andere = ALLE.filter(x => SONDERGRUPPE(x) && x.mp != null), n = k => andere.filter(x => x.mp === k).length;
+  return `<div class="karte" id="w-mp" tabindex="0" role="button"><div class="karte-kopf"><span data-e="mp_karte">Marktphase · S&amp;P 500</span><span>Trend</span></div>
+    <div class="wk-wert" style="color:${MP_FARBE[w.mp]}">${MP_PFEIL[w.mp]} ${MP_KURZ[w.mp]}</div>
+    <div class="wk-wort" style="font-weight:400;color:var(--text2)">ETFs, Krypto, Rohstoffe: ${n(2)} aufwärts · ${n(1)} gemischt · ${n(0)} abwärts</div>
+    <p class="klein" style="margin:8px 0 0">Beschreibt den Trend, keine Vorhersage.</p></div>`;
+}
 function zeigeUebersicht(){
   seiteAnfang("uebersicht"); hashSetzen("seite=uebersicht");
   const f = F(), u = UMFELD, b = u?.breite, v = u?.vix, z = u?.zinskurve;
@@ -1287,6 +1305,7 @@ function zeigeUebersicht(){
       <div class="wk-wert" style="color:${v && (v.wert >= 25 || ["nervös","Panik"].includes(v.stufe)) ? "var(--teuer)" : "inherit"}">${v ? (v.wert != null ? fmt(v.wert,1) : v.stufe) : "–"}</div><div class="wk-wort">${v ? (v.wert != null ? vixWort(v.wert) : `höher als an ${fmt(v.perzentil,0)} % der Tage`) : "keine Daten"}</div>${miniSpark(v?.reihe, f.teuer, 750)}</div>
     <div class="karte" id="w-zins" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_zinskurve">Zinskurve 10 J. – 2 J.</span><span>${z ? datumDe(z.datum) : ""}</span></div>
       <div class="wk-wert" style="color:${z && z.invertiert ? "var(--teuer)" : "inherit"}">${z ? vz(z.wert,2) : "–"}</div><div class="wk-wort">${z ? (z.invertiert ? "invertiert" : "normal") : "keine Daten"}<span class="klein"> · Prozentpunkte</span></div>${miniSpark(z?.reihe, f.akzent, 750)}</div>
+    ${mpKachel()}
     ${bewKachel()}
     <div class="karte" id="w-pruefung" tabindex="0" role="button"><div class="karte-kopf"><span data-e="k_pruefung">Prüfung der Ampel</span><span>ETFs, 3 J.</span></div>
       <div class="wk-wert" style="font-size:22px;margin-top:4px">${e && e.skill != null ? (e.skill > 2 ? "hilft etwas" : "kein Vorteil") : "–"}</div>
@@ -1296,7 +1315,7 @@ function zeigeUebersicht(){
   const kachel = w => { const de = wert(w, "delta");
     return `<button class="kachel" data-id="${w.id}" style="--kf:${farbe(w.score)}" aria-label="${esc(kurzname(w))}: Ampel ${fmt(w.score,0)}, ${zonenWort(w.score)}">
       <div class="n">${esc(kurzname(w))}</div><div class="s"><b>${fmt(w.score,0)}</b><span class="z">${w.score == null ? `noch keine Ampel` : zonenWort(w.score)}</span></div>
-      <div class="d">${w.score == null ? `${fmt(w.jahre_daten,1)} J. Daten` : `4W ${de == null ? "–" : (de > 0 ? "+" : "") + fmt(de,0)} · Ø ${fmt(w.cagr20,1," %")}/J.`}</div></button>`; };
+      <div class="d">${w.score == null ? `${fmt(w.jahre_daten,1)} J. Daten` : `4W ${de == null ? "–" : (de > 0 ? "+" : "") + fmt(de,0)} · Ø ${fmt(w.cagr20,1," %")}/J.`}</div>${w.mp != null ? `<div class="d" title="Marktphase: ${MP_KURZ[w.mp]}">Trend ${MP_PFEIL[w.mp]} ${MP_KURZ[w.mp]}</div>` : ""}</button>`; };
   // Heute auffällig (nur beschreibend)
   const mitD = sonder.filter(w => wert(w, "delta") != null).sort((a, b) => Math.abs(wert(b, "delta")) - Math.abs(wert(a, "delta"))).slice(0, 5);
   const neuGuenstig = ALLE.filter(w => w.score >= 80 && w.score_vor4w != null && w.score_vor4w < 80 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
@@ -1327,6 +1346,7 @@ function zeigeUebersicht(){
   $$("#haupt [data-id]").forEach(e => { e.onclick = () => zeige(e.dataset.id); e.onkeydown = ev => { if (ev.key === "Enter") zeige(e.dataset.id); }; });
   const geh = (id, fn) => { const e = $(id); if (e) { e.onclick = fn; e.onkeydown = ev => { if (ev.key === "Enter") fn(); }; } };
   ["#w-breite","#w-vix","#w-zins"].forEach(id => geh(id, () => zeigeUmfeld()));
+  geh("#w-mp", () => zeige("SPY"));
   geh("#w-bewertung", () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); });
   geh("#w-pruefung", () => zeigePruefungGesamt());
   $("#zu-aktien").onclick = () => { LISTE_REITER = "aktien"; sichere("liste_reiter", LISTE_REITER); $("#nurq").checked = true; $("#minu").value = "1e7"; SORT = {k:"score", dir:-1}; $("#sortierung").value = "score"; reiterZahlen(); listeNeu(); if (istHandy()) ansicht("liste"); };
@@ -1514,6 +1534,7 @@ async function zeige(id, opt={}){
     <div id="hinweise"></div>
     <div class="raster">
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
+      ${marktphaseKarte(w, c)}
       ${phasenKarte(c)}
       <section class="karte" id="wahr">${wahrKarte(w)}</section>
       <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
@@ -1719,6 +1740,52 @@ function kaufPhasen(c){   // Wochen mit Ampel ≥ 60 zu Phasen (Lücken bis 4 Wo
   const vergleich = h => { const a = alleR(h); return a.length ? {hoeher:a.filter(x => x > 0).length / a.length * 100, median:med(a)} : null; };
   const zus = k => { const a = phasen.map(p => p[k]).filter(x => x != null); return a.length ? {n:a.length, hoeher:a.filter(x => x > 0).length, median:med(a)} : null; };
   return {phasen, zus:{r1:zus("r1"), r3:zus("r3"), r5:zus("r5")}, alle:{r1:vergleich(52), r3:vergleich(156), r5:vergleich(260)}};
+}
+const MP_FARBE = {2:"var(--cyan)", 1:"var(--neutral)", 0:"var(--teuer)"};
+const MP_PFEIL = {2:"↗", 1:"↔", 0:"↘"};
+const MP_KURZ = {2:"aufwärts", 1:"gemischt", 0:"abwärts"};
+const mpGruppe = w => w.gruppe === "ETF" ? "etf" : w.gruppe === "Krypto" ? "krypto" : w.gruppe === "Rohstoffe" ? "rohstoffe" : "aktien";
+function mpStreifen(verlauf, t){
+  const n = Math.min(520, verlauf.length), ab = verlauf.length - n, b = 600 / n;
+  let r = "";
+  for (let i = 0; i < n; i++) { const ch = verlauf[ab + i]; if (ch === "-") continue; r += `<rect x="${(i * b).toFixed(2)}" y="0" width="${(b + .4).toFixed(2)}" height="18" fill="${MP_FARBE[+ch]}"/>`; }
+  const jahre = []; let letztes = null;
+  for (let i = 0; i < n; i++) { const j = new Date(t[ab + i] * 1000).getUTCFullYear(); if (j !== letztes) { if (letztes != null && j % 2 === 0) jahre.push(`<text x="${(i * b).toFixed(1)}" y="31" font-size="10" fill="var(--muted)">${j}</text>`); letztes = j; } }
+  return `<svg viewBox="0 0 600 34" width="100%" role="img" aria-label="Phasen der letzten ${Math.round(n / 52)} Jahre" data-e="mp_streifen" tabindex="0" style="display:block;margin:10px 0 2px">${r}${jahre.join("")}</svg>`;
+}
+function marktphaseKarte(w, c){
+  const m = c?.mp;
+  const kopf = `<div class="karte-kopf"><span data-e="mp_karte" tabindex="0">Marktphase · steigt oder fällt es?</span><span>Trend heute</span></div>`;
+  if (!m) return `<section class="karte breit2" id="mp-karte">${kopf}<p>Noch keine Phase: Dafür braucht es mindestens ein Jahr Kursdaten.</p></section>`;
+  const r3 = m.rueckblick["3m"], r1 = m.rueckblick["1"];
+  const zeile = (p, i) => { const a = r3[i], b = r1[i], jetzt = p === m.phase;
+    return `<tr${jetzt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${p == null ? "alle Wochen" : `<span style="color:${MP_FARBE[p]}">${MP_PFEIL[p]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][p]}${jetzt ? ' <span class="klein">heute</span>' : ""}`}</td>
+      <td>${b.n.toLocaleString("de-DE")}</td><td>${fmt(a.quote,0," %")}</td><td>${fmt(b.quote,0," %")}</td><td class="${klasse(b.median)}">${vz(b.median,0," %")}</td><td>${fmt(b.absturz,0," %")}</td></tr>`; };
+  const pr = m.pruefung || {}, g = PRUEF?.marktphase?.[mpGruppe(w)];
+  const skillText = x => x?.skill == null ? "–" : `${vz(x.skill,1)} %`;
+  const hilft = x => x?.skill != null && x.skill > 2;
+  const auf = r1.find(x => x.phase === 2), ab = r1.find(x => x.phase === 0), alle = r1.find(x => x.phase == null);
+  const risiko = auf?.absturz != null && ab?.absturz != null && ab.n >= 26
+    ? `Deutlicher als bei der Richtung ist der Unterschied oft beim <b>Risiko</b>: Nach einem Abwärtstrend fiel der Kurs im folgenden Jahr in <b>${fmt(ab.absturz,0," %")}</b> der Wochen noch einmal um 20 % oder mehr, nach einem Aufwärtstrend in <b>${fmt(auf.absturz,0," %")}</b>.` : "";
+  const fazit = hilft(pr["3m"]) || hilft(pr["1"])
+    ? "Bei diesem Wert hat die Phase außerhalb der Lernzeit <b>etwas besser</b> vorhergesagt als die Grundquote – der Vorteil ist klein."
+    : "Bei diesem Wert hat die Phase die Richtung außerhalb der Lernzeit <b>nicht besser</b> vorhergesagt als die einfache Grundquote.";
+  return `<section class="karte breit2" id="mp-karte">${kopf}
+    <div class="mp-kopf"><div class="gross-zahl" style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]} ${["Abwärtstrend","Gemischt","Aufwärtstrend"][m.phase]}</div>
+      <div class="klein">seit ${datumDe(m.seit)}</div></div>
+    <div class="mp-kv">
+      <div class="kv"><span>zur 200-Tage-Linie</span><b class="${klasse(m.zu_linie)}">${vz(m.zu_linie,1," %")}</b></div>
+      <div class="kv"><span>zu vor 12 Monaten</span><b class="${klasse(m.mom12)}">${vz(m.mom12,1," %")}</b></div>
+      <div class="kv"><span data-e="mp_baer">vom Hoch · klassisch</span><b>${fmt(m.dd,1," %")} · ${m.baer_seit ? `Bärenmarkt seit ${datumDe(m.baer_seit)}` : "kein Bärenmarkt"}</b></div>
+    </div>
+    ${mpStreifen(m.verlauf, c.t)}
+    <h4 style="margin:14px 0 4px" data-e="mp_tabelle" tabindex="0">Was danach kam <span class="klein">Rückblick ${datumDe(m.ab).slice(-4)}–heute</span></h4>
+    <div class="tab-scroll"><table class="wtab mp-tab"><thead><tr><th style="text-align:left">Phase</th><th>Wochen</th><th>3 Mon. höher</th><th>1 J. höher</th><th>Median 1 J.</th><th>−20 % im 1. Jahr</th></tr></thead>
+      <tbody>${[2,1,0,null].map(zeile).join("")}</tbody></table></div>
+    <p style="margin:10px 0 4px"><b data-e="mp_pruefung" tabindex="0">Ehrlich geprüft:</b> ${fazit} Skill 3 Monate ${skillText(pr["3m"])}, 1 Jahr ${skillText(pr["1"])}${pr["1"] ? ` (${pr["1"].jahr_von}–${pr["1"].jahr_bis})` : ""}.${g && g["3m"] ? ` Über alle ${g.name} (${g.werte.toLocaleString("de-DE")} Werte): 3 Monate ${skillText(g["3m"])}, 1 Jahr ${skillText(g["1"])}.` : ""}</p>
+    ${risiko ? `<p style="margin:4px 0">${risiko}</p>` : ""}
+    <p class="klein" style="margin:6px 0 0">Die Phase beschreibt, wo der Kurs gerade steht – sie sagt nicht voraus, wohin er geht. Grundquote: in ${fmt(alle?.quote,0," %")} aller Wochen stand der Kurs ein Jahr später höher. Keine Anlageberatung.</p>
+  </section>`;
 }
 function phasenKarte(c){
   if (!c?.c || !c.score) return "";
@@ -2917,6 +2984,18 @@ function fallenHtml(fa){
     <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">danach</th><th style="text-align:left">Geschäft damals</th><th>Aktien</th><th>Fälle</th><th>Kurs höher</th><th>Median</th><th data-e="f_absturz">Absturz ≥ 50 %</th></tr></thead><tbody>${zeilen.join("")}</tbody></table></div>
     <div class="text">${s1 && o1 ? `Nach einem Jahr stand der Kurs bei schwachem Geschäft in ${fmt(s1.hoeher,0)} % der Fälle höher, bei solidem in ${fmt(o1.hoeher,0)} %; um die Hälfte oder mehr abgestürzt sind ${fmt(s1.absturz,0)} % gegen ${fmt(o1.absturz,0)} %. ` : ""}${esc(fa.hinweis)}. Firmen, die pleite gingen oder von der Börse verschwanden, fehlen – sie wären fast alle „schwach“ gewesen, der Unterschied ist in Wirklichkeit also eher größer. Ausländische Firmen ohne SEC-Zahlen fehlen ganz. Die Warnung sagt nichts darüber, ob eine solide Aktie steigt.</div>`;
 }
+function mpPruefHtml(mp){
+  if (!mp) return "";
+  const zeilen = Object.values(mp).filter(x => x["3m"] || x["1"]).map(x => {
+    const ph = (h, k) => x[h]?.phasen.find(p => p.phase === k);
+    return `<tr><td style="text-align:left">${esc(x.name.replace(" (Auswahl mit Rückblick!)","*"))}</td><td>${x.werte.toLocaleString("de-DE")}</td>
+      <td>${fmt(x["3m"]?.alle.quote,0," %")}</td><td>${fmt(ph("3m",2)?.quote,0," %")}</td><td>${fmt(ph("3m",0)?.quote,0," %")}</td><td class="${klasse(x["3m"]?.skill)}">${x["3m"]?.skill == null ? "–" : vz(x["3m"].skill,1) + " %"}</td>
+      <td>${fmt(x["1"]?.alle.quote,0," %")}</td><td>${fmt(ph("1",2)?.quote,0," %")}</td><td>${fmt(ph("1",0)?.quote,0," %")}</td><td class="${klasse(x["1"]?.skill)}">${x["1"]?.skill == null ? "–" : vz(x["1"].skill,1) + " %"}</td></tr>`; }).join("");
+  return `<h3>4. ${ek("mp_pruefung","Marktphase: sagt der Trend die Richtung voraus?")}</h3>
+    <div class="text">Phase je Woche nur mit damaligem Wissen (${ek("mp_karte","Aufwärtstrend / Gemischt / Abwärtstrend")}). Quoten außerhalb der Lernzeit: Wie oft stand der Kurs danach höher? Skill = Vorhersage nach Phase gegen die einfache Grundquote.</div>
+    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th>3 Mon.: alle</th><th>nach ↗</th><th>nach ↘</th><th>Skill</th><th>1 J.: alle</th><th>nach ↗</th><th>nach ↘</th><th>Skill</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <div class="text">Skill um 0 % oder darunter heißt: Wer nur die Grundquote kennt, lag genauso gut. Bei Aktien fehlen Firmen, die pleite gingen.</div>`;
+}
 function zeigePruefungGesamt(gruppe="etf", h="3"){
   seiteAnfang("pruefung"); hashSetzen("seite=pruefung");
   if (!PRUEF) { $("#haupt").innerHTML = '<div class="leer">Prüfung noch nicht berechnet (läuft mit aktualisieren.sh).</div>'; return; }
@@ -2945,7 +3024,8 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
     <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th data-e="s_irr">Sparplan</th><th data-e="s_staffel">Staffel</th><th data-e="s_staffel_vk">+ Teilverkauf</th><th data-e="s_rueckgang">größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
       s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
-    <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}${fallenHtml(PRUEF.fallen)}`;
+    <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}${fallenHtml(PRUEF.fallen)}
+    ${mpPruefHtml(PRUEF.marktphase)}`;
   document.querySelectorAll("#haupt [data-g]").forEach(b => b.onclick = () => zeigePruefungGesamt(b.dataset.g, h));
   document.querySelectorAll("#haupt [data-h]").forEach(b => b.onclick = () => zeigePruefungGesamt(gruppe, b.dataset.h));
   document.querySelectorAll("#haupt tr[data-id]").forEach(t => t.onclick = () => { REITER = "strategie"; zeige(t.dataset.id); });
