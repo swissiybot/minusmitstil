@@ -33,6 +33,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 H1, H3, H5 = 52, 156, 260          # Wochen
 AEHNLICH = 7.5                       # Ampel-Spanne fuer "aehnliche Lage"
 WARMUP = 260                         # Wochen Historie, bevor eine Ampel berechnet wird
+VORL_WARMUP = 104                    # vorläufige Ampel (nur Anzeige im Chart) schon ab 2 Jahren Historie
 
 QUELLEN_TEXT = {
     "index": ("Index ohne Dividenden", False),
@@ -347,6 +348,18 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     with np.errstate(invalid="ignore"):
         anzahl = np.sum(~np.isnan(teile), axis=0)
         score = np.where(anzahl >= 2, (1 - np.nanmean(np.where(np.isnan(teile), np.nan, teile), axis=0)) * 100, np.nan)
+    # Vorläufige Ampel für die Anfangsjahre (Wunsch Marc): gleiche Bausteine, aber schon ab VORL_WARMUP Wochen eigener
+    # Geschichte (die 200-Wochen-Linie fehlt dann meist noch). Nur dort, wo es die echte Ampel noch nicht gibt; nur für die
+    # Anzeige im Chart – Rangliste, Prüfungen und Signale nutzen weiter nur die echte Ampel.
+    kv = {"dd": expandierendes_perzentil(dd, VORL_WARMUP), "ratio": expandierendes_perzentil(ratio, VORL_WARMUP),
+          "trend": expandierendes_perzentil(tz, VORL_WARMUP), "rsi": expandierendes_perzentil(rs, VORL_WARMUP)}
+    if "mayer" in komponenten:
+        kv["mayer"] = komponenten["mayer"]
+    tv = np.vstack(list(kv.values()))
+    with np.errstate(invalid="ignore"):
+        anz_v = np.sum(~np.isnan(tv), axis=0)
+        score_v = np.where(anz_v >= 2, (1 - np.nanmean(tv, axis=0)) * 100, np.nan)
+    score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
 
     jahre_daten = (tag.index[-1] - tag.index[0]).days / 365.25
@@ -445,6 +458,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    if not np.all(np.isnan(score_v)):
+        chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)
     if mp:
         chart["mp"] = mp
     if krypto and "mayer_w" in extra:
@@ -520,6 +535,7 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "t": [int(x) for x in (t.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)],
         "o": rund(t["Open"].values), "h": rund(t["High"].values), "l": rund(t["Low"].values), "c": rund(t["Close"].values),
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
+        **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
         **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
     }
     if info.get("gruppe") == "Krypto":

@@ -632,7 +632,7 @@ function zeichneOnline(w, c){
     zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t}));
   }
   const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
-  sc.setData(c.t.map((t,i) => c.score[i]==null ? {time:t} : {time:t, value:c.score[i], color:farbe(c.score[i])}));
+  sc.setData(c.t.map((t,i) => c.score[i] != null ? {time:t, value:c.score[i], color:farbe(c.score[i])} : c.score_v?.[i] != null ? {time:t, value:c.score_v[i], color:farbe(c.score_v[i]) + "66"} : {time:t}));   // blass = vorläufig
   [80,15].forEach(v => sc.createPriceLine({price:v, color:v===80?F().guenstig:F().teuer, lineWidth:1, lineStyle:2, axisLabelVisible:true}));
   sc.setMarkers(c.marken.map(([t,art,s]) => ({
     kauf:     {time:t,position:"aboveBar",color:F().guenstig,shape:"arrowDown",text:String(s)},
@@ -968,7 +968,7 @@ const ERKLAERUNG_NEU = {
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
   skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
   quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Pfeile und Kegel gibt es dort nicht."},
-  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Gestrichelt: 80 und 15. Die Trennlinie darüber lässt sich ziehen."},
+  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Gestrichelt: 80 und 15. Die Trennlinie darüber lässt sich ziehen. Blasse Balken am Anfang = vorläufige Ampel: Die normale Ampel braucht 5 Jahre eigene Kursgeschichte; vorher rechnet das Tool ab 2 Jahren schon eine vorläufige mit weniger Vergleichsgeschichte (und meist noch ohne 200-Wochen-Linie). Sie ist weniger verlässlich und zählt nicht in Prüfungen, Ranglisten und Signalen."},
   l_pitop: {titel:"Pi Cycle Top (gestrichelt)", text:"111-Tage-Durchschnitt (orange) und 2 × 350-Tage-Durchschnitt (rosa). Stieg die 111-Tage-Linie darüber, lag bei Bitcoin früher ein Zyklushoch nahe (Markierung „Pi Top“). Nur für Bitcoin geeicht, sehr wenige Fälle."},
   l_mayer: {titel:"Mayer Multiple (unten, linke Skala)", text:"Kurs geteilt durch den 200-Tage-Durchschnitt, je Woche. Gestrichelt: 0,8 (früher tief) und 2,4 (früher überhitzt) – Grenzen aus der Bitcoin-Geschichte, für andere Coins nicht erprobt."},
   prognose: {titel:"Prognose (Simulation, 12 Monate)", text:"Monte-Carlo-Simulation: Aus echten Wochenrenditen der letzten 20 Jahre (bei kürzerer Historie der vorhandenen) werden 10.000 mögliche Wege gebaut. Gezeigt werden der mittlere Weg und die Spanne, in der 90 % der Wege enden. Keine Vorhersage: die Zukunft muss der Vergangenheit nicht ähneln, die heutige Ampel fließt nicht ein."},
@@ -2062,7 +2062,8 @@ function zeichne(c, w){
   {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 (kräftig), 60–80 (hell) bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
     const ph = ch.addHistogramSeries({priceScaleId:"phasen", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.phasen});
     ch.priceScale("phasen").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
-    ph.setData(c.t.map((t,i) => { const s = c.score[i]; return s == null ? {time:t} : s >= 80 ? {time:t, value:1, color:f.guenstig + "2e"} : s >= 60 ? {time:t, value:1, color:f.guenstig + "14"} : s <= 15 ? {time:t, value:1, color:f.teuer + "1f"} : {time:t}; }));
+    ph.setData(c.t.map((t,i) => { const v = c.score[i] == null && c.score_v?.[i] != null, s = c.score[i] ?? c.score_v?.[i]; if (s == null) return {time:t};   // vorläufige Ampel (Anfangsjahre) blasser
+      return s >= 80 ? {time:t, value:1, color:f.guenstig + (v ? "18" : "2e")} : s >= 60 ? {time:t, value:1, color:f.guenstig + (v ? "0c" : "14")} : s <= 15 ? {time:t, value:1, color:f.teuer + (v ? "10" : "1f")} : {time:t}; }));
     SERIEN.phasen.push(ph);
   }
   const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
@@ -2102,7 +2103,7 @@ function zeichne(c, w){
     z2.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(z2);
   }
   const sc = ch2.addHistogramSeries({priceLineVisible:false, lastValueVisible:true, priceFormat:{type:"price", precision:0, minMove:1}});
-  sc.setData(c.t.map((t,i) => c.score[i] == null ? {time:t} : {time:t, value:c.score[i], color:farbe(c.score[i])}));
+  sc.setData(c.t.map((t,i) => c.score[i] != null ? {time:t, value:c.score[i], color:farbe(c.score[i])} : c.score_v?.[i] != null ? {time:t, value:c.score_v[i], color:farbe(c.score_v[i]) + "66"} : {time:t}));   // blass = vorläufig
   [80, 15].forEach(v => sc.createPriceLine({price:v, color:v === 80 ? f.guenstig : f.teuer, lineWidth:1, lineStyle:2, axisLabelVisible:true}));
   if (c.mayer) {
     const my = ch2.addLineSeries({priceScaleId:"left", color:f.mayer, lineWidth:1.5, priceLineVisible:false, lastValueVisible:true, visible:CHIPS.mayer, priceFormat:{type:"price", precision:2, minMove:0.01}});
@@ -2141,10 +2142,10 @@ function zeichne(c, w){
       return;
     }
     const nk = c.c[i] >= 100 ? 2 : 4, v = i > 0 && c.c[i-1] ? (c.c[i] / c.c[i-1] - 1) * 100 : null;
-    const sc_ = c.score[i];
+    const sc_ = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null;
     fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
-      <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}`}">Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}`}</span>
+      <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>
       ${danachText(c, i)}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
