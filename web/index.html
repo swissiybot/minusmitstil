@@ -201,7 +201,16 @@ async function apiStrategie(id, q=""){
 }
 async function apiMc(id, wochen, jahre, preise){
   if (!STATISCH) return holeJson(`api/mc?id=${encodeURIComponent(id)}&wochen=${wochen}&jahre=${jahre}&preise=${preise.join(",")}`);
-  return null;   // online: Rechner nutzt die vorab gerechneten Verteilungen (tabRechnerOnline)
+  // online: vorab gerechnete Verteilungen (Verhältnisse zum heutigen Kurs) aus dem Export
+  const d = await exportLaden(id), m = d?.mc;
+  if (!m || m.fehler) return m || null;
+  const c = d.chart.c, p0 = c ? c[c.length - 1] : null;
+  if (!p0) return null;   // reduzierter Export ohne Kurse
+  const wahr = preis => ({...mcOnlineWahr(m, (preis / p0 - 1) * 100), preis, abstand: Math.round((preis / p0 - 1) * 1000) / 10});
+  return {kurs:p0, wochen:m.wochen, pfade:m.pfade, block:m.block, hist_von:m.hist_von, hist_jahre:m.hist_jahre, t:m.t,
+    kegel:Object.fromEntries(Object.entries(m.kegel).map(([k, v]) => [k, v.map(r => r * p0)])), ende_median:m.ende[50] * p0,
+    verlust_wahrsch:Math.round(anteilBis(m.ende, 1) * 1000) / 10, standard:[0.7,0.8,0.9,0.95,1.05,1.1,1.2,1.3].map(f => wahr(p0 * f)),
+    eigene:preise.filter(x => x > 0).map(wahr), vorab:true};
 }
 
 // Datenstand oben: lokal "live" (Server rechnet beim Anklicken), online mehrmals täglich
@@ -653,8 +662,8 @@ async function zeige(id){
       <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${ek("zonen", zonen[w.zone])}</span></h2>
       <div class="grund" data-e="grund">${grundMitErklaerung(w.grund)}</div>
       <div id="check" class="check"><span class="klein">Lohnt-sich-Check rechnet …</span></div></div>
-    <div id="chart"></div><div id="chart2"></div>
-    <div class="legende">${STATISCH ? legendeOnline(w) : `
+    <div id="chart"></div><div id="tvchart" style="height:430px;display:none"></div><div id="chart2"></div>
+    <div class="legende">${!c.c ? legendeOnline(w) : `${STATISCH && w.tv ? '<button class="knopf leise" id="tv-umschalter" style="padding:2px 10px">TradingView-Chart zeigen</button>' : ""}
       <span data-e="l_200w"><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
       <span data-e="l_trend"><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
       ${btc?'<span data-e="l_ema150"><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span data-e="l_sma471"><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span><span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Bodenbildungszone (EMA unter der Linie)</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▲ Pi Boden-Signal</span>':''}
@@ -667,10 +676,17 @@ async function zeige(id){
     </div>
     <div id="tab"></div>`;
   document.querySelectorAll(".reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
-  if (STATISCH) zeichneOnline(w, c); else zeichne(c, btc);
+  if (c.c) zeichne(c, btc); else zeichneOnline(w, c);
   reiter(REITER);
   lohntSichCheck(id);
-  if (!STATISCH) ladeKegel(52, 20, []);
+  if (c.c) ladeKegel(52, 20, []);
+  const um = $("#tv-umschalter");
+  if (um) um.onclick = () => {   // zwischen eigenem Chart und TradingView-Chart wechseln
+    const tv = $("#tvchart"), zeigeTv = tv.style.display === "none";
+    if (zeigeTv && !tv.dataset.geladen) { tvWidget(tv, w.tv); tv.dataset.geladen = "1"; }
+    tv.style.display = zeigeTv ? "" : "none"; $("#chart").style.display = zeigeTv ? "none" : "";
+    um.textContent = zeigeTv ? "Eigenen Chart zeigen" : "TradingView-Chart zeigen";
+  };
 }
 
 function grundMitErklaerung(g){
@@ -688,7 +704,7 @@ function reiter(name){
   REITER = name;
   tabCharts.forEach(ch => { try { ch.remove(); } catch(e){} }); tabCharts = [];
   document.querySelectorAll(".reiter button").forEach(b => b.classList.toggle("an", b.dataset.r===name));
-  ({kennzahlen:tabKennzahlen, rechner:STATISCH ? tabRechnerOnline : tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
+  ({kennzahlen:tabKennzahlen, rechner:STATISCH && INFO.kurs == null ? tabRechnerOnline : tabRechner, pruefung:tabPruefung, strategie:tabStrategie})[name](INFO);
 }
 
 function tabKennzahlen(w){
@@ -787,6 +803,10 @@ function tabRechner(w){
       Grenze: Die Durchschnittsrendite der gewählten Jahre steckt in den Wegen; die Zukunft muss der Vergangenheit nicht ähneln. Die heutige Ampel fließt nicht ein.</div>`;
   };
   $("#mc-los").onclick = los;
+  if (STATISCH) {   // online: vorab gerechnet für 12 Monate und 20 Jahre Historie
+    ["#mc-wochen", "#mc-jahre"].forEach(s => $(s).disabled = true);
+    $("#tab .eingabe").insertAdjacentHTML("beforeend", '<span class="klein" style="align-self:center">Online: 12 Monate und 20 Jahre Historie fest; Kauflimit und Verkaufsziel frei.</span>');
+  }
   los();
 }
 

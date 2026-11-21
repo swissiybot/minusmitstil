@@ -3,7 +3,12 @@
 Ergebnis ist der Ordner site/ (index.html, lib/, daten/) – nur dieser wird veroeffentlicht;
 web/daten bleibt unveraendert (lokale Fassung).
 
-Reduzierter, oeffentlicher Modus (Entscheidung Marc: Variante b): Die Online-Seite enthaelt KEINE
+Schalter KURSE_OEFFENTLICH (unten):
+  True  = Variante a (Entscheidung Marc, 21.11.2026 abends): die Online-Seite zeigt den eigenen Chart
+          mit Kursen wie lokal (Pfeile, 200-Wochen-Linie, Pi Cycle, Prognose-Kegel). Kurse: Yahoo Finance.
+  False = reduzierter Modus (Variante b), wie folgt beschrieben:
+
+Reduzierter, oeffentlicher Modus (frueher Entscheidung Marc: Variante b): Die Online-Seite enthaelt KEINE
 Kursreihen und keine Einzelkurse aus Yahoo, nur eigene Ergebnisse:
   - je Wert web/daten/werte/<id>.json: Kennzahlen (ohne Kurs), Ampel-Verlauf, Markierungen,
     Pi-Cycle-Zonen (nur Ja/Nein je Woche), Walk-forward-Pruefung, Strategie-Vergleich (Standardwerte),
@@ -32,7 +37,8 @@ import umfeld
 from kurse import alle_laden
 
 # Felder, die Kurse oder Kursreihen enthalten und deshalb nie veroeffentlicht werden
-VERBOTEN = {"o", "h", "l", "c", "kurs", "sma200w", "trend", "trend_o", "trend_u", "pi_ema150", "pi_sma471",
+KURSE_OEFFENTLICH = True
+VERBOTEN = set() if KURSE_OEFFENTLICH else {"o", "h", "l", "c", "kurs", "sma200w", "trend", "trend_o", "trend_u", "pi_ema150", "pi_sma471",
             "preis", "pfad", "p0", "ende_median", "reihe_kurs"}
 STUFEN = np.linspace(0, 100, 101)   # Perzentile fuer die Monte-Carlo-Verteilungen
 
@@ -42,6 +48,8 @@ def dateiname(wid: str) -> str:
 
 
 def ohne_kurs(info: dict) -> dict:
+    if KURSE_OEFFENTLICH:
+        return info
     info = {k: v for k, v in info.items() if k != "kurs"}
     if info.get("pi_rueckblick"):
         info["pi_rueckblick"] = [{k: v for k, v in x.items() if k != "kurs"} for x in info["pi_rueckblick"]]
@@ -123,7 +131,7 @@ def main():
             w, score = roh["w"], roh["score"]
             out = {
                 "info": ohne_kurs(info) | {"tv": E.tv_symbol(z["id"], z["symbol"], z["gruppe"])},
-                "chart": {"t": chart["t"], "score": chart["score"], "marken": chart["marken"],
+                "chart": chart if KURSE_OEFFENTLICH else {"t": chart["t"], "score": chart["score"], "marken": chart["marken"],
                           **({"pi_zone": chart["pi_zone"]} if "pi_zone" in chart else {})},
                 "mc": mc_relativ(w, z["id"]),
             }
@@ -144,7 +152,7 @@ def main():
     uf = E.WEB_DATEN / "umfeld.json"
     if uf.exists():
         u = json.loads(uf.read_text())
-        if "vix" in u:
+        if "vix" in u and not KURSE_OEFFENTLICH:
             v = u["vix"]
             stufe = "ruhig" if v["wert"] < 15 else "normal" if v["wert"] < 25 else "nervös" if v["wert"] < 35 else "Panik"
             u["vix"] = {"datum": v["datum"], "perzentil": v["perzentil"], "stufe": stufe,
@@ -166,7 +174,7 @@ def main():
         funde += [f"{d.name}{x}" for x in pruefe(json.loads(d.read_text()))]
     if funde:
         raise SystemExit(f"ABBRUCH: Kursfelder in den Online-Dateien gefunden: {funde[:10]}")
-    print(f"Export: {n} Werte, {groesse / 1e6:.0f} MB, {fehler} Fehler, {time.time() - t0:.0f} s – geprüft: keine Kursfelder")
+    print(f"Export: {n} Werte, {groesse / 1e6:.0f} MB, {fehler} Fehler, {time.time() - t0:.0f} s – " + ("mit Kursen (Variante a)" if KURSE_OEFFENTLICH else "geprüft: keine Kursfelder"))
     if lauf:
         print(f"Kursdownload: {lauf.get('geladen')} von {lauf.get('gesamt')} geladen, {lauf.get('ohne_daten')} ohne Daten"
               + (" – ABGEBROCHEN (alter Stand)" if lauf.get("abgebrochen") else ""))
