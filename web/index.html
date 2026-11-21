@@ -1230,7 +1230,7 @@ function trefferOeffnen(i){
   const t = TREFFER[i]; if (!t) return;
   const ersatz = ERSATZ_FUER; ERSATZ_FUER = null; $("#suche-dlg").close();
   if (ersatz != null && t.art === "wert" && DEPOT?.positionen[ersatz]) {   // Depot: gewählten Wert als Ersatz zuordnen
-    Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt"}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
+    Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt", ersatz:false, hinweis:""}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
   }
   if (t.art === "wert") zeige(t.w.id);
   else ({uebersicht:() => { zeigeUebersicht(); ansicht("haupt"); }, umfeld:() => { zeigeUmfeld(); ansicht("haupt"); }, pruefung:() => { zeigePruefungGesamt(); ansicht("haupt"); }, karte:() => { zeigeKarte(); ansicht("haupt"); }, lesen:() => leseOeffnen(true), depot:() => { zeigeDepot(); ansicht("haupt"); }})[t.s[0]]();
@@ -2237,6 +2237,16 @@ const INDEX_NAMEN = [
   [/dow\s*jones\s*industrial/i, "DIA", "gleicher Index (Name)"],
 ];
 const INDEX_AUSNAHMEN = /small|mid\s*cap|equal|\bex[\s-]|ohne|lever|hebel|short|daily|\b[23]x\b|momentum|quality|value|growth|min(imum)?\s*vol|dividend|covered|\bcall\b|sector|mdax|sdax|tecdax|hedged/i;
+// Letzter Schritt: automatischer Ersatz, damit keine Position offen bleibt. Klar als Annäherung markiert, jederzeit änderbar.
+const FONDS_WORT = /\b(etf|etc|etp|etn|ucits|fonds|fund|index|trust|sicav)\b|\((acc|dist|thes|aussch)\.?\)|\b(acc|dist)\b/i;
+const FONDS_ROHSTOFF = [[/bitcoin|\bbtc\b/i, "BTC", "Bitcoin"], [/ethereum|\beth\b/i, "ETH-USD", "Ethereum"], [/solana/i, "SOL-USD", "Solana"],
+  [/\bgold\b/i, "GOLD", "Gold"], [/silber|silver/i, "SILBER", "Silber"], [/platin/i, "PLATIN", "Platin"], [/kupfer|copper/i, "KUPFER", "Kupfer"],
+  [/(roh(stoff|öl)|commodit|brent|\bwti\b|crude)/i, "DBC", "Rohstoff-Korb"]];
+const LAND_ERSATZ = [   // Aktie nicht im Tool: breiter Markt ihres Landes/ihrer Region (ISIN-Ländercode)
+  [/^(US|CA)/, "SPY", "S&P 500"], [/^JP/, "EWJ", "Japan"], [/^DE/, "EXS1", "DAX"], [/^GB/, "ISF", "FTSE 100"],
+  [/^(FR|NL|IT|ES|BE|AT|FI|PT|IE|LU|GR)/, "SX5E", "Euro Stoxx 50"],
+  [/^(CN|HK|KY|BM|TW|IN|BR|KR|ZA|MX|ID|TH|MY|PH|SA|AE|QA|KW|CL|PE|CO|TR|PL|HU|CZ|EG|VN|AR)/, "EEM", "Schwellenländer (MSCI EM)"],
+];
 // ISIN → Wert im Tool für alle US-Aktien/ETFs im Tool (aus SEC-Daten gebaut, isin.py). Wird beim Öffnen von „Mein Depot“ geladen.
 let ISIN_SEC = null, ISIN_SEC_LAEDT = null;
 function isinListeLaden(){
@@ -2245,7 +2255,7 @@ function isinListeLaden(){
     ISIN_SEC = d || {};
     // offene Positionen (nicht von Hand gewählt) neu zuordnen
     let geaendert = false;
-    if (DEPOT) DEPOT.positionen.forEach(p => { if (!p.id) { const z = zuordnen(p); if (z.id || (z.hinweis && z.hinweis !== p.hinweis)) { Object.assign(p, z); geaendert = true; } } });
+    if (DEPOT) DEPOT.positionen.forEach(p => { if (!p.id || p.ersatz) { const z = zuordnen(p); if (z.id && (z.id !== p.id || z.quelle !== p.quelle)) { Object.assign(p, {ersatz:false, hinweis:""}, z); geaendert = true; } } });
     if (geaendert) { depotSichern(); DEPOT_ERG = null; if (SEITE === "depot") zeigeDepot(); }
   });
   return ISIN_SEC_LAEDT;
@@ -2283,7 +2293,7 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
   if (isin && ISIN_TABELLE[isin] && gibt(ISIN_TABELLE[isin][0])) return {id:ISIN_TABELLE[isin][0], quelle:"ISIN (gleicher Index)"};
   if (isin && ISIN_SEC?.[isin] && gibt(ISIN_SEC[isin])) return {id:ISIN_SEC[isin], quelle:"ISIN"};
   // erkannt, aber ohne Ampel (unter 10 Jahre Kursgeschichte, z. B. junge Börsengänge) → offen mit Grund
-  if (isin && ISIN_SEC?.[isin]) return {id:null, quelle:"", hinweis:`erkannt als ${ISIN_SEC[isin]}, aber im Tool erst ab 10 Jahren Kursgeschichte – bitte Ersatz wählen`};
+  const junger = isin && ISIN_SEC?.[isin] ? ISIN_SEC[isin] : null;   // erkannt, aber unter 10 Jahren Kurse (z. B. junger Börsengang) → unten Ersatz
   if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k || w.id.toUpperCase() === k); if (w) return {id:w.id, quelle:"Kürzel"}; }
   const name = String(pos.name || "");
   if (name && !INDEX_AUSNAHMEN.test(name)) for (const [re, id, q] of INDEX_NAMEN) if (re.test(name) && gibt(id)) return {id, quelle:q + " – bitte prüfen"};
@@ -2292,7 +2302,22 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
     const tr = ALLE.filter(w => w.name && nameKern(w.name) === kern);
     if (tr.length === 1) return {id:tr[0].id, quelle:"Firmenname – bitte prüfen"};
   }
+  return autoErsatz(pos, name, isin, junger);
   return {id:null, quelle:""};
+}
+function autoErsatz(pos, name, isin, junger){
+  const gibt = id => ALLE.some(w => w.id === id), w_ = id => ALLE.find(w => w.id === id);
+  const raus = (id, text) => gibt(id) ? {id, quelle:`automatischer Ersatz: ${text} – Annäherung, bitte prüfen`, ersatz:true} : null;
+  if (junger) return raus("QQQ", `${junger} ist erkannt, hat aber unter 10 Jahre Kurse → Nasdaq-100`) || {id:null, quelle:""};
+  const fonds = FONDS_WORT.test(name) || /^(IE|LU)/.test(isin);
+  if (fonds) {
+    for (const [re, id, t] of FONDS_ROHSTOFF) if (re.test(name)) { const r = raus(id, `${t} (Fonds/ETC auf ${t})`); if (r) return r; }
+    // Variante (Small Cap, Equal Weight …) eines bekannten Index → trotzdem dieser Index als Annäherung
+    for (const [re, id] of INDEX_NAMEN) if (re.test(name)) { const r = raus(id, `${w_(id)?.name || id} (Variante dieses Index)`); if (r) return r; }
+    return raus("ACWI", "Welt-ETF MSCI ACWI (kein passender Index im Tool)") || {id:null, quelle:""};
+  }
+  if (isin) for (const [re, id, t] of LAND_ERSATZ) if (re.test(isin)) { const r = raus(id, `${t} (Aktie nicht im Tool, Markt ihres Landes)`); if (r) return r; }
+  return raus("ACWI", "Welt-ETF MSCI ACWI (Aktie nicht im Tool)") || {id:null, quelle:""};
 }
 
 // ------------------------------------------------------------ CSV lesen (Trennzeichen und Dezimalkomma erkennen)
@@ -2368,7 +2393,7 @@ function csvVorschau(text, vorschlag){
     if (!neu.length) { $("#csv-info").textContent = "Keine Zeile mit gültigem Wert gefunden."; return; }
     if ($("#csv-ersetzen").checked) {   // gleichnamiges Depot ersetzen: bisherige Zuordnungen (Ersatzwerte) wiederverwenden
       const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
-      neu.forEach(n => { if (!n.id) { const a = alt.find(x => x.id && ((n.isin && x.isin === n.isin) || x.name === n.name)); if (a) { n.id = a.id; n.quelle = a.quelle; } } });
+      neu.forEach(n => { if (!n.id || n.ersatz) { const a = alt.find(x => x.id && x.quelle === "von dir gewählt" && ((n.isin && x.isin === n.isin) || x.name === n.name)); if (a) { n.id = a.id; n.quelle = a.quelle; n.ersatz = false; } } });   // deine eigene Wahl geht vor dem automatischen Ersatz
       DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
     }
     DEPOT.zuordnungen = {...(DEPOT.zuordnungen || {}), [sig]:sp};
@@ -2429,6 +2454,7 @@ function zeigeDepot(){
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
             <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
+        ${P.some(p => p.id && p.ersatz) ? `<div class="merke" style="margin-top:0">${(() => { const e = P.filter(p => p.id && p.ersatz), ew = e.reduce((a, p) => a + p.wert, 0); return `${e.length} Position${e.length === 1 ? " ist" : "en sind"} nicht im Tool und werden mit einem <b>automatischen Ersatz</b> gerechnet (${fmt(ew / summe * 100, 0, " %")} des Depots), z. B. eine chinesische Aktie mit dem Schwellenländer-ETF. Das ist eine Annäherung: Eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ kannst du einen besseren Ersatz wählen.`; })()}</div>` : ""}
         ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
       : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
     </section>
@@ -2510,7 +2536,7 @@ function depotImport(art){
       <label>Wert in €<input id="dm-wert" placeholder="10.000" style="width:120px"></label>
       <label>${ek("d_depotname","Depot")}<input id="dm-depot" list="dm-depots" value="${esc(DEPOT.positionen.length ? depotName(DEPOT.positionen[DEPOT.positionen.length - 1]) : DEPOT_NAME_STD)}" style="width:150px"><datalist id="dm-depots">${depotNamen().map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
       <button class="knopf" id="dm-plus">Hinzufügen</button></div>
-      <p class="klein" style="margin:8px 0 0">Automatisch zugeordnet werden: die ISIN jeder US-Aktie bzw. jedes US-ETFs im Tool, ISINs großer Index-ETFs, Kürzel (z. B. SPY, BTC, AAPL) und breite Indizes im Fondsnamen (z. B. „MSCI World“). Sonst wählst du danach einen Ersatz.</p>`;
+      <p class="klein" style="margin:8px 0 0">Automatisch zugeordnet werden: die ISIN jeder US-Aktie bzw. jedes US-ETFs im Tool, ISINs großer Index-ETFs, Kürzel (z. B. SPY, BTC, AAPL) und breite Indizes im Fondsnamen (z. B. „MSCI World“). Alles andere bekommt einen markierten automatischen Ersatz, den du ändern kannst.</p>`;
     $("#dm-plus").onclick = () => {
       const name = $("#dm-name").value.trim(), isin = $("#dm-isin").value.trim().toUpperCase(), wert = zahlDe($("#dm-wert").value);
       if (!name && !isin) return $("#dm-name").focus();
@@ -2588,12 +2614,29 @@ function pdfPositionen(zeilen){
   zeilen.forEach((z, i) => { for (const m of z.matchAll(ISIN)) if (isinGueltig(m[1])) treffer.push({i, isin:m[1]}); });
   const isinZeilen = new Set(treffer.map(t => t.i));
   const pos = new Map();
+  // Kopf- und Fußzeilen der Bank (Adresse, Registergericht, Seitenzahl) gehören zu keiner Position
+  const RAHMEN = /(sitz der gesellschaft|geschäftsführ|umsatzsteuer|\bhrb\b|amtsgericht|www\.|seite\s+\d+\s+von|erstellt am|bank gmbh|bank ag\b|brunnenstra|vorstand|aufsichtsrat|bic\b|iban\b)/i;
+  const hatGeld = j => j >= 0 && j < zeilen.length && !RAHMEN.test(zeilen[j])
+    && [...zeilen[j].replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ").replace(/-?\d+(?:,\d+)?\s*%/g, " ").matchAll(PDF_ZAHL)].some(m => (m[0].split(",")[1] || "").length === 2);
+  // Kopfzeile je ISIN (Zeile mit Kurswert): erst die ISIN-Zeile selbst (Tabellen), dann bis zu 4 Zeilen darüber
+  // (Depotauszüge wie Trade Republic: Stück, Name, Kurs, Wert über der ISIN), erst danach bis zu 2 Zeilen darunter.
+  // Jede Kopfzeile gehört genau einer Position – sonst rutscht der Name der nächsten Position herein.
+  const kopf = new Array(treffer.length).fill(null), vergeben = new Set();
   treffer.forEach((t, k) => {
-    // Block: ISIN-Zeile, bis zu 2 Zeilen davor und 1 danach (ohne fremde ISIN, nicht über die vorige ISIN hinaus)
     const vorige = k > 0 ? treffer[k - 1].i : -1;
-    const idx = [t.i];
-    for (let j = t.i - 1; j >= Math.max(vorige + 1, t.i - 2); j--) { if (isinZeilen.has(j)) break; idx.unshift(j); }
-    if (t.i + 1 < zeilen.length && !isinZeilen.has(t.i + 1)) idx.push(t.i + 1);
+    if (hatGeld(t.i)) { kopf[k] = t.i; vergeben.add(t.i); return; }
+    for (let j = t.i - 1; j >= Math.max(vorige + 1, t.i - 4); j--) { if (isinZeilen.has(j)) break; if (hatGeld(j)) { kopf[k] = j; vergeben.add(j); break; } }
+  });
+  treffer.forEach((t, k) => {
+    if (kopf[k] != null) return;
+    const naechste = k + 1 < treffer.length ? treffer[k + 1].i : zeilen.length;
+    for (let j = t.i + 1; j < Math.min(naechste, t.i + 3); j++) if (hatGeld(j) && !vergeben.has(j)) { kopf[k] = j; vergeben.add(j); break; }
+  });
+  treffer.forEach((t, k) => {
+    // Block: von der Kopfzeile bis zur ISIN-Zeile; ohne Kopfzeile nur die ISIN-Zeile und die Zeile davor (wenn frei)
+    let idx;
+    if (kopf[k] != null) { const a = Math.min(kopf[k], t.i), b = Math.max(kopf[k], t.i); idx = []; for (let j = a; j <= b; j++) if (!RAHMEN.test(zeilen[j]) && (j === t.i || j === kopf[k] || !vergeben.has(j))) idx.push(j); }
+    else { idx = [t.i]; const j = t.i - 1; if (j >= 0 && !isinZeilen.has(j) && !vergeben.has(j) && !RAHMEN.test(zeilen[j])) idx.unshift(j); }
     const text = idx.map(j => zeilen[j]).join("   ");
     const ohneDatum = text.replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ");
     // Stückzahl: Zahl direkt vor/nach „Stk“/„Stück“/„St.“
@@ -2615,18 +2658,23 @@ function pdfPositionen(zeilen){
     const nameTeile = txt => txt.replace(t.isin, " ").split(/ {3,}/).map(s => s.replace(/\b(ISIN|WKN)\s*:?\s*[A-Z0-9]{6,12}\b/gi, " ").replace(PDF_ZAHL, " ")
       .replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ").replace(/\b(Stk\.?|Stück|St\.|ISIN:?|WKN:?|Lagerland:?|Girosammelverwahrung|Wertpapierrechnung|%)\b/gi, " ")
       .replace(/[|:]/g, " ").replace(/\s+/g, " ").trim()).filter(s => /[A-Za-zÄÖÜäöü]{3,}/.test(s) && !/^(EUR|USD|CHF|GBP)$/i.test(s));
-    // Name bevorzugt aus der ISIN-Zeile (Tabellen), sonst aus den Zeilen davor/danach (Depotauszüge)
-    const eigene = nameTeile(zeilen[t.i]), alle = nameTeile(text);
-    const name = (eigene.length ? eigene : alle).sort((a, b) => b.length - a.length)[0] || t.isin;
+    // Name bevorzugt aus der ISIN-Zeile (Tabellen), dann aus der Kopfzeile (Depotauszüge), sonst aus dem Block;
+    // Zusatzzeilen wie „Registered Shares …“ / „Namens-Aktien …“ sind Gattung, nicht Name
+    const GATTUNG = /^(registered|reg\.?\s|namens|inhaber|vinkulierte|shares|actions|aktien|ordinary|common|sp\.?\s*adr|adr)/i;
+    const eigene = nameTeile(zeilen[t.i]), kopfTeile = kopf[k] != null ? nameTeile(zeilen[kopf[k]]) : [], alle = nameTeile(text).filter(s => !GATTUNG.test(s));
+    const name = (eigene.length ? eigene : kopfTeile.length ? kopfTeile : alle).sort((a, b) => b.length - a.length)[0] || t.isin;
     const alt = pos.get(t.isin);
     if (!alt || (!alt.wert && wert)) pos.set(t.isin, {isin:t.isin, name:name.slice(0, 80), anzahl, wert, sicher, an:!!wert});
   });
   // Summe laut PDF (zum Abgleich)
-  let summe = null;
-  for (const z of zeilen) if (/(summe|gesamt|depotwert|gesamtwert|total)/i.test(z) && !/[A-Z]{2}[A-Z0-9]{9}\d/.test(z)) {
-    const v = [...z.matchAll(PDF_ZAHL)].filter(m => (m[0].split(",")[1] || "").length === 2).map(m => zahlDe(m[0])).filter(v => v > 0);
-    if (v.length) summe = Math.max(summe || 0, ...v);
+  // Kandidaten: Zeilen mit Summe/Gesamt/… oder „Anzahl Positionen“; passt einer zur Summe der Positionen (±0,5 %), gilt der
+  // (z. B. Trade Republic: „Brokerage“-Summe ohne Cash), sonst der größte
+  const kand = [], posSumme = [...pos.values()].reduce((a, p) => a + (p.wert || 0), 0);
+  for (const z of zeilen) if (/(summe|gesamt|depotwert|gesamtwert|total|anzahl positionen|brokerage|wertpapiere)/i.test(z) && !/[A-Z]{2}[A-Z0-9]{9}\d/.test(z)) {
+    kand.push(...[...z.matchAll(PDF_ZAHL)].filter(m => (m[0].split(",")[1] || "").length === 2).map(m => zahlDe(m[0])).filter(v => v > 0));
   }
+  const passend = kand.find(v => posSumme > 0 && Math.abs(v / posSumme - 1) < 0.005);
+  const summe = passend ?? (kand.length ? Math.max(...kand) : null);
   return {positionen:[...pos.values()], summe};
 }
 async function naechstePdf(){
@@ -2671,7 +2719,7 @@ async function naechstePdf(){
     if (!neu.length) { $("#pdf-info").textContent = "Keine Position mit Wert ausgewählt."; return; }
     if ($("#pdf-ersetzen").checked) {
       const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
-      neu.forEach(n => { if (!n.id) { const a = alt.find(x => x.id && x.isin === n.isin); if (a) { n.id = a.id; n.quelle = a.quelle; } } });
+      neu.forEach(n => { if (!n.id || n.ersatz) { const a = alt.find(x => x.id && x.quelle === "von dir gewählt" && x.isin === n.isin); if (a) { n.id = a.id; n.quelle = a.quelle; n.ersatz = false; } } });   // deine eigene Wahl geht vor dem automatischen Ersatz
       DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
     }
     DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
@@ -2856,7 +2904,7 @@ function depotErgebnisZeigen(r){
 const ERKLAERUNG_DEPOT = {
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
-  d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 4) und 5) sind mit „bitte prüfen“ markiert. Nicht im Tool sind z. B. NYSE-Aktien (Procter & Gamble, Xpeng), Aktien nur aus Hongkong (BYD, Xiaomi) und Themen-ETFs (Uran) – dafür wählst du einen Ersatz. Ein Ersatz ist eine Annäherung."},
+  d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
   d_verteilung: {titel:"Verteilung", text:"Wie die Sparrate auf die Positionen verteilt wird: wie das heutige Depot, gleichmäßig oder nach den Anteilen in der Tabelle."},
