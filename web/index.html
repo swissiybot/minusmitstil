@@ -1076,6 +1076,7 @@ function favUmschalten(id){
 const LISTEN_REITER = [["uebersicht","Übersicht"],["etf","ETFs"],["krypto","Krypto"],["rohstoffe","Rohstoffe"],["aktien","Aktien"],["meine","★ Meine"]];
 let LISTE_REITER = lade("liste_reiter", "uebersicht"), GEFILTERT = [], ZEILE_H = 54, FOKUS_I = -1;
 const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
+const istIndexEtf = w => w.gruppe === "ETF" && (!w.branche || w.branche === "Index");   // breite Index-ETFs (ohne Themen-/Branchen-ETFs)
 function imReiter(w, r){
   return r === "uebersicht" ? SONDERGRUPPE(w) : r === "etf" ? w.gruppe === "ETF" : r === "krypto" ? w.gruppe === "Krypto"
     : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
@@ -1342,7 +1343,8 @@ function zeigeKarte(opt = {}){
   const perfModus = KARTE.farbe in PI;
   const istAktie = w => !SONDERGRUPPE(w);
   // Nur Nasdaq-100 (Mitglieder laut Wikipedia-Liste), Index-ETFs, Krypto und Rohstoffe
-  const titelOk = w => KARTE.titel === "alle" ? (w.n100 || SONDERGRUPPE(w)) : KARTE.titel === "n100" ? !!w.n100 : w.gruppe === KARTE.titel;
+  // „Index-ETFs“ = nur die breiten Index-ETFs (Themen-, Branchen-, Anleihen-ETFs aus der Welt-Erweiterung bleiben draußen)
+  const titelOk = w => KARTE.titel === "alle" ? (w.n100 || (SONDERGRUPPE(w) && (w.gruppe !== "ETF" || istIndexEtf(w)))) : KARTE.titel === "n100" ? !!w.n100 : KARTE.titel === "ETF" ? istIndexEtf(w) : w.gruppe === KARTE.titel;
   const werte = [...ALLE, ...HEATMAP_EXTRA].filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
   const aktien = werte.filter(istAktie), mitMw = aktien.filter(w => w.f?.mw > 0).length, nachMw = mitMw >= aktien.length * 0.5 && mitMw > 0;
   const mitBranche = aktien.filter(w => w.branche).length;
@@ -1453,7 +1455,7 @@ function zeigeUebersicht(){
       <div class="wk-wert" style="font-size:22px;margin-top:4px">${e && e.skill != null ? (e.skill > 2 ? "hilft etwas" : "kein Vorteil") : "–"}</div>
       <div class="wk-wort" style="font-weight:400;color:var(--text2)">außerhalb der Lernzeit${s ? ` · Warten besser bei ${fmt(s.staffel_besser,0)} % der ETFs` : ""}</div>
       <p class="klein" style="margin:8px 0 0">Ehrlich: Warten auf eine günstige Ampel brachte meist weniger als ein Sparplan.</p></div>`;
-  const gruppe = (titel, g) => { const k = sonder.filter(w => w.gruppe === g).sort((a, b) => (b.score ?? -1) - (a.score ?? -1)); return k.length ? `<div class="heat-gruppe"><h3>${titel}</h3><div class="heat">${k.map(kachel).join("")}</div></div>` : ""; };
+  const gruppe = (titel, g) => { const k = sonder.filter(w => w.gruppe === g && (g !== "ETF" || istIndexEtf(w))).sort((a, b) => (b.score ?? -1) - (a.score ?? -1)); return k.length ? `<div class="heat-gruppe"><h3>${titel}</h3><div class="heat">${k.map(kachel).join("")}</div></div>` : ""; };
   const kachel = w => { const de = wert(w, "delta");
     return `<button class="kachel" data-id="${w.id}" style="--kf:${farbe(w.score)}" aria-label="${esc(kurzname(w))}: Ampel ${fmt(w.score,0)}, ${zonenWort(w.score)}">
       <div class="n">${esc(kurzname(w))}</div><div class="s"><b>${fmt(w.score,0)}</b><span class="z">${w.score == null ? `noch keine Ampel` : zonenWort(w.score)}</span></div>
