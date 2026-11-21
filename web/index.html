@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aktien-Kaufplan</title>
+<script src="lib/lightweight-charts.js"></script>
+<style>
+:root{
+  --bg:#131722; --panel:#1e222d; --panel2:#2a2e39; --line:#363a45; --text:#d1d4dc; --muted:#868993;
+  --gruen:#26a69a; --gruen2:#089981; --rot:#ef5350; --gelb:#f0b90b; --blau:#2962ff; --orange:#ff9800;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Ubuntu,sans-serif}
+header{display:flex;gap:16px;align-items:baseline;padding:10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+header h1{font-size:16px;margin:0;font-weight:600}
+header .stand{color:var(--muted)}
+header .hinweis{color:var(--muted);font-size:11px;margin-left:auto}
+#kacheln{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;padding:10px 16px}
+.kachel{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;cursor:pointer}
+.kachel:hover{border-color:var(--blau)}
+.kachel .n{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kachel .s{font-size:20px;font-weight:600}
+.kachel .z{font-size:11px}
+main{display:grid;grid-template-columns:minmax(500px,47%) 1fr;gap:10px;padding:0 16px 16px;min-height:calc(100vh - 190px)}
+@media (max-width:1000px){main{grid-template-columns:1fr}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;display:flex;flex-direction:column}
+.filter{display:flex;gap:8px;flex-wrap:wrap;padding:8px;border-bottom:1px solid var(--line);align-items:center}
+.filter input,.filter select{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 7px;font:inherit}
+.filter label{color:var(--muted);display:flex;gap:4px;align-items:center}
+.tabelle{overflow:auto;flex:1;max-height:calc(100vh - 250px)}
+table{border-collapse:collapse;width:100%}
+th,td{padding:5px 6px;text-align:right;white-space:nowrap;border-bottom:1px solid #2a2e39}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:500;cursor:pointer;user-select:none}
+th:first-child,td:first-child{text-align:left}
+tr:hover td{background:#2a2e3988}
+tr.aktiv td{background:#2962ff22}
+td .nm{max-width:170px;overflow:hidden;text-overflow:ellipsis;display:block}
+td .sym{color:var(--muted);font-size:11px}
+.ampel{display:inline-block;min-width:38px;padding:1px 6px;border-radius:3px;font-weight:600;text-align:center;color:#fff}
+.mehr{padding:8px;text-align:center}
+.mehr button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:4px;padding:5px 12px;cursor:pointer}
+#detail{padding:0}
+#kopf{padding:10px 12px;border-bottom:1px solid var(--line)}
+#kopf h2{margin:0;font-size:16px}
+#kopf .grund{color:var(--muted);margin-top:4px}
+#chart{height:430px}
+#chart2{height:120px;border-top:1px solid var(--line)}
+.legende{display:flex;gap:14px;flex-wrap:wrap;padding:6px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+.legende i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+.werte{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;padding:10px 12px}
+.wert{background:var(--panel2);border-radius:4px;padding:7px 9px}
+.wert .k{font-size:11px;color:var(--muted)}
+.wert .v{font-size:15px;font-weight:600}
+.wert .u{font-size:11px;color:var(--muted)}
+.wtab{margin:0 12px 12px;width:calc(100% - 24px)}
+.wtab td,.wtab th{text-align:right}
+.wtab th{position:static}
+.text{padding:0 12px 12px;color:var(--muted);font-size:12px}
+.pos{color:var(--gruen)} .neg{color:var(--rot)}
+.leer{padding:40px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Aktien-Kaufplan</h1><span class="stand" id="stand">lädt …</span>
+  <span class="hinweis">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts.</span>
+</header>
+<div id="kacheln"></div>
+<main>
+  <section class="box">
+    <div class="filter">
+      <input id="suche" placeholder="Suche Name oder Kürzel" size="18">
+      <select id="gruppe"><option value="">Alle Gruppen</option><option>ETF</option><option>Krypto</option><option>Nasdaq</option><option>FTSE All-World</option></select>
+      <label>min. Jahre <input id="minj" type="number" value="10" min="0" style="width:52px"></label>
+      <label><input id="nurq" type="checkbox" checked> nur stabiler Aufwärtstrend</label>
+      <label>min. Umsatz/Tag <select id="minu"><option value="0">egal</option><option value="1e6">1 Mio $</option><option value="1e7" selected>10 Mio $</option><option value="1e8">100 Mio $</option></select></label>
+    </div>
+    <div class="tabelle"><table>
+      <thead><tr>
+        <th data-s="name">Wert</th><th data-s="score" title="0-100: hoch = historisch günstig">Ampel ▼</th>
+        <th data-s="cagr20" title="Durchschnittliche Jahresrendite über 20 Jahre (oder verfügbare Jahre)">Ø Jahr</th>
+        <th data-s="p3" title="Anteil früherer ähnlicher Lagen mit höherem Kurs nach 3 Jahren">3J höher</th>
+        <th data-s="vorteil" title="Trefferquote ähnlicher Lagen minus Trefferquote an allen Tagen">Vorteil</th>
+        <th data-s="rueck" title="So oft fiel der Kurs danach noch mind. 10 % tiefer (innerhalb 1 Jahr)">Rückschlag</th>
+        <th data-s="dd">vom Hoch</th><th data-s="delta" title="Änderung der Ampel in 4 Wochen">4W</th>
+      </tr></thead><tbody id="zeilen"></tbody></table>
+      <div class="mehr"><button id="mehr">mehr anzeigen</button> <span id="anzahl" class="stand"></span></div>
+    </div>
+  </section>
+  <section class="box" id="detail"><div class="leer">Wert in der Liste anklicken.</div></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+let ALLE = [], ANZEIGE = 200, SORT = {k:"score", dir:-1}, AKTIV = null;
+const fmt = (x, n=1, suf="") => x==null ? "–" : (Math.round(x*10**n)/10**n).toLocaleString("de-DE",{minimumFractionDigits:n,maximumFractionDigits:n})+suf;
+const farbe = s => s==null ? "#555" : s>=80 ? "#089981" : s>=60 ? "#26a69a99" : s>40 ? "#5d606b" : s>15 ? "#ef535099" : "#ef5350";
+const zonen = {"historisch sehr guenstig":"historisch sehr günstig","guenstig":"günstig","neutral":"neutral","teuer":"teuer","historisch sehr teuer":"historisch sehr teuer","keine Daten":"keine Daten"};
+const umlaut = t => (t||"").replace(/ae/g,"ä").replace(/oe/g,"ö").replace(/ue/g,"ü").replace(/Standardabw\./g,"Standardabw.");
+const p3 = w => w.p && w.p["3"] ? w.p["3"] : null;
+const wert = (w,k) => ({score:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
+  rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:w.name})[k];
+
+async function start(){
+  const r = await fetch("daten/rangliste.json", {cache:"no-store"});
+  const d = await r.json();
+  ALLE = d.werte; $("#stand").textContent = "Stand " + d.stand + " · " + ALLE.length + " Werte";
+  kacheln(); liste();
+  const erster = new URLSearchParams(location.hash.slice(1)).get("w") || "SPY";
+  zeige(erster);
+}
+function kacheln(){
+  const k = ALLE.filter(w => w.gruppe==="ETF" || w.gruppe==="Krypto");
+  $("#kacheln").innerHTML = k.map(w => `<div class="kachel" data-id="${w.id}">
+    <div class="n">${w.name.replace(" (ETF)","")}</div>
+    <div class="s" style="color:${farbe(w.score)}">${fmt(w.score,0)}</div>
+    <div class="z">${zonen[w.zone]} · Ø ${fmt(w.cagr20,1,"%")}/J</div></div>`).join("");
+  document.querySelectorAll(".kachel").forEach(e => e.onclick = () => zeige(e.dataset.id));
+}
+function gefiltert(){
+  const q = $("#suche").value.trim().toLowerCase(), g = $("#gruppe").value, mj = +$("#minj").value||0,
+        nq = $("#nurq").checked, mu = +$("#minu").value;
+  return ALLE.filter(w => w.score!=null
+    && (!q || w.name.toLowerCase().includes(q) || w.symbol.toLowerCase().includes(q))
+    && (!g || w.gruppe.includes(g))
+    && (w.jahre_daten||0) >= mj
+    && (!nq || w.qualitaet || w.gruppe==="ETF" || w.gruppe==="Krypto")
+    && (w.gruppe==="ETF" || w.gruppe==="Krypto" || (w.umsatz_usd||0) >= mu));
+}
+function liste(){
+  const f = gefiltert().sort((a,b) => {
+    const x = wert(a,SORT.k), y = wert(b,SORT.k);
+    if (x==null) return 1; if (y==null) return -1;
+    return (x>y?1:x<y?-1:0) * SORT.dir;
+  });
+  $("#anzahl").textContent = `${Math.min(ANZEIGE,f.length)} von ${f.length}`;
+  $("#mehr").style.display = f.length > ANZEIGE ? "" : "none";
+  $("#zeilen").innerHTML = f.slice(0,ANZEIGE).map(w => {
+    const p = p3(w), v = p ? p.quote-p.basis : null, de = wert(w,"delta");
+    return `<tr data-id="${w.id}" class="${w.id===AKTIV?"aktiv":""}">
+      <td><span class="nm">${w.name}</span><span class="sym">${w.symbol} · ${w.gruppe}</span></td>
+      <td><span class="ampel" style="background:${farbe(w.score)}">${fmt(w.score,0)}</span></td>
+      <td class="${w.cagr20>0?"pos":"neg"}" title="${fmt(w.cagr_jahre,0)} Jahre${w.cagr20_div?", mit Dividenden":", ohne Dividenden"}">${fmt(w.cagr20,1,"%")}</td>
+      <td title="${p?p.episoden+" Phasen, "+p.wochen+" Wochen":""}">${p?fmt(p.quote,0,"%"):"–"}</td>
+      <td class="${v>0?"pos":v<0?"neg":""}">${v==null?"–":(v>0?"+":"")+fmt(v,0)}</td>
+      <td>${fmt(w.p?.rueckschlag10,0,"%")}</td>
+      <td>${fmt(w.dd,0,"%")}</td>
+      <td class="${de>0?"pos":de<0?"neg":""}">${de==null?"–":(de>0?"+":"")+fmt(de,0)}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("#zeilen tr").forEach(e => e.onclick = () => zeige(e.dataset.id));
+}
+["#suche","#gruppe","#minj","#nurq","#minu"].forEach(s => $(s).addEventListener("input", () => {ANZEIGE=200; liste();}));
+$("#mehr").onclick = () => {ANZEIGE += 300; liste();};
+document.querySelectorAll("th[data-s]").forEach(th => th.onclick = () => {
+  const k = th.dataset.s; SORT = {k, dir: SORT.k===k ? -SORT.dir : (k==="name"||k==="rueck" ? 1 : -1)};
+  document.querySelectorAll("th[data-s]").forEach(t => t.textContent = t.textContent.replace(/ [▲▼]$/,""));
+  th.textContent += SORT.dir<0 ? " ▼" : " ▲"; liste();
+});
+
+let charts = [];
+async function zeige(id){
+  AKTIV = id; location.hash = "w=" + encodeURIComponent(id);
+  document.querySelectorAll("#zeilen tr").forEach(e => e.classList.toggle("aktiv", e.dataset.id===id));
+  const r = await fetch("api/wert?id=" + encodeURIComponent(id));
+  if (!r.ok) { $("#detail").innerHTML = '<div class="leer">Keine Daten für ' + id + '</div>'; return; }
+  const {info:w, chart:c} = await r.json();
+  charts.forEach(ch => ch.remove()); charts = [];
+  const pz = k => w.p && w.p[k] ? w.p[k] : null;
+  const zeileP = (k, txt) => { const p = pz(k); if (!p) return `<tr><td style="text-align:left">${txt}</td><td colspan="5">zu wenig ähnliche Fälle</td></tr>`;
+    const v = p.quote - p.basis;
+    return `<tr><td style="text-align:left">${txt}</td><td><b>${fmt(p.quote,0,"%")}</b></td><td>${fmt(p.basis,0,"%")}</td>
+      <td class="${v>0?"pos":v<0?"neg":""}">${v>0?"+":""}${fmt(v,0)}</td><td>${fmt(p.median_pa,1,"%")} / ${fmt(p.basis_median_pa,1,"%")}</td><td>${p.episoden} (${p.wochen} Wo.)</td></tr>`; };
+  const seg = w.segmente.map(s => `ab ${s.ab.slice(0,4)}: ${umlaut(s.art)} (${s.symbol})`).join(" → ");
+  const btc = w.gruppe === "Krypto";
+  $("#detail").innerHTML = `
+    <div id="kopf"><h2>${w.name} <span class="sym">${w.symbol}</span>
+      <span class="ampel" style="background:${farbe(w.score)};margin-left:8px">${fmt(w.score,0)}</span>
+      <span style="font-size:13px;font-weight:400;color:${farbe(w.score)}"> ${zonen[w.zone]}</span></h2>
+      <div class="grund">${umlaut(w.grund)}</div></div>
+    <div id="chart"></div><div id="chart2"></div>
+    <div class="legende">
+      <span><i style="background:#f0b90b"></i>200-Wochen-Linie</span>
+      <span><i style="background:#2962ff"></i>Langfristtrend (±2 Standardabw.)</span>
+      ${btc?'<span><i style="background:#e040fb"></i>Pi Cycle: 150-Tage-EMA</span><span><i style="background:#00bcd4"></i>471-Tage-SMA × 0,745</span>':''}
+      <span>▲ Ampel ≥ 80 (Kaufzone) · ▼ Ampel ≤ 15 (teuer)</span>
+      <span>Unten: Ampel 0–100 im Zeitverlauf</span>
+    </div>
+    <div class="werte">
+      <div class="wert"><div class="k">Ø Jahresrendite</div><div class="v ${w.cagr20>0?"pos":"neg"}">${fmt(w.cagr20,1,"%")}</div><div class="u">${fmt(w.cagr_jahre,0)} Jahre, ${w.cagr20_div?"mit":"ohne"} Dividenden</div></div>
+      <div class="wert"><div class="k">Ø seit Beginn</div><div class="v">${fmt(w.cagr_max,1,"%")}</div><div class="u">${fmt(w.jahre_daten,0)} Jahre Daten</div></div>
+      <div class="wert"><div class="k">Abstand zum Hoch</div><div class="v">${fmt(w.dd,1,"%")}</div><div class="u">zur 200-Wochen-Linie ${fmt(w.zu200w,0,"%")}</div></div>
+      <div class="wert"><div class="k">Rückschlagrisiko</div><div class="v">${fmt(w.p?.rueckschlag10,0,"%")}</div><div class="u">fiel danach noch ≥ 10 % (Median ${fmt(w.p?.median_tiefer,0,"%")})</div></div>
+      <div class="wert"><div class="k">Trendgüte (R²)</div><div class="v">${fmt(w.trend_r2,2)}</div><div class="u">${w.qualitaet?"stabiler Aufwärtstrend":"kein stabiler Trend – Signal unsicher"}</div></div>
+      ${btc?`<div class="wert"><div class="k">Bitcoin-Signale</div><div class="v">Mayer ${fmt(w.mayer,2)}</div><div class="u">Pi Bottom ${w.pi_bottom_aktiv?"<b class=pos>AKTIV</b>":"aus"} · Pi Top ${w.pi_top_aktiv?"<b class=neg>AKTIV</b>":"aus"}</div></div>`:""}
+    </div>
+    <table class="wtab"><thead><tr><th style="text-align:left">Ähnliche Lage früher (Ampel ±7,5)</th><th>Kurs höher</th><th>an allen Tagen</th><th>Vorteil</th><th>Median p.a. (ähnlich / alle)</th><th>Phasen</th></tr></thead>
+    <tbody>${zeileP("1","nach 1 Jahr")}${zeileP("3","nach 3 Jahren")}${zeileP("5","nach 5 Jahren")}</tbody></table>
+    <div class="text">Datenquelle: ${seg}. Jede Kennzahl wird nur mit der Historie bis zum jeweiligen Zeitpunkt verglichen (kein Blick in die Zukunft).
+    „Vorteil“ = wie viel öfter ähnliche Lagen gut ausgingen als ein beliebiger Kauftag. Wenige Phasen = wenig aussagekräftig.
+    Heutige Indexmitglieder haben überlebt (Pleitefirmen fehlen) – historische Quoten bei Einzelaktien wirken deshalb zu gut.</div>`;
+  zeichne(c, btc);
+}
+function zeichne(c, btc){
+  const basis = {autoSize:true, layout:{background:{color:"#1e222d"},textColor:"#d1d4dc"},grid:{vertLines:{color:"#2a2e39"},horzLines:{color:"#2a2e39"}},
+    timeScale:{borderColor:"#363a45",minBarSpacing:0.02},rightPriceScale:{borderColor:"#363a45"},crosshair:{mode:0},
+    localization:{locale:"de-DE",priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}};
+  const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:1}});
+  const linie = (werte, farbe, breite=1, stil=0) => { const s = ch.addLineSeries({color:farbe,lineWidth:breite,lineStyle:stil,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+    s.setData(c.t.map((t,i)=>({time:t,value:werte[i]})).filter(p=>p.value!=null)); return s; };
+  const kerzen = ch.addCandlestickSeries({upColor:"#26a69a",downColor:"#ef5350",borderVisible:false,wickUpColor:"#26a69a",wickDownColor:"#ef5350"});
+  kerzen.setData(c.t.map((t,i)=>({time:t,open:c.o[i]??c.c[i],high:c.h[i]??c.c[i],low:c.l[i]??c.c[i],close:c.c[i]})));
+  linie(c.trend_o,"#2962ff55",1,2); linie(c.trend,"#2962ff",1,0); linie(c.trend_u,"#2962ff55",1,2);
+  linie(c.sma200w,"#f0b90b",2);
+  if (btc && c.pi_ema150) { linie(c.pi_ema150,"#e040fb",1); linie(c.pi_sma471,"#00bcd4",1); }
+  kerzen.setMarkers(c.marken.map(([t,art,s]) => art==="kauf"
+    ? {time:t,position:"belowBar",color:"#089981",shape:"arrowUp",text:String(s)}
+    : {time:t,position:"aboveBar",color:"#ef5350",shape:"arrowDown",text:String(s)}));
+  const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, timeScale:{...basis.timeScale, visible:false}});
+  const sc = ch2.addHistogramSeries({priceLineVisible:false, priceFormat:{type:"price",precision:0,minMove:1}});
+  sc.setData(c.t.map((t,i)=> c.score[i]==null ? {time:t} : {time:t,value:c.score[i],color:farbe(c.score[i])}));
+  [80,15].forEach(v => sc.createPriceLine({price:v,color:v===80?"#089981":"#ef5350",lineWidth:1,lineStyle:2,axisLabelVisible:true}));
+  let sperre = false;
+  const sync = (a,b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (sperre||!r) return; sperre = true; b.timeScale().setVisibleLogicalRange(r); sperre = false; });
+  sync(ch,ch2); sync(ch2,ch);
+  // erst nach dem Layout einpassen, sonst ist die Breite noch 0
+  setTimeout(() => ch.timeScale().fitContent(), 50);
+  charts = [ch, ch2];
+}
+start();
+</script>
+</body>
+</html>

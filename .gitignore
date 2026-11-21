@@ -1,0 +1,19 @@
+# Python-Umgebung (neu anlegen: python3 -m venv .venv && .venv/bin/pip install -r requirements.txt)
+.venv/
+__pycache__/
+*.pyc
+
+# Daten, die jederzeit neu geladen bzw. berechnet werden (aktualisieren.sh)
+daten/kurse.parquet
+daten/kurse.tmp
+daten/kurse/
+daten/universum.csv
+daten/ohne_daten.txt
+daten/*.log
+web/daten/
+
+# Vanguard-Bestandsliste: Datei von Vanguard, nicht weitergeben
+daten/eingang/*
+!daten/eingang/.gitkeep
+
+# Signal-Tagebuch wird bewusst MITGESICHERT (nicht neu erzeugbar)

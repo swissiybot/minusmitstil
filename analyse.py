@@ -1,0 +1,386 @@
+"""Berechnet fuer jeden Wert Ampel, Rendite, Wahrscheinlichkeiten und schreibt die Dashboard-Daten.
+
+Grundsatz: Jede Kennzahl zum Zeitpunkt t wird NUR mit der Historie bis t verglichen
+(kein Blick in die Zukunft). Nur so sind die Trefferquoten aus der Vergangenheit ehrlich.
+
+Ampel (0-100, hoch = historisch guenstig) = Mittel aus vier Perzentilen:
+  1. Abstand zum Allzeithoch        (tiefer = guenstiger)
+  2. Kurs / 200-Wochen-Linie         (niedriger = guenstiger)
+  3. Abweichung vom log. Langfristtrend in Standardabweichungen
+  4. Wochen-RSI(14)
+Bitcoin zusaetzlich: Mayer Multiple (Kurs / 200-Tage-Linie); Pi Cycle Bottom/Top als Markierung.
+
+Wahrscheinlichkeit: alle frueheren Wochen mit aehnlicher Ampel (+-7,5 Punkte) -> Anteil, bei dem der
+Kurs 1/3/5 Jahre spaeter hoeher stand, Median-Rendite, Rueckschlagrisiko; Vergleich: alle Wochen.
+"""
+import bisect
+import json
+import math
+import sys
+import datetime as dt
+import numpy as np
+import pandas as pd
+
+import warnings
+import einstellungen as E
+from kurse import lade_lokal, alle_laden
+
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
+H1, H3, H5 = 52, 156, 260          # Wochen
+AEHNLICH = 7.5                       # Ampel-Spanne fuer "aehnliche Lage"
+WARMUP = 260                         # Wochen Historie, bevor eine Ampel berechnet wird
+
+QUELLEN_TEXT = {
+    "index": ("Index ohne Dividenden", False),
+    "index_tr": ("Index mit Dividenden", True),
+    "vorlauf_etf": ("aehnlicher ETF als Vorlauf", True),
+    "etf": ("ETF", True),
+    "aktie": ("Aktie", True),
+    "krypto": ("Krypto", False),
+}
+
+
+# ----------------------------------------------------------------- Daten zusammensetzen
+def verketten(etf: dict):
+    """Index-Historie vor den ETF haengen (skaliert). Gibt Tagesdaten + Segmentliste zurueck."""
+    kette = [(k, etf.get(k)) for k in ("index", "index_tr", "vorlauf_etf")] + [("etf", etf["etf"])]
+    kette = [(k, s) for k, s in kette if s]
+    akt, segmente = None, []
+    for art, sym in reversed(kette):
+        d = lade_lokal(sym)
+        if d is None or d.empty:
+            continue
+        if akt is None:
+            akt, segmente = d.copy(), [(d.index[0], art, sym)]
+            continue
+        start = akt.index[0]
+        vor = d[d.index < start]
+        if vor.empty:
+            continue
+        ref = d["Close"].asof(start)
+        if not ref or math.isnan(ref):
+            continue
+        f = akt["Close"].iloc[0] / ref
+        vor = vor.copy()
+        for c in ("Open", "High", "Low", "Close"):
+            vor[c] = vor[c] * f
+        akt = pd.concat([vor, akt])
+        segmente.insert(0, (vor.index[0], art, sym))
+    return akt, segmente
+
+
+def wochen(d: pd.DataFrame) -> pd.DataFrame:
+    w = d.resample("W-FRI").agg({"Open": "first", "High": "max", "Low": "min", "Close": "last", "Volume": "sum"})
+    return w.dropna(subset=["Close"])
+
+
+# ----------------------------------------------------------------- Kennzahlen
+def expandierendes_perzentil(x: np.ndarray, start: int) -> np.ndarray:
+    """Anteil der bisherigen Werte (bis einschl. t), die kleiner sind als x[t]. NaN vor 'start'."""
+    out = np.full(len(x), np.nan)
+    sortiert: list[float] = []
+    for t, v in enumerate(x):
+        if math.isnan(v):
+            continue
+        bisect.insort(sortiert, v)
+        if t >= start and len(sortiert) > 50:
+            out[t] = bisect.bisect_left(sortiert, v) / len(sortiert)
+    return out
+
+
+def trend_z(logp: np.ndarray) -> np.ndarray:
+    """Abweichung vom expandierenden log-linearen Trend (nur Vergangenheit) in Standardabweichungen."""
+    n = len(logp)
+    t = np.arange(n, dtype=float)
+    S1 = np.cumsum(np.ones(n)); St = np.cumsum(t); Sy = np.cumsum(logp)
+    Stt = np.cumsum(t * t); Sty = np.cumsum(t * logp); Syy = np.cumsum(logp * logp)
+    nenner = S1 * Stt - St * St
+    with np.errstate(invalid="ignore", divide="ignore"):
+        b = (S1 * Sty - St * Sy) / nenner
+        a = (Sy - b * St) / S1
+        ssr = np.maximum(Syy - a * Sy - b * Sty, 0)
+        sd = np.sqrt(ssr / np.maximum(S1 - 2, 1))
+        z = (logp - (a + b * t)) / sd
+    z[:104] = np.nan
+    return z
+
+
+def rsi(close: pd.Series, n: int = 14) -> pd.Series:
+    d = close.diff()
+    auf = d.clip(lower=0).ewm(alpha=1 / n, adjust=False).mean()
+    ab = (-d.clip(upper=0)).ewm(alpha=1 / n, adjust=False).mean()
+    return 100 - 100 / (1 + auf / ab)
+
+
+def jahresrendite(tag: pd.Series, jahre: int):
+    """Durchschnittliche Jahresrendite (CAGR) ueber 'jahre' oder ueber die verfuegbare Zeit."""
+    ende = tag.index[-1]
+    start_soll = ende - pd.DateOffset(years=jahre)
+    if tag.index[0] <= start_soll + pd.Timedelta(days=10):
+        s = tag[tag.index >= start_soll]
+    else:
+        s = tag
+    j = (s.index[-1] - s.index[0]).days / 365.25
+    if j < 1:
+        return None, j, s.index[0]
+    return (s.iloc[-1] / s.iloc[0]) ** (1 / j) - 1, j, s.index[0]
+
+
+def trendguete(w: pd.Series, jahre: int = 20) -> float:
+    s = w[w.index >= w.index[-1] - pd.DateOffset(years=jahre)]
+    if len(s) < 104:
+        return float("nan")
+    y = np.log(s.values); x = np.arange(len(y))
+    r = np.corrcoef(x, y)[0, 1]
+    return float(r * r) if r > 0 else 0.0
+
+
+def episoden(maske: np.ndarray) -> int:
+    idx = np.flatnonzero(maske)
+    if len(idx) == 0:
+        return 0
+    return int(1 + np.sum(np.diff(idx) > 13))
+
+
+def statistik(close: np.ndarray, low: np.ndarray, score: np.ndarray, s_jetzt: float):
+    n = len(close)
+    erg = {}
+    gueltig = ~np.isnan(score)
+    aehnlich = gueltig & (np.abs(score - s_jetzt) <= AEHNLICH)
+    for name, h in (("1", H1), ("3", H3), ("5", H5)):
+        m_a = aehnlich.copy(); m_a[n - h:] = False
+        m_b = gueltig.copy(); m_b[n - h:] = False
+        if m_a.sum() < 8:
+            erg[name] = None
+            continue
+        fwd = np.full(n, np.nan); fwd[:n - h] = close[h:] / close[:n - h] - 1
+        a, b = fwd[m_a], fwd[m_b]
+        erg[name] = {
+            "quote": round(float((a > 0).mean()) * 100, 1),
+            "basis": round(float((b > 0).mean()) * 100, 1),
+            "median": round(float(np.median(a)) * 100, 1),
+            "median_pa": round(((1 + float(np.median(a))) ** (52 / h) - 1) * 100, 1),
+            "basis_median_pa": round(((1 + float(np.median(b))) ** (52 / h) - 1) * 100, 1),
+            "wochen": int(m_a.sum()),
+            "episoden": episoden(m_a),
+        }
+    # Rueckschlagrisiko: faellt der Kurs innerhalb eines Jahres noch mind. 10 % unter den Kaufkurs?
+    m = aehnlich.copy(); m[n - H1:] = False
+    if m.sum() >= 8:
+        tiefer = []
+        for t in np.flatnonzero(m):
+            mn = np.nanmin(low[t + 1:t + 1 + H1]) / close[t] - 1
+            tiefer.append(mn)
+        tiefer = np.array(tiefer)
+        erg["rueckschlag10"] = round(float((tiefer <= -0.10).mean()) * 100, 1)
+        erg["median_tiefer"] = round(float(np.median(tiefer)) * 100, 1)
+    return erg
+
+
+# ----------------------------------------------------------------- ein Wert
+def zone(s):
+    if s is None or (isinstance(s, float) and math.isnan(s)):
+        return "keine Daten"
+    if s >= 80: return "historisch sehr guenstig"
+    if s >= 60: return "guenstig"
+    if s > 40: return "neutral"
+    if s > 15: return "teuer"
+    return "historisch sehr teuer"
+
+
+def r(x, n=2):
+    return None if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))) else round(float(x), n)
+
+
+def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
+    w = wochen(tag)
+    if len(w) < 156:
+        return None
+    c = w["Close"].values.astype(float)
+    logp = np.log(c)
+    sma200 = w["Close"].rolling(200).mean().values
+    ath = np.maximum.accumulate(c)
+    dd = c / ath - 1
+    ratio = c / sma200
+    tz = trend_z(logp)
+    rs = rsi(w["Close"]).values
+    komponenten = {
+        "dd": expandierendes_perzentil(dd, WARMUP),
+        "ratio": expandierendes_perzentil(ratio, WARMUP),
+        "trend": expandierendes_perzentil(tz, WARMUP),
+        "rsi": expandierendes_perzentil(rs, WARMUP),
+    }
+    krypto = zeile["gruppe"] == "Krypto"
+    tag_c = tag["Close"]
+    extra = {}
+    if krypto:
+        mayer_tag = tag_c / tag_c.rolling(200).mean()
+        mayer_w = mayer_tag.resample("W-FRI").last().reindex(w.index).values
+        komponenten["mayer"] = expandierendes_perzentil(mayer_w, 104)
+        ema150 = tag_c.ewm(span=150, adjust=False).mean()
+        sma471 = tag_c.rolling(471).mean() * 0.745
+        sma111 = tag_c.rolling(111).mean(); sma350x2 = tag_c.rolling(350).mean() * 2
+        unten = (ema150 < sma471)
+        oben = (sma111 > sma350x2)
+        pi_bottom = list(tag_c.index[(unten & ~unten.shift(1, fill_value=False))])
+        pi_top = list(tag_c.index[(oben & ~oben.shift(1, fill_value=False))])
+        extra = {
+            "mayer": r(mayer_tag.iloc[-1]),
+            "pi_bottom_aktiv": bool(unten.iloc[-1]),
+            "pi_top_aktiv": bool(oben.iloc[-1]),
+            "pi_bottom_daten": [d.strftime("%Y-%m-%d") for d in pi_bottom],
+            "pi_top_daten": [d.strftime("%Y-%m-%d") for d in pi_top],
+            "pi_ema150": ema150.resample("W-FRI").last().reindex(w.index).values,
+            "pi_sma471": sma471.resample("W-FRI").last().reindex(w.index).values,
+        }
+    teile = np.vstack(list(komponenten.values()))
+    with np.errstate(invalid="ignore"):
+        anzahl = np.sum(~np.isnan(teile), axis=0)
+        score = np.where(anzahl >= 2, (1 - np.nanmean(np.where(np.isnan(teile), np.nan, teile), axis=0)) * 100, np.nan)
+    s_jetzt = score[-1]
+
+    jahre_daten = (tag.index[-1] - tag.index[0]).days / 365.25
+    cagr20, j20, start20 = jahresrendite(tag_c, 20)
+    cagr10, _, _ = jahresrendite(tag_c, 10)
+    cagr_max, jmax, _ = jahresrendite(tag_c, 200)
+    # Dividenden enthalten? Haengt davon ab, aus welchem Segment der Startpunkt stammt.
+    def mit_div(start):
+        art = segmente[0][1]
+        for s_start, s_art, _ in segmente:
+            if s_start <= start:
+                art = s_art
+        return QUELLEN_TEXT.get(art, ("", True))[1]
+
+    stat = statistik(c, w["Low"].values.astype(float), score, s_jetzt) if not math.isnan(s_jetzt) else {}
+    r2 = trendguete(w["Close"])
+    qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
+    umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
+
+    # Begruendung in Worten
+    def perz_text(k):
+        p = komponenten[k][-1]
+        return "" if math.isnan(p) else f" (so tief nur in {max(p * 100, 0.1):.0f} % der Wochen)" if p < 0.5 else f" (hoeher als in {p * 100:.0f} % der Wochen)"
+    grund = [f"{abs(dd[-1]) * 100:.0f} % unter Allzeithoch{perz_text('dd')}"]
+    if not math.isnan(ratio[-1]):
+        grund.append(f"{(ratio[-1] - 1) * 100:+.0f} % zur 200-Wochen-Linie{perz_text('ratio')}")
+    if not math.isnan(tz[-1]):
+        grund.append(f"{tz[-1]:+.1f} Standardabw. zum Langfristtrend")
+    grund.append(f"Wochen-RSI {rs[-1]:.0f}")
+    if krypto:
+        grund.append(f"Mayer Multiple {extra['mayer']}")
+        if extra["pi_bottom_aktiv"]: grund.append("Pi Cycle Bottom AKTIV")
+        if extra["pi_top_aktiv"]: grund.append("Pi Cycle Top AKTIV")
+    vor4 = score[-5] if len(score) > 5 else np.nan
+
+    zeile_out = {
+        **{k: zeile[k] for k in ("id", "symbol", "name", "gruppe", "land", "branche")},
+        "datum": tag.index[-1].strftime("%Y-%m-%d"),
+        "kurs": r(tag_c.iloc[-1], 4),
+        "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
+        "cagr20": r(cagr20 * 100 if cagr20 is not None else None, 1), "cagr_jahre": r(j20, 1),
+        "cagr20_div": mit_div(start20), "cagr10": r(cagr10 * 100 if cagr10 is not None else None, 1),
+        "cagr_max": r(cagr_max * 100 if cagr_max is not None else None, 1), "jahre_daten": r(jmax, 1),
+        "trend_r2": r(r2), "qualitaet": qualitaet,
+        "dd": r(dd[-1] * 100, 1), "zu200w": r((ratio[-1] - 1) * 100, 1), "trend_z": r(tz[-1]), "rsi": r(rs[-1], 0),
+        "p": stat, "umsatz_usd": r(umsatz, 0),
+        "grund": " · ".join(grund),
+        "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
+        **{k: v for k, v in extra.items() if not k.startswith("pi_") or k.endswith("aktiv") or k.endswith("daten")},
+    }
+
+    # Chartdaten (kompakt als Spaltenlisten)
+    t_unix = [int(x) for x in (w.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)]
+    voll = np.polyfit(np.arange(len(logp)), logp, 1)
+    trendlinie = voll[1] + voll[0] * np.arange(len(logp))
+    resid_sd = float(np.std(logp - trendlinie))
+    marken = []
+    for i in range(1, len(score)):
+        if not math.isnan(score[i]) and score[i] >= 80 and not (score[i - 1] >= 80):
+            marken.append([t_unix[i], "kauf", r(score[i], 0)])
+        if not math.isnan(score[i]) and score[i] <= 15 and not (score[i - 1] <= 15):
+            marken.append([t_unix[i], "teuer", r(score[i], 0)])
+    rund = lambda a, n=4: [None if (x is None or (isinstance(x, float) and math.isnan(x))) else float(f"{x:.{n}g}") for x in a]
+    chart = {
+        "t": t_unix,
+        "o": rund(w["Open"].values), "h": rund(w["High"].values), "l": rund(w["Low"].values), "c": rund(c),
+        "sma200w": rund(sma200),
+        "trend": rund(np.exp(trendlinie)),
+        "trend_o": rund(np.exp(trendlinie + 2 * resid_sd)), "trend_u": rund(np.exp(trendlinie - 2 * resid_sd)),
+        "score": rund(score, 3),
+        "marken": marken,
+    }
+    if krypto:
+        chart["pi_ema150"] = rund(extra["pi_ema150"]); chart["pi_sma471"] = rund(extra["pi_sma471"])
+    return zeile_out, chart
+
+
+def tagebuch(zeilen):
+    """Signal-Tagebuch: einmal je Tag festhalten, was das Tool angezeigt hat (wird nie ueberschrieben).
+    Spaeter wird damit nachgeprueft, ob die Signale tatsaechlich gut waren."""
+    ordner = E.DATEN / "tagebuch"; ordner.mkdir(exist_ok=True)
+    datei = ordner / f"{dt.date.today().isoformat()}.json"
+    if datei.exists():
+        return
+    eintraege = [
+        {k: z.get(k) for k in ("id", "symbol", "datum", "kurs", "score", "zone", "qualitaet")}
+        | {"p3": (z["p"].get("3") or {}).get("quote") if z.get("p") else None}
+        for z in zeilen
+        if z["gruppe"] in ("ETF", "Krypto") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
+    ]
+    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "signale": eintraege}, ensure_ascii=False, indent=0))
+
+
+def _etfs():
+    return {e["id"]: e for e in E.ETFS}
+
+
+def werte_eines(z: dict):
+    """Ampel, Kennzahlen und Chartdaten fuer einen Eintrag aus universum.csv (oder None)."""
+    if z["gruppe"] == "ETF":
+        tag, seg = verketten(_etfs()[z["id"]])
+    else:
+        tag = lade_lokal(z["symbol"])
+        seg = [(tag.index[0], "krypto" if z["gruppe"] == "Krypto" else "aktie", z["symbol"])] if tag is not None and not tag.empty else []
+    if tag is None or tag.empty:
+        return None
+    tag = tag[tag["Close"] > 0]
+    return analysiere(z, tag, seg)
+
+
+def universum() -> pd.DataFrame:
+    return pd.read_csv(E.DATEN / "universum.csv").fillna("")
+
+
+def main(argv):
+    uni = universum()
+    if argv:
+        uni = uni[uni["id"].isin(argv) | uni["symbol"].isin(argv)]
+    else:
+        alle_laden()   # einmal alles in den Arbeitsspeicher, dann geht es schnell
+    zeilen, fehler = [], 0
+    for i, z in enumerate(uni.to_dict("records")):
+        try:
+            erg = werte_eines(z)
+            if erg is not None:
+                zeilen.append(erg[0])
+        except Exception as ex:
+            fehler += 1
+            print(f"Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+        if (i + 1) % 250 == 0:
+            print(f"  {i + 1}/{len(uni)} ausgewertet", flush=True)
+    if not argv:
+        out = {"stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "werte": zeilen}
+        tmp = E.WEB_DATEN / "rangliste.tmp"
+        tmp.write_text(json.dumps(out, separators=(",", ":")))
+        tmp.replace(E.WEB_DATEN / "rangliste.json")
+        tagebuch(zeilen)
+    print(f"Fertig: {len(zeilen)} Werte ausgewertet, {fehler} Fehler")
+    return zeilen
+
+
+if __name__ == "__main__":
+    erg = main(sys.argv[1:])
+    if sys.argv[1:]:
+        for z in erg:
+            print(json.dumps({k: z[k] for k in ("name", "score", "zone", "cagr20", "cagr_jahre", "cagr20_div", "grund", "p", "segmente")}, ensure_ascii=False, indent=1))

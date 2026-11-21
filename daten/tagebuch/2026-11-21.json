@@ -1,0 +1,7325 @@
+{
+"erstellt": "2026-11-21T09:46:33",
+"signale": [
+{
+"id": "SPY",
+"symbol": "SPY",
+"datum": "2026-11-20",
+"kurs": 689.81,
+"score": 50.5,
+"zone": "neutral",
+"qualitaet": true,
+"p3": 74.1
+},
+{
+"id": "QQQ",
+"symbol": "QQQ",
+"datum": "2026-11-20",
+"kurs": 608.45,
+"score": 64.6,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 85.7
+},
+{
+"id": "ONEQ",
+"symbol": "ONEQ",
+"datum": "2026-11-20",
+"kurs": 89.52,
+"score": 60.3,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 84.1
+},
+{
+"id": "DIA",
+"symbol": "DIA",
+"datum": "2026-11-20",
+"kurs": 481.08,
+"score": 68.6,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 89.9
+},
+{
+"id": "IWM",
+"symbol": "IWM",
+"datum": "2026-11-20",
+"kurs": 256.61,
+"score": 68.5,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 87.1
+},
+{
+"id": "URTH",
+"symbol": "URTH",
+"datum": "2026-11-20",
+"kurs": 187.43,
+"score": 69.4,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "IWDA",
+"symbol": "IWDA.AS",
+"datum": "2026-11-19",
+"kurs": 126.73,
+"score": 48.1,
+"zone": "neutral",
+"qualitaet": true,
+"p3": 99.0
+},
+{
+"id": "VWRL",
+"symbol": "VWRL.L",
+"datum": "2026-11-19",
+"kurs": 133.33,
+"score": 55.7,
+"zone": "neutral",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ACWI",
+"symbol": "ACWI",
+"datum": "2026-11-20",
+"kurs": 142.59,
+"score": 64.0,
+"zone": "guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "EEM",
+"symbol": "EEM",
+"datum": "2026-11-20",
+"kurs": 53.84,
+"score": 56.4,
+"zone": "neutral",
+"qualitaet": false,
+"p3": 62.9
+},
+{
+"id": "EXS1",
+"symbol": "EXS1.DE",
+"datum": "2026-11-19",
+"kurs": 209.9,
+"score": 39.1,
+"zone": "teuer",
+"qualitaet": true,
+"p3": 71.4
+},
+{
+"id": "SX5E",
+"symbol": "EXW1.DE",
+"datum": "2026-11-19",
+"kurs": 61.79,
+"score": 39.7,
+"zone": "teuer",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ISF",
+"symbol": "ISF.L",
+"datum": "2026-11-19",
+"kurs": 1020.8,
+"score": 38.4,
+"zone": "teuer",
+"qualitaet": false,
+"p3": 58.8
+},
+{
+"id": "EWJ",
+"symbol": "EWJ",
+"datum": "2026-11-20",
+"kurs": 83.43,
+"score": 47.6,
+"zone": "neutral",
+"qualitaet": true,
+"p3": 82.2
+},
+{
+"id": "BTC",
+"symbol": "BTC-USD",
+"datum": "2026-11-21",
+"kurs": 57630.0703,
+"score": 89.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "AAON",
+"symbol": "AAON",
+"datum": "2026-11-20",
+"kurs": 75.21,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ABAT",
+"symbol": "ABAT",
+"datum": "2026-11-20",
+"kurs": 0.79,
+"score": 90.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ABEO",
+"symbol": "ABEO",
+"datum": "2026-11-20",
+"kurs": 2.42,
+"score": 81.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 32.4
+},
+{
+"id": "ABOS",
+"symbol": "ABOS",
+"datum": "2026-11-20",
+"kurs": 0.187,
+"score": 95.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ABTS",
+"symbol": "ABTS",
+"datum": "2026-11-20",
+"kurs": 0.174,
+"score": 91.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 63.6
+},
+{
+"id": "ACET",
+"symbol": "ACET",
+"datum": "2026-11-20",
+"kurs": 2.14,
+"score": 99.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "ACNB",
+"symbol": "ACNB",
+"datum": "2026-11-20",
+"kurs": 64.98,
+"score": 13.7,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 69.5
+},
+{
+"id": "ACT",
+"symbol": "ACT",
+"datum": "2026-11-20",
+"kurs": 44.18,
+"score": 96.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ADAM",
+"symbol": "ADAM",
+"datum": "2026-11-20",
+"kurs": 4.68,
+"score": 83.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 92.3
+},
+{
+"id": "ADBE",
+"symbol": "ADBE",
+"datum": "2026-11-20",
+"kurs": 217.71,
+"score": 95.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 98.2
+},
+{
+"id": "ADSE",
+"symbol": "ADSE",
+"datum": "2026-11-20",
+"kurs": 9.78,
+"score": 85.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ADTN",
+"symbol": "ADTN",
+"datum": "2026-11-20",
+"kurs": 3.99,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 77.2
+},
+{
+"id": "AEHL",
+"symbol": "AEHL",
+"datum": "2026-11-20",
+"kurs": 6.73,
+"score": 87.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 1.0
+},
+{
+"id": "AEMD",
+"symbol": "AEMD",
+"datum": "2026-11-20",
+"kurs": 5.46,
+"score": 85.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 18.7
+},
+{
+"id": "AFRI",
+"symbol": "AFRI",
+"datum": "2026-11-20",
+"kurs": 12.84,
+"score": 11.2,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AFYA",
+"symbol": "AFYA",
+"datum": "2026-11-20",
+"kurs": 9.53,
+"score": 95.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AGNT",
+"symbol": "AGNT",
+"datum": "2026-11-20",
+"kurs": 2.43,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AIFF",
+"symbol": "AIFF",
+"datum": "2026-11-20",
+"kurs": 0.75,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 53.5
+},
+{
+"id": "AIFU",
+"symbol": "AIFU",
+"datum": "2026-11-20",
+"kurs": 7.15,
+"score": 96.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "AIIO",
+"symbol": "AIIO",
+"datum": "2026-11-20",
+"kurs": 4.65,
+"score": 94.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AIOS",
+"symbol": "AIOS",
+"datum": "2026-11-20",
+"kurs": 5.8,
+"score": 89.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "AIOT",
+"symbol": "AIOT",
+"datum": "2026-11-20",
+"kurs": 1.88,
+"score": 92.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 71.2
+},
+{
+"id": "AIRG",
+"symbol": "AIRG",
+"datum": "2026-11-20",
+"kurs": 3.43,
+"score": 82.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 9.5
+},
+{
+"id": "AIRS",
+"symbol": "AIRS",
+"datum": "2026-11-20",
+"kurs": 0.591,
+"score": 95.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AISP",
+"symbol": "AISP",
+"datum": "2026-11-20",
+"kurs": 1.44,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AKTX",
+"symbol": "AKTX",
+"datum": "2026-11-20",
+"kurs": 7.18,
+"score": 81.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "ALAR",
+"symbol": "ALAR",
+"datum": "2026-11-20",
+"kurs": 0.97,
+"score": 91.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALDX",
+"symbol": "ALDX",
+"datum": "2026-11-20",
+"kurs": 0.84,
+"score": 95.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 62.0
+},
+{
+"id": "ALGM",
+"symbol": "ALGM",
+"datum": "2026-11-20",
+"kurs": 25.56,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALGN",
+"symbol": "ALGN",
+"datum": "2026-11-20",
+"kurs": 155.17,
+"score": 85.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 49.3
+},
+{
+"id": "ALGS",
+"symbol": "ALGS",
+"datum": "2026-11-20",
+"kurs": 1.22,
+"score": 94.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALHC",
+"symbol": "ALHC",
+"datum": "2026-11-20",
+"kurs": 6.37,
+"score": 97.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALKT",
+"symbol": "ALKT",
+"datum": "2026-11-20",
+"kurs": 12.51,
+"score": 93.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALLO",
+"symbol": "ALLO",
+"datum": "2026-11-20",
+"kurs": 0.63,
+"score": 80.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALNY",
+"symbol": "ALNY",
+"datum": "2026-11-20",
+"kurs": 143.82,
+"score": 94.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 89.6
+},
+{
+"id": "ALP",
+"symbol": "ALP",
+"datum": "2026-11-20",
+"kurs": 2.1,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 41.0
+},
+{
+"id": "ALT",
+"symbol": "ALT",
+"datum": "2026-11-20",
+"kurs": 1.33,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ALTI",
+"symbol": "ALTI",
+"datum": "2026-11-20",
+"kurs": 1.39,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AMOD",
+"symbol": "AMOD",
+"datum": "2026-11-20",
+"kurs": 0.643,
+"score": 92.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AMPG",
+"symbol": "AMPG",
+"datum": "2026-11-20",
+"kurs": 1.79,
+"score": 86.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AMPL",
+"symbol": "AMPL",
+"datum": "2026-11-20",
+"kurs": 16.2,
+"score": 9.1,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AMSF",
+"symbol": "AMSF",
+"datum": "2026-11-20",
+"kurs": 18.87,
+"score": 100.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "AMTX",
+"symbol": "AMTX",
+"datum": "2026-11-20",
+"kurs": 0.809,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "ANDE",
+"symbol": "ANDE",
+"datum": "2026-11-20",
+"kurs": 44.97,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 55.8
+},
+{
+"id": "ANGI",
+"symbol": "ANGI",
+"datum": "2026-11-20",
+"kurs": 4.64,
+"score": 88.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 2.4
+},
+{
+"id": "ANIK",
+"symbol": "ANIK",
+"datum": "2026-11-20",
+"kurs": 13.23,
+"score": 85.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 53.9
+},
+{
+"id": "AOSL",
+"symbol": "AOSL",
+"datum": "2026-11-20",
+"kurs": 21.28,
+"score": 89.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 86.5
+},
+{
+"id": "AOUT",
+"symbol": "AOUT",
+"datum": "2026-11-20",
+"kurs": 17.85,
+"score": 14.9,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "APVO",
+"symbol": "APVO",
+"datum": "2026-11-20",
+"kurs": 0.404,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "APWC",
+"symbol": "APWC",
+"datum": "2026-11-20",
+"kurs": 1.03,
+"score": 89.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 77.6
+},
+{
+"id": "AQMS",
+"symbol": "AQMS",
+"datum": "2026-11-20",
+"kurs": 0.65,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARBK",
+"symbol": "ARBK",
+"datum": "2026-11-20",
+"kurs": 0.982,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARCC",
+"symbol": "ARCC",
+"datum": "2026-11-20",
+"kurs": 18.43,
+"score": 82.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ARHS",
+"symbol": "ARHS",
+"datum": "2026-11-20",
+"kurs": 13.0,
+"score": 13.6,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARKO",
+"symbol": "ARKO",
+"datum": "2026-11-20",
+"kurs": 3.21,
+"score": 96.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARKR",
+"symbol": "ARKR",
+"datum": "2026-11-20",
+"kurs": 4.32,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "ARRY",
+"symbol": "ARRY",
+"datum": "2026-11-20",
+"kurs": 3.785,
+"score": 86.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARTL",
+"symbol": "ARTL",
+"datum": "2026-11-20",
+"kurs": 1.39,
+"score": 97.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ARTNA",
+"symbol": "ARTNA",
+"datum": "2026-11-20",
+"kurs": 31.85,
+"score": 91.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 86.7
+},
+{
+"id": "ASO",
+"symbol": "ASO",
+"datum": "2026-11-20",
+"kurs": 69.755,
+"score": 9.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ASTE",
+"symbol": "ASTE",
+"datum": "2026-11-20",
+"kurs": 34.57,
+"score": 82.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 91.0
+},
+{
+"id": "ASTH",
+"symbol": "ASTH",
+"datum": "2026-11-20",
+"kurs": 28.9,
+"score": 87.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 74.5
+},
+{
+"id": "ASTS",
+"symbol": "ASTS",
+"datum": "2026-11-20",
+"kurs": 23.27,
+"score": 83.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ATHE",
+"symbol": "ATHE",
+"datum": "2026-11-20",
+"kurs": 1.52,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 25.0
+},
+{
+"id": "ATLO",
+"symbol": "ATLO",
+"datum": "2026-11-20",
+"kurs": 32.57,
+"score": 14.8,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 37.5
+},
+{
+"id": "ATOM",
+"symbol": "ATOM",
+"datum": "2026-11-20",
+"kurs": 2.04,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 3.4
+},
+{
+"id": "ATOS",
+"symbol": "ATOS",
+"datum": "2026-11-20",
+"kurs": 1.6,
+"score": 80.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 65.5
+},
+{
+"id": "ATYR",
+"symbol": "ATYR",
+"datum": "2026-11-20",
+"kurs": 3.82,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AUR",
+"symbol": "AUR",
+"datum": "2026-11-20",
+"kurs": 3.505,
+"score": 89.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AUTL",
+"symbol": "AUTL",
+"datum": "2026-11-20",
+"kurs": 0.907,
+"score": 90.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AVAV",
+"symbol": "AVAV",
+"datum": "2026-11-20",
+"kurs": 86.79,
+"score": 97.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "AVGO",
+"symbol": "AVGO",
+"datum": "2026-11-20",
+"kurs": 304.41,
+"score": 81.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "AVXL",
+"symbol": "AVXL",
+"datum": "2026-11-20",
+"kurs": 0.592,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.1
+},
+{
+"id": "AWRE",
+"symbol": "AWRE",
+"datum": "2026-11-20",
+"kurs": 0.92,
+"score": 89.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 67.1
+},
+{
+"id": "AXGN",
+"symbol": "AXGN",
+"datum": "2026-11-20",
+"kurs": 55.75,
+"score": 7.2,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 30.2
+},
+{
+"id": "AXSM",
+"symbol": "AXSM",
+"datum": "2026-11-20",
+"kurs": 129.36,
+"score": 85.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "AZ",
+"symbol": "AZ",
+"datum": "2026-11-20",
+"kurs": 4.42,
+"score": 80.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "AZIO",
+"symbol": "AZIO",
+"datum": "2026-11-20",
+"kurs": 0.445,
+"score": 96.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "BAFN",
+"symbol": "BAFN",
+"datum": "2026-11-20",
+"kurs": 5.25,
+"score": 83.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BCDA",
+"symbol": "BCDA",
+"datum": "2026-11-20",
+"kurs": 0.79,
+"score": 90.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.2
+},
+{
+"id": "BCIC",
+"symbol": "BCIC",
+"datum": "2026-11-20",
+"kurs": 5.22,
+"score": 97.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 94.7
+},
+{
+"id": "BCTX",
+"symbol": "BCTX",
+"datum": "2026-11-20",
+"kurs": 3.06,
+"score": 83.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 7.1
+},
+{
+"id": "BCYC",
+"symbol": "BCYC",
+"datum": "2026-11-20",
+"kurs": 2.9,
+"score": 90.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BDRX",
+"symbol": "BDRX",
+"datum": "2026-11-20",
+"kurs": 1.875,
+"score": 91.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "BDTX",
+"symbol": "BDTX",
+"datum": "2026-11-20",
+"kurs": 1.31,
+"score": 86.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BEEM",
+"symbol": "BEEM",
+"datum": "2026-11-20",
+"kurs": 0.477,
+"score": 99.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.7
+},
+{
+"id": "BGLC",
+"symbol": "BGLC",
+"datum": "2026-11-20",
+"kurs": 0.68,
+"score": 81.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BGM",
+"symbol": "BGM",
+"datum": "2026-11-20",
+"kurs": 8.0,
+"score": 80.0,
+"zone": "guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BHST",
+"symbol": "BHST",
+"datum": "2026-11-20",
+"kurs": 1.3,
+"score": 98.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BIDU",
+"symbol": "BIDU",
+"datum": "2026-11-20",
+"kurs": 61.9,
+"score": 95.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.1
+},
+{
+"id": "BIRD",
+"symbol": "BIRD",
+"datum": "2026-11-20",
+"kurs": 1.065,
+"score": 87.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BKNG",
+"symbol": "BKNG",
+"datum": "2026-11-20",
+"kurs": 144.91,
+"score": 84.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "BKYI",
+"symbol": "BKYI",
+"datum": "2026-11-20",
+"kurs": 2.0,
+"score": 90.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 23.2
+},
+{
+"id": "BL",
+"symbol": "BL",
+"datum": "2026-11-20",
+"kurs": 24.73,
+"score": 90.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "BLDP",
+"symbol": "BLDP",
+"datum": "2026-11-20",
+"kurs": 1.07,
+"score": 85.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 19.8
+},
+{
+"id": "BLRX",
+"symbol": "BLRX",
+"datum": "2026-11-20",
+"kurs": 0.96,
+"score": 97.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "BMEA",
+"symbol": "BMEA",
+"datum": "2026-11-20",
+"kurs": 0.574,
+"score": 84.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BMRA",
+"symbol": "BMRA",
+"datum": "2026-11-20",
+"kurs": 1.08,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 90.9
+},
+{
+"id": "BNKK",
+"symbol": "BNKK",
+"datum": "2026-11-20",
+"kurs": 0.456,
+"score": 96.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BODI",
+"symbol": "BODI",
+"datum": "2026-11-20",
+"kurs": 2.62,
+"score": 84.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BOXL",
+"symbol": "BOXL",
+"datum": "2026-11-20",
+"kurs": 0.845,
+"score": 95.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "BRAG",
+"symbol": "BRAG",
+"datum": "2026-11-20",
+"kurs": 0.589,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BRID",
+"symbol": "BRID",
+"datum": "2026-11-20",
+"kurs": 5.01,
+"score": 98.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 58.2
+},
+{
+"id": "BRZE",
+"symbol": "BRZE",
+"datum": "2026-11-20",
+"kurs": 46.28,
+"score": 6.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BSEM",
+"symbol": "BSEM",
+"datum": "2026-11-20",
+"kurs": 0.635,
+"score": 97.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BTBT",
+"symbol": "BTBT",
+"datum": "2026-11-20",
+"kurs": 0.515,
+"score": 96.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BTDR",
+"symbol": "BTDR",
+"datum": "2026-11-20",
+"kurs": 2.955,
+"score": 99.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BTMD",
+"symbol": "BTMD",
+"datum": "2026-11-20",
+"kurs": 0.815,
+"score": 96.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BYND",
+"symbol": "BYND",
+"datum": "2026-11-20",
+"kurs": 3.8,
+"score": 99.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BYRN",
+"symbol": "BYRN",
+"datum": "2026-11-20",
+"kurs": 3.06,
+"score": 85.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 57.1
+},
+{
+"id": "BZ",
+"symbol": "BZ",
+"datum": "2026-11-20",
+"kurs": 12.87,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "BZFD",
+"symbol": "BZFD",
+"datum": "2026-11-20",
+"kurs": 0.375,
+"score": 92.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CABA",
+"symbol": "CABA",
+"datum": "2026-11-20",
+"kurs": 0.936,
+"score": 93.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CADL",
+"symbol": "CADL",
+"datum": "2026-11-20",
+"kurs": 5.04,
+"score": 89.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CAPS",
+"symbol": "CAPS",
+"datum": "2026-11-20",
+"kurs": 1.44,
+"score": 92.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 32.8
+},
+{
+"id": "CASK",
+"symbol": "CASK",
+"datum": "2026-11-20",
+"kurs": 16.83,
+"score": 81.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 63.3
+},
+{
+"id": "CBFV",
+"symbol": "CBFV",
+"datum": "2026-11-20",
+"kurs": 40.22,
+"score": 9.1,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 67.6
+},
+{
+"id": "CBSH",
+"symbol": "CBSH",
+"datum": "2026-11-20",
+"kurs": 52.87,
+"score": 86.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 96.0
+},
+{
+"id": "CCAP",
+"symbol": "CCAP",
+"datum": "2026-11-20",
+"kurs": 9.8,
+"score": 85.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CCB",
+"symbol": "CCB",
+"datum": "2026-11-20",
+"kurs": 37.02,
+"score": 99.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CCD",
+"symbol": "CCD",
+"datum": "2026-11-20",
+"kurs": 18.65,
+"score": 93.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CCOI",
+"symbol": "CCOI",
+"datum": "2026-11-20",
+"kurs": 3.0,
+"score": 99.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CDLX",
+"symbol": "CDLX",
+"datum": "2026-11-20",
+"kurs": 1.05,
+"score": 95.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CDRO",
+"symbol": "CDRO",
+"datum": "2026-11-20",
+"kurs": 7.57,
+"score": 82.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CDXS",
+"symbol": "CDXS",
+"datum": "2026-11-20",
+"kurs": 1.01,
+"score": 90.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 1.3
+},
+{
+"id": "CDZIP",
+"symbol": "CDZIP",
+"datum": "2026-11-20",
+"kurs": 18.545,
+"score": 86.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CENN",
+"symbol": "CENN",
+"datum": "2026-11-20",
+"kurs": 0.1139,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "CETX",
+"symbol": "CETX",
+"datum": "2026-11-20",
+"kurs": 0.389,
+"score": 92.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CEVA",
+"symbol": "CEVA",
+"datum": "2026-11-20",
+"kurs": 22.41,
+"score": 85.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 81.2
+},
+{
+"id": "CG",
+"symbol": "CG",
+"datum": "2026-11-20",
+"kurs": 36.0,
+"score": 89.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CGBD",
+"symbol": "CGBD",
+"datum": "2026-11-20",
+"kurs": 10.32,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CGEM",
+"symbol": "CGEM",
+"datum": "2026-11-20",
+"kurs": 8.89,
+"score": 80.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CGNT",
+"symbol": "CGNT",
+"datum": "2026-11-20",
+"kurs": 7.3,
+"score": 82.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CHGA",
+"symbol": "CHGA",
+"datum": "2026-11-20",
+"kurs": 0.71,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "CHNR",
+"symbol": "CHNR",
+"datum": "2026-11-20",
+"kurs": 2.98,
+"score": 91.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 27.6
+},
+{
+"id": "CHR",
+"symbol": "CHR",
+"datum": "2026-11-20",
+"kurs": 1.02,
+"score": 93.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "CHRS",
+"symbol": "CHRS",
+"datum": "2026-11-20",
+"kurs": 0.37,
+"score": 94.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "CHTR",
+"symbol": "CHTR",
+"datum": "2026-11-20",
+"kurs": 128.73,
+"score": 87.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 54.3
+},
+{
+"id": "CHY",
+"symbol": "CHY",
+"datum": "2026-11-20",
+"kurs": 9.83,
+"score": 89.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CIFR",
+"symbol": "CIFR",
+"datum": "2026-11-20",
+"kurs": 5.435,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CIGI",
+"symbol": "CIGI",
+"datum": "2026-11-20",
+"kurs": 89.43,
+"score": 92.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 98.0
+},
+{
+"id": "CIIT",
+"symbol": "CIIT",
+"datum": "2026-11-20",
+"kurs": 1.32,
+"score": 97.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CLBT",
+"symbol": "CLBT",
+"datum": "2026-11-20",
+"kurs": 10.77,
+"score": 93.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CLIR",
+"symbol": "CLIR",
+"datum": "2026-11-20",
+"kurs": 1.5,
+"score": 99.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 94.9
+},
+{
+"id": "CLLS",
+"symbol": "CLLS",
+"datum": "2026-11-20",
+"kurs": 0.921,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 55.0
+},
+{
+"id": "CLMB",
+"symbol": "CLMB",
+"datum": "2026-11-20",
+"kurs": 40.14,
+"score": 10.5,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 86.4
+},
+{
+"id": "CLRB",
+"symbol": "CLRB",
+"datum": "2026-11-20",
+"kurs": 0.8,
+"score": 91.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "CLSK",
+"symbol": "CLSK",
+"datum": "2026-11-20",
+"kurs": 4.89,
+"score": 83.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 97.9
+},
+{
+"id": "CLWT",
+"symbol": "CLWT",
+"datum": "2026-11-20",
+"kurs": 1.05,
+"score": 81.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 27.6
+},
+{
+"id": "CMCSA",
+"symbol": "CMCSA",
+"datum": "2026-11-20",
+"kurs": 24.9,
+"score": 81.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 78.5
+},
+{
+"id": "CMCT",
+"symbol": "CMCT",
+"datum": "2026-11-20",
+"kurs": 5.93,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 41.5
+},
+{
+"id": "CMPR",
+"symbol": "CMPR",
+"datum": "2026-11-20",
+"kurs": 53.81,
+"score": 88.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 46.2
+},
+{
+"id": "CMPX",
+"symbol": "CMPX",
+"datum": "2026-11-20",
+"kurs": 0.688,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CMTL",
+"symbol": "CMTL",
+"datum": "2026-11-20",
+"kurs": 1.02,
+"score": 97.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CNCK",
+"symbol": "CNCK",
+"datum": "2026-11-20",
+"kurs": 0.752,
+"score": 95.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CNDT",
+"symbol": "CNDT",
+"datum": "2026-11-20",
+"kurs": 0.876,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CNET",
+"symbol": "CNET",
+"datum": "2026-11-20",
+"kurs": 0.57,
+"score": 90.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 15.4
+},
+{
+"id": "CNL",
+"symbol": "CNL",
+"datum": "2026-11-20",
+"kurs": 9.66,
+"score": 95.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CNSY",
+"symbol": "CNSY",
+"datum": "2026-11-20",
+"kurs": 0.63,
+"score": 88.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 3.4
+},
+{
+"id": "CODX",
+"symbol": "CODX",
+"datum": "2026-11-20",
+"kurs": 0.13,
+"score": 92.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "COIN",
+"symbol": "COIN",
+"datum": "2026-11-20",
+"kurs": 101.97,
+"score": 90.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "COLL",
+"symbol": "COLL",
+"datum": "2026-11-20",
+"kurs": 24.72,
+"score": 90.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CPHC",
+"symbol": "CPHC",
+"datum": "2026-11-20",
+"kurs": 15.6,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CPIX",
+"symbol": "CPIX",
+"datum": "2026-11-20",
+"kurs": 5.84,
+"score": 12.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 16.7
+},
+{
+"id": "CPOP",
+"symbol": "CPOP",
+"datum": "2026-11-20",
+"kurs": 1.74,
+"score": 83.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CPRT",
+"symbol": "CPRT",
+"datum": "2026-11-20",
+"kurs": 31.09,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CPZ",
+"symbol": "CPZ",
+"datum": "2026-11-20",
+"kurs": 12.24,
+"score": 81.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CRBP",
+"symbol": "CRBP",
+"datum": "2026-11-20",
+"kurs": 2.06,
+"score": 86.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 38.5
+},
+{
+"id": "CRBU",
+"symbol": "CRBU",
+"datum": "2026-11-20",
+"kurs": 0.284,
+"score": 99.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CRCT",
+"symbol": "CRCT",
+"datum": "2026-11-20",
+"kurs": 8.35,
+"score": 8.5,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CRDL",
+"symbol": "CRDL",
+"datum": "2026-11-20",
+"kurs": 0.863,
+"score": 80.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CRMT",
+"symbol": "CRMT",
+"datum": "2026-11-20",
+"kurs": 0.73,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CRSP",
+"symbol": "CRSP",
+"datum": "2026-11-20",
+"kurs": 39.1,
+"score": 80.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 41.9
+},
+{
+"id": "CRWS",
+"symbol": "CRWS",
+"datum": "2026-11-20",
+"kurs": 2.33,
+"score": 96.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 93.3
+},
+{
+"id": "CSGP",
+"symbol": "CSGP",
+"datum": "2026-11-20",
+"kurs": 29.61,
+"score": 95.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "CSIQ",
+"symbol": "CSIQ",
+"datum": "2026-11-20",
+"kurs": 6.02,
+"score": 95.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "CSTE",
+"symbol": "CSTE",
+"datum": "2026-11-20",
+"kurs": 0.88,
+"score": 95.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 18.2
+},
+{
+"id": "CTSH",
+"symbol": "CTSH",
+"datum": "2026-11-20",
+"kurs": 58.06,
+"score": 83.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 91.9
+},
+{
+"id": "CUE",
+"symbol": "CUE",
+"datum": "2026-11-20",
+"kurs": 4.15,
+"score": 94.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CULP",
+"symbol": "CULP",
+"datum": "2026-11-20",
+"kurs": 3.1,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 53.8
+},
+{
+"id": "CUVL",
+"symbol": "CUVL",
+"datum": "2026-11-20",
+"kurs": 4.62,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 37.8
+},
+{
+"id": "CVRX",
+"symbol": "CVRX",
+"datum": "2026-11-20",
+"kurs": 0.501,
+"score": 95.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "CXAI",
+"symbol": "CXAI",
+"datum": "2026-11-20",
+"kurs": 1.04,
+"score": 97.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DASH",
+"symbol": "DASH",
+"datum": "2026-11-20",
+"kurs": 152.6,
+"score": 84.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DBGI",
+"symbol": "DBGI",
+"datum": "2026-11-20",
+"kurs": 0.16,
+"score": 86.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DCOY",
+"symbol": "DCOY",
+"datum": "2026-11-20",
+"kurs": 0.829,
+"score": 97.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "DDI",
+"symbol": "DDI",
+"datum": "2026-11-20",
+"kurs": 15.31,
+"score": 6.3,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DERM",
+"symbol": "DERM",
+"datum": "2026-11-20",
+"kurs": 3.3,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DFNS",
+"symbol": "DFNS",
+"datum": "2026-11-20",
+"kurs": 1.21,
+"score": 92.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DGICA",
+"symbol": "DGICA",
+"datum": "2026-11-20",
+"kurs": 18.97,
+"score": 13.5,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 74.0
+},
+{
+"id": "DGICB",
+"symbol": "DGICB",
+"datum": "2026-11-20",
+"kurs": 34.99,
+"score": 5.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 69.1
+},
+{
+"id": "DGXX",
+"symbol": "DGXX",
+"datum": "2026-11-20",
+"kurs": 1.85,
+"score": 82.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DJT",
+"symbol": "DJT",
+"datum": "2026-11-20",
+"kurs": 3.73,
+"score": 99.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DKNG",
+"symbol": "DKNG",
+"datum": "2026-11-20",
+"kurs": 15.8,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DLHC",
+"symbol": "DLHC",
+"datum": "2026-11-20",
+"kurs": 2.73,
+"score": 82.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 25.1
+},
+{
+"id": "DLPN",
+"symbol": "DLPN",
+"datum": "2026-11-20",
+"kurs": 0.86,
+"score": 82.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 23.8
+},
+{
+"id": "DMRC",
+"symbol": "DMRC",
+"datum": "2026-11-20",
+"kurs": 5.54,
+"score": 90.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 63.3
+},
+{
+"id": "DOMH",
+"symbol": "DOMH",
+"datum": "2026-11-20",
+"kurs": 0.81,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 28.2
+},
+{
+"id": "DOX",
+"symbol": "DOX",
+"datum": "2026-11-20",
+"kurs": 41.18,
+"score": 85.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "DPRO",
+"symbol": "DPRO",
+"datum": "2026-11-20",
+"kurs": 1.87,
+"score": 84.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DRH",
+"symbol": "DRH",
+"datum": "2026-11-20",
+"kurs": 14.21,
+"score": 2.6,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 12.5
+},
+{
+"id": "DRIO",
+"symbol": "DRIO",
+"datum": "2026-11-20",
+"kurs": 1.32,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DRVN",
+"symbol": "DRVN",
+"datum": "2026-11-20",
+"kurs": 10.69,
+"score": 84.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "DTST",
+"symbol": "DTST",
+"datum": "2026-11-20",
+"kurs": 2.23,
+"score": 85.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": null
+},
+{
+"id": "DUOT",
+"symbol": "DUOT",
+"datum": "2026-11-20",
+"kurs": 2.59,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "DXR",
+"symbol": "DXR",
+"datum": "2026-11-20",
+"kurs": 7.45,
+"score": 88.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 73.9
+},
+{
+"id": "EBON",
+"symbol": "EBON",
+"datum": "2026-11-20",
+"kurs": 1.42,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ECX",
+"symbol": "ECX",
+"datum": "2026-11-20",
+"kurs": 0.527,
+"score": 92.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EDUC",
+"symbol": "EDUC",
+"datum": "2026-11-20",
+"kurs": 0.81,
+"score": 96.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 56.8
+},
+{
+"id": "EEFT",
+"symbol": "EEFT",
+"datum": "2026-11-20",
+"kurs": 64.4,
+"score": 88.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 64.7
+},
+{
+"id": "EH",
+"symbol": "EH",
+"datum": "2026-11-20",
+"kurs": 2.48,
+"score": 98.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ELE",
+"symbol": "ELE",
+"datum": "2026-11-20",
+"kurs": 11.33,
+"score": 86.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ELTX",
+"symbol": "ELTX",
+"datum": "2026-11-20",
+"kurs": 1.45,
+"score": 97.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ENPH",
+"symbol": "ENPH",
+"datum": "2026-11-20",
+"kurs": 19.63,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ENSG",
+"symbol": "ENSG",
+"datum": "2026-11-20",
+"kurs": 176.32,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ENTA",
+"symbol": "ENTA",
+"datum": "2026-11-20",
+"kurs": 7.62,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 1.3
+},
+{
+"id": "ENTX",
+"symbol": "ENTX",
+"datum": "2026-11-20",
+"kurs": 3.305,
+"score": 11.0,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ENVX",
+"symbol": "ENVX",
+"datum": "2026-11-20",
+"kurs": 1.17,
+"score": 100.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EOCN",
+"symbol": "EOCN",
+"datum": "2026-11-20",
+"kurs": 1.78,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "EOSE",
+"symbol": "EOSE",
+"datum": "2026-11-20",
+"kurs": 1.19,
+"score": 95.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EPOW",
+"symbol": "EPOW",
+"datum": "2026-11-20",
+"kurs": 3.05,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ERII",
+"symbol": "ERII",
+"datum": "2026-11-20",
+"kurs": 6.47,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ERNA",
+"symbol": "ERNA",
+"datum": "2026-11-20",
+"kurs": 1.36,
+"score": 97.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 29.3
+},
+{
+"id": "ETON",
+"symbol": "ETON",
+"datum": "2026-11-20",
+"kurs": 60.85,
+"score": 15.0,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EU",
+"symbol": "EU",
+"datum": "2026-11-20",
+"kurs": 0.45,
+"score": 81.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EVCM",
+"symbol": "EVCM",
+"datum": "2026-11-20",
+"kurs": 6.43,
+"score": 95.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EVLV",
+"symbol": "EVLV",
+"datum": "2026-11-20",
+"kurs": 3.795,
+"score": 84.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EVO",
+"symbol": "EVO",
+"datum": "2026-11-20",
+"kurs": 1.32,
+"score": 97.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EXE",
+"symbol": "EXE",
+"datum": "2026-11-20",
+"kurs": 81.27,
+"score": 97.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "EXEL",
+"symbol": "EXEL",
+"datum": "2026-11-20",
+"kurs": 64.63,
+"score": 10.4,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 28.4
+},
+{
+"id": "EYPT",
+"symbol": "EYPT",
+"datum": "2026-11-20",
+"kurs": 0.23,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 88.0
+},
+{
+"id": "EZGO",
+"symbol": "EZGO",
+"datum": "2026-11-20",
+"kurs": 1.84,
+"score": 93.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FABC",
+"symbol": "FABC",
+"datum": "2026-11-20",
+"kurs": 1.02,
+"score": 87.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "FCEL",
+"symbol": "FCEL",
+"datum": "2026-11-20",
+"kurs": 6.69,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 20.7
+},
+{
+"id": "FCUV",
+"symbol": "FCUV",
+"datum": "2026-11-20",
+"kurs": 3.94,
+"score": 83.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 5.2
+},
+{
+"id": "FEMY",
+"symbol": "FEMY",
+"datum": "2026-11-20",
+"kurs": 1.24,
+"score": 94.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FENC",
+"symbol": "FENC",
+"datum": "2026-11-20",
+"kurs": 13.09,
+"score": 4.2,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FFAI",
+"symbol": "FFAI",
+"datum": "2026-11-20",
+"kurs": 0.103,
+"score": 96.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FFIN",
+"symbol": "FFIN",
+"datum": "2026-11-20",
+"kurs": 29.13,
+"score": 96.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 86.4
+},
+{
+"id": "FHTX",
+"symbol": "FHTX",
+"datum": "2026-11-20",
+"kurs": 1.72,
+"score": 96.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FISV",
+"symbol": "FISV",
+"datum": "2026-11-20",
+"kurs": 55.88,
+"score": 90.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 97.9
+},
+{
+"id": "FKWL",
+"symbol": "FKWL",
+"datum": "2026-11-20",
+"kurs": 1.45,
+"score": 100.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 74.2
+},
+{
+"id": "FLL",
+"symbol": "FLL",
+"datum": "2026-11-20",
+"kurs": 0.38,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 83.8
+},
+{
+"id": "FLNC",
+"symbol": "FLNC",
+"datum": "2026-11-20",
+"kurs": 3.46,
+"score": 95.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FLWS",
+"symbol": "FLWS",
+"datum": "2026-11-20",
+"kurs": 1.87,
+"score": 98.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 40.4
+},
+{
+"id": "FNUC",
+"symbol": "FNUC",
+"datum": "2026-11-20",
+"kurs": 0.366,
+"score": 94.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FOCL",
+"symbol": "FOCL",
+"datum": "2026-11-20",
+"kurs": 2.61,
+"score": 88.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 84.1
+},
+{
+"id": "FORR",
+"symbol": "FORR",
+"datum": "2026-11-20",
+"kurs": 8.64,
+"score": 88.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 61.0
+},
+{
+"id": "FOXF",
+"symbol": "FOXF",
+"datum": "2026-11-20",
+"kurs": 16.06,
+"score": 80.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 31.8
+},
+{
+"id": "FRGT",
+"symbol": "FRGT",
+"datum": "2026-11-20",
+"kurs": 0.58,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "FRPH",
+"symbol": "FRPH",
+"datum": "2026-11-20",
+"kurs": 17.53,
+"score": 98.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 91.7
+},
+{
+"id": "FRSX",
+"symbol": "FRSX",
+"datum": "2026-11-20",
+"kurs": 0.44,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FTAI",
+"symbol": "FTAI",
+"datum": "2026-11-20",
+"kurs": 150.02,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "FTCI",
+"symbol": "FTCI",
+"datum": "2026-11-20",
+"kurs": 0.78,
+"score": 93.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FTFT",
+"symbol": "FTFT",
+"datum": "2026-11-20",
+"kurs": 3.15,
+"score": 94.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 28.8
+},
+{
+"id": "FUTU",
+"symbol": "FUTU",
+"datum": "2026-11-20",
+"kurs": 83.02,
+"score": 82.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "FWDI",
+"symbol": "FWDI",
+"datum": "2026-11-20",
+"kurs": 3.28,
+"score": 92.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.8
+},
+{
+"id": "FWRD",
+"symbol": "FWRD",
+"datum": "2026-11-20",
+"kurs": 16.28,
+"score": 88.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 79.3
+},
+{
+"id": "GAIA",
+"symbol": "GAIA",
+"datum": "2026-11-20",
+"kurs": 1.22,
+"score": 97.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 68.3
+},
+{
+"id": "GAIN",
+"symbol": "GAIN",
+"datum": "2026-11-20",
+"kurs": 13.41,
+"score": 84.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "GANX",
+"symbol": "GANX",
+"datum": "2026-11-20",
+"kurs": 0.999,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GBDC",
+"symbol": "GBDC",
+"datum": "2026-11-20",
+"kurs": 12.25,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 89.7
+},
+{
+"id": "GDC",
+"symbol": "GDC",
+"datum": "2026-11-20",
+"kurs": 1.08,
+"score": 94.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 54.8
+},
+{
+"id": "GDEV",
+"symbol": "GDEV",
+"datum": "2026-11-20",
+"kurs": 7.55,
+"score": 91.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GEOS",
+"symbol": "GEOS",
+"datum": "2026-11-20",
+"kurs": 2.27,
+"score": 99.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 63.2
+},
+{
+"id": "GERN",
+"symbol": "GERN",
+"datum": "2026-11-20",
+"kurs": 0.87,
+"score": 91.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 73.4
+},
+{
+"id": "GFS",
+"symbol": "GFS",
+"datum": "2026-11-20",
+"kurs": 35.56,
+"score": 83.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GLAD",
+"symbol": "GLAD",
+"datum": "2026-11-20",
+"kurs": 17.03,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 61.0
+},
+{
+"id": "GLPI",
+"symbol": "GLPI",
+"datum": "2026-11-20",
+"kurs": 37.79,
+"score": 95.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "GNPX",
+"symbol": "GNPX",
+"datum": "2026-11-20",
+"kurs": 1.45,
+"score": 96.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "GNSS",
+"symbol": "GNSS",
+"datum": "2026-11-20",
+"kurs": 1.2,
+"score": 87.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 71.1
+},
+{
+"id": "GNTX",
+"symbol": "GNTX",
+"datum": "2026-11-20",
+"kurs": 18.75,
+"score": 96.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 86.0
+},
+{
+"id": "GOGO",
+"symbol": "GOGO",
+"datum": "2026-11-20",
+"kurs": 2.5,
+"score": 86.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "GOOD",
+"symbol": "GOOD",
+"datum": "2026-11-20",
+"kurs": 9.1,
+"score": 96.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 83.9
+},
+{
+"id": "GOSS",
+"symbol": "GOSS",
+"datum": "2026-11-20",
+"kurs": 10.72,
+"score": 81.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GPRE",
+"symbol": "GPRE",
+"datum": "2026-11-20",
+"kurs": 11.27,
+"score": 81.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 85.1
+},
+{
+"id": "GPRO",
+"symbol": "GPRO",
+"datum": "2026-11-20",
+"kurs": 0.508,
+"score": 87.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 22.7
+},
+{
+"id": "GRAB",
+"symbol": "GRAB",
+"datum": "2026-11-20",
+"kurs": 2.75,
+"score": 92.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GRRR",
+"symbol": "GRRR",
+"datum": "2026-11-20",
+"kurs": 5.255,
+"score": 84.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GRSD",
+"symbol": "GRSD",
+"datum": "2026-11-20",
+"kurs": 0.418,
+"score": 99.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GSAT",
+"symbol": "GSAT",
+"datum": "2026-11-20",
+"kurs": 85.65,
+"score": 10.1,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 9.4
+},
+{
+"id": "GSIT",
+"symbol": "GSIT",
+"datum": "2026-11-20",
+"kurs": 2.52,
+"score": 91.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 69.9
+},
+{
+"id": "GT",
+"symbol": "GT",
+"datum": "2026-11-20",
+"kurs": 3.5,
+"score": 97.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 73.9
+},
+{
+"id": "GTIM",
+"symbol": "GTIM",
+"datum": "2026-11-20",
+"kurs": 1.24,
+"score": 84.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 61.0
+},
+{
+"id": "GTM",
+"symbol": "GTM",
+"datum": "2026-11-20",
+"kurs": 2.76,
+"score": 91.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "GURE",
+"symbol": "GURE",
+"datum": "2026-11-20",
+"kurs": 2.75,
+"score": 88.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 51.0
+},
+{
+"id": "GWRS",
+"symbol": "GWRS",
+"datum": "2026-11-20",
+"kurs": 6.4,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "GYRO",
+"symbol": "GYRO",
+"datum": "2026-11-20",
+"kurs": 4.99,
+"score": 83.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 56.0
+},
+{
+"id": "HCAT",
+"symbol": "HCAT",
+"datum": "2026-11-20",
+"kurs": 1.31,
+"score": 82.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HCWB",
+"symbol": "HCWB",
+"datum": "2026-11-20",
+"kurs": 0.749,
+"score": 82.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HFFG",
+"symbol": "HFFG",
+"datum": "2026-11-20",
+"kurs": 1.45,
+"score": 85.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "HIMX",
+"symbol": "HIMX",
+"datum": "2026-11-20",
+"kurs": 6.86,
+"score": 81.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 88.2
+},
+{
+"id": "HIVE",
+"symbol": "HIVE",
+"datum": "2026-11-20",
+"kurs": 1.16,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "HLNE",
+"symbol": "HLNE",
+"datum": "2026-11-20",
+"kurs": 81.07,
+"score": 92.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "HOOD",
+"symbol": "HOOD",
+"datum": "2026-11-20",
+"kurs": 62.17,
+"score": 86.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HRZN",
+"symbol": "HRZN",
+"datum": "2026-11-20",
+"kurs": 3.15,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 37.5
+},
+{
+"id": "HTCO",
+"symbol": "HTCO",
+"datum": "2026-11-20",
+"kurs": 1.13,
+"score": 92.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HTLD",
+"symbol": "HTLD",
+"datum": "2026-11-20",
+"kurs": 9.65,
+"score": 93.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 65.4
+},
+{
+"id": "HTO",
+"symbol": "HTO",
+"datum": "2026-11-20",
+"kurs": 57.41,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 86.8
+},
+{
+"id": "HTOO",
+"symbol": "HTOO",
+"datum": "2026-11-20",
+"kurs": 0.666,
+"score": 97.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HTZ",
+"symbol": "HTZ",
+"datum": "2026-11-20",
+"kurs": 1.11,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "HYPD",
+"symbol": "HYPD",
+"datum": "2026-11-20",
+"kurs": 2.08,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "IART",
+"symbol": "IART",
+"datum": "2026-11-20",
+"kurs": 13.25,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 48.6
+},
+{
+"id": "IBEX",
+"symbol": "IBEX",
+"datum": "2026-11-20",
+"kurs": 54.01,
+"score": 6.2,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ICCC",
+"symbol": "ICCC",
+"datum": "2026-11-20",
+"kurs": 10.92,
+"score": 12.6,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 33.3
+},
+{
+"id": "ICCM",
+"symbol": "ICCM",
+"datum": "2026-11-20",
+"kurs": 0.801,
+"score": 91.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ICFI",
+"symbol": "ICFI",
+"datum": "2026-11-20",
+"kurs": 77.56,
+"score": 91.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ICHR",
+"symbol": "ICHR",
+"datum": "2026-11-20",
+"kurs": 27.28,
+"score": 88.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 33.3
+},
+{
+"id": "IDYA",
+"symbol": "IDYA",
+"datum": "2026-11-20",
+"kurs": 25.56,
+"score": 87.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IHRT",
+"symbol": "IHRT",
+"datum": "2026-11-20",
+"kurs": 0.45,
+"score": 94.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IMA",
+"symbol": "IMA",
+"datum": "2026-11-20",
+"kurs": 3.92,
+"score": 81.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IMCC",
+"symbol": "IMCC",
+"datum": "2026-11-20",
+"kurs": 0.5,
+"score": 97.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IMCR",
+"symbol": "IMCR",
+"datum": "2026-11-20",
+"kurs": 26.41,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IMMP",
+"symbol": "IMMP",
+"datum": "2026-11-20",
+"kurs": 3.11,
+"score": 88.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 75.9
+},
+{
+"id": "IMNN",
+"symbol": "IMNN",
+"datum": "2026-11-20",
+"kurs": 0.54,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 8.8
+},
+{
+"id": "IMTX",
+"symbol": "IMTX",
+"datum": "2026-11-20",
+"kurs": 5.77,
+"score": 88.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IMXI",
+"symbol": "IMXI",
+"datum": "2026-11-20",
+"kurs": 5.53,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "INCR",
+"symbol": "INCR",
+"datum": "2026-11-20",
+"kurs": 3.24,
+"score": 85.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "INDI",
+"symbol": "INDI",
+"datum": "2026-11-20",
+"kurs": 1.52,
+"score": 96.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "INKT",
+"symbol": "INKT",
+"datum": "2026-11-20",
+"kurs": 8.02,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "INMB",
+"symbol": "INMB",
+"datum": "2026-11-20",
+"kurs": 0.827,
+"score": 94.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "INSE",
+"symbol": "INSE",
+"datum": "2026-11-20",
+"kurs": 3.63,
+"score": 93.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "INSG",
+"symbol": "INSG",
+"datum": "2026-11-20",
+"kurs": 3.0,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 48.7
+},
+{
+"id": "INTU",
+"symbol": "INTU",
+"datum": "2026-11-20",
+"kurs": 270.44,
+"score": 97.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": null
+},
+{
+"id": "INVE",
+"symbol": "INVE",
+"datum": "2026-11-20",
+"kurs": 2.19,
+"score": 80.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 49.0
+},
+{
+"id": "IONS",
+"symbol": "IONS",
+"datum": "2026-11-20",
+"kurs": 26.58,
+"score": 93.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 68.4
+},
+{
+"id": "IOSP",
+"symbol": "IOSP",
+"datum": "2026-11-20",
+"kurs": 75.56,
+"score": 85.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 93.6
+},
+{
+"id": "IPDN",
+"symbol": "IPDN",
+"datum": "2026-11-20",
+"kurs": 0.63,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 50.0
+},
+{
+"id": "IPGP",
+"symbol": "IPGP",
+"datum": "2026-11-20",
+"kurs": 58.64,
+"score": 91.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 22.9
+},
+{
+"id": "IPHA",
+"symbol": "IPHA",
+"datum": "2026-11-20",
+"kurs": 0.863,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IPW",
+"symbol": "IPW",
+"datum": "2026-11-20",
+"kurs": 1.16,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IPWR",
+"symbol": "IPWR",
+"datum": "2026-11-20",
+"kurs": 1.73,
+"score": 84.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "IQ",
+"symbol": "IQ",
+"datum": "2026-11-20",
+"kurs": 0.493,
+"score": 97.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IQST",
+"symbol": "IQST",
+"datum": "2026-11-20",
+"kurs": 0.62,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "IREN",
+"symbol": "IREN",
+"datum": "2026-11-20",
+"kurs": 11.82,
+"score": 88.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ISRG",
+"symbol": "ISRG",
+"datum": "2026-11-20",
+"kurs": 399.05,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "IVF",
+"symbol": "IVF",
+"datum": "2026-11-20",
+"kurs": 1.76,
+"score": 81.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "JACK",
+"symbol": "JACK",
+"datum": "2026-11-20",
+"kurs": 13.2,
+"score": 88.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 77.1
+},
+{
+"id": "JAGX",
+"symbol": "JAGX",
+"datum": "2026-11-20",
+"kurs": 0.227,
+"score": 92.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "JANX",
+"symbol": "JANX",
+"datum": "2026-11-20",
+"kurs": 10.08,
+"score": 95.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "JBLU",
+"symbol": "JBLU",
+"datum": "2026-11-20",
+"kurs": 3.32,
+"score": 89.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 29.2
+},
+{
+"id": "JCTC",
+"symbol": "JCTC",
+"datum": "2026-11-20",
+"kurs": 2.65,
+"score": 84.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 66.4
+},
+{
+"id": "JFIN",
+"symbol": "JFIN",
+"datum": "2026-11-20",
+"kurs": 1.16,
+"score": 97.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "JRSH",
+"symbol": "JRSH",
+"datum": "2026-11-20",
+"kurs": 7.01,
+"score": 1.9,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "JRVR",
+"symbol": "JRVR",
+"datum": "2026-11-20",
+"kurs": 2.88,
+"score": 82.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "JYNT",
+"symbol": "JYNT",
+"datum": "2026-11-20",
+"kurs": 6.19,
+"score": 84.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 13.0
+},
+{
+"id": "KALU",
+"symbol": "KALU",
+"datum": "2026-11-20",
+"kurs": 90.16,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 69.2
+},
+{
+"id": "KE",
+"symbol": "KE",
+"datum": "2026-11-20",
+"kurs": 17.92,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "KEEL",
+"symbol": "KEEL",
+"datum": "2026-11-20",
+"kurs": 1.375,
+"score": 80.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KELYB",
+"symbol": "KELYB",
+"datum": "2026-11-20",
+"kurs": 23.6,
+"score": 13.9,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 31.6
+},
+{
+"id": "KG",
+"symbol": "KG",
+"datum": "2026-11-20",
+"kurs": 3.55,
+"score": 94.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 35.6
+},
+{
+"id": "KLRS",
+"symbol": "KLRS",
+"datum": "2026-11-20",
+"kurs": 1.28,
+"score": 90.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KLTR",
+"symbol": "KLTR",
+"datum": "2026-11-20",
+"kurs": 1.08,
+"score": 94.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KLXE",
+"symbol": "KLXE",
+"datum": "2026-11-20",
+"kurs": 1.02,
+"score": 93.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KMB",
+"symbol": "KMB",
+"datum": "2026-11-20",
+"kurs": 106.38,
+"score": 82.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 84.3
+},
+{
+"id": "KNDI",
+"symbol": "KNDI",
+"datum": "2026-11-20",
+"kurs": 2.9,
+"score": 97.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 16.0
+},
+{
+"id": "KNSA",
+"symbol": "KNSA",
+"datum": "2026-11-20",
+"kurs": 93.895,
+"score": 4.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KOSS",
+"symbol": "KOSS",
+"datum": "2026-11-20",
+"kurs": 2.99,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 61.6
+},
+{
+"id": "KRT",
+"symbol": "KRT",
+"datum": "2026-11-20",
+"kurs": 29.59,
+"score": 90.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KRUS",
+"symbol": "KRUS",
+"datum": "2026-11-20",
+"kurs": 22.29,
+"score": 97.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "KTCC",
+"symbol": "KTCC",
+"datum": "2026-11-20",
+"kurs": 1.17,
+"score": 98.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 82.2
+},
+{
+"id": "KURA",
+"symbol": "KURA",
+"datum": "2026-11-20",
+"kurs": 6.91,
+"score": 83.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 31.1
+},
+{
+"id": "KUST",
+"symbol": "KUST",
+"datum": "2026-11-20",
+"kurs": 2.55,
+"score": 97.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 8.6
+},
+{
+"id": "KZIA",
+"symbol": "KZIA",
+"datum": "2026-11-20",
+"kurs": 4.92,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 25.1
+},
+{
+"id": "LAKE",
+"symbol": "LAKE",
+"datum": "2026-11-20",
+"kurs": 8.29,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 90.5
+},
+{
+"id": "LAND",
+"symbol": "LAND",
+"datum": "2026-11-20",
+"kurs": 6.2,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "LARK",
+"symbol": "LARK",
+"datum": "2026-11-20",
+"kurs": 32.26,
+"score": 14.4,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 88.6
+},
+{
+"id": "LCID",
+"symbol": "LCID",
+"datum": "2026-11-20",
+"kurs": 2.5,
+"score": 97.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LE",
+"symbol": "LE",
+"datum": "2026-11-20",
+"kurs": 8.35,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 66.2
+},
+{
+"id": "LEGN",
+"symbol": "LEGN",
+"datum": "2026-11-20",
+"kurs": 15.25,
+"score": 90.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LENZ",
+"symbol": "LENZ",
+"datum": "2026-11-20",
+"kurs": 2.965,
+"score": 97.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LEXX",
+"symbol": "LEXX",
+"datum": "2026-11-20",
+"kurs": 4.03,
+"score": 83.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LFMD",
+"symbol": "LFMD",
+"datum": "2026-11-20",
+"kurs": 1.45,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "LFST",
+"symbol": "LFST",
+"datum": "2026-11-20",
+"kurs": 13.82,
+"score": 6.6,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LFWD",
+"symbol": "LFWD",
+"datum": "2026-11-20",
+"kurs": 2.803,
+"score": 87.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LGHL",
+"symbol": "LGHL",
+"datum": "2026-11-20",
+"kurs": 0.71,
+"score": 99.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LGIH",
+"symbol": "LGIH",
+"datum": "2026-11-20",
+"kurs": 38.88,
+"score": 93.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 25.8
+},
+{
+"id": "LGVN",
+"symbol": "LGVN",
+"datum": "2026-11-20",
+"kurs": 1.66,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LI",
+"symbol": "LI",
+"datum": "2026-11-20",
+"kurs": 10.39,
+"score": 95.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LILA",
+"symbol": "LILA",
+"datum": "2026-11-20",
+"kurs": 9.24,
+"score": 13.5,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LITS",
+"symbol": "LITS",
+"datum": "2026-11-20",
+"kurs": 0.8,
+"score": 81.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 16.7
+},
+{
+"id": "LIVE",
+"symbol": "LIVE",
+"datum": "2026-11-20",
+"kurs": 6.8,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 30.5
+},
+{
+"id": "LIVN",
+"symbol": "LIVN",
+"datum": "2026-11-20",
+"kurs": 90.73,
+"score": 11.0,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LKQ",
+"symbol": "LKQ",
+"datum": "2026-11-20",
+"kurs": 18.51,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 92.2
+},
+{
+"id": "LMAT",
+"symbol": "LMAT",
+"datum": "2026-11-20",
+"kurs": 73.61,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "LMNR",
+"symbol": "LMNR",
+"datum": "2026-11-20",
+"kurs": 10.21,
+"score": 95.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 95.2
+},
+{
+"id": "LNSR",
+"symbol": "LNSR",
+"datum": "2026-11-20",
+"kurs": 4.46,
+"score": 88.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LNZA",
+"symbol": "LNZA",
+"datum": "2026-11-20",
+"kurs": 2.89,
+"score": 88.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LOPE",
+"symbol": "LOPE",
+"datum": "2026-11-20",
+"kurs": 108.13,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "LPCN",
+"symbol": "LPCN",
+"datum": "2026-11-20",
+"kurs": 1.48,
+"score": 80.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 10.0
+},
+{
+"id": "LPLA",
+"symbol": "LPLA",
+"datum": "2026-11-20",
+"kurs": 264.56,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "LSAK",
+"symbol": "LSAK",
+"datum": "2026-11-20",
+"kurs": 3.14,
+"score": 83.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 59.1
+},
+{
+"id": "LSBK",
+"symbol": "LSBK",
+"datum": "2026-11-20",
+"kurs": 18.36,
+"score": 12.8,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 94.2
+},
+{
+"id": "LSTA",
+"symbol": "LSTA",
+"datum": "2026-11-20",
+"kurs": 0.9,
+"score": 83.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 13.6
+},
+{
+"id": "LSTR",
+"symbol": "LSTR",
+"datum": "2026-11-20",
+"kurs": 146.43,
+"score": 94.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 98.8
+},
+{
+"id": "LULU",
+"symbol": "LULU",
+"datum": "2026-11-20",
+"kurs": 102.62,
+"score": 93.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "LUMN",
+"symbol": "LUMN",
+"datum": "2026-11-20",
+"kurs": 3.83,
+"score": 90.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 67.8
+},
+{
+"id": "LUNR",
+"symbol": "LUNR",
+"datum": "2026-11-20",
+"kurs": 8.775,
+"score": 90.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LVO",
+"symbol": "LVO",
+"datum": "2026-11-20",
+"kurs": 2.61,
+"score": 87.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "LWLG",
+"symbol": "LWLG",
+"datum": "2026-11-20",
+"kurs": 2.59,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 68.3
+},
+{
+"id": "LZ",
+"symbol": "LZ",
+"datum": "2026-11-20",
+"kurs": 4.47,
+"score": 92.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MAMA",
+"symbol": "MAMA",
+"datum": "2026-11-20",
+"kurs": 11.08,
+"score": 97.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MAT",
+"symbol": "MAT",
+"datum": "2026-11-20",
+"kurs": 13.71,
+"score": 85.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 79.7
+},
+{
+"id": "MATH",
+"symbol": "MATH",
+"datum": "2026-11-20",
+"kurs": 0.761,
+"score": 90.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "MATW",
+"symbol": "MATW",
+"datum": "2026-11-20",
+"kurs": 19.39,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 60.1
+},
+{
+"id": "MBUU",
+"symbol": "MBUU",
+"datum": "2026-11-20",
+"kurs": 18.45,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 37.2
+},
+{
+"id": "MCHP",
+"symbol": "MCHP",
+"datum": "2026-11-20",
+"kurs": 55.44,
+"score": 95.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "MCHX",
+"symbol": "MCHX",
+"datum": "2026-11-20",
+"kurs": 1.1,
+"score": 85.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 79.3
+},
+{
+"id": "MCRB",
+"symbol": "MCRB",
+"datum": "2026-11-20",
+"kurs": 1.24,
+"score": 98.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "MDXG",
+"symbol": "MDXG",
+"datum": "2026-11-20",
+"kurs": 3.05,
+"score": 93.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 98.6
+},
+{
+"id": "MELI",
+"symbol": "MELI",
+"datum": "2026-11-20",
+"kurs": 1355.0,
+"score": 96.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "METC",
+"symbol": "METC",
+"datum": "2026-11-20",
+"kurs": 5.41,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MGEE",
+"symbol": "MGEE",
+"datum": "2026-11-20",
+"kurs": 78.6,
+"score": 85.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 99.4
+},
+{
+"id": "MGYR",
+"symbol": "MGYR",
+"datum": "2026-11-20",
+"kurs": 22.4,
+"score": 9.1,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 97.1
+},
+{
+"id": "MIND",
+"symbol": "MIND",
+"datum": "2026-11-20",
+"kurs": 2.38,
+"score": 91.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 58.3
+},
+{
+"id": "MLCO",
+"symbol": "MLCO",
+"datum": "2026-11-20",
+"kurs": 4.13,
+"score": 92.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 48.0
+},
+{
+"id": "MLTX",
+"symbol": "MLTX",
+"datum": "2026-11-20",
+"kurs": 11.07,
+"score": 90.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MMYT",
+"symbol": "MMYT",
+"datum": "2026-11-20",
+"kurs": 47.98,
+"score": 81.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 98.5
+},
+{
+"id": "MNDY",
+"symbol": "MNDY",
+"datum": "2026-11-20",
+"kurs": 72.16,
+"score": 86.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MNRO",
+"symbol": "MNRO",
+"datum": "2026-11-20",
+"kurs": 9.5,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 43.8
+},
+{
+"id": "MNSBP",
+"symbol": "MNSBP",
+"datum": "2026-11-20",
+"kurs": 22.5,
+"score": 90.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MOBX",
+"symbol": "MOBX",
+"datum": "2026-11-20",
+"kurs": 1.71,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MOLN",
+"symbol": "MOLN",
+"datum": "2026-11-20",
+"kurs": 2.525,
+"score": 92.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MPAA",
+"symbol": "MPAA",
+"datum": "2026-11-20",
+"kurs": 7.3,
+"score": 83.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 79.0
+},
+{
+"id": "MRBK",
+"symbol": "MRBK",
+"datum": "2026-11-20",
+"kurs": 14.91,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "MRTN",
+"symbol": "MRTN",
+"datum": "2026-11-20",
+"kurs": 11.75,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "MSAI",
+"symbol": "MSAI",
+"datum": "2026-11-20",
+"kurs": 2.56,
+"score": 92.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MTEX",
+"symbol": "MTEX",
+"datum": "2026-11-20",
+"kurs": 2.56,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 69.5
+},
+{
+"id": "MTRX",
+"symbol": "MTRX",
+"datum": "2026-11-20",
+"kurs": 7.87,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 68.6
+},
+{
+"id": "MVIS",
+"symbol": "MVIS",
+"datum": "2026-11-20",
+"kurs": 0.83,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 58.3
+},
+{
+"id": "MYSE",
+"symbol": "MYSE",
+"datum": "2026-11-20",
+"kurs": 0.814,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "MYSZ",
+"symbol": "MYSZ",
+"datum": "2026-11-20",
+"kurs": 0.87,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "MZTI",
+"symbol": "MZTI",
+"datum": "2026-11-20",
+"kurs": 104.9,
+"score": 95.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 97.9
+},
+{
+"id": "NAAS",
+"symbol": "NAAS",
+"datum": "2026-11-20",
+"kurs": 1.5,
+"score": 81.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NAGE",
+"symbol": "NAGE",
+"datum": "2026-11-20",
+"kurs": 1.84,
+"score": 89.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 94.4
+},
+{
+"id": "NAII",
+"symbol": "NAII",
+"datum": "2026-11-20",
+"kurs": 0.88,
+"score": 99.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 32.5
+},
+{
+"id": "NAMS",
+"symbol": "NAMS",
+"datum": "2026-11-20",
+"kurs": 18.41,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NATR",
+"symbol": "NATR",
+"datum": "2026-11-20",
+"kurs": 10.18,
+"score": 98.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 64.9
+},
+{
+"id": "NAVI",
+"symbol": "NAVI",
+"datum": "2026-11-20",
+"kurs": 6.21,
+"score": 98.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "NCMI",
+"symbol": "NCMI",
+"datum": "2026-11-20",
+"kurs": 1.38,
+"score": 91.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 23.6
+},
+{
+"id": "NCNA",
+"symbol": "NCNA",
+"datum": "2026-11-20",
+"kurs": 0.75,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NCRA",
+"symbol": "NCRA",
+"datum": "2026-11-20",
+"kurs": 1.279,
+"score": 94.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NCTY",
+"symbol": "NCTY",
+"datum": "2026-11-20",
+"kurs": 2.6,
+"score": 83.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 5.9
+},
+{
+"id": "NEGG",
+"symbol": "NEGG",
+"datum": "2026-11-20",
+"kurs": 7.99,
+"score": 85.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 13.1
+},
+{
+"id": "NEOG",
+"symbol": "NEOG",
+"datum": "2026-11-20",
+"kurs": 10.55,
+"score": 85.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 67.2
+},
+{
+"id": "NEXM",
+"symbol": "NEXM",
+"datum": "2026-11-20",
+"kurs": 0.85,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.7
+},
+{
+"id": "NFLX",
+"symbol": "NFLX",
+"datum": "2026-11-20",
+"kurs": 56.73,
+"score": 93.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "NGEN",
+"symbol": "NGEN",
+"datum": "2026-11-20",
+"kurs": 1.845,
+"score": 84.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NHTC",
+"symbol": "NHTC",
+"datum": "2026-11-20",
+"kurs": 0.64,
+"score": 85.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 86.4
+},
+{
+"id": "NICE",
+"symbol": "NICE",
+"datum": "2026-11-20",
+"kurs": 85.22,
+"score": 91.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 86.4
+},
+{
+"id": "NIKI",
+"symbol": "NIKI",
+"datum": "2026-11-20",
+"kurs": 1.57,
+"score": 94.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NMFC",
+"symbol": "NMFC",
+"datum": "2026-11-20",
+"kurs": 6.37,
+"score": 97.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "NMRK",
+"symbol": "NMRK",
+"datum": "2026-11-20",
+"kurs": 9.7,
+"score": 86.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "NMTC",
+"symbol": "NMTC",
+"datum": "2026-11-20",
+"kurs": 0.652,
+"score": 98.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NN",
+"symbol": "NN",
+"datum": "2026-11-20",
+"kurs": 7.8,
+"score": 92.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NNDM",
+"symbol": "NNDM",
+"datum": "2026-11-20",
+"kurs": 1.06,
+"score": 84.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NPCE",
+"symbol": "NPCE",
+"datum": "2026-11-20",
+"kurs": 7.95,
+"score": 87.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NRDS",
+"symbol": "NRDS",
+"datum": "2026-11-20",
+"kurs": 7.14,
+"score": 95.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NSLR",
+"symbol": "NSLR",
+"datum": "2026-11-20",
+"kurs": 4.82,
+"score": 85.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "NTES",
+"symbol": "NTES",
+"datum": "2026-11-20",
+"kurs": 99.85,
+"score": 92.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "NTGR",
+"symbol": "NTGR",
+"datum": "2026-11-20",
+"kurs": 17.38,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 55.9
+},
+{
+"id": "NTIC",
+"symbol": "NTIC",
+"datum": "2026-11-20",
+"kurs": 7.38,
+"score": 92.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 63.8
+},
+{
+"id": "NTRP",
+"symbol": "NTRP",
+"datum": "2026-11-20",
+"kurs": 0.6975,
+"score": 82.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "NUWE",
+"symbol": "NUWE",
+"datum": "2026-11-20",
+"kurs": 3.41,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "NVNO",
+"symbol": "NVNO",
+"datum": "2026-11-20",
+"kurs": 5.25,
+"score": 96.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NVTS",
+"symbol": "NVTS",
+"datum": "2026-11-20",
+"kurs": 6.08,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "NXH",
+"symbol": "NXH",
+"datum": "2026-11-20",
+"kurs": 1.11,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "NYXH",
+"symbol": "NYXH",
+"datum": "2026-11-20",
+"kurs": 0.805,
+"score": 97.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OCCI",
+"symbol": "OCCI",
+"datum": "2026-11-20",
+"kurs": 1.28,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OCG",
+"symbol": "OCG",
+"datum": "2026-11-20",
+"kurs": 1.445,
+"score": 84.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OCS",
+"symbol": "OCS",
+"datum": "2026-11-20",
+"kurs": 7.06,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ODFL",
+"symbol": "ODFL",
+"datum": "2026-11-20",
+"kurs": 168.09,
+"score": 86.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "ODYS",
+"symbol": "ODYS",
+"datum": "2026-11-20",
+"kurs": 1.62,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OFIX",
+"symbol": "OFIX",
+"datum": "2026-11-20",
+"kurs": 6.07,
+"score": 97.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 56.6
+},
+{
+"id": "OFLX",
+"symbol": "OFLX",
+"datum": "2026-11-20",
+"kurs": 21.15,
+"score": 97.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 8.0
+},
+{
+"id": "OFS",
+"symbol": "OFS",
+"datum": "2026-11-20",
+"kurs": 3.34,
+"score": 87.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 78.0
+},
+{
+"id": "OLED",
+"symbol": "OLED",
+"datum": "2026-11-20",
+"kurs": 77.62,
+"score": 90.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 96.4
+},
+{
+"id": "OLOX",
+"symbol": "OLOX",
+"datum": "2026-11-20",
+"kurs": 0.55,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OMCL",
+"symbol": "OMCL",
+"datum": "2026-11-20",
+"kurs": 32.51,
+"score": 86.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 62.3
+},
+{
+"id": "OPAL",
+"symbol": "OPAL",
+"datum": "2026-11-20",
+"kurs": 1.29,
+"score": 89.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OPHI",
+"symbol": "OPHI",
+"datum": "2026-11-20",
+"kurs": 3.13,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "OPRA",
+"symbol": "OPRA",
+"datum": "2026-11-20",
+"kurs": 12.86,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OPRT",
+"symbol": "OPRT",
+"datum": "2026-11-20",
+"kurs": 10.3,
+"score": 11.8,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ORGO",
+"symbol": "ORGO",
+"datum": "2026-11-20",
+"kurs": 0.772,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "ORIC",
+"symbol": "ORIC",
+"datum": "2026-11-20",
+"kurs": 7.36,
+"score": 81.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OSIS",
+"symbol": "OSIS",
+"datum": "2026-11-20",
+"kurs": 187.0,
+"score": 80.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "OSS",
+"symbol": "OSS",
+"datum": "2026-11-20",
+"kurs": 4.01,
+"score": 83.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "OSW",
+"symbol": "OSW",
+"datum": "2026-11-20",
+"kurs": 30.15,
+"score": 13.9,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "OTEX",
+"symbol": "OTEX",
+"datum": "2026-11-20",
+"kurs": 22.63,
+"score": 88.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 73.7
+},
+{
+"id": "OTLY",
+"symbol": "OTLY",
+"datum": "2026-11-20",
+"kurs": 6.935,
+"score": 82.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OTTR",
+"symbol": "OTTR",
+"datum": "2026-11-20",
+"kurs": 76.58,
+"score": 84.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 90.8
+},
+{
+"id": "OXBR",
+"symbol": "OXBR",
+"datum": "2026-11-20",
+"kurs": 0.611,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "OXLC",
+"symbol": "OXLC",
+"datum": "2026-11-20",
+"kurs": 4.94,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "OXSQ",
+"symbol": "OXSQ",
+"datum": "2026-11-20",
+"kurs": 0.6,
+"score": 98.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "PAVM",
+"symbol": "PAVM",
+"datum": "2026-11-20",
+"kurs": 1.135,
+"score": 99.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "PAVS",
+"symbol": "PAVS",
+"datum": "2026-11-20",
+"kurs": 2.35,
+"score": 89.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PAX",
+"symbol": "PAX",
+"datum": "2026-11-20",
+"kurs": 8.7,
+"score": 96.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PCAR",
+"symbol": "PCAR",
+"datum": "2026-11-20",
+"kurs": 102.2,
+"score": 80.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 99.3
+},
+{
+"id": "PCT",
+"symbol": "PCT",
+"datum": "2026-11-20",
+"kurs": 1.575,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PDYN",
+"symbol": "PDYN",
+"datum": "2026-11-20",
+"kurs": 2.37,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PEGA",
+"symbol": "PEGA",
+"datum": "2026-11-20",
+"kurs": 27.25,
+"score": 83.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 88.1
+},
+{
+"id": "PEP",
+"symbol": "PEP",
+"datum": "2026-11-20",
+"kurs": 140.54,
+"score": 83.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 95.5
+},
+{
+"id": "PETS",
+"symbol": "PETS",
+"datum": "2026-11-20",
+"kurs": 0.85,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 27.9
+},
+{
+"id": "PHAT",
+"symbol": "PHAT",
+"datum": "2026-11-20",
+"kurs": 4.66,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PIII",
+"symbol": "PIII",
+"datum": "2026-11-20",
+"kurs": 1.69,
+"score": 84.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PLAY",
+"symbol": "PLAY",
+"datum": "2026-11-20",
+"kurs": 6.26,
+"score": 96.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "PLMR",
+"symbol": "PLMR",
+"datum": "2026-11-20",
+"kurs": 163.59,
+"score": 14.4,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PLRX",
+"symbol": "PLRX",
+"datum": "2026-11-20",
+"kurs": 0.595,
+"score": 94.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PLUG",
+"symbol": "PLUG",
+"datum": "2026-11-20",
+"kurs": 0.96,
+"score": 87.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 17.7
+},
+{
+"id": "PMN",
+"symbol": "PMN",
+"datum": "2026-11-20",
+"kurs": 3.16,
+"score": 98.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.2
+},
+{
+"id": "PODD",
+"symbol": "PODD",
+"datum": "2026-11-20",
+"kurs": 133.17,
+"score": 95.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 54.8
+},
+{
+"id": "POLA",
+"symbol": "POLA",
+"datum": "2026-11-20",
+"kurs": 0.25,
+"score": 99.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "POOL",
+"symbol": "POOL",
+"datum": "2026-11-20",
+"kurs": 208.23,
+"score": 81.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 61.5
+},
+{
+"id": "POWI",
+"symbol": "POWI",
+"datum": "2026-11-20",
+"kurs": 39.16,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "PPBT",
+"symbol": "PPBT",
+"datum": "2026-11-20",
+"kurs": 1.525,
+"score": 83.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "PPSI",
+"symbol": "PPSI",
+"datum": "2026-11-20",
+"kurs": 1.96,
+"score": 91.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 97.4
+},
+{
+"id": "PPTA",
+"symbol": "PPTA",
+"datum": "2026-11-20",
+"kurs": 14.51,
+"score": 89.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PRAA",
+"symbol": "PRAA",
+"datum": "2026-11-20",
+"kurs": 10.38,
+"score": 97.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.9
+},
+{
+"id": "PRGS",
+"symbol": "PRGS",
+"datum": "2026-11-20",
+"kurs": 39.94,
+"score": 83.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 97.0
+},
+{
+"id": "PRQR",
+"symbol": "PRQR",
+"datum": "2026-11-20",
+"kurs": 1.04,
+"score": 86.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 46.4
+},
+{
+"id": "PRVA",
+"symbol": "PRVA",
+"datum": "2026-11-20",
+"kurs": 25.05,
+"score": 14.7,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PSEC",
+"symbol": "PSEC",
+"datum": "2026-11-20",
+"kurs": 1.27,
+"score": 98.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "PSNY",
+"symbol": "PSNY",
+"datum": "2026-11-20",
+"kurs": 2.55,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PTN",
+"symbol": "PTN",
+"datum": "2026-11-20",
+"kurs": 4.58,
+"score": 94.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 9.2
+},
+{
+"id": "PWCM",
+"symbol": "PWCM",
+"datum": "2026-11-20",
+"kurs": 0.349,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PWP",
+"symbol": "PWP",
+"datum": "2026-11-20",
+"kurs": 11.77,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "PZZA",
+"symbol": "PZZA",
+"datum": "2026-11-20",
+"kurs": 18.14,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 62.3
+},
+{
+"id": "QBTS",
+"symbol": "QBTS",
+"datum": "2026-11-20",
+"kurs": 6.52,
+"score": 84.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "QDEL",
+"symbol": "QDEL",
+"datum": "2026-11-20",
+"kurs": 8.32,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 78.7
+},
+{
+"id": "QFIN",
+"symbol": "QFIN",
+"datum": "2026-11-20",
+"kurs": 4.45,
+"score": 99.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "QNTM",
+"symbol": "QNTM",
+"datum": "2026-11-20",
+"kurs": 1.29,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "QQQX",
+"symbol": "QQQX",
+"datum": "2026-11-20",
+"kurs": 25.73,
+"score": 88.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "QS",
+"symbol": "QS",
+"datum": "2026-11-20",
+"kurs": 2.79,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "QTI",
+"symbol": "QTI",
+"datum": "2026-11-20",
+"kurs": 1.92,
+"score": 85.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "QTRX",
+"symbol": "QTRX",
+"datum": "2026-11-20",
+"kurs": 1.96,
+"score": 93.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RARE",
+"symbol": "RARE",
+"datum": "2026-11-20",
+"kurs": 16.48,
+"score": 91.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 8.2
+},
+{
+"id": "RBBN",
+"symbol": "RBBN",
+"datum": "2026-11-20",
+"kurs": 1.23,
+"score": 97.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 60.0
+},
+{
+"id": "RCKT",
+"symbol": "RCKT",
+"datum": "2026-11-20",
+"kurs": 1.95,
+"score": 94.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "RCON",
+"symbol": "RCON",
+"datum": "2026-11-20",
+"kurs": 0.95,
+"score": 98.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 4.0
+},
+{
+"id": "RDGT",
+"symbol": "RDGT",
+"datum": "2026-11-20",
+"kurs": 0.94,
+"score": 92.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "REAX",
+"symbol": "REAX",
+"datum": "2026-11-20",
+"kurs": 8.26,
+"score": 99.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RETO",
+"symbol": "RETO",
+"datum": "2026-11-20",
+"kurs": 4.03,
+"score": 91.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "RGC",
+"symbol": "RGC",
+"datum": "2026-11-20",
+"kurs": 4.18,
+"score": 84.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RGP",
+"symbol": "RGP",
+"datum": "2026-11-20",
+"kurs": 2.45,
+"score": 99.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 52.9
+},
+{
+"id": "RGTI",
+"symbol": "RGTI",
+"datum": "2026-11-20",
+"kurs": 7.16,
+"score": 88.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RILY",
+"symbol": "RILY",
+"datum": "2026-11-20",
+"kurs": 2.81,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RIVN",
+"symbol": "RIVN",
+"datum": "2026-11-20",
+"kurs": 10.33,
+"score": 89.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RKLB",
+"symbol": "RKLB",
+"datum": "2026-11-20",
+"kurs": 45.42,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RMCF",
+"symbol": "RMCF",
+"datum": "2026-11-20",
+"kurs": 0.5,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "RMTI",
+"symbol": "RMTI",
+"datum": "2026-11-20",
+"kurs": 5.82,
+"score": 86.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 13.6
+},
+{
+"id": "ROCK",
+"symbol": "ROCK",
+"datum": "2026-11-20",
+"kurs": 26.7,
+"score": 96.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 78.9
+},
+{
+"id": "RPID",
+"symbol": "RPID",
+"datum": "2026-11-20",
+"kurs": 0.735,
+"score": 93.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RPRX",
+"symbol": "RPRX",
+"datum": "2026-11-20",
+"kurs": 68.45,
+"score": 9.4,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RRR",
+"symbol": "RRR",
+"datum": "2026-11-20",
+"kurs": 46.09,
+"score": 87.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": null
+},
+{
+"id": "RTB",
+"symbol": "RTB",
+"datum": "2026-11-20",
+"kurs": 3.72,
+"score": 93.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 48.2
+},
+{
+"id": "RUM",
+"symbol": "RUM",
+"datum": "2026-11-20",
+"kurs": 4.19,
+"score": 94.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RUN",
+"symbol": "RUN",
+"datum": "2026-11-20",
+"kurs": 6.6,
+"score": 89.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "RXRX",
+"symbol": "RXRX",
+"datum": "2026-11-20",
+"kurs": 2.45,
+"score": 94.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "RZLV",
+"symbol": "RZLV",
+"datum": "2026-11-20",
+"kurs": 0.84,
+"score": 93.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SAFT",
+"symbol": "SAFT",
+"datum": "2026-11-20",
+"kurs": 104.44,
+"score": 13.1,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 89.0
+},
+{
+"id": "SAIA",
+"symbol": "SAIA",
+"datum": "2026-11-20",
+"kurs": 314.45,
+"score": 80.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 94.5
+},
+{
+"id": "SAMG",
+"symbol": "SAMG",
+"datum": "2026-11-20",
+"kurs": 10.0,
+"score": 91.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "SANA",
+"symbol": "SANA",
+"datum": "2026-11-20",
+"kurs": 1.59,
+"score": 91.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SBAC",
+"symbol": "SBAC",
+"datum": "2026-11-20",
+"kurs": 173.33,
+"score": 83.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 7.9
+},
+{
+"id": "SBET",
+"symbol": "SBET",
+"datum": "2026-11-20",
+"kurs": 4.48,
+"score": 90.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 15.9
+},
+{
+"id": "SCLX",
+"symbol": "SCLX",
+"datum": "2026-11-20",
+"kurs": 0.566,
+"score": 98.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SCNI",
+"symbol": "SCNI",
+"datum": "2026-11-20",
+"kurs": 1.58,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "SCNX",
+"symbol": "SCNX",
+"datum": "2026-11-20",
+"kurs": 2.278,
+"score": 98.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "SCOR",
+"symbol": "SCOR",
+"datum": "2026-11-20",
+"kurs": 3.09,
+"score": 86.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 11.4
+},
+{
+"id": "SCWO",
+"symbol": "SCWO",
+"datum": "2026-11-20",
+"kurs": 1.74,
+"score": 87.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 36.1
+},
+{
+"id": "SCYX",
+"symbol": "SCYX",
+"datum": "2026-11-20",
+"kurs": 2.38,
+"score": 97.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "SDOT",
+"symbol": "SDOT",
+"datum": "2026-11-20",
+"kurs": 3.26,
+"score": 91.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SEAT",
+"symbol": "SEAT",
+"datum": "2026-11-20",
+"kurs": 1.56,
+"score": 92.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SEDG",
+"symbol": "SEDG",
+"datum": "2026-11-20",
+"kurs": 18.27,
+"score": 87.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 4.2
+},
+{
+"id": "SEVN",
+"symbol": "SEVN",
+"datum": "2026-11-20",
+"kurs": 6.42,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 95.5
+},
+{
+"id": "SFM",
+"symbol": "SFM",
+"datum": "2026-11-20",
+"kurs": 48.81,
+"score": 97.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 100.0
+},
+{
+"id": "SGA",
+"symbol": "SGA",
+"datum": "2026-11-20",
+"kurs": 5.88,
+"score": 93.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 41.4
+},
+{
+"id": "SGHT",
+"symbol": "SGHT",
+"datum": "2026-11-20",
+"kurs": 10.18,
+"score": 11.3,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SGML",
+"symbol": "SGML",
+"datum": "2026-11-20",
+"kurs": 3.69,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "SGRX",
+"symbol": "SGRX",
+"datum": "2026-11-20",
+"kurs": 2.18,
+"score": 80.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SHEN",
+"symbol": "SHEN",
+"datum": "2026-11-20",
+"kurs": 9.12,
+"score": 98.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 75.3
+},
+{
+"id": "SHOE",
+"symbol": "SHOE",
+"datum": "2026-11-20",
+"kurs": 14.26,
+"score": 86.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 96.0
+},
+{
+"id": "SIBN",
+"symbol": "SIBN",
+"datum": "2026-11-20",
+"kurs": 23.73,
+"score": 11.5,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SIEB",
+"symbol": "SIEB",
+"datum": "2026-11-20",
+"kurs": 1.65,
+"score": 82.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 52.9
+},
+{
+"id": "SIGA",
+"symbol": "SIGA",
+"datum": "2026-11-20",
+"kurs": 2.4,
+"score": 90.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 71.0
+},
+{
+"id": "SILO",
+"symbol": "SILO",
+"datum": "2026-11-20",
+"kurs": 1.71,
+"score": 94.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SLAB",
+"symbol": "SLAB",
+"datum": "2026-11-20",
+"kurs": 220.21,
+"score": 14.9,
+"zone": "historisch sehr teuer",
+"qualitaet": true,
+"p3": 66.2
+},
+{
+"id": "SLDP",
+"symbol": "SLDP",
+"datum": "2026-11-20",
+"kurs": 1.35,
+"score": 89.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SLM",
+"symbol": "SLM",
+"datum": "2026-11-20",
+"kurs": 15.87,
+"score": 81.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 81.6
+},
+{
+"id": "SLN",
+"symbol": "SLN",
+"datum": "2026-11-20",
+"kurs": 19.81,
+"score": 12.2,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SLNH",
+"symbol": "SLNH",
+"datum": "2026-11-20",
+"kurs": 0.37,
+"score": 90.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.6
+},
+{
+"id": "SLRC",
+"symbol": "SLRC",
+"datum": "2026-11-20",
+"kurs": 10.81,
+"score": 98.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "SMCI",
+"symbol": "SMCI",
+"datum": "2026-11-20",
+"kurs": 21.65,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 81.4
+},
+{
+"id": "SMSI",
+"symbol": "SMSI",
+"datum": "2026-11-20",
+"kurs": 2.15,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 42.9
+},
+{
+"id": "SNDX",
+"symbol": "SNDX",
+"datum": "2026-11-20",
+"kurs": 8.72,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SNOA",
+"symbol": "SNOA",
+"datum": "2026-11-20",
+"kurs": 0.72,
+"score": 93.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 3.3
+},
+{
+"id": "SNTG",
+"symbol": "SNTG",
+"datum": "2026-11-20",
+"kurs": 1.54,
+"score": 85.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SOFI",
+"symbol": "SOFI",
+"datum": "2026-11-20",
+"kurs": 12.48,
+"score": 87.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SONM",
+"symbol": "SONM",
+"datum": "2026-11-20",
+"kurs": 1.506,
+"score": 96.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SOWG",
+"symbol": "SOWG",
+"datum": "2026-11-20",
+"kurs": 2.37,
+"score": 85.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 14.8
+},
+{
+"id": "SPRC",
+"symbol": "SPRC",
+"datum": "2026-11-20",
+"kurs": 0.196,
+"score": 92.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SPRY",
+"symbol": "SPRY",
+"datum": "2026-11-20",
+"kurs": 2.96,
+"score": 95.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SPSC",
+"symbol": "SPSC",
+"datum": "2026-11-20",
+"kurs": 76.88,
+"score": 87.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 100.0
+},
+{
+"id": "SQFT",
+"symbol": "SQFT",
+"datum": "2026-11-20",
+"kurs": 0.645,
+"score": 96.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SRAD",
+"symbol": "SRAD",
+"datum": "2026-11-20",
+"kurs": 11.4,
+"score": 89.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SRPT",
+"symbol": "SRPT",
+"datum": "2026-11-20",
+"kurs": 13.33,
+"score": 92.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 73.6
+},
+{
+"id": "SRTS",
+"symbol": "SRTS",
+"datum": "2026-11-20",
+"kurs": 2.26,
+"score": 91.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.4
+},
+{
+"id": "SSM",
+"symbol": "SSM",
+"datum": "2026-11-20",
+"kurs": 0.746,
+"score": 84.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SSP",
+"symbol": "SSP",
+"datum": "2026-11-20",
+"kurs": 2.96,
+"score": 81.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 49.4
+},
+{
+"id": "SSYS",
+"symbol": "SSYS",
+"datum": "2026-11-20",
+"kurs": 5.06,
+"score": 95.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 34.1
+},
+{
+"id": "STEP",
+"symbol": "STEP",
+"datum": "2026-11-20",
+"kurs": 41.84,
+"score": 88.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "STKE",
+"symbol": "STKE",
+"datum": "2026-11-20",
+"kurs": 0.93,
+"score": 89.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "STKH",
+"symbol": "STKH",
+"datum": "2026-11-20",
+"kurs": 1.57,
+"score": 90.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "STKS",
+"symbol": "STKS",
+"datum": "2026-11-20",
+"kurs": 1.03,
+"score": 99.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 55.0
+},
+{
+"id": "STRA",
+"symbol": "STRA",
+"datum": "2026-11-20",
+"kurs": 50.7,
+"score": 87.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 57.0
+},
+{
+"id": "STRR",
+"symbol": "STRR",
+"datum": "2026-11-20",
+"kurs": 8.3,
+"score": 80.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 35.5
+},
+{
+"id": "SUIG",
+"symbol": "SUIG",
+"datum": "2026-11-20",
+"kurs": 0.659,
+"score": 96.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 82.8
+},
+{
+"id": "SUNE",
+"symbol": "SUNE",
+"datum": "2026-11-20",
+"kurs": 1.71,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 57.7
+},
+{
+"id": "SVC",
+"symbol": "SVC",
+"datum": "2026-11-20",
+"kurs": 5.58,
+"score": 95.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 57.0
+},
+{
+"id": "SWAG",
+"symbol": "SWAG",
+"datum": "2026-11-20",
+"kurs": 1.11,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SXTC",
+"symbol": "SXTC",
+"datum": "2026-11-20",
+"kurs": 2.645,
+"score": 98.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SYM",
+"symbol": "SYM",
+"datum": "2026-11-20",
+"kurs": 31.1,
+"score": 94.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "SYPR",
+"symbol": "SYPR",
+"datum": "2026-11-20",
+"kurs": 1.16,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 46.0
+},
+{
+"id": "TBLA",
+"symbol": "TBLA",
+"datum": "2026-11-20",
+"kurs": 1.86,
+"score": 96.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TC",
+"symbol": "TC",
+"datum": "2026-11-20",
+"kurs": 0.69,
+"score": 98.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TCPC",
+"symbol": "TCPC",
+"datum": "2026-11-20",
+"kurs": 4.04,
+"score": 80.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 66.7
+},
+{
+"id": "TDUP",
+"symbol": "TDUP",
+"datum": "2026-11-20",
+"kurs": 1.455,
+"score": 93.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TENX",
+"symbol": "TENX",
+"datum": "2026-11-20",
+"kurs": 1.25,
+"score": 89.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 15.9
+},
+{
+"id": "TGTX",
+"symbol": "TGTX",
+"datum": "2026-11-20",
+"kurs": 63.34,
+"score": 13.0,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 32.0
+},
+{
+"id": "THRY",
+"symbol": "THRY",
+"datum": "2026-11-20",
+"kurs": 0.725,
+"score": 97.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TLRY",
+"symbol": "TLRY",
+"datum": "2026-11-20",
+"kurs": 1.89,
+"score": 96.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TLSI",
+"symbol": "TLSI",
+"datum": "2026-11-20",
+"kurs": 2.32,
+"score": 95.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TMC",
+"symbol": "TMC",
+"datum": "2026-11-20",
+"kurs": 1.52,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TMDX",
+"symbol": "TMDX",
+"datum": "2026-11-20",
+"kurs": 85.25,
+"score": 80.0,
+"zone": "guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TNXP",
+"symbol": "TNXP",
+"datum": "2026-11-20",
+"kurs": 2.38,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "TOUR",
+"symbol": "TOUR",
+"datum": "2026-11-20",
+"kurs": 3.47,
+"score": 82.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 66.0
+},
+{
+"id": "TRDA",
+"symbol": "TRDA",
+"datum": "2026-11-20",
+"kurs": 4.35,
+"score": 92.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TRI",
+"symbol": "TRI",
+"datum": "2026-11-20",
+"kurs": 101.56,
+"score": 85.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 90.8
+},
+{
+"id": "TRIP",
+"symbol": "TRIP",
+"datum": "2026-11-20",
+"kurs": 7.01,
+"score": 96.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 14.3
+},
+{
+"id": "TRMB",
+"symbol": "TRMB",
+"datum": "2026-11-20",
+"kurs": 50.62,
+"score": 87.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 93.8
+},
+{
+"id": "TROW",
+"symbol": "TROW",
+"datum": "2026-11-20",
+"kurs": 100.99,
+"score": 85.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 82.8
+},
+{
+"id": "TTD",
+"symbol": "TTD",
+"datum": "2026-11-20",
+"kurs": 13.38,
+"score": 89.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 37.8
+},
+{
+"id": "TTGT",
+"symbol": "TTGT",
+"datum": "2026-11-20",
+"kurs": 2.4,
+"score": 97.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 12.8
+},
+{
+"id": "TULP",
+"symbol": "TULP",
+"datum": "2026-11-20",
+"kurs": 2.32,
+"score": 93.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 87.7
+},
+{
+"id": "TVRD",
+"symbol": "TVRD",
+"datum": "2026-11-20",
+"kurs": 0.989,
+"score": 88.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "TWAV",
+"symbol": "TWAV",
+"datum": "2026-11-20",
+"kurs": 1.16,
+"score": 85.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 19.6
+},
+{
+"id": "TYGO",
+"symbol": "TYGO",
+"datum": "2026-11-20",
+"kurs": 0.541,
+"score": 91.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "TZOO",
+"symbol": "TZOO",
+"datum": "2026-11-20",
+"kurs": 4.96,
+"score": 85.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 75.6
+},
+{
+"id": "UCTT",
+"symbol": "UCTT",
+"datum": "2026-11-20",
+"kurs": 37.0,
+"score": 80.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 97.8
+},
+{
+"id": "UFPI",
+"symbol": "UFPI",
+"datum": "2026-11-20",
+"kurs": 79.18,
+"score": 80.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 71.1
+},
+{
+"id": "ULBI",
+"symbol": "ULBI",
+"datum": "2026-11-20",
+"kurs": 15.58,
+"score": 5.0,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "UNB",
+"symbol": "UNB",
+"datum": "2026-11-20",
+"kurs": 22.56,
+"score": 82.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 65.3
+},
+{
+"id": "UNCY",
+"symbol": "UNCY",
+"datum": "2026-11-20",
+"kurs": 3.35,
+"score": 91.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "UONE",
+"symbol": "UONE",
+"datum": "2026-11-20",
+"kurs": 2.38,
+"score": 97.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 25.2
+},
+{
+"id": "UONEK",
+"symbol": "UONEK",
+"datum": "2026-11-20",
+"kurs": 1.97,
+"score": 95.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 28.3
+},
+{
+"id": "UPST",
+"symbol": "UPST",
+"datum": "2026-11-20",
+"kurs": 15.66,
+"score": 98.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "UROY",
+"symbol": "UROY",
+"datum": "2026-11-20",
+"kurs": 2.32,
+"score": 89.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "USCB",
+"symbol": "USCB",
+"datum": "2026-11-20",
+"kurs": 19.45,
+"score": 80.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VBIO",
+"symbol": "VBIO",
+"datum": "2026-11-20",
+"kurs": 0.481,
+"score": 95.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VC",
+"symbol": "VC",
+"datum": "2026-11-20",
+"kurs": 80.05,
+"score": 91.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 81.3
+},
+{
+"id": "VCYT",
+"symbol": "VCYT",
+"datum": "2026-11-20",
+"kurs": 25.13,
+"score": 87.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 97.6
+},
+{
+"id": "VERA",
+"symbol": "VERA",
+"datum": "2026-11-20",
+"kurs": 25.45,
+"score": 92.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VERI",
+"symbol": "VERI",
+"datum": "2026-11-20",
+"kurs": 0.311,
+"score": 98.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "VERU",
+"symbol": "VERU",
+"datum": "2026-11-20",
+"kurs": 1.94,
+"score": 90.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 49.8
+},
+{
+"id": "VFS",
+"symbol": "VFS",
+"datum": "2026-11-20",
+"kurs": 2.55,
+"score": 80.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VGAS",
+"symbol": "VGAS",
+"datum": "2026-11-20",
+"kurs": 0.935,
+"score": 89.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VINP",
+"symbol": "VINP",
+"datum": "2026-11-20",
+"kurs": 8.01,
+"score": 95.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VIP",
+"symbol": "VIP",
+"datum": "2026-11-20",
+"kurs": 0.57,
+"score": 92.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 18.8
+},
+{
+"id": "VITL",
+"symbol": "VITL",
+"datum": "2026-11-20",
+"kurs": 8.69,
+"score": 92.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VIVK",
+"symbol": "VIVK",
+"datum": "2026-11-20",
+"kurs": 0.225,
+"score": 99.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "VMAR",
+"symbol": "VMAR",
+"datum": "2026-11-20",
+"kurs": 3.37,
+"score": 84.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VNDA",
+"symbol": "VNDA",
+"datum": "2026-11-20",
+"kurs": 3.45,
+"score": 90.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.9
+},
+{
+"id": "VNET",
+"symbol": "VNET",
+"datum": "2026-11-20",
+"kurs": 2.18,
+"score": 86.1,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 80.0
+},
+{
+"id": "VOXR",
+"symbol": "VOXR",
+"datum": "2026-11-20",
+"kurs": 3.77,
+"score": 87.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VRCA",
+"symbol": "VRCA",
+"datum": "2026-11-20",
+"kurs": 2.74,
+"score": 88.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VRRM",
+"symbol": "VRRM",
+"datum": "2026-11-20",
+"kurs": 1.6,
+"score": 98.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "VRSK",
+"symbol": "VRSK",
+"datum": "2026-11-20",
+"kurs": 202.09,
+"score": 83.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 94.0
+},
+{
+"id": "VSA",
+"symbol": "VSA",
+"datum": "2026-11-20",
+"kurs": 1.64,
+"score": 91.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 34.7
+},
+{
+"id": "VUZI",
+"symbol": "VUZI",
+"datum": "2026-11-20",
+"kurs": 1.09,
+"score": 91.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 70.4
+},
+{
+"id": "VYGR",
+"symbol": "VYGR",
+"datum": "2026-11-20",
+"kurs": 1.53,
+"score": 96.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 84.1
+},
+{
+"id": "WAFD",
+"symbol": "WAFD",
+"datum": "2026-11-20",
+"kurs": 26.73,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 89.7
+},
+{
+"id": "WAFDP",
+"symbol": "WAFDP",
+"datum": "2026-11-20",
+"kurs": 13.94,
+"score": 86.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "WAVE",
+"symbol": "WAVE",
+"datum": "2026-11-20",
+"kurs": 3.18,
+"score": 89.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "WDAY",
+"symbol": "WDAY",
+"datum": "2026-11-20",
+"kurs": 174.52,
+"score": 84.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 82.4
+},
+{
+"id": "WERN",
+"symbol": "WERN",
+"datum": "2026-11-20",
+"kurs": 25.75,
+"score": 98.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 93.8
+},
+{
+"id": "WHLR",
+"symbol": "WHLR",
+"datum": "2026-11-20",
+"kurs": 0.318,
+"score": 93.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 33.3
+},
+{
+"id": "WINA",
+"symbol": "WINA",
+"datum": "2026-11-20",
+"kurs": 254.46,
+"score": 91.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 93.8
+},
+{
+"id": "WING",
+"symbol": "WING",
+"datum": "2026-11-20",
+"kurs": 151.53,
+"score": 84.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 83.0
+},
+{
+"id": "WIX",
+"symbol": "WIX",
+"datum": "2026-11-20",
+"kurs": 59.03,
+"score": 87.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 47.3
+},
+{
+"id": "WKHS",
+"symbol": "WKHS",
+"datum": "2026-11-20",
+"kurs": 1.75,
+"score": 90.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 30.1
+},
+{
+"id": "WMG",
+"symbol": "WMG",
+"datum": "2026-11-20",
+"kurs": 32.72,
+"score": 12.5,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "WNW",
+"symbol": "WNW",
+"datum": "2026-11-20",
+"kurs": 1.645,
+"score": 82.3,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "WORX",
+"symbol": "WORX",
+"datum": "2026-11-20",
+"kurs": 1.09,
+"score": 91.7,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "WSC",
+"symbol": "WSC",
+"datum": "2026-11-20",
+"kurs": 16.14,
+"score": 94.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "WVE",
+"symbol": "WVE",
+"datum": "2026-11-20",
+"kurs": 2.56,
+"score": 80.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 50.0
+},
+{
+"id": "WVVI",
+"symbol": "WVVI",
+"datum": "2026-11-20",
+"kurs": 1.66,
+"score": 98.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 67.7
+},
+{
+"id": "XAIR",
+"symbol": "XAIR",
+"datum": "2026-11-20",
+"kurs": 1.54,
+"score": 95.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "XBIT",
+"symbol": "XBIT",
+"datum": "2026-11-20",
+"kurs": 1.73,
+"score": 91.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "XBP",
+"symbol": "XBP",
+"datum": "2026-11-20",
+"kurs": 2.08,
+"score": 81.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "XENE",
+"symbol": "XENE",
+"datum": "2026-11-20",
+"kurs": 37.04,
+"score": 84.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": null
+},
+{
+"id": "XERS",
+"symbol": "XERS",
+"datum": "2026-11-20",
+"kurs": 16.97,
+"score": 4.1,
+"zone": "historisch sehr teuer",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "XGPU",
+"symbol": "XGPU",
+"datum": "2026-11-20",
+"kurs": 1.51,
+"score": 81.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "XRAY",
+"symbol": "XRAY",
+"datum": "2026-11-20",
+"kurs": 8.29,
+"score": 97.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 73.3
+},
+{
+"id": "XRTX",
+"symbol": "XRTX",
+"datum": "2026-11-20",
+"kurs": 0.839,
+"score": 82.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "XRX",
+"symbol": "XRX",
+"datum": "2026-11-20",
+"kurs": 0.85,
+"score": 99.6,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 76.2
+},
+{
+"id": "XTLB",
+"symbol": "XTLB",
+"datum": "2026-11-20",
+"kurs": 1.37,
+"score": 92.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 28.6
+},
+{
+"id": "XXII",
+"symbol": "XXII",
+"datum": "2026-11-20",
+"kurs": 0.337,
+"score": 97.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 21.1
+},
+{
+"id": "YDKG",
+"symbol": "YDKG",
+"datum": "2026-11-20",
+"kurs": 0.73,
+"score": 89.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 15.4
+},
+{
+"id": "YHGJ",
+"symbol": "YHGJ",
+"datum": "2026-11-20",
+"kurs": 2.79,
+"score": 85.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 43.8
+},
+{
+"id": "YORW",
+"symbol": "YORW",
+"datum": "2026-11-20",
+"kurs": 31.13,
+"score": 84.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": true,
+"p3": 52.9
+},
+{
+"id": "YYAI",
+"symbol": "YYAI",
+"datum": "2026-11-20",
+"kurs": 0.67,
+"score": 83.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "Z",
+"symbol": "Z",
+"datum": "2026-11-20",
+"kurs": 27.29,
+"score": 93.0,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 96.0
+},
+{
+"id": "ZCMD",
+"symbol": "ZCMD",
+"datum": "2026-11-20",
+"kurs": 0.785,
+"score": 91.2,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": null
+},
+{
+"id": "ZD",
+"symbol": "ZD",
+"datum": "2026-11-20",
+"kurs": 49.35,
+"score": 80.4,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 68.6
+},
+{
+"id": "ZG",
+"symbol": "ZG",
+"datum": "2026-11-20",
+"kurs": 27.57,
+"score": 94.8,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 88.5
+},
+{
+"id": "ZNB",
+"symbol": "ZNB",
+"datum": "2026-11-20",
+"kurs": 0.36,
+"score": 92.9,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 0.0
+},
+{
+"id": "ZUMZ",
+"symbol": "ZUMZ",
+"datum": "2026-11-20",
+"kurs": 13.01,
+"score": 87.5,
+"zone": "historisch sehr guenstig",
+"qualitaet": false,
+"p3": 83.3
+}
+]
+}
