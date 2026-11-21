@@ -118,7 +118,8 @@ def mc_json(wid: str, q) -> bytes | None:
     return _gz(montecarlo.ergebnis(sim, preise[:10]))
 
 
-API = {"/api/wert": lambda wid, q: wert_json(wid), "/api/pruefung": pruefung_json,
+API = {"/api/ping": lambda wid, q: _gz({"server": True}),   # zeigt dem Dashboard: lokaler Server laeuft
+       "/api/wert": lambda wid, q: wert_json(wid), "/api/pruefung": pruefung_json,
        "/api/strategie": strategie_json, "/api/mc": mc_json}
 
 

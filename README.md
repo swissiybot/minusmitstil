@@ -2,6 +2,8 @@
 
 > Ein hochwissenschaftliches Werkzeug, das dir täglich sagt, was du vor drei Jahren hättest kaufen sollen.
 
+**🌐 Live-Seite: https://swissiybot.github.io/minusmitstil/** – wird mehrmals täglich automatisch neu berechnet (werktags etwa alle 2 Stunden während der US-Börsenzeit, dazu jeden Morgen). Keine Echtzeitkurse.
+
 **⚠️ Spaßprojekt. Historische Statistik, keine Anlageberatung.** Nichts hier ist eine Empfehlung, etwas zu kaufen oder zu verkaufen. Vergangene Kurse garantieren nichts. Wer nach diesem Tool handelt, tut das auf eigene Rechnung – und mit Stil.
 
 ## Was es macht
@@ -57,3 +59,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `daten/tagebuch/` | tägliche Signale – nie ändern |
 
 Erzeugte Dateien (jederzeit neu erzeugbar, nicht im Repository): `daten/kurse.parquet`, `web/daten/*.json`, `daten/fred/*.csv`.
+
+## Online-Fassung (GitHub Pages)
+Der Workflow `.github/workflows/dashboard.yml` lädt die Kurse auf GitHub, rechnet alles neu, exportiert je Wert eine Datei (`export.py`, nur dort) und veröffentlicht `web/` als statische Seite. Die Kursdatei bleibt zwischen den Läufen im GitHub-Cache, nie im Repository. Sperrt Yahoo, wird der letzte Stand veröffentlicht und oben auf der Seite als veraltet markiert. Online rechnet der Kurs-Rechner im Browser; der Strategie-Vergleich zeigt online die Standardwerte (500 je Monat, 1 je Order), eigene Eingaben gehen in der lokalen Fassung.
+

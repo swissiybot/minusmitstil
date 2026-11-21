@@ -11,7 +11,13 @@ Indizes (^GSPC usw.) haben keine Dividenden – das wird im Dashboard gekennzeic
 
 Aufruf:  python kurse.py            (alle Werte)
          python kurse.py SPY AAPL   (nur diese Symbole)
+
+Umgebungsvariablen (fuer den Online-Lauf auf GitHub):
+  KURSE_NEU_LADEN=1      auch heute schon geladene Werte neu holen (mehrere Laeufe am Tag)
+  KURSE_ABBRUCH_NACH=5   nach so vielen Stapeln in Folge ganz ohne Daten aufhoeren (Yahoo sperrt);
+                         der bisherige Stand bleibt erhalten und wird trotzdem ausgewertet
 """
+import os
 import sys
 import time
 import datetime as dt
@@ -146,12 +152,20 @@ def main(argv):
         lokal = _SPEICHER.get(s)
         if lokal is None or lokal.empty:
             neu_laden.append(s)
-        elif (heute - lokal.index.max()).days >= 1:
+        elif (heute - lokal.index.max()).days >= 1 or os.environ.get("KURSE_NEU_LADEN") == "1":
             nachladen.append(s)
     print(f"{len(neu_laden)} Werte komplett laden, {len(nachladen)} Werte aktualisieren")
     fehler, stapel_nr = [], 0
+    abbruch_nach = int(os.environ.get("KURSE_ABBRUCH_NACH", "0") or 0)
+    leer_in_folge, abgebrochen, geladen = 0, False, 0
     for liste, zeitraum in ((neu_laden, "max"), (nachladen, "1mo")):
+        if abgebrochen:
+            fehler += liste
+            continue
         for i in range(0, len(liste), E.STAPEL_GROESSE):
+            if abgebrochen:
+                fehler += liste[i:i + E.STAPEL_GROESSE]
+                continue
             stapel = liste[i:i + E.STAPEL_GROESSE]
             for versuch in range(4):
                 try:
@@ -164,15 +178,25 @@ def main(argv):
             else:
                 ok, fehlt = 0, stapel
             fehler += fehlt
+            geladen += ok
+            leer_in_folge = leer_in_folge + 1 if ok == 0 else 0
             print(f"  {zeitraum}: {min(i + E.STAPEL_GROESSE, len(liste))}/{len(liste)} – ok {ok}, ohne Daten {len(fehlt)}", flush=True)
+            if abbruch_nach and leer_in_folge >= abbruch_nach:
+                print(f"ABBRUCH: {leer_in_folge} Stapel in Folge ohne Daten (Yahoo sperrt vermutlich). "
+                      "Es wird mit dem letzten gespeicherten Stand weitergearbeitet.", flush=True)
+                abgebrochen = True
             stapel_nr += 1
             if zeitraum == "max" and stapel_nr % 25 == 0:
                 speichern_alle()   # Zwischenstand bei langen Erstladungen sichern
             time.sleep(E.PAUSE_SEKUNDEN)
-    if neu_laden or nachladen:
+    if geladen:
         speichern_alle()
     (E.DATEN / "ohne_daten.txt").write_text("\n".join(fehler))
-    print(f"Fertig. Ohne Daten: {len(fehler)} (Liste in daten/ohne_daten.txt)")
+    (E.DATEN / "kurse_lauf.json").write_text(__import__("json").dumps({
+        "zeit": dt.datetime.now().isoformat(timespec="minutes"), "gesamt": len(symbole), "geladen": geladen,
+        "ohne_daten": len(fehler), "abgebrochen": abgebrochen}))
+    print(f"Fertig. Geladen: {geladen}, ohne Daten: {len(fehler)} von {len(symbole)} (Liste in daten/ohne_daten.txt)"
+          + (" – ABGEBROCHEN, alter Stand bleibt" if abgebrochen else ""))
 
 
 if __name__ == "__main__":
