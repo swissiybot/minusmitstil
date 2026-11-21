@@ -935,6 +935,7 @@ const ERKLAERUNG_NEU = {
   lineal: {titel:"Lineal", text:"Messen im Chart: einmal klicken (Start), Maus bewegen, noch einmal klicken (Ende). Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
   l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (kräftig blaugrün, „sehr günstig“), zwischen 60 und 80 (hell blaugrün, „günstig“) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
+  l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts (0 % = Hoch, 100 % = Tief). Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
@@ -1354,8 +1355,8 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, bb:false, fib:false, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
-let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [];
+let CHIPS = {w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, bb:false, fib:false, gp:true, ampel:true, pi:true, pitop:true, mayer:true, ...lade("chips", {})};
+let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
 let INTERVALL = lade("intervall", "W"), CD = null, KEGEL_D = null;
@@ -1470,6 +1471,7 @@ async function zeige(id, opt={}){
     ["ergebnis", "Kauf-Ergebnis", `<i class="pfeil"><span style="color:var(--guenstig)">●</span></i>`, "l_ergebnis", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
+    ["gp", "Golden Pocket", `<i class="flaeche" style="color:var(--fib)"></i>`, "l_gp", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
     ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
@@ -1566,7 +1568,7 @@ function chipUmschalten(k, b){
   CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis") markenSetzen();
-  if (k === "fib") fibAktualisieren();
+  if (k === "fib" || k === "gp") fibAktualisieren();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
 }
@@ -1833,16 +1835,50 @@ function zeichne(c, w){
 }
 // ------------------------------------------------------------ Fibonacci-Zonen (Hoch und Tief des sichtbaren Ausschnitts)
 const FIB_STUFEN = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+// Golden Pocket: Fläche zwischen zwei Kursen als Zeichen-Baustein (Primitive) des Kerzen-Charts
+class GoldenPocketBand {
+  constructor(){ this.p1 = null; this.p2 = null; this.t0 = null; this.farbe = "rgba(0,0,0,0)"; this._serie = null; this._chart = null; this._neu = null;
+    const band = this;
+    this._ansicht = {zOrder:() => "bottom", renderer:() => ({draw:ziel => {
+      if (band.p1 == null || !band._serie) return;
+      ziel.useBitmapCoordinateSpace(sc => {
+        const y1 = band._serie.priceToCoordinate(band.p1), y2 = band._serie.priceToCoordinate(band.p2); if (y1 == null || y2 == null) return;
+        let x0 = band.t0 != null ? band._chart.timeScale().timeToCoordinate(band.t0) : 0; if (x0 == null || x0 < 0) x0 = 0;
+        const ctx = sc.context; ctx.fillStyle = band.farbe;
+        ctx.fillRect(Math.round(x0 * sc.horizontalPixelRatio), Math.round(Math.min(y1, y2) * sc.verticalPixelRatio), sc.bitmapSize.width, Math.max(1, Math.round(Math.abs(y2 - y1) * sc.verticalPixelRatio)));
+      });
+    }})};
+  }
+  attached({chart, series, requestUpdate}){ this._chart = chart; this._serie = series; this._neu = requestUpdate; }
+  detached(){ this._serie = null; }
+  updateAllViews(){}
+  paneViews(){ return [this._ansicht]; }
+  setze(p1, p2, t0, farbe){ this.p1 = p1; this.p2 = p2; this.t0 = t0; if (farbe) this.farbe = farbe; this._neu?.(); }
+}
+const GP_STUFEN = [0.382, 0.5, 0.618, 0.65];
 function fibAktualisieren(){
   if (!KERZEN) return;
   FIB_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); FIB_LINIEN = [];
-  if (!CHIPS.fib || !CD || !HAUPT) return;
+  if (GP_BAND?._serie === KERZEN) GP_BAND.setze(null, null, null);
+  if ((!CHIPS.fib && !CHIPS.gp) || !CD || !HAUPT) return;
   const r = HAUPT.timeScale().getVisibleLogicalRange(); if (!r) return;
   const von = Math.max(0, Math.floor(r.from)), bis = Math.min(CD.c.length - 1, Math.ceil(r.to));
-  let hoch = -Infinity, tief = Infinity;
-  for (let i = von; i <= bis; i++) { const h = CD.h[i] ?? CD.c[i], l = CD.l[i] ?? CD.c[i]; if (h > hoch) hoch = h; if (l < tief) tief = l; }
+  let hoch = -Infinity, tief = Infinity, iH = von, iT = von;
+  for (let i = von; i <= bis; i++) { const h = CD.h[i] ?? CD.c[i], l = CD.l[i] ?? CD.c[i]; if (h > hoch) { hoch = h; iH = i; } if (l < tief) { tief = l; iT = i; } }
   if (!(hoch > tief)) return;
   const f = F();
+  if (CHIPS.gp) {   // Richtung: Tief vor Hoch = Aufwärtsbewegung → Rücksetzer-Zonen nach unten; Hoch vor Tief → Erholungsziele nach oben
+    const auf = iT < iH, spanne = hoch - tief;
+    const preis = s => auf ? hoch - spanne * s : tief + spanne * s;
+    const ab = CD.t[Math.min(iH, iT)];   // ab Beginn der Bewegung (wie im Fibonacci-Werkzeug von Charting-Programmen)
+    if (!GP_BAND || GP_BAND._serie !== KERZEN) { GP_BAND = new GoldenPocketBand(); KERZEN.attachPrimitive(GP_BAND); }
+    GP_BAND.setze(preis(0.618), preis(0.65), ab, f.fib + "59");
+    GP_STUFEN.forEach(s => FIB_LINIEN.push(KERZEN.createPriceLine({price:preis(s), color:f.fib + (s === 0.65 ? "99" : ""), lineWidth:s === 0.618 ? 2 : 1, lineStyle:s === 0.5 ? 2 : 0, axisLabelVisible:true,
+      title:(s === 0.618 ? "Golden Pocket " : "") + String(s).replace(".", ",")})));
+    FIB_LINIEN.push(KERZEN.createPriceLine({price:auf ? hoch : tief, color:f.fib + "66", lineWidth:1, lineStyle:3, axisLabelVisible:false, title:auf ? "Hoch (0)" : "Tief (0)"}));
+    FIB_LINIEN.push(KERZEN.createPriceLine({price:auf ? tief : hoch, color:f.fib + "66", lineWidth:1, lineStyle:3, axisLabelVisible:false, title:auf ? "Tief (1)" : "Hoch (1)"}));
+  }
+  if (!CHIPS.fib) return;
   FIB_STUFEN.forEach(s => FIB_LINIEN.push(KERZEN.createPriceLine({price:hoch - (hoch - tief) * s, color:f.fib + (s === 0.618 || s === 0.382 ? "" : "99"), lineWidth:1, lineStyle:s === 0 || s === 1 ? 0 : 2, axisLabelVisible:true, title:"Fib " + fmt(s * 100, s === 0.5 || s === 0 || s === 1 ? 0 : 1) + " %"})));
 }
 
