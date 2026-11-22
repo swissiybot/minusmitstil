@@ -144,7 +144,7 @@ def main():
                 out["pruefung"] = pruefung.fuer_wert(w["Close"].values.astype(float), score, w.index.year.values)
                 out["strategie"] = strategie.vergleich(w, score, zins) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
             groesse += schreiben(tmp / f"{dateiname(z['id'])}.json", out)
-            if KURSE_OEFFENTLICH and z["gruppe"] in ("ETF", "Krypto", "Rohstoffe"):
+            if KURSE_OEFFENTLICH and (z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or info.get("jung")):   # junge Werte: Tageskerzen für den kurzen Verlauf
                 tc = analyse.tageschart(info, chart, roh)
                 if tc:
                     groesse += schreiben(tage_ordner / f"{dateiname(z['id'])}.json", tc)

@@ -38,6 +38,7 @@ QUELLEN_TEXT = {
     "index_tr": ("Index mit Dividenden", True),
     "vorlauf_etf": ("aehnlicher ETF als Vorlauf", True),
     "etf": ("ETF", True),
+    "etc": ("ETC (Wertpapier auf Rohstoff-Futures, Rollkosten enthalten)", False),
     "aktie": ("Aktie", True),
     "krypto": ("Krypto", False),
     "krypto_cm": ("Coin Metrics Community-Daten (nur Tagespreis, keine Kerzen)", False),
@@ -658,9 +659,51 @@ def werte_eines(z: dict):
         tag, seg = btc_alt.verlaengern(tag, seg)
     tag = tag[tag["Close"] > 0]
     erg = analysiere(z, tag, seg)
+    if erg is None and z["gruppe"] not in ("Krypto", "Rohstoffe"):
+        erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
     if erg is not None and mc_ab is not None:
         erg[2]["mc_ab"] = mc_ab
     return erg
+
+
+def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
+    """Junger Wert (mindestens 13, unter 156 Wochen Kurse, aktuell gehandelt, z. B. SpaceX seit 06/2026): eigene Seite mit
+    Chart, aber OHNE Ampel (dafür fehlt die 200-Wochen-Linie). Statt der Ampel: Lage seit Börsengang (erster Kurs,
+    Hoch, Tief, Durchschnitt). Rückgabe wie analysiere(): (Zeile, Chart, Rohdaten)."""
+    c_tag = tag["Close"][tag["Close"] > 0]
+    if len(c_tag) < 2 or (pd.Timestamp(dt.date.today()) - c_tag.index[-1]).days > 14:
+        return None
+    w = wochen(tag)
+    if not (13 <= len(w) < 156):
+        return None
+    c = w["Close"].values.astype(float)
+    hoch, tief = float(np.nanmax(w["High"].values)), float(np.nanmin(w["Low"].values))
+    mittel = float(np.mean(c))
+    def seit(versatz):
+        t0 = c_tag.index[-1] - versatz
+        return None if t0 < c_tag.index[0] else r((float(c_tag.iloc[-1]) / float(c_tag.asof(t0)) - 1) * 100, 1)
+    jetzt = float(c_tag.iloc[-1])
+    zeile = {
+        **{k: z.get(k) for k in ("id", "symbol", "name", "gruppe", "land", "branche")},
+        "datum": c_tag.index[-1].strftime("%Y-%m-%d"), "kurs": r(jetzt, 4),
+        "score": None, "score_vor4w": None, "zone": "keine Daten", "jung": True,
+        "seit": c_tag.index[0].strftime("%Y-%m-%d"), "wochen": int(len(w)),
+        "erster_kurs": r(float(c_tag.iloc[0]), 4), "hoch_seit": r(hoch, 4), "tief_seit": r(tief, 4), "mittel_seit": r(mittel, 4),
+        "dd": r((jetzt / hoch - 1) * 100, 1), "zu_mittel": r((jetzt / mittel - 1) * 100, 1),
+        "seit_start": r((jetzt / float(c_tag.iloc[0]) - 1) * 100, 1),
+        "jahre_daten": r((c_tag.index[-1] - c_tag.index[0]).days / 365.25, 2),
+        "cagr20": None, "cagr_jahre": None, "cagr_max": None, "qualitaet": False, "p": {}, "kz": None, "sv": [],
+        "perf": [r((jetzt / float(c_tag.iloc[-2]) - 1) * 100, 2), seit(pd.Timedelta(days=7)), seit(pd.DateOffset(months=1)), seit(pd.DateOffset(years=1))],
+        "umsatz_usd": r(float((tag["Close"] * tag["Volume"]).tail(63).mean()), 0) if "Volume" in tag else 0.0,
+        "grund": f"erst {len(w)} Wochen an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')}) · {abs((jetzt / hoch - 1) * 100):.0f} % unter dem Hoch seit Börsengang",
+        "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
+    }
+    t_unix = [int(x) for x in (w.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)]
+    rund = lambda a, n=4: [None if (x is None or (isinstance(x, float) and math.isnan(x))) else float(f"{x:.{n}g}") for x in a]
+    leer = [None] * len(w)
+    chart = {"t": t_unix, "o": rund(w["Open"].values), "h": rund(w["High"].values), "l": rund(w["Low"].values), "c": rund(c),
+             "sma200w": leer, "score": leer, "marken": [], "jung": True}
+    return zeile, chart, {"w": w, "score": np.full(len(w), np.nan), "tag": tag, "mp": None}
 
 
 def heatmap_zeile(z: dict, tag: pd.DataFrame, n100: dict, f: dict | None) -> dict | None:
@@ -704,8 +747,14 @@ def jung_zeile(z: dict, tag: pd.DataFrame | None) -> dict | None:
             "t": t, "c": [float(f"{x:.6g}") for x in w.values]}
 
 
+NAMEN_ALIAS = {"SPCX": "SpaceX (Space Exploration Technologies)"}   # bekannter Name, damit Suche und Kopf ihn zeigen
+
+
 def universum() -> pd.DataFrame:
-    return pd.read_csv(E.DATEN / "universum.csv").fillna("")
+    u = pd.read_csv(E.DATEN / "universum.csv").fillna("")
+    for sym, name in NAMEN_ALIAS.items():
+        u.loc[u["symbol"] == sym, "name"] = name
+    return u
 
 
 PRUEF_GRUPPEN = {"etf": "ETFs / Indizes", "krypto": "Krypto", "rohstoffe": "Rohstoffe", "aktien": "Aktien (alle)",
@@ -805,6 +854,10 @@ def main(argv):
     for i, z in enumerate(uni.to_dict("records")):
         try:
             erg = werte_eines(z)
+            if erg is not None and erg[0].get("jung"):   # junge Werte: zusätzlich Wochenkurse für die Depot-Prognose
+                jz = jung_zeile(z, lade_lokal(z["symbol"]))
+                if jz:
+                    jung.append(jz)
             if erg is None and z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe"):
                 jz = jung_zeile(z, lade_lokal(z["symbol"]))
                 if jz:
@@ -823,12 +876,12 @@ def main(argv):
                 if f is not None:
                     try:
                         erg[0]["f"] = fundamente.fuer_zeile(f, erg[0].get("kurs"), erg[0].get("score")) or None
-                        if s2 is not None:
+                        if s2 is not None and not erg[0].get("jung"):
                             s2.fallen.add(z["symbol"], f, erg[2]["w"], erg[2]["score"])
                     except Exception as ex:
                         print(f"Geschäftszahlen-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
                 zeilen.append(erg[0])
-                if s2 is not None:
+                if s2 is not None and not erg[0].get("jung"):
                     try:
                         s2.add(z, erg[0], erg[2])
                     except Exception as ex:

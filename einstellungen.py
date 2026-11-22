@@ -96,6 +96,8 @@ ROHSTOFFE = [
     {"id": "ZUCKER", "name": "Zucker", "symbol": "SB=F", "art": "rohstoff"},
     {"id": "KAKAO", "name": "Kakao", "symbol": "CC=F", "art": "rohstoff"},
     {"id": "DBC", "name": "Rohstoff-Korb (ETF DBC)", "symbol": "DBC", "art": "etf"},
+    # Nickel (Wunsch Marc 22.11.2026): kein Nickel-Future bei Yahoo; WisdomTree Nickel ETC (London, USD, seit 2008) auf Nickel-Futures
+    {"id": "NICKEL", "name": "Nickel (ETC WisdomTree)", "symbol": "NICK.L", "art": "etc"},
 ]
 
 # TradingView-Symbole fuer das Chart-Widget der Online-Seite (Kurse kommen dort von TradingView, nicht von uns).

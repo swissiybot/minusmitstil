@@ -120,7 +120,7 @@ def etfs_und_bitcoin() -> pd.DataFrame:
         zeilen.append({"id": k["id"], "symbol": k["symbol"], "name": k["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
     for r in E.ROHSTOFFE:
         zeilen.append({"id": r["id"], "symbol": r["symbol"], "name": r["name"], "gruppe": "Rohstoffe", "land": "",
-                       "branche": "Future" if r["art"] == "rohstoff" else "Rohstoff-ETF"})
+                       "branche": "Future" if r["art"] == "rohstoff" else "Rohstoff-ETC" if r["art"] == "etc" else "Rohstoff-ETF"})
     return pd.DataFrame(zeilen)
 
 
