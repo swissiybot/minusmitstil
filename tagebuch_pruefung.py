@@ -25,7 +25,7 @@ def eintraege() -> list[dict]:
     for f in sorted(ORDNER.glob("*.json")):
         with open(f, "r", encoding="utf-8") as fh:       # nur lesen
             d = json.load(fh)
-        if d.get("ampel") != "studie":   # nur Einträge der heutigen Ampel (seit 22.11.2026 abends), frühere nicht vermischen
+        if d.get("ampel") != "anker200":   # nur Einträge der heutigen Ampel (seit 22.11.2026 abends), frühere nicht vermischen
             continue
         for s in d.get("signale", []):
             if s.get("datum") and s.get("kurs") is not None:

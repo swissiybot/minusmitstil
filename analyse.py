@@ -132,6 +132,50 @@ def jahresrendite(tag: pd.Series, jahre: int):
     return (s.iloc[-1] / s.iloc[0]) ** (1 / j) - 1, j, s.index[0]
 
 
+ANKER = 70.0        # Ampel genau an der 200-Wochen-Linie (gesetzter Wert, Wunsch Marc 22.11.2026: an der Linie = günstig)
+ANKER_STEIL = 2.0   # unter der Linie: +2 Punkte je % Abstand (5 % darunter = 80 = sehr günstig, 15 % darunter = 100)
+ANKER_MIN_UEBER = 52   # Mindestzahl früherer Wochen über der Linie, bevor „über der Linie“ bewertet wird
+
+
+def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min_linie: int = 200):
+    """Ampel an der 200-Wochen-Linie verankert (seit 22.11.2026 abends, Wunsch Marc), ohne Blick in die Zukunft.
+    r = Kurs / 200-Wochen-Linie.
+      r <= 1 (an oder unter der Linie): Ampel = min(100, 70 + 2 x Abstand in %)  -> an der Linie 70, 5 % darunter 80.
+      r > 1 (über der Linie): Ampel = 70 x (1 - Rang), Rang = Anteil aller FRÜHEREN Wochen über der Linie mit kleinerem r.
+        So weit über der Linie wie meistens -> etwa 35 (teuer); weiter darüber als fast immer -> nahe 0.
+    Kaufzonen je Woche exakt aus derselben Formel: Ampel A bei Kurs p, wobei die Linie p selbst enthält
+    (Linie = (Summe der 199 Vorwochen + p) / 200, also p = r * S199 / (200 - r)).
+    min_linie: Wochen, aus denen die Linie mindestens besteht (200; für die vorläufige Ampel weniger).
+    Rückgabe: score, {80,60,40,15: Kurs}, rang_ueber (Rang heute, nur über der Linie, sonst NaN)."""
+    n = len(c)
+    score = np.full(n, np.nan); rang_ueber = np.full(n, np.nan)
+    kz = {z: np.full(n, np.nan) for z in (80, 60, 40, 15)}
+    C = np.concatenate([[0.0], np.cumsum(c)])
+    ueber: list[float] = []
+    for t in range(n):
+        m = min(t + 1, 200)
+        if m < min_linie:
+            continue
+        linie = (C[t + 1] - C[t + 1 - m]) / m
+        r = c[t] / linie
+        if t >= start:
+            s_vor = C[t] - C[t + 1 - m]          # Summe der Vorwochen innerhalb der Linie (ohne Woche t)
+            p_zu = lambda rr: rr * s_vor / (m - rr)  # Kurs p, bei dem Kurs/Linie = rr wäre
+            if r <= 1:
+                score[t] = min(100.0, ANKER + ANKER_STEIL * (1 - r) * 100)
+            elif len(ueber) >= min_ueber:
+                rg = bisect.bisect_left(ueber, r) / len(ueber)
+                score[t] = ANKER * (1 - rg); rang_ueber[t] = rg
+            kz[80][t] = p_zu(1 - (80 - ANKER) / (ANKER_STEIL * 100))
+            if len(ueber) >= min_ueber:
+                for z in (60, 40, 15):
+                    k = math.ceil((1 - z / ANKER) * len(ueber) - 1e-9)
+                    kz[z][t] = p_zu(1.0 if k <= 0 else ueber[k - 1])
+        if r > 1:
+            bisect.insort(ueber, r)
+    return score, kz, rang_ueber
+
+
 def kaufzonen_verlauf(c: np.ndarray, roh: dict, perz: dict, score: np.ndarray) -> dict:
     """Kaufzonen fuer jede Woche (wandern mit): Kurs, bei dem die Ampel in DIESER Woche 80 / 60 / 40 / 15 gezeigt haette.
     Gleiche Rechnung wie die Ampel: jeder Baustein wird fuer einen gedachten Schlusskurs p neu berechnet und mit allen
@@ -397,15 +441,14 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     # aus der Ampel-Studie, jeder als Perzentil gegen alle frueheren Wochen desselben Werts (nur Vergangenheit),
     # Ampel = 100 − Mittel der Perzentile (mindestens 2 Bausteine). Bis 22.11. mittags: nur 200-Wochen-Linie; bis 21.11.:
     # Mischung aus Allzeithoch, 200-Wochen-Linie, Trend und RSI.
-    art, roh = ampel_bausteine(zeile, w, c, {"dd": dd, "ratio": ratio, "trend": tz}, krypto, bitcoin)
-    start_von = lambda k: 104 if k == "mvrv" else WARMUP
-    perz = {k: expandierendes_perzentil(x, start_von(k)) for k, x in roh.items()}
-    score = ampel_aus(perz, 2)
-    # Vorläufige Ampel für die Anfangsjahre (ab 2 Jahren, nur Anzeige im Chart, nur wo die echte fehlt): dieselben Bausteine,
-    # aber schon ab 104 Wochen verglichen, die 200-Wochen-Linie als Durchschnitt aller bisherigen Wochen; ein Baustein reicht.
-    linie_v = w["Close"].rolling(200, min_periods=VORL_WARMUP).mean().values
-    roh_v = {k: (c / linie_v if k == "ratio" else x) for k, x in roh.items()}
-    score_v = ampel_aus({k: expandierendes_perzentil(x, VORL_WARMUP) for k, x in roh_v.items()}, 1)
+    # AMPEL seit 22.11.2026 abends (Wunsch Marc): an der 200-Wochen-Linie verankert – an der Linie 70 (günstig), darunter
+    # schnell sehr günstig, darüber nach Seltenheit des Abstands in der eigenen Geschichte (anker_ampel). Davor (22.11.):
+    # Studien-Ampel (Mittel aus 3–4 Perzentilen je Gruppe), davor reine 200-Wochen-Perzentil-Ampel, bis 21.11. Mischung.
+    art = "anker200"
+    score, kzv, rang_ueber = anker_ampel(c, WARMUP)
+    # Vorläufige Ampel für die Anfangsjahre (ab 2 Jahren, nur Anzeige im Chart, nur wo die echte fehlt): gleiche Formel,
+    # Linie aus allen bisherigen Wochen (mindestens 104), schon ab 26 früheren Wochen über der Linie.
+    score_v, _, _ = anker_ampel(c, VORL_WARMUP, min_ueber=26, min_linie=VORL_WARMUP)
     score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
 
@@ -423,9 +466,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
 
     stat = statistik(c, w["Low"].values.astype(float), score, s_jetzt) if not math.isnan(s_jetzt) else {}
     # Kaufzonen je Woche (mitwandernd) und heute: Kurse, bei denen die Ampel 80 / 60 / 40 / 15 zeigen wuerde
-    kz, kzv = None, None
+    kz = None
     try:
-        kzv = kaufzonen_verlauf(c, roh, perz, score)
         if not math.isnan(s_jetzt):
             kz = {"jetzt": r(s_jetzt, 1), **{str(z): (None if math.isnan(a[-1]) else float(f"{a[-1]:.4g}")) for z, a in kzv.items()}}
     except Exception as ex:
@@ -435,19 +477,13 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
 
     # Begruendung in Worten
-    def perz_text(k):   # Seltenheit eines Bausteins (Perzentil gegen fruehere Wochen)
-        p = perz[k][-1]
-        return "" if math.isnan(p) else f" – so tief nur in {max(p * 100, 1):.0f} % der Wochen" if p < 0.5 else f" – höher als in {p * 100:.0f} % der Wochen"
-    def wert_text(k):
-        x = roh[k][-1]
-        if math.isnan(x): return None
-        if k == "dd": return f"{abs(x) * 100:.0f} % unter dem Allzeithoch"
-        if k == "ratio": return f"{abs(x - 1) * 100:.0f} % {'über' if x >= 1 else 'unter'} der 200-Wochen-Linie"
-        if k == "trend": return f"{abs(x):.1f} Standardabweichungen {'über' if x >= 0 else 'unter'} dem Langfristtrend".replace(".", ",")
-        if k == "r3j": return f"in 3 Jahren {x * 100:+.0f} %"
-        if k == "r5j": return f"in 5 Jahren {x * 100:+.0f} %"
-        if k == "mvrv": return f"MVRV {x:.2f}".replace(".", ",")
-    grund = [wert_text(k) + perz_text(k) for k in roh if wert_text(k) and not math.isnan(perz[k][-1])]
+    grund = []
+    if not math.isnan(ratio[-1]):
+        g = f"{abs(ratio[-1] - 1) * 100:.0f} % {'über' if ratio[-1] >= 1 else 'unter'} der 200-Wochen-Linie"
+        if not math.isnan(rang_ueber[-1]):
+            g += f" – weiter darüber als in {rang_ueber[-1] * 100:.0f} % der früheren Wochen über der Linie"
+        grund.append(g)
+    grund.append(f"{abs(dd[-1]) * 100:.0f} % unter dem Allzeithoch")
     if krypto:
         grund.append(f"Mayer Multiple {extra['mayer']}".replace(".", ","))
         if extra.get("pi_status"): grund.append(extra["pi_status"])
@@ -471,9 +507,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "datum": tag.index[-1].strftime("%Y-%m-%d"),
         "kurs": r(tag_c.iloc[-1], 4),
         "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
-        "ampel_art": art,                    # Bausteine der Ampel: aktien / index / krypto
-        "bausteine": [{"k": k, "name": BAUSTEIN_NAME[k], "wert": r(roh[k][-1] * (1 if k in ("trend", "mvrv") else 100), 2 if k in ("trend", "mvrv") else 1),
-                       "perz": r(perz[k][-1] * 100, 0)} for k in roh if not math.isnan(perz[k][-1])],
+        "ampel_art": art,                    # anker200: an der 200-Wochen-Linie verankert
+        "rang_ueber": r(rang_ueber[-1] * 100, 0),   # über der Linie: Anteil früherer Wochen über der Linie, die näher an der Linie lagen
         "cagr20": r(cagr20 * 100 if cagr20 is not None else None, 1), "cagr_jahre": r(j20, 1),
         "cagr20_div": mit_div(start20), "cagr10": r(cagr10 * 100 if cagr10 is not None else None, 1),
         "cagr_max": r(cagr_max * 100 if cagr_max is not None else None, 1), "jahre_daten": r(jmax, 1),
@@ -554,7 +589,7 @@ def tagebuch(zeilen):
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
-    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "studie", "signale": eintraege}, ensure_ascii=False, indent=0))
+    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "anker200", "signale": eintraege}, ensure_ascii=False, indent=0))
 
 
 def _etfs():
