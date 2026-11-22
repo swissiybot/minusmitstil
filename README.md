@@ -40,6 +40,9 @@ Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopier
 - Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
 - Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
 
+### ISIN, WKN und Kurzbeschreibung (22.11.2026)
+Im Kopf jeder Wertseite und in der Liste steht statt des Börsenkürzels die ISIN (geprüft über Wikidata oder aus der CUSIP berechnet, dann mit „berechnet“ markiert), die WKN nur, wo sie sicher bekannt ist (deutsche ISINs, einige europäische ETFs), darunter eine Kurzbeschreibung in 1–2 Sätzen: bei ETFs, Rohstoffen und Krypto selbst geschrieben, bei Aktien aus Wikidata (CC0; deutsche Kurzbeschreibung oder Branche, Land, Gründungsjahr). `beschreibung.py`, höchstens einmal pro Woche neu. Suche auch per ISIN oder WKN.
+
 ### Kauf- und Verkaufsqualität je Titel (22.11.2026)
 Im Chart zwei schmale Bänder (Rückblick): unten Kaufqualität = Rang der Rendite der folgenden 3 Jahre unter allen Wochen des Titels, oben Verkaufsqualität = wie stark der Kurs im Jahr danach fiel. Karte „Heute im Vergleich“: die 10 % früheren Wochen mit ähnlichstem Abstand zur 200-Wochen-Linie und wie Kauf bzw. Verkauf danach ausgingen, beste Kauf-/Verkaufswochen und eine Probe ohne Zukunftswissen je Titel (`kauf_verkauf_qualitaet` in `analyse.py`).
 

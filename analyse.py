@@ -742,6 +742,8 @@ def werte_eines(z: dict):
     erg = analysiere(z, tag, seg)
     if erg is None and z["gruppe"] not in ("Krypto", "Rohstoffe"):
         erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
+    if erg is not None:
+        erg[0].update(beschreibung_fuer(z["id"]))   # ISIN, WKN, Kurzbeschreibung
     if erg is not None and mc_ab is not None:
         erg[2]["mc_ab"] = mc_ab
     return erg
@@ -826,6 +828,22 @@ def jung_zeile(z: dict, tag: pd.DataFrame | None) -> dict | None:
     return {"id": z["id"], "symbol": z["symbol"], "name": z["name"], "gruppe": z["gruppe"], "datum": c.index[-1].strftime("%Y-%m-%d"),
             "kurs": r(c.iloc[-1], 4), "seit": c.index[0].strftime("%Y-%m-%d"), "wochen": len(w),
             "t": t, "c": [float(f"{x:.6g}") for x in w.values]}
+
+
+_BESCHR = None
+
+
+def beschreibung_fuer(wid: str) -> dict:
+    """ISIN, WKN und Kurzbeschreibung aus daten/beschreibung.json (beschreibung.py); leer, wenn nicht vorhanden."""
+    global _BESCHR
+    if _BESCHR is None:
+        try:
+            _BESCHR = json.loads((E.DATEN / "beschreibung.json").read_text())
+        except Exception:
+            _BESCHR = {}
+    e = _BESCHR.get(wid) or {}
+    return {k: v for k, v in (("isin", e.get("isin")), ("isin_geprueft", e.get("geprueft")), ("wkn", e.get("wkn")),
+                              ("beschreibung", e.get("text"))) if v}
 
 
 NAMEN_ALIAS = {"SPCX": "SpaceX (Space Exploration Technologies)"}   # bekannter Name, damit Suche und Kopf ihn zeigen

@@ -179,6 +179,7 @@ h1,h2,h3{letter-spacing:-.015em}
 .gauge svg{display:block;width:230px;height:140px}
 .gauge .g-zahl{font-size:38px;font-weight:750;letter-spacing:-.03em;line-height:1;margin-top:-80px}
 .gauge .g-wort{font-weight:650;font-size:14px;margin-top:44px}
+.beschreibung{margin:6px 0 4px;color:var(--text2);font-size:13.5px;line-height:1.5}
 .gauge .g-vor{font-size:12px;color:var(--muted);margin-top:2px}
 .gauge .g-rang{font-size:12.5px;font-weight:600;color:var(--text2);margin-top:2px}
 .fk-rang{color:var(--text2);font-weight:600}
@@ -1003,6 +1004,8 @@ const ERKLAERUNG_NEU = {
   vq: {titel:"Verkaufsqualität (Rückblick, oberes Band)", text:"Das schmale Band ganz oben im Kurs-Chart zeigt, wann ein Verkauf im Rückblick gut war: Orange heißt, der Kurs stand ein Jahr später deutlich tiefer – kräftig orange gehört zu den besten 20 % Verkaufszeitpunkten dieses Titels, hell orange zu den besten 40 %. Ohne Farbe: Verkaufen war dort nicht besonders gut, meist stieg der Kurs weiter. Das letzte Jahr hat noch keine Farbe."},
   kv_heute: {titel:"Heute im Vergleich", text:"Das Tool sucht die früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt, wie es danach ausging: Wie oft stand der Kurs 3 Jahre später höher, wie viel brachte das pro Jahr, wie oft gehörte so ein Kauf zu den besten 30 % aller Kaufwochen – und wie oft war Verkaufen richtig, weil der Kurs ein Jahr später tiefer stand. Zum Vergleich steht daneben der Wert über alle Wochen. Ist die ähnliche Lage deutlich besser als „alle Wochen“, war das früher eher ein guter Kaufzeitpunkt. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der Phasen."},
   kv_probe: {titel:"Wie verlässlich bei diesem Titel?", text:"Die Probe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode „besser oder schlechter als üblich“ voraus, und es wird nachgeschaut, ob das stimmte. 50 % richtig wäre Zufall. Liegt der Wert darunter oder nur knapp darüber, sollte man der Karte „Heute im Vergleich“ bei diesem Titel wenig Gewicht geben."},
+  kennung: {titel:"ISIN und WKN", text:"Die ISIN ist die internationale Wertpapierkennnummer (12 Zeichen) – damit findest du den Wert bei jeder Bank und jedem Broker. Sie stammt aus Wikidata oder wird aus der amtlichen US-Kennnummer (CUSIP) berechnet; „berechnet“ heißt, sie konnte nicht mit einer zweiten Quelle abgeglichen werden – bitte vor dem Kauf bei der Bank prüfen. Die WKN (6 Zeichen, nur in Deutschland üblich) steht nur da, wo sie sicher bekannt ist: bei deutschen Wertpapieren steckt sie in der ISIN, für US-Aktien gibt es keine freie Quelle. Rohstoff-Futures und Kryptowährungen haben keine ISIN; dort steht das Kürzel. Das Börsenkürzel siehst du beim Darüberfahren."},
+  beschreibung: {titel:"Kurzbeschreibung", text:"Worum es sich handelt, in 1–2 Sätzen. Bei ETFs, Rohstoffen und Kryptowährungen selbst geschrieben, bei Aktien aus Wikidata (frei nutzbar): die deutsche Kurzbeschreibung oder – wenn es keine gibt – Branche, Land und Gründungsjahr. Für viele kleine Firmen gibt es noch keine Beschreibung."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Günstig-/Teuer-Phasen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
@@ -1174,7 +1177,7 @@ function listeZeichnen(){
     for (let i = von; i < bis; i++) {
       const w = GEFILTERT[i], p = p3(w), v = p ? p.quote - p.basis : null;
       html += `<div class="zeile${w.id === AKTIV ? " aktiv" : ""}${i === FOKUS_I ? " fokus" : ""}" role="option" aria-selected="${w.id === AKTIV}" id="z-${i}" data-i="${i}" style="top:${i * ZEILE_H}px">
-        <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Ampel günstig, Geschäft schwach">⚠</span> ' : ""}${esc(w.symbol)} · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
+        <div style="min-width:0"><span class="nm">${esc(kurzname(w))}</span><span class="sym">${FAV.has(w.id) ? '<span class="stern-klein">★</span> ' : ""}${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Ampel günstig, Geschäft schwach">⚠</span> ' : ""}<span title="Kürzel ${esc(w.symbol)}">${esc(w.isin || w.symbol)}</span> · ${w.score == null ? "noch keine Ampel" : zonenWort(w.score)}</span></div>
         <div style="text-align:right">${pille(w.score)}</div>
         <div>${spark(w.sv, w.score)}</div>
         <div class="zahl-r c-cagr ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1,"%")}</div>
@@ -1237,6 +1240,7 @@ function abstand(a, b, max){   // Levenshtein mit früher Abbruchgrenze
 }
 function suchPunkte(w, q, qw){
   if (w._sym === q || w._id === q) return 1000;
+  if ((w.isin && w.isin.toLowerCase() === q) || (w.wkn && w.wkn.toLowerCase() === q)) return 1000;   // Suche auch per ISIN oder WKN
   let p = 0;
   if (w._sym.startsWith(q)) p = 820 - w._sym.length;
   else if (w._n.startsWith(q)) p = 760;
@@ -1639,6 +1643,11 @@ function rangZuZeit(t){
   return ampelRang(CDATA.score, lo);
 }
 const rangText = r => r == null ? "" : r.guenstiger >= r.teurer ? `teurer als in ${fmt(r.guenstiger,0)} % der Zeit davor` : `günstiger als in ${fmt(r.teurer,0)} % der Zeit davor`;
+// Kennung im Kopf: ISIN (geprüft oder aus der CUSIP berechnet) und WKN statt Börsenkürzel; Kürzel nur als Hinweis beim Darüberfahren
+function kennung(w){
+  if (!w.isin) return `<span data-e="kennung">${esc(w.symbol)}</span>`;
+  return `<span data-e="kennung" title="Börsenkürzel ${esc(w.symbol)}">ISIN <b>${esc(w.isin)}</b>${w.isin_geprueft ? "" : ' <span class="klein">(berechnet)</span>'}${w.wkn ? ` · WKN <b>${esc(w.wkn)}</b>` : ""}</span>`;
+}
 function klartext(w, c){
   if (w.jung) { const nk = w.kurs >= 100 ? 2 : 4;
     return `${esc(kurzname(w))} ist erst seit <b>${datumDe(w.seit)}</b> an der Börse (${w.wochen} Wochen). Für die Ampel braucht es die 200-Wochen-Linie, also knapp 4 Jahre Kurse – eine vorläufige Ampel gibt es ab 2 Jahren. Bis dahin zeigt das Tool die Lage seit dem Börsengang: erster Kurs ${fmt(w.erster_kurs, nk)}, Hoch ${fmt(w.hoch_seit, nk)}, Tief ${fmt(w.tief_seit, nk)}, heute <b>${fmt(w.kurs, nk)}</b> – ${fmt(Math.abs(w.dd),0)} % unter dem Hoch und ${w.zu_mittel >= 0 ? fmt(w.zu_mittel,0) + " % über" : fmt(-w.zu_mittel,0) + " % unter"} dem Durchschnittskurs seit Börsengang (${fmt(w.mittel_seit, nk)}). Bei so kurzer Geschichte lässt sich nicht sagen, was günstig oder teuer ist.`; }
@@ -1803,7 +1812,8 @@ async function zeige(id, opt={}){
       <div style="min-width:0">
         <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
           <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
-        <div class="wk-meta">${esc(w.symbol)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
+        <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
+        ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
         <p class="klartext" data-e="klartext">${klartext(w, c)}</p>
         <div class="grund-chips">${umlaut(w.grund).split(" · ").map(g => `<span>${grundMitErklaerung(g)}</span>`).join("")}</div>
       </div>

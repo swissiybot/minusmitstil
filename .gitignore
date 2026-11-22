@@ -28,3 +28,4 @@ daten/eingang/*
 daten/isin/
 daten/welt/
 daten/welt.csv
+daten/beschreibung.json

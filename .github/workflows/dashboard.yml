@@ -53,6 +53,7 @@ jobs:
             daten/nasdaq100.json
             daten/kegelpruefung.json
             daten/isin
+            daten/beschreibung.json
             daten/welt
             daten/welt.csv
             daten/btc_alt
@@ -100,6 +101,10 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
         run: python isin.py
 
+      - name: ISIN, WKN und Kurzbeschreibungen (Wikidata, höchstens einmal pro Woche neu)
+        continue-on-error: true
+        run: python beschreibung.py
+
       - name: Prüfung des Prognose-Kegels (höchstens einmal pro Woche neu)
         continue-on-error: true
         run: python kegelpruefung.py --wenn-alt
@@ -117,6 +122,7 @@ jobs:
             daten/nasdaq100.json
             daten/kegelpruefung.json
             daten/isin
+            daten/beschreibung.json
             daten/welt
             daten/welt.csv
             daten/btc_alt
