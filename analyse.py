@@ -615,7 +615,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         **{k: zeile[k] for k in ("id", "symbol", "name", "gruppe", "land", "branche")},
         "datum": tag.index[-1].strftime("%Y-%m-%d"),
         "kurs": r(tag_c.iloc[-1], 4),
-        "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
+        "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(r(s_jetzt, 1)),   # Stufe zur angezeigten (gerundeten) Ampel
         "ampel_art": art,                    # anker200s: an der 200-Wochen-Linie verankert, unter der Linie nach Seltenheit
         "rang_ueber": r(rang_ueber[-1] * 100, 0),   # über der Linie: Anteil früherer Wochen über der Linie, die näher an der Linie lagen
         "rang_unter": r(rang_unter[-1] * 100, 0),   # unter der Linie: Anteil früherer Wochen unter der Linie, die tiefer lagen
