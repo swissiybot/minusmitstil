@@ -206,6 +206,30 @@ def kaufzonen(c: np.ndarray, komponenten: dict, rsi_n: int = 14, mayer_sma: floa
     return out
 
 
+def kaufzonen_verlauf(c: np.ndarray, ratio: np.ndarray, gueltig: np.ndarray) -> dict:
+    """Kaufzonen fuer jede Woche (wandern mit der 200-Wochen-Linie): Kurs, bei dem die Ampel in DIESER Woche
+    80 / 60 / 40 / 15 gezeigt haette. Gleiche Rechnung wie kaufzonen(): Vergleich nur mit den frueheren Wochen
+    (ohne die Woche selbst), Linie aus den 199 Vorwochen plus dem gedachten Kurs. Ampel >= ziel heisst
+    Abstand <= h[m] mit m = floor((100 - ziel) / 100 * (N + 1)); daraus der Kurs p = r * Summe199 / (200 - r)."""
+    n = len(c)
+    out = {z: np.full(n, np.nan) for z in (80, 60, 40, 15)}
+    sortiert: list[float] = []
+    kum = np.concatenate([[0.0], np.cumsum(c)])
+    for t in range(n):
+        if t >= 200 and gueltig[t] and len(sortiert) >= 50:
+            N = len(sortiert)
+            s199 = kum[t] - kum[t - 199]
+            for z in out:
+                m = min(int(math.floor((100 - z) * (N + 1) / 100 + 1e-9)), N - 1)
+                rz = sortiert[m]
+                if rz < 200:
+                    out[z][t] = rz * s199 / (200 - rz)
+        v = ratio[t]
+        if not math.isnan(v):
+            bisect.insort(sortiert, v)
+    return out
+
+
 def trendguete(w: pd.Series, jahre: int = 20) -> float:
     s = w[w.index >= w.index[-1] - pd.DateOffset(years=jahre)]
     if len(s) < 104:
@@ -473,6 +497,13 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    try:   # Kaufzonen je Woche (mitwandernde Linien im Chart, Wunsch Marc 22.11.2026)
+        kzv = kaufzonen_verlauf(c, ratio, ~np.isnan(score))
+        for z, arr in kzv.items():
+            if not np.all(np.isnan(arr)):
+                chart[f"kz{z}"] = rund(arr)
+    except Exception as ex:
+        print(f"Kaufzonen-Verlauf nicht berechenbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
     if not np.all(np.isnan(score2)):
         chart["score2"] = rund(score2, 3)   # neue Ampel (zusätzlich, Studie 21.11.2026)
     if not np.all(np.isnan(score_v)):
@@ -554,6 +585,7 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
         **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
         **({"score2": rund(woche(chart["score2"]), 3)} if "score2" in chart else {}),
+        **{k: rund(woche(chart[k])) for k in ("kz80", "kz60", "kz40", "kz15") if k in chart},
         **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
     }
     if info.get("gruppe") == "Krypto":
