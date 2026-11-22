@@ -105,7 +105,8 @@ def strategie_json(wid: str, q) -> bytes | None:
         fest = None if z == "echt" else _zahl(q, "zins", 0, -2, 20)
         st = strategie.vergleich(erg[2]["w"], erg[2]["score"], _zwischen["zins"],
                                  betrag=_zahl(q, "betrag", 500, 10, 1e6), jahre=int(_zahl(q, "jahre", 20, 3, 60)),
-                                 kfix=_zahl(q, "kfix", 1, 0, 100), kproz=_zahl(q, "kproz", 0, 0, 5) / 100, fester_zins=fest)
+                                 kfix=_zahl(q, "kfix", 1, 0, 100), kproz=_zahl(q, "kproz", 0, 0, 5) / 100, fester_zins=fest,
+                                 pausch=_zahl(q, "pausch", strategie.PAUSCHBETRAG, 0, 1e5), teilfrei=strategie.teilfreistellung(erg[0]))
         return _gz(st or {"fehler": "zu wenig Monate mit gültiger Ampel"})
 
 

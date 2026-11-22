@@ -819,7 +819,7 @@ const ERKLAERUNG = {
   s_irr: {titel:"Interner Zinsfuß", text:"Die jährliche Verzinsung, die alle Einzahlungen zusammen nach Kosten und Steuern erreicht haben. Berücksichtigt, dass spätere Einzahlungen kürzer arbeiten. Gut vergleichbar mit einem Sparzins."},
   s_rueckgang: {titel:"Größter Rückgang", text:"Stärkster Fall des Vermögens (Depot + Bargeld) vom bisherigen Höchststand, in Prozent. Zeigt, welchen Einbruch man aushalten musste."},
   s_unter: {titel:"Zeitweise unter Einzahlungen", text:"Wie weit das Vermögen schlimmstenfalls unter der Summe des bis dahin eingezahlten Geldes lag. „Nie“ = man war zu keinem Zeitpunkt im Minus."},
-  s_steuer: {titel:"Steuern", text:"Unterwegs: Abgeltungssteuer auf Zinsen und auf Gewinne aus Teilverkäufen (zuerst gekaufte Stücke zuerst, Verluste werden verrechnet). Am Ende: Steuer beim gedachten Verkauf von allem. Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung, Vorabpauschale."},
+  s_steuer: {titel:"Steuern", text:"Unterwegs: Abgeltungssteuer auf Zinsen und auf Gewinne aus Teilverkäufen (zuerst gekaufte Stücke zuerst, Verluste werden verrechnet). Am Ende: Steuer beim gedachten Verkauf von allem. Für den einzelnen Wert mit Sparerpauschbetrag 1.000 je Kalenderjahr (auf Gewinne und Zinsen) und bei Aktien-ETFs Teilfreistellung 30 % (nur 70 % der Gewinne und Verluste zählen). Laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."},
   s_kosten: {titel:"Kosten", text:"Summe der Ordergebühren (fester Betrag plus Prozent je Order). Staffelkauf hat weniger, aber größere Orders."},
   s_bar: {titel:"Bargeld am Ende", text:"Anteil des Vermögens, der am Ende noch auf dem Tagesgeld auf eine hohe Ampel wartete. Ein hoher Anteil heißt: viel Geld lag lange ungenutzt."},
   s_zins: {titel:"Zins auf wartendes Geld", text:"„Echt“ nimmt den tatsächlichen US-Geldmarktzins 3 Monate (FRED TB3MS) des jeweiligen Monats, versteuert. Für Euro-Anleger lag der Tagesgeldzins oft niedriger; zum Vergleich lassen sich feste Sätze wählen."},
@@ -850,6 +850,7 @@ const ERKLAERUNG = {
   k_pruefung: {titel:"Prüfung der Ampel", text:"Übersicht über alle Werte: Walk-forward-Kalibrierung, Strategie-Vergleich und Signal-Tagebuch. Zeigt ehrlich, ob die Ampel früher etwas gebracht hätte."},
   // --- Gesamtprüfung
   g_strategie: {titel:"Strategie über viele Werte", text:"Für jeden Wert derselbe Vergleich (500 je Monat, bis 20 Jahre). „Besser“ = Anteil der Werte, bei denen die Strategie einen höheren internen Zinsfuß hatte als der Sparplan; „±“ = Median-Unterschied in Prozentpunkten pro Jahr. Aktien enthalten nur heute noch gelistete Firmen."},
+  waehrung: {titel:"$ / € umschalten", text:"US-Aktien, US-ETFs, Krypto und Rohstoffe werden in Dollar gehandelt. Mit „€“ rechnet der Chart jede Kerze und jede Linie mit dem echten Wechselkurs der jeweiligen Woche (bzw. des Tages) in Euro um – so siehst du, wie sich der Wert für jemanden mit Euro entwickelt hat; ein steigender Dollar macht Gewinne größer, ein fallender kleiner. Quelle: US-Notenbank (FRED, Dollar je Euro, seit 1999), die letzten Tage von Yahoo. Vor 1999 gab es keinen Euro, deshalb beginnt der Chart in Euro 1999. Die Ampel, die Kaufzonen-Texte und der Klartext bleiben in Dollar, weil die Ampel den Kurs mit seiner eigenen Geschichte vergleicht. Der Prognose-Kegel wird mit dem heutigen Wechselkurs umgerechnet (künftige Kurse sind unbekannt). Werte an Euro-Börsen (z. B. Xetra, Amsterdam) sind schon in Euro; bei anderen Börsen (London, Tokio …) gibt es den Umschalter nicht."},
   erfolgsbilanz: {titel:"Erfolgsbilanz", text:"Die meisten Prüfungen im Tool sind Rückblicke: Man rechnet aus, wie die Ampel früher gelegen hätte. Das kann unbemerkt zu gut aussehen. Ehrlicher ist die Echtzeit-Prüfung: Seit dem Start wird jeden Tag festgehalten, was das Tool für jeden Wert anzeigt (Ampel, Stufe und die angekündigte Wahrscheinlichkeit „Kurs nach 1/3/5 Jahren höher“), und unveränderbar gesichert. Sobald ein Jahr vergangen ist, wird nachgesehen, was wirklich passierte. „Rückblick: angekündigt“ ist die damals gezeigte Quote, „Echtzeit: eingetreten“ der Anteil der Signale, nach denen der Kurs wirklich höher stand. Gezählt werden nur Einträge der heutigen Ampel (seit 22.11.2026)."},
   tagebuch: {titel:"Signal-Tagebuch", text:"Jeden Tag wird festgehalten, was das Tool anzeigt, und nie geändert. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen. Das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet."},
 };
@@ -1611,7 +1612,7 @@ async function lohntSichCheck(id){
       <span data-e="s_spar">Sparplan</span><div class="balken"><i style="width:${e.spar.netto / mx * 100}%;background:var(--akzent)"></i></div><b>${geld(e.spar.netto)}</b>
       <span data-e="s_staffel">Warten</span><div class="balken"><i style="width:${e.staffel.netto / mx * 100}%;background:${ja ? "var(--guenstig)" : "var(--neutral)"}"></i></div><b>${geld(e.staffel.netto)}</b>
     </div>
-    <p class="klein">500 je Monat, ${fmt(s.jahre,0)} Jahre, nach Kosten und Steuer, in der Währung des Werts. Größter Rückgang: Sparplan ${fmt(e.spar.max_verlust,0," %")}, Warten ${fmt(e.staffel.max_verlust,0," %")}. Ein Rückblick auf einen einzigen Weg der Geschichte.</p>
+    <p class="klein">500 je Monat, ${fmt(s.jahre,0)} Jahre, nach Kosten und Abgeltungssteuer${s.pausch ? ` (mit Sparerpauschbetrag${s.teilfrei ? " und Teilfreistellung 30 %" : ""})` : ""}, in der Währung des Werts. Größter Rückgang: Sparplan ${fmt(e.spar.max_verlust,0," %")}, Warten ${fmt(e.staffel.max_verlust,0," %")}. Ein Rückblick auf einen einzigen Weg der Geschichte.</p>
     <button class="linkknopf" id="check-mehr">Strategie-Vergleich ansehen →</button>`;
   $("#check-mehr").onclick = () => { reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
 }
@@ -1864,6 +1865,7 @@ async function zeige(id, opt={}){
         <div class="segment" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
         <div class="segment" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+        ${eigen && waehrungVon(w) === "USD" ? `<div class="segment" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
         ${eigen ? `<button class="werkzeug" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
         ${eigen && w.tv ? `<div class="segment rechts" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
       </div>
@@ -1921,6 +1923,7 @@ async function zeige(id, opt={}){
   $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); trendkanalAktualisieren(); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
+  $$("#chart-karte [data-wg]").forEach(b => b.onclick = () => waehrungSetzen(b.dataset.wg));
   $$("#chart-karte [data-iv]").forEach(b => b.onclick = () => intervallSetzen(b.dataset.iv));
   if ($("#lineal-knopf")) $("#lineal-knopf").onclick = () => linealUmschalten();
   LINEAL = {an:false, a:null, b:null, fertig:false};
@@ -1970,6 +1973,47 @@ function tvHinweis(){
   return `TradingView: ${art} ${INTRADAY.includes(INTERVALL) ? "Eine 200-Wochen-Linie lässt sich hier nicht sinnvoll zeigen (sie bräuchte mehrere Tausend Kerzen) – sie steht im Monats-, Wochen- und Tageschart. " : ""}Günstig-/Teuer-Phasen, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart (Monat, Woche, Tag); die Ampel-Leiste darunter ist wöchentlich und gilt weiter.`;
 }
 function meldung(text){ const m = $("#chart-meldung"); if (!m) return; m.hidden = !text; m.textContent = text || ""; }
+// ------------------------------------------------------------ Umschalter $ / € (echter EUR/USD-Kurs; Ampel, Klartext und Kaufzonen-Texte bleiben in Dollar)
+let FX = undefined, WAEHRUNG = lade("waehrung", "USD");
+const PREIS_FELDER = ["o", "h", "l", "c", "sma200w", "kz80", "kz60", "kz40", "kz15", "pi_ema150", "pi_sma471", "pi_top111", "pi_top350x2"];
+const EUR_BOERSEN = /\.(DE|F|AS|PA|MI|MC|BR|HE|LS|VI|IR)$/i;
+function waehrungVon(w){   // nur wo sicher: US-Börsen und US-ETFs, Krypto in Dollar, US-Rohstoff-Futures → USD; Euro-Börsen → EUR; sonst unbekannt
+  if (!w) return null; const s = String(w.symbol || w.id || "");
+  if (EUR_BOERSEN.test(s)) return "EUR";
+  if (w.gruppe === "Krypto") return /-USD$/.test(s) ? "USD" : null;
+  if (/\./.test(s)) return null;   // andere Auslandsbörsen (London, Tokio, Hongkong …): Heimatwährung, kein Umschalter
+  return ["Nasdaq", "NYSE", "ETF", "Rohstoffe"].includes(w.gruppe) ? "USD" : null;
+}
+async function fxLaden(){
+  if (FX !== undefined) return FX;
+  const d = await holeJson("daten/eurusd.json");
+  if (!d?.d?.length) return (FX = null);
+  const t0 = Date.parse(d.tag0) / 1000;
+  return (FX = {t:d.d.map(x => t0 + x * 86400), k:d.k, stand:d.stand, quelle:d.quelle});
+}
+const euroAktiv = () => WAEHRUNG === "EUR" && !!FX && waehrungVon(INFO) === "USD" && CHARTQUELLE !== "tv";
+function dollarJeEuro(t){   // letzter bekannter Kurs bis t (null vor 1999)
+  let lo = 0, hi = FX.t.length - 1, r = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (FX.t[m] <= t + 43200) { r = m; lo = m + 1; } else hi = m - 1; }
+  return r < 0 ? null : FX.k[r];
+}
+const fxFaktor = () => euroAktiv() ? 1 / FX.k[FX.k.length - 1] : 1;   // für heutige Werte (Kegel, Linien aus INFO)
+function inEuro(c){   // Chartdaten in Euro: Preisreihen durch Dollar je Euro der jeweiligen Woche/des Tages, erst ab 1999
+  const n = c.t.length; let i0 = 0; while (i0 < n && c.t[i0] < FX.t[0]) i0++;
+  const k = c.t.slice(i0).map(dollarJeEuro), out = {...c};
+  for (const [key, v] of Object.entries(c)) if (Array.isArray(v) && v.length === n) out[key] = v.slice(i0);
+  for (const key of PREIS_FELDER) if (Array.isArray(out[key])) out[key] = out[key].map((x, i) => x == null || !k[i] ? x : x / k[i]);
+  if (Array.isArray(c.marken)) out.marken = c.marken.filter(m => m[0] >= c.t[i0]);
+  out.euro = true;
+  return out;
+}
+async function waehrungSetzen(wg){
+  WAEHRUNG = wg; sichere("waehrung", wg);
+  if (wg === "EUR") await fxLaden();
+  $$("#chart-karte [data-wg]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.wg === wg)));
+  if (wg === "EUR" && !FX) { meldung("Wechselkurs EUR/USD gerade nicht verfügbar – Chart bleibt in Dollar."); return; }
+  await eigenNeu();
+}
 async function intervallSetzen(iv){
   INTERVALL = iv; sichere("intervall", iv); meldung("");
   $$("#chart-karte [data-iv]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.iv === iv)));
@@ -2033,11 +2077,14 @@ function hauptChartWeg(){
 }
 async function eigenNeu(){
   const id = AKTIV, iv = INTRADAY.includes(INTERVALL) ? "W" : INTERVALL;
-  let cd = iv === "M" ? monatsDaten(CDATA) : CDATA;
+  if (WAEHRUNG === "EUR" && FX === undefined) { await fxLaden(); if (AKTIV !== id) return; }
+  const eur = euroAktiv(), basis = eur ? inEuro(CDATA) : CDATA;
+  let cd = iv === "M" ? monatsDaten(basis) : basis;
+  meldung(eur ? `Kurse und Linien in Euro umgerechnet (Dollar je Euro der jeweiligen Woche bzw. des Tages, ${FX.quelle}, Stand ${datumDe(FX.stand)}); in Euro erst ab 1999. Ampel und Texte bleiben in Dollar, Prognose-Kegel mit dem heutigen Kurs umgerechnet.` : "");
   if (iv === "D") {
     const d = await tagesDaten(id);
     if (AKTIV !== id) return;
-    if (d) cd = d;
+    if (d) cd = eur ? inEuro(d) : d;
     else { meldung(STATISCH ? "Tageskerzen gibt es online nur für ETFs, Krypto und Rohstoffe – für Aktien den TradingView-Chart (Tag) nutzen." : "Tageskerzen gerade nicht verfügbar – den lokalen Server einmal neu starten (neue Funktion)."); }
   }
   if (!$("#chart")) return;
@@ -2064,8 +2111,8 @@ function danachText(c, i){
   const r1 = nach(1), r3 = nach(3);
   if (r1 == null) {
     const kz = INFO?.kz; if (!kz || i < c.t.length - 2) return "";
-    const p = x => x == null ? "–" : fmt(x, x >= 100 ? 0 : 2);
-    return `<span class="fk-kz">Heute: sehr günstig unter <b>${p(kz["80"])}</b> · günstig unter <b>${p(kz["60"])}</b> · teuer über <b>${p(kz["40"])}</b> · sehr teuer über <b>${p(kz["15"])}</b></span>`;
+    const p = x => x == null ? "–" : fmt(x * fxFaktor(), x * fxFaktor() >= 100 ? 0 : 2);
+    return `<span class="fk-kz">Heute${euroAktiv() ? " (in €)" : ""}: sehr günstig unter <b>${p(kz["80"])}</b> · günstig unter <b>${p(kz["60"])}</b> · teuer über <b>${p(kz["40"])}</b> · sehr teuer über <b>${p(kz["15"])}</b></span>`;
   }
   const kq = c.kq?.[i], vq = c.vq?.[i];
   return `<span>danach: 1 J. <b class="${klasse(r1)}">${vz(r1,0," %")}</b>${r3 != null ? ` · 3 J. <b class="${klasse(r3)}">${vz(r3,0," %")}</b>` : ""}</span>`
@@ -2078,11 +2125,11 @@ function kaufzonenLinien(){
   if (!KERZEN) return;
   KZ_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); KZ_LINIEN = [];
   const mi = CDATA?.mvrv_info;
-  if (CHIPS.mvrv && mi?.realisiert_kurs) KZ_LINIEN.push(KERZEN.createPriceLine({price:mi.realisiert_kurs, color:F().mvrv, lineWidth:2, lineStyle:2, axisLabelVisible:true, title:"Ø-Einstand aller Besitzer (MVRV-Z 0)"}));
+  if (CHIPS.mvrv && mi?.realisiert_kurs) KZ_LINIEN.push(KERZEN.createPriceLine({price:mi.realisiert_kurs * fxFaktor(), color:F().mvrv, lineWidth:2, lineStyle:2, axisLabelVisible:true, title:"Ø-Einstand aller Besitzer (MVRV-Z 0)"}));
   const kz = INFO?.kz; if (!CHIPS.kaufzonen || !kz || CDATA?.kz80 || CDATA?.kz15) return;   // waagerecht nur noch, falls die Daten noch keinen Verlauf haben
   [["80", 4, "sehr günstig darunter"], ["60", 3, "günstig darunter"], ["40", 1, "teuer darüber"], ["15", 0, "sehr teuer darüber"]].forEach(([k, st, t]) => {
     if (kz[k] == null) return;
-    KZ_LINIEN.push(KERZEN.createPriceLine({price:kz[k], color:AMPEL_FARBEN[st], lineWidth:k === "80" || k === "15" ? 2 : 1, lineStyle:k === "40" || k === "60" ? 1 : 0, axisLabelVisible:true, title:t}));
+    KZ_LINIEN.push(KERZEN.createPriceLine({price:kz[k] * fxFaktor(), color:AMPEL_FARBEN[st], lineWidth:k === "80" || k === "15" ? 2 : 1, lineStyle:k === "40" || k === "60" ? 1 : 0, axisLabelVisible:true, title:t}));
   });
 }
 function markenSetzen(){
@@ -3600,7 +3647,7 @@ function kegelZeichnen(){
   if (!HAUPT || !KEGEL_M) return;
   const f = F(), m = KEGEL_D = kegelAnzeige(KEGEL_M);
   KEGEL.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} }); KEGEL = [];
-  const daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i]}));
+  const fx = fxFaktor(), daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i] * fx}));
   // 90-%-Band als Fläche: oben getönt, darunter mit Hintergrundfarbe abgedeckt (ab dem ersten Zukunftsschritt)
   const flaeche = (k, farbe) => { const s = HAUPT.addAreaSeries({lineColor:"rgba(0,0,0,0)", topColor:farbe, bottomColor:farbe, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.kegel});
     s.setData(daten(k).slice(1)); KEGEL.push(s); };
@@ -3752,7 +3799,7 @@ function tabStrategie(w){
       <div class="text">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
       <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
       Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
-      Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts). Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
+      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."} Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
       Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
     const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:F().line}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
     [["ein","#868993",2],["spar","#2962ff",0],["staffel",F().guenstig,0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {

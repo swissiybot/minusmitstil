@@ -12,9 +12,13 @@ Ablauf je Monat: Entscheidung mit der Ampel vom letzten Wochenschluss (nur damal
 Ausfuehrung zum Eroeffnungskurs der ersten Woche des Monats.
 Kosten: fester Betrag + Prozent je Order (zaehlen zu den Anschaffungskosten bzw. mindern den Erloes).
 Steuer: Abgeltungssteuer 26,375 % (25 % + Soli) auf realisierte Gewinne (FIFO, Verlusttopf) und auf Zinsen.
-Endvermoegen "nach Steuer" = alles am Ende verkauft. Nicht beruecksichtigt: Sparerpauschbetrag,
-Kirchensteuer, Teilfreistellung fuer Aktien-ETFs, Vorabpauschale, Waehrungen; Dividenden stecken
-steuerfrei im bereinigten Kurs (fuer alle drei Vorgehen gleich).
+Endvermoegen "nach Steuer" = alles am Ende verkauft. Seit 22.11.2026 fuer den einzelnen Wert (Lohnt-sich-Check,
+Strategie-Vergleich je Wert): Sparerpauschbetrag 1.000 je Kalenderjahr (auf Kursgewinne und Zinsen, vereinfacht in der
+Waehrung des Werts) und Teilfreistellung 30 % fuer Aktien-ETFs (Gewinne und Verluste nur zu 70 % steuerwirksam; nicht
+fuer Anleihen-ETFs, Rohstoffe, Krypto, Einzelaktien und Zinsen). Laufende Fondskosten (TER) stecken schon im ETF-Kurs.
+Die Pruefung ueber viele Werte (analyse.py) rechnet weiter ohne beides, damit sie mit frueheren Staenden vergleichbar bleibt.
+Nicht beruecksichtigt: Kirchensteuer, Vorabpauschale, Waehrungen; Dividenden stecken steuerfrei im bereinigten Kurs
+(fuer alle drei Vorgehen gleich).
 """
 import math
 import numpy as np
@@ -25,6 +29,15 @@ STUFEN = [(90, 1.0), (75, 2 / 3), (60, 1 / 3)]
 VERKAUF_AB = 15
 VERKAUF_ANTEIL = 0.25
 WIEDER_FREI_AB = 40
+PAUSCHBETRAG = 1000.0
+TEILFREI_AKTIENFONDS = 0.30
+
+
+def teilfreistellung(zeile: dict) -> float:
+    """30 % fuer Aktien-ETFs (Index-, Themen-, Branchen-, Faktor-, Laender-ETFs), sonst 0."""
+    return TEILFREI_AKTIENFONDS if zeile.get("gruppe") == "ETF" and zeile.get("branche") not in ("Anleihen", "Rohstoff") else 0.0
+
+
 NAMEN = {"spar": "Sparplan", "staffel": "Staffelkauf 60/75/90", "staffel_vk": "Staffelkauf + Teilverkauf ≤ 15"}
 
 
@@ -45,8 +58,10 @@ def _xirr(fluesse: list[tuple[float, float]]) -> float | None:
 
 
 class Depot:
-    def __init__(self, kfix, kproz):
+    def __init__(self, kfix, kproz, pausch=0.0, teilfrei=0.0):
         self.kfix, self.kproz = kfix, kproz
+        self.pausch, self.teilfrei = pausch, teilfrei
+        self.jahr, self.frei_rest = None, pausch
         self.lose: list[list[float]] = []   # [Stueck, Einstand je Stueck inkl. Kosten]
         self.bar = 0.0
         self.verlusttopf = 0.0
@@ -66,13 +81,24 @@ class Depot:
         self.n += menge
         self.kosten += k; self.kaeufe += 1
 
+    def jahr_setzen(self, jahr):
+        """Neues Kalenderjahr: Sparerpauschbetrag steht wieder voll zur Verfuegung."""
+        if jahr != self.jahr:
+            self.jahr, self.frei_rest = jahr, self.pausch
+
+    def _nach_freibetrag(self, betrag):
+        ab = min(betrag, self.frei_rest)
+        self.frei_rest -= ab
+        return betrag - ab
+
     def _versteuern(self, gewinn):
+        gewinn *= 1 - self.teilfrei            # Teilfreistellung: nur dieser Teil ist steuerwirksam (auch bei Verlust)
         if gewinn < 0:
             self.verlusttopf += -gewinn
             return 0.0
         verrechnet = min(gewinn, self.verlusttopf)
         self.verlusttopf -= verrechnet
-        st = (gewinn - verrechnet) * STEUER
+        st = self._nach_freibetrag(gewinn - verrechnet) * STEUER
         self.steuer += st
         return st
 
@@ -101,7 +127,7 @@ class Depot:
     def zins(self, satz_pa):
         z = self.bar * satz_pa / 100 / 12
         if z > 0:
-            st = z * STEUER
+            st = self._nach_freibetrag(z) * STEUER
             self.steuer += st
             z -= st
         self.bar += z
@@ -111,7 +137,7 @@ class Depot:
 
 
 def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag=500.0, jahre=20,
-              kfix=1.0, kproz=0.0, fester_zins: float | None = None, reihe=True) -> dict | None:
+              kfix=1.0, kproz=0.0, fester_zins: float | None = None, reihe=True, pausch=0.0, teilfrei=0.0) -> dict | None:
     """w = Wochenkerzen (Index Freitag), score = Ampel je Woche (gleich lang)."""
     c = w["Close"].values.astype(float)
     o = w["Open"].values.astype(float)
@@ -133,7 +159,7 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
         m = pd.Timestamp(datum.year, datum.month, 1)
         return float(zins.asof(m)) if m >= zins.index[0] else float(zins.iloc[0])
 
-    depots = {k: Depot(kfix, kproz) for k in NAMEN}
+    depots = {k: Depot(kfix, kproz, pausch, teilfrei) for k in NAMEN}
     frei = True
     eingezahlt = 0.0
     fluesse = []
@@ -149,6 +175,8 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
             kurs = o[i] if not math.isnan(o[i]) and o[i] > 0 else c[i - 1]
             s = score[i - 1]
             letzter_satz = satz(idx[i])
+            for d in depots.values():
+                d.jahr_setzen(idx[i].year)
             eingezahlt += betrag
             fluesse.append(((idx[i] - t0).days / 365.25, -betrag))
             depots["spar"].kaufen(betrag, kurs)
@@ -200,6 +228,7 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
     return {
         "von": t0.strftime("%Y-%m-%d"), "bis": min(idx[-1], pd.Timestamp.today().normalize()).strftime("%Y-%m-%d"), "jahre": round(jahre_ist, 1),
         "monate": len(tage), "eingezahlt": round(eingezahlt), "betrag": betrag, "kfix": kfix, "kproz": kproz,
+        "pausch": pausch, "teilfrei": teilfrei,
         "zins": "fest " + f"{fester_zins:g}".replace(".", ",") + " % p.a." if fester_zins is not None else (("US-Geldmarkt 3 Monate (FRED TB3MS), zuletzt %.2f %%" % letzter_satz).replace(".", ",") if zins is not None else "kein Zins (FRED-Daten fehlen)"),
         "ergebnis": erg,
         "reihe": {"t": verlauf_t, "ein": verlauf_ein, **verlauf} if reihe else None,

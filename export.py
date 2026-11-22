@@ -114,7 +114,7 @@ def main():
     (SITE / "daten").mkdir(parents=True)
     shutil.copy(E.WEB / "index.html", SITE / "index.html")
     shutil.copytree(E.WEB / "lib", SITE / "lib")
-    for name in ("pruefung.json", "tagebuch_pruefung.json", "bewertung.json", "trendstudie.json", "isin.json", "kegelpruefung.json", "jung.json", "indexanteile.json"):
+    for name in ("pruefung.json", "tagebuch_pruefung.json", "bewertung.json", "trendstudie.json", "isin.json", "kegelpruefung.json", "jung.json", "indexanteile.json", "eurusd.json"):
         if (E.WEB_DATEN / name).exists():
             schreiben(SITE / "daten" / name, json.loads((E.WEB_DATEN / name).read_text()))
     rl = json.loads((E.WEB_DATEN / "rangliste.json").read_text())
@@ -142,7 +142,7 @@ def main():
             }
             if info["score"] is not None:
                 out["pruefung"] = pruefung.fuer_wert(w["Close"].values.astype(float), score, w.index.year.values)
-                out["strategie"] = strategie.vergleich(w, score, zins) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
+                out["strategie"] = strategie.vergleich(w, score, zins, pausch=strategie.PAUSCHBETRAG, teilfrei=strategie.teilfreistellung(info)) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
             groesse += schreiben(tmp / f"{dateiname(z['id'])}.json", out)
             if KURSE_OEFFENTLICH and (z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or info.get("jung")):   # junge Werte: Tageskerzen für den kurzen Verlauf
                 tc = analyse.tageschart(info, chart, roh)

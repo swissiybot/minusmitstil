@@ -91,6 +91,10 @@ jobs:
       - name: Zinsen (FRED)
         run: python umfeld.py   # vor dem Zwischenspeichern, damit FRED- und Shiller-Dateien im Cache landen
 
+      - name: Wechselkurs EUR/USD (FRED, Yahoo) für den Umschalter $ / €
+        continue-on-error: true
+        run: python waehrung.py
+
       - name: Bewertung S&P 500 (Shiller-CAPE)
         run: python bewertung.py
 
