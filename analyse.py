@@ -730,7 +730,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     except Exception as ex:
         print(f"Kauf-/Verkaufsqualität nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     for z, arr in (kzv or {}).items():   # Kaufzonen je Woche (mitwandernde Linien im Chart)
-        if z in KZ_STUFEN and not np.all(np.isnan(arr)):
+        if (z in KZ_STUFEN or z == 90) and not np.all(np.isnan(arr)):   # 90 nur im Chart (Fläche „Ausverkauf“)
             chart[f"kz{z}"] = rund(arr)
     if not np.all(np.isnan(score_v)):
         chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)

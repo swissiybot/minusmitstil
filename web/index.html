@@ -1002,7 +1002,7 @@ const ERKLAERUNG_NEU = {
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
   l_nachkauf: {titel:"Nachkaufen", text:"Für jeden Titel einzeln aus seiner eigenen Geschichte: Für die Schwellen Ampel 60, 70, 80 und 90 wird nachgerechnet, wie viel ein Kauf in allen früheren Wochen mit dieser Ampel in den 3 Jahren danach pro Jahr brachte (bei kurzer Geschichte: im Jahr danach), verglichen mit Käufen in beliebigen Wochen. Gezählt wird eine Schwelle nur, wenn es mindestens 3 getrennte Phasen gab, der Median höher war und die Käufe nicht deutlich seltener im Plus endeten. Die beste zählende Schwelle wird in einen Kurs für heute umgerechnet – mit derselben Formel wie die Kaufzonen. Brachte keine Schwelle mehr, steht dort ehrlich: Warten lohnte sich bei diesem Titel nicht. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
-  l_kaufzonen: {titel:"Kaufzonen", text:"Vier Linien im Chart, die Woche für Woche mitwandern: Ab welchem Kurs war der Wert in der jeweiligen Woche günstig oder teuer? Rechts an der Achse steht der Stand von heute. Dunkel-blaugrün: darunter stünde die Ampel bei 80 oder mehr (historisch sehr günstig) – also tiefer unter der 200-Wochen-Linie als in einem Drittel der früheren Wochen unter der Linie. Hell-blaugrün: darunter bei 60 oder mehr (günstig) – knapp über der Linie. Hell-orange: darüber bei 40 oder weniger (teuer). Dunkel-orange: darüber bei 15 oder weniger (historisch sehr teuer). Alle Grenzen kommen aus der Geschichte des Werts: wie tief der Kurs früher unter und wie weit über der Linie lag. Die Grenzen wandern mit, weil sich die Linie bewegt und jede Woche Geschichte dazukommt. Beschreibung, keine Kaufempfehlung."},
+  l_kaufzonen: {titel:"Kaufzonen und Bewertungszonen", text:"Farbige Flächen hinter den Kerzen zeigen Woche für Woche, in welcher Zone der Kurs lag: von unten Ausverkauf (Ampel 90 oder mehr), historisch sehr günstig (80–90), günstig (60–80, darin liegt die gelbe 200-Wochen-Linie), neutral (40–60), teuer (15–40) und historisch sehr teuer (15 oder weniger). Rechts am Rand steht der Name der Zone. Dazu vier Linien im Chart, die Woche für Woche mitwandern: Ab welchem Kurs war der Wert in der jeweiligen Woche günstig oder teuer? Rechts an der Achse steht der Stand von heute. Dunkel-blaugrün: darunter stünde die Ampel bei 80 oder mehr (historisch sehr günstig) – also tiefer unter der 200-Wochen-Linie als in einem Drittel der früheren Wochen unter der Linie. Hell-blaugrün: darunter bei 60 oder mehr (günstig) – knapp über der Linie. Hell-orange: darüber bei 40 oder weniger (teuer). Dunkel-orange: darüber bei 15 oder weniger (historisch sehr teuer). Alle Grenzen kommen aus der Geschichte des Werts: wie tief der Kurs früher unter und wie weit über der Linie lag. Die Grenzen wandern mit, weil sich die Linie bewegt und jede Woche Geschichte dazukommt. Beschreibung, keine Kaufempfehlung."},
   l_mvrv: {titel:"MVRV-Z-Score (Bitcoin)", text:"Vergleicht den Marktwert aller Bitcoin mit dem „Realized Value“: jeder Coin zu dem Preis bewertet, zu dem er zuletzt bewegt wurde – grob der Durchschnittseinstand aller Besitzer. Z-Score = (Marktwert − Einstand) / Schwankung des Marktwerts. Unter 0: Kurs unter dem Ø-Einstand, die meisten Besitzer liegen im Minus – das war 2011, 2015, 2018/19, März 2020 und 2022 der Fall (Böden). Über 7: überhitzt (2013, 2017, 2021). In der Prüfung ohne Zukunftswissen leicht besser als die Grundquote; nur wenige Fälle. Blaue Linie im Ampel-Bereich, gestrichelte Linie im Kurs-Chart = Ø-Einstand."},
   kegel_pruefung: {titel:"Prüfung des Prognose-Kegels", text:"Ein Kegel ist gut, wenn er so oft trifft, wie er verspricht: Das 90-%-Band soll den späteren Kurs in etwa 9 von 10 Fällen enthalten, das 50-%-Band in etwa jedem zweiten. Trifft er seltener, ist er zu schmal (zu selbstsicher), trifft er öfter, ist er zu breit. Geprüft werden Varianten: wie viel Geschichte, ob die heutige Schwankung zählt (nach einem Einbruch ist der Markt meist unruhiger) und ob eine vorsichtigere Grundrendite besser passt. Die Variante mit der besten Trefferquote rechnet im Tool."},
   ampel_rang: {titel:"Teurer oder günstiger als …", text:"Übersetzt die Ampelzahl in einen Satz, der sich direkt vergleichen lässt: „teurer als in 91 % der Zeit davor“ heißt, dass die Ampel bis zu diesem Zeitpunkt in 91 % aller Wochen höher stand – es war also fast immer günstiger als jetzt. Zwei Zeitpunkte vergleichst du so: „teurer als in 91 %“ ist teurer als „teurer als in 69 %“. Merke: Bei der Ampelzahl selbst heißt eine HOHE Zahl günstig und eine NIEDRIGE Zahl teuer (Ampel 9 ist teurer als Ampel 31)."},
@@ -2003,7 +2003,7 @@ function tvHinweis(){
 function meldung(text){ const m = $("#chart-meldung"); if (!m) return; m.hidden = !text; m.textContent = text || ""; }
 // ------------------------------------------------------------ Umschalter $ / € (echter EUR/USD-Kurs; Ampel, Klartext und Kaufzonen-Texte bleiben in Dollar)
 let FX = undefined, WAEHRUNG = lade("waehrung", "USD");
-const PREIS_FELDER = ["o", "h", "l", "c", "sma200w", "kz80", "kz60", "kz40", "kz15", "pi_ema150", "pi_sma471", "pi_top111", "pi_top350x2"];
+const PREIS_FELDER = ["o", "h", "l", "c", "sma200w", "kz90", "kz80", "kz60", "kz40", "kz15", "pi_ema150", "pi_sma471", "pi_top111", "pi_top350x2"];
 const EUR_BOERSEN = /\.(DE|F|AS|PA|MI|MC|BR|HE|LS|VI|IR)$/i;
 function waehrungVon(w){   // nur wo sicher: US-Börsen und US-ETFs, Krypto in Dollar, US-Rohstoff-Futures → USD; Euro-Börsen → EUR; sonst unbekannt
   if (!w) return null; const s = String(w.symbol || w.id || "");
@@ -2051,7 +2051,7 @@ async function intervallSetzen(iv){
 }
 // ------------------------------------------------------------ Zeitebenen für den eigenen Chart
 function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
-  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz80","kz60","kz40","kz15","kq","vq","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz90","kz80","kz60","kz40","kz15","kq","vq","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
   linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
   const zuMonat = new Map(); let schl = null, i0 = 0;
   const abschliessen = i1 => {   // Wochen i0..i1-1
@@ -2364,6 +2364,56 @@ function phasenKarte(c){
     <p class="klein" style="margin-top:8px">${satz("r1","Nach 1 Jahr")} ${satz("r3","Nach 3 Jahren")} ${satz("r5","Nach 5 Jahren")}</p>
     <p class="klein">Rückblick ab dem Wochenschluss der ersten Woche mit Ampel ab ${PHASE_AB} (Lücken bis 4 Wochen zählen zur selben Phase), ohne Kosten und Steuern. „Noch tiefer“ zeigt, wie weit der Kurs in der Phase noch fiel – das wusste damals niemand. Vergangene Phasen sagen nichts Sicheres über die nächste.</p></section>`;
 }
+// Bewertungszonen (Wunsch Marc 22.11.2026): Flächen zwischen den mitwandernden Kaufzonen-Linien, Woche für Woche.
+// Grenzen = Kurs, bei dem die Ampel in der Woche 90/80/60/40/15 gezeigt hätte (aus der eigenen Geschichte des Werts, nichts geschätzt).
+const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deckkraft hex, Name]
+  [null,   "kz15", 0, "30", "historisch sehr teuer"],
+  ["kz15", "kz40", 1, "1f", "teuer"],
+  ["kz40", "kz60", 2, "12", "neutral"],
+  ["kz60", "kz80", 3, "1f", "günstig"],
+  ["kz80", "kz90", 4, "2e", "historisch sehr günstig"],
+  ["kz90", null,   5, "30", "Ausverkauf"]];
+function zonenFlaechen(ch, serie, c, f){
+  if (!c.kz80 && !c.kz15) return;
+  const farbe = i => i === 5 ? f.cyan : AMPEL_FARBEN[i];
+  let sichtbar = CHIPS.kaufzonen, neu = null;
+  const zeichnen = ({context:x, mediaSize:gr}) => {
+    if (!sichtbar) return;
+    const ts = ch.timeScale(), lr = ts.getVisibleLogicalRange(); if (!lr) return;
+    const von = Math.max(0, Math.floor(lr.from) - 1), bis = Math.min(c.t.length - 1, Math.ceil(lr.to) + 1);
+    const y = (k, i) => { if (k === null) return null; const v = c[k]?.[i]; return v == null ? undefined : serie.priceToCoordinate(v); };
+    const marken = [];
+    BEW_ZONEN.forEach(([ob, un, fi, deck, name]) => {
+      if ((ob && !c[ob]) || (un && !c[un])) return;
+      x.fillStyle = farbe(fi) + deck;
+      let lauf = [], letzte = null;
+      const fuellen = () => { if (lauf.length > 1) { x.beginPath();
+          lauf.forEach(([px, yo], j) => j ? x.lineTo(px, yo) : x.moveTo(px, yo));
+          for (let j = lauf.length - 1; j >= 0; j--) x.lineTo(lauf[j][0], lauf[j][2]);
+          x.closePath(); x.fill(); } lauf = []; };
+      for (let i = von; i <= bis; i++) {
+        const yo = y(ob, i), yu = y(un, i), px = ts.logicalToCoordinate(i);
+        if (yo === undefined || yu === undefined || yo === null && yu === null || px == null) { fuellen(); continue; }
+        const a = yo ?? -2, b = yu ?? gr.height + 2;
+        lauf.push([px, a, b]); letzte = [px, a, b];
+      }
+      fuellen();
+      if (letzte) marken.push([name, farbe(fi), letzte]);
+    });
+    x.font = "600 11px system-ui, sans-serif"; x.textAlign = "right"; x.textBaseline = "middle";
+    marken.forEach(([name, fa, [px, a, b]]) => {   // Name rechts am letzten Wochenwert, mitten in der Fläche (nur wenn sie hoch genug ist)
+      const o = Math.max(a, 4), u = Math.min(b, gr.height - 4); if (u - o < 16) return;
+      const xr = Math.min(px, gr.width - 120) - 6, ym = (o + u) / 2, br = x.measureText(name).width;   // links der Linien-Schilder am rechten Rand
+      x.fillStyle = f.panel + "d9"; x.beginPath(); x.roundRect ? x.roundRect(xr - br - 5, ym - 8, br + 10, 16, 4) : x.rect(xr - br - 5, ym - 8, br + 10, 16); x.fill();
+      x.fillStyle = fa; x.fillText(name, xr, ym);
+    });
+  };
+  serie.attachPrimitive({
+    attached: p => { neu = p.requestUpdate; }, detached: () => { neu = null; }, updateAllViews(){},
+    paneViews: () => [{zOrder: () => "bottom", renderer: () => ({draw(){}, drawBackground: z => z.useMediaCoordinateSpace(zeichnen)})}],
+  });
+  SERIEN.kaufzonen.push({applyOptions: o => { sichtbar = o.visible; neu?.(); }});   // Chip „Kaufzonen“ schaltet Linien und Flächen
+}
 function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
@@ -2404,6 +2454,7 @@ function zeichne(c, w){
     [["kz80", 4, "sehr günstig darunter", 2, 0], ["kz60", 3, "günstig darunter", 1, 1], ["kz40", 1, "teuer darüber", 1, 1], ["kz15", 0, "sehr teuer darüber", 2, 0]].forEach(([k, st, t, b, stil]) => {
       const s = linie("kaufzonen", c[k], AMPEL_FARBEN[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:t});
     });
+    zonenFlaechen(ch, kerzen, c, f);
   }
   {   // Bollinger-Bänder (20 Kerzen, ±2 Standardabweichungen) auf der gewählten Zeitebene
     const n = 20, mitte = [], oben = [], unten = [];
@@ -2483,7 +2534,7 @@ function zeichne(c, w){
       ${c.score[i] != null && rangZuZeit(c.t[i]) ? `<span class="fk-rang">${rangText(rangZuZeit(c.t[i]))}</span>` : ""}
       ${danachText(c, i)}
       ${CHIPS.trend && TK_INFO ? `<span class="fk-tk" data-e="l_trend"><i class="sw" style="background:var(--akzent)"></i>Trendkanal (sichtbar, ${fmt(TK_INFO.jahre, TK_INFO.jahre < 2 ? 1 : 0)} J.): ${TK_INFO.pa == null ? "–" : vz(TK_INFO.pa,1," %")} pro Jahr · Kurs ${TK_INFO.z > 2 ? "über dem Kanal" : TK_INFO.z > 1 ? "im oberen Teil" : TK_INFO.z < -2 ? "unter dem Kanal" : TK_INFO.z < -1 ? "im unteren Teil" : "nahe der Mitte"}</span>` : ""}
-      ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: sehr günstig unter <b>${fmt(c.kz80[i],nk)}</b> · günstig unter ${fmt(c.kz60[i],nk)} · teuer über ${fmt(c.kz40[i],nk)} · sehr teuer über <b>${fmt(c.kz15[i],nk)}</b></span>` : ""}
+      ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: ${c.kz90?.[i] != null ? `Ausverkauf unter ${fmt(c.kz90[i],nk)} · ` : ""}sehr günstig unter <b>${fmt(c.kz80[i],nk)}</b> · günstig unter ${fmt(c.kz60[i],nk)} · teuer über ${fmt(c.kz40[i],nk)} · sehr teuer über <b>${fmt(c.kz15[i],nk)}</b></span>` : ""}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
@@ -2874,6 +2925,20 @@ function sparAnteileSetzen(art){
 function feld(k, titel, e, attr="", art="number"){
   return `<label>${ek(e, titel)}<input data-e2="${k}" type="${art}" value="${esc(DEPOT.e[k])}" ${attr}></label>`;
 }
+function nachkaufZelle(w, p){   // Depot-Spalte „Nachkauf unter“ aus dem Feld nk der Rangliste (Nachkauf-Karte der Titelseite)
+  const nk = w?.nk; if (!nk) return `<span class="klein">–</span>`;
+  const st = w.kurs == null ? 2 : w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, wg = waehrungVon(w), zeichen = wg === "USD" ? " $" : wg === "EUR" ? " €" : "";
+  const k = x => fmt(x, st) + zeichen, fuer = p?.ersatz ? `<div class="klein">gilt für den Ersatz ${esc(kurzname(w))}</div>` : "";
+  const beleg = nk.med != null ? `Beleg: bei Ampel ≥ ${nk.ab} im Mittel ${vz(nk.med,1," %")} pro Jahr (${fmt(nk.q,0," %")} im Plus, ${nk.ph} Phasen), beliebige Wochen ${vz(nk.b_med,1," %")} (${fmt(nk.b_q,0," %")} im Plus)` : "";
+  const noch = nk.jetzt ? `<span class="pos">✓ heute erfüllt</span>` : nk.abstand != null ? `noch ${fmt(-nk.abstand,0)} % tiefer` : "";
+  if (nk.art === "lohnt" && nk.preis != null)
+    return `<span title="${esc(beleg)}"><b>${k(nk.preis)}</b> ${nk.jetzt ? `<span class="pos">✓</span>` : ""}</span><div class="klein">Ampel ≥ ${nk.ab}${noch ? " · " + noch : ""}</div>${fuer}`;
+  if (nk.art === "egal")
+    return `<span title="Käufe bei hoher Ampel brachten früher nicht mehr als Käufe in beliebigen Wochen (${vz(nk.b_med,1," %")} pro Jahr, ${fmt(nk.b_q,0," %")} im Plus)">jederzeit gleich</span><div class="klein">Warten brachte nichts</div>${fuer}`;
+  if (nk.preis != null)
+    return `<span title="Zu wenig Geschichte für einen Beleg – bis dahin gilt Ampel 80 (historisch sehr günstig)">vorläufig unter <b>${k(nk.preis)}</b></span><div class="klein">zu wenig Geschichte${noch ? " · " + noch : ""}</div>${fuer}`;
+  return `<span class="klein">–</span>`;
+}
 function zeigeDepot(){
   if (!DEPOT) depotLaden();
   isinListeLaden();   // einmalig; ordnet danach offene Positionen neu zu
@@ -2903,9 +2968,9 @@ function zeigeDepot(){
         <h2 style="margin:0;font-size:16px">Positionen</h2>
         <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
-      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>Wert €</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
+      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>Wert €</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_nachkauf","Nachkauf unter")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
-          return `<tr class="depot-zeile"><td colspan="6" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
+          return `<tr class="depot-zeile"><td colspan="7" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
           teil.map(([p, i]) => { const w = wertVon(p.id);
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
@@ -2913,6 +2978,7 @@ function zeigeDepot(){
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
             <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} J. Daten`}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
+            <td style="text-align:left;white-space:normal;min-width:130px">${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
             <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
         ${P.some(p => p.id && p.ersatz) ? `<div class="merke" style="margin-top:0">${(() => { const e = P.filter(p => p.id && p.ersatz), ew = e.reduce((a, p) => a + p.wert, 0); return `${e.length} Position${e.length === 1 ? " ist" : "en sind"} nicht im Tool und werden mit einem <b>automatischen Ersatz</b> gerechnet (${fmt(ew / summe * 100, 0, " %")} des Depots), z. B. eine chinesische Aktie mit dem Schwellenländer-ETF. Das ist eine Annäherung: Eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ kannst du einen besseren Ersatz wählen.`; })()}</div>` : ""}
@@ -3585,6 +3651,7 @@ const ERKLAERUNG_DEPOT = {
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
+  d_nachkauf: {titel:"Nachkauf unter", text:"Ab welchem Kurs sich Nachkaufen bei dieser Position früher gelohnt hat – dieselbe Rechnung wie auf der Titelseite des Werts (Karte „Nachkaufen“). Ein Preis heißt: Käufe bei dieser Ampel-Schwelle (60, 70, 80 oder 90) brachten in der Geschichte des Werts im Mittel mehr als Käufe in beliebigen Wochen, über mindestens 3 getrennte Phasen; ✓ heißt, der Kurs liegt heute schon darunter. „jederzeit gleich“ heißt: Warten auf tiefe Kurse brachte hier nichts, regelmäßiges Nachkaufen war genauso gut. „vorläufig“ heißt: zu wenig Geschichte für einen Beleg, bis dahin gilt die Grenze Ampel 80. Der Preis steht in der Währung des Werts und wandert jede Woche mit der 200-Wochen-Linie. Bei einem automatischen Ersatz gilt er für den Ersatz, nicht für deine Position. Fahre mit der Maus über den Preis, um den Beleg zu sehen. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
   d_verteilung: {titel:"Verteilung", text:"Wie die Sparrate auf die Positionen verteilt wird: wie das heutige Depot, gleichmäßig oder nach den Anteilen in der Tabelle."},
