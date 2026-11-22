@@ -12,6 +12,8 @@ Geprueft wird mit echten Daten an einer festen Stichprobe (alle ETFs, Krypto, Ro
   5. Die letzte Woche der Kaufzonen im Chart = Kaufzonen in der Kopfzeile (info.kz) und in der Rangliste.
   6. Kauf- und Verkaufsqualitaet liegen zwischen 0 und 100.
   7. Die ausgegebene Ampel ist genau die der Formel (nachgerechnet mit ampel_rechnen).
+  8. Nachkauf je Titel: Art lohnt/egal/unklar; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht;
+     „heute erfüllt“ passt zur Ampel; Kurse für Ampel 90 <= 80 <= 70; Kurs unter dem Kurs für Ampel 90 => Ampel >= 90.
 Dazu Rechenproben mit kuenstlichen Kursreihen (konstanter Kurs = an der Linie = 70, Absturz tiefer als je zuvor = 100,
 Kurs knapp unter/ueber der Kaufzone 80).
 
@@ -100,6 +102,20 @@ def ein_wert(z: dict, rl: dict):
         if rz.get(k) is not None:
             pruef(math.isclose(rz[k], zk[k], rel_tol=1e-3, abs_tol=0.011), f"{wid}: Kaufzone {k} in der Rangliste ({rz[k]}) ≠ Kopfzeile ({zk[k]})")
     pruef(stufe_passt(zeile.get("zone"), zeile["score"]), f"{wid}: Stufe {zeile.get('zone')} passt nicht zur Ampel {zeile['score']}")
+    # Nachkauf: Art bekannt; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht; „heute erfüllt“ passt zur Ampel
+    nk = zeile.get("nk")
+    pruef(isinstance(nk, dict) and nk.get("art") in ("lohnt", "egal", "unklar"), f"{wid}: Nachkauf fehlt oder unbekannte Art ({nk})")
+    if isinstance(nk, dict) and nk.get("ab") is not None:
+        g = nk["ab"]
+        soll = kz[g][-1]
+        if nk.get("preis") is not None and not math.isnan(soll):
+            pruef(math.isclose(nk["preis"], soll, rel_tol=1e-3, abs_tol=0.011), f"{wid}: Nachkauf-Preis {nk['preis']} ≠ Kurs für Ampel {g} ({soll:.4g})")
+        pruef(nk.get("jetzt") == bool(score[-1] >= g), f"{wid}: Nachkauf „heute erfüllt“ = {nk.get('jetzt')}, Ampel {score[-1]:.1f}, Schwelle {g}")
+    alle_hoch = ~np.isnan(kz[70]) & ~np.isnan(kz[80]) & ~np.isnan(kz[90])
+    hoch_geordnet = (kz[90] <= kz[80] * (1 + 1e-9)) & (kz[80] <= kz[70] * (1 + 1e-9))
+    pruef(bool(hoch_geordnet[alle_hoch].all()), f"{wid}: Kurse für Ampel 90/80/70 nicht geordnet ({int((~hoch_geordnet[alle_hoch]).sum())} Wochen)")
+    m90 = ok & ~np.isnan(kz[90]) & (c < kz[90] * (1 - eps))
+    pruef(bool((score[m90] >= 90 - 1e-6).all()), f"{wid}: Kurs unter dem Kurs für Ampel 90, Ampel trotzdem unter 90 ({int((score[m90] < 90 - 1e-6).sum())} Wochen)")
     for k in ("kq", "vq"):
         v = [x for x in chart.get(k, []) if x is not None]
         pruef(all(0 <= x <= 100 for x in v), f"{wid}: {'Kauf' if k == 'kq' else 'Verkaufs'}qualität außerhalb 0–100")

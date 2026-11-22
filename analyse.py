@@ -156,7 +156,7 @@ def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min
     früherer Wochen unter der Linie, die tiefer lagen; sonst NaN)."""
     n = len(c)
     score = np.full(n, np.nan); rang_ueber = np.full(n, np.nan); rang_unter = np.full(n, np.nan)
-    kz = {z: np.full(n, np.nan) for z in (80, 60, 40, 15)}
+    kz = {z: np.full(n, np.nan) for z in (80, 60, 40, 15, 70, 90)}   # 70 und 90 nur für den Nachkauf-Preis
     C = np.concatenate([[0.0], np.cumsum(c)])
     ueber: list[float] = []
     unter: list[float] = []
@@ -180,12 +180,14 @@ def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min
             elif len(ueber) >= min_ueber:
                 rg = bisect.bisect_left(ueber, r) / len(ueber)
                 score[t] = ANKER * (1 - rg); rang_ueber[t] = rg
-            if L >= min_unter:
-                # Ampel >= 80  <=>  (L - br)/L >= 1/3  <=>  br <= k  <=>  r < unter[k]
-                k = math.floor(L * (1 - (80 - ANKER) / (100 - ANKER)) + 1e-9)
-                kz[80][t] = p_zu(min(1.0, unter[k]))
-            else:
-                kz[80][t] = p_zu(1 - (80 - ANKER) / (ANKER_STEIL * 100))
+            kz[70][t] = p_zu(1.0)                          # an der Linie
+            for z in (80, 90):
+                if L >= min_unter:
+                    # Ampel >= z  <=>  (L - br)/L >= (z-70)/30  <=>  br <= k  <=>  r < unter[k]
+                    k = math.floor(L * (1 - (z - ANKER) / (100 - ANKER)) + 1e-9)
+                    kz[z][t] = p_zu(min(1.0, unter[k]))
+                else:
+                    kz[z][t] = p_zu(1 - (z - ANKER) / (ANKER_STEIL * 100))
             if len(ueber) >= min_ueber:
                 for z in (60, 40, 15):
                     k = math.ceil((1 - z / ANKER) * len(ueber) - 1e-9)
@@ -206,6 +208,69 @@ def ampel_rechnen(c: np.ndarray, krypto: bool = False, start: int = None):
     start = WARMUP if start is None else start
     score, kz, ru, rn = anker_ampel(c, start)
     return "anker200s", score, kz, ru, rn
+
+
+KZ_STUFEN = (80, 60, 40, 15)   # Kaufzonen in Kopfzeile, Rangliste und Chart
+
+NK_STUFEN = (60, 70, 80, 90)   # Nachkauf: geprüfte Ampel-Schwellen
+NK_LUECKE = 13                 # Wochen Abstand, ab dem zwei Kaufzeiträume als getrennte Phasen zählen
+NK_MIN_PHASEN, NK_MIN_WOCHEN = 3, 8
+NK_TOL_QUOTE = 5               # Prozentpunkte: so viel seltener im Plus darf eine Schwelle sein und trotzdem zählen
+
+
+def _phasen(maske: np.ndarray, luecke: int = NK_LUECKE) -> int:
+    i = np.flatnonzero(maske)
+    return 0 if not len(i) else 1 + int(np.sum(np.diff(i) > luecke))
+
+
+def nachkauf(c: np.ndarray, score: np.ndarray, kzv: dict, kurs: float) -> dict | None:
+    """Wunsch Marc 22.11.2026: „pro Titel wissen, wann es sich lohnt nachzukaufen“.
+    Rückblick über die Geschichte DIESES Titels: Für jede Schwelle (Ampel ≥ 60/70/80/90) die Jahresrendite der folgenden
+    3 Jahre (zu wenig Geschichte: 1 Jahr) nach allen Wochen mit dieser Ampel, verglichen mit Käufen in beliebigen Wochen.
+    Eine Schwelle zählt, wenn sie mindestens NK_MIN_PHASEN getrennte Phasen hat, im Median mehr brachte und nicht deutlich
+    seltener im Plus endete (höchstens NK_TOL_QUOTE Punkte). Unter den zählenden gilt die mit dem höchsten Median.
+    Nachkauf-Preis = Kurs, bei dem die Ampel heute diese Schwelle erreicht (gleiche Formel wie die Kaufzonen).
+    art: "lohnt" (Schwelle gefunden), "egal" (Warten brachte früher nichts), "unklar" (zu wenig Geschichte; Ersatz Ampel 80)."""
+    n = len(c); ok = ~np.isnan(score)
+    def heute(g):
+        a = kzv.get(g)
+        return None if a is None or math.isnan(a[-1]) else float(a[-1])
+    erg = None
+    for H in (156, 52):
+        if n <= H:
+            continue
+        f = np.full(n, np.nan)
+        f[:n - H] = ((c[H:] / c[:n - H]) ** (52 / H) - 1) * 100
+        basis = ok & ~np.isnan(f)
+        if basis.sum() < 52:
+            continue
+        stufen = []
+        for g in NK_STUFEN:
+            m = basis & (score >= g)
+            ph = _phasen(m)
+            if m.sum() >= NK_MIN_WOCHEN and ph >= NK_MIN_PHASEN:
+                stufen.append([g, float(np.median(f[m])), float(np.mean(f[m] > 0) * 100), ph, int(m.sum())])
+        if stufen or H == 52:
+            erg = (H, float(np.median(f[basis])), float(np.mean(f[basis] > 0) * 100), int(basis.sum()), stufen)
+            break
+    if erg is None:
+        p = heute(80)
+        return {"art": "unklar", "ab": 80, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
+                "jetzt": bool(ok[-1] and score[-1] >= 80)}
+    H, b_med, b_q, b_n, stufen = erg
+    gut = [s_ for s_ in stufen if s_[1] > b_med and s_[2] >= b_q - NK_TOL_QUOTE]
+    aus = {"h": H // 52, "b_med": r(b_med, 1), "b_q": r(b_q, 0), "b_wo": b_n,
+           "stufen": [[g, r(m, 1), r(q, 0), ph, wo] for g, m, q, ph, wo in stufen]}
+    if not stufen:
+        p = heute(80)
+        return {"art": "unklar", "ab": 80, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
+                "jetzt": bool(ok[-1] and score[-1] >= 80), **aus}
+    if not gut:
+        return {"art": "egal", "ab": None, "preis": None, **aus}
+    g, m, q, ph, wo = max(gut, key=lambda s_: s_[1])
+    p = heute(g)
+    return {"art": "lohnt", "ab": g, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
+            "jetzt": bool(ok[-1] and score[-1] >= g), "med": r(m, 1), "q": r(q, 0), "ph": ph, "wo": wo, **aus}
 
 
 KQ_H, VQ_H = 156, 52   # Kaufqualität: Rendite der folgenden 3 Jahre; Verkaufsqualität: Kurs 1 Jahr später
@@ -576,9 +641,15 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     kz = None
     try:
         if not math.isnan(s_jetzt):
-            kz = {"jetzt": r(s_jetzt, 1), **{str(z): (None if math.isnan(a[-1]) else float(f"{a[-1]:.4g}")) for z, a in kzv.items()}}
+            kz = {"jetzt": r(s_jetzt, 1), **{str(z): (None if math.isnan(a[-1]) else float(f"{a[-1]:.4g}")) for z, a in kzv.items() if z in KZ_STUFEN}}
     except Exception as ex:
         print(f"Kaufzonen nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    nk = None
+    try:   # Nachkauf-Preis je Titel mit Beleg aus der eigenen Geschichte
+        if not math.isnan(s_jetzt):
+            nk = nachkauf(c, score, kzv, float(tag_c.iloc[-1]))
+    except Exception as ex:
+        print(f"Nachkauf nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     r2 = trendguete(w["Close"])
     qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
@@ -634,6 +705,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
         "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
+        "nk": nk,                            # Nachkauf: ab welcher Ampel sich Kaufen bei diesem Titel früher lohnte, Kurs dafür heute
         "linie200": r(sma200[-1], 4),        # 200-Wochen-Linie heute
         "ampel_wochen": int(np.sum(~np.isnan(score))),   # Wochen mit Ampel
         "ampel_seit": w.index[int(np.flatnonzero(~np.isnan(score))[0])].strftime("%Y") if np.any(~np.isnan(score)) else None,
@@ -658,7 +730,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     except Exception as ex:
         print(f"Kauf-/Verkaufsqualität nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     for z, arr in (kzv or {}).items():   # Kaufzonen je Woche (mitwandernde Linien im Chart)
-        if not np.all(np.isnan(arr)):
+        if z in KZ_STUFEN and not np.all(np.isnan(arr)):
             chart[f"kz{z}"] = rund(arr)
     if not np.all(np.isnan(score_v)):
         chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)
