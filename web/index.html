@@ -779,7 +779,7 @@ const ERKLAERUNG = {
   pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
   // --- Chart-Legende
   l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Gelbe Linie: der Durchschnitt der letzten 200 Wochenschlusskurse (knapp 4 Jahre). Bei Indizes, ETFs und Rohstoffen ist der Abstand zu ihr einer der Bausteine der Ampel. Liegt der Kurs nahe an der Linie oder darunter, ist er gemessen an den letzten Jahren günstig; liegt er weit darüber, ist er teuer. Bei starken Werten wie dem S&P 500 oder Bitcoin war die Linie früher oft ein Boden, unter den der Kurs nur selten und kurz fiel."},
-  l_trend: {titel:"Langfristtrend ±2 Standardabw. (blau)", text:"Gerade durch den ganzen Kursverlauf auf logarithmischer Skala, dazu ein Band von ±2 Standardabweichungen. Achtung: Diese Linie im Chart nutzt die ganze Historie bis heute (Rückblick). Die Ampel rechnet dagegen nur mit dem jeweils damals bekannten Trend."},
+  l_trend: {titel:"Trendkanal (blau, wandert mit)", text:"Die mittlere blaue Linie ist der Langfristtrend: eine Gerade durch alle Kurse auf logarithmischer Skala. Sie wird für jede Woche neu gezogen, und zwar nur mit den Kursen, die es bis dahin gab – deshalb wandert der Kanal mit und knickt nach großen Auf- oder Abschwüngen ein wenig. Die gestrichelten Linien darüber und darunter liegen 2 Standardabweichungen entfernt: Dazwischen bewegte sich der Kurs bis dahin meistens. Über dem oberen Rand war der Kurs weit über seinem langen Trend (z. B. Nasdaq-100 im März 2000), unter dem unteren Rand weit darunter (z. B. Oktober 2002). Kein Kaufsignal; bei Werten ohne echten Aufwärtstrend (viele Rohstoffe) sagt der Kanal wenig."},
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
@@ -1580,13 +1580,14 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {w200:true, trend:true, kegel:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
-delete CHIPS.pfeile;   // Pfeile günstig/teuer entfernt (22.11.2026)
-const CHIPS_WICHTIG = ["w200", "phasen", "kaufzonen", "ampel", "ergebnis", "tiefhoch"];
+// Startzustand bei JEDEM Aufruf (Wunsch Marc 22.11.2026): 200-Wochen-Linie, Kaufzonen, Ampel-Verlauf, Tief-/Hochpunkte und
+// Prognose-Kegel an, alles andere aus; Wochenansicht, 10 Jahre. Umschalten gilt bis zum nächsten Neuladen der Seite.
+let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:false, mayer:false, mvrv:false};
+const CHIPS_WICHTIG = ["w200", "kaufzonen", "ampel", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
-let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
+let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
-let INTERVALL = lade("intervall", "W"), CD = null, KEGEL_D = null;
+let INTERVALL = "W", CD = null, KEGEL_D = null;
 const INTRADAY = ["60", "30", "15"], TAG_CACHE = new Map();
 const INTERVALLE = [["M","Monat"],["W","Woche"],["D","Tag"],["60","1 Std"],["30","30 Min"],["15","15 Min"]];
 const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:getComputedStyle(document.body).fontFamily, fontSize:11},
