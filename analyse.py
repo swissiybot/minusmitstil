@@ -134,25 +134,32 @@ def jahresrendite(tag: pd.Series, jahre: int):
 
 
 ANKER = 70.0        # Ampel genau an der 200-Wochen-Linie (gesetzter Wert, Wunsch Marc 22.11.2026: an der Linie = günstig)
-ANKER_STEIL = 2.0   # unter der Linie: +2 Punkte je % Abstand (5 % darunter = 80 = sehr günstig, 15 % darunter = 100)
+ANKER_STEIL = 2.0   # Ersatz unter der Linie, solange es zu wenige frühere Wochen unter der Linie gibt: +2 Punkte je % Abstand
 ANKER_MIN_UEBER = 52   # Mindestzahl früherer Wochen über der Linie, bevor „über der Linie“ bewertet wird
+ANKER_MIN_UNTER = 26   # Mindestzahl früherer Wochen unter der Linie, bevor „unter der Linie“ nach Seltenheit bewertet wird
 
 
-def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min_linie: int = 200):
-    """Ampel an der 200-Wochen-Linie verankert (seit 22.11.2026 abends, Wunsch Marc), ohne Blick in die Zukunft.
+def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min_linie: int = 200,
+                min_unter: int = ANKER_MIN_UNTER):
+    """Ampel an der 200-Wochen-Linie verankert, ohne Blick in die Zukunft (Modell für alle Gruppen).
     r = Kurs / 200-Wochen-Linie.
-      r <= 1 (an oder unter der Linie): Ampel = min(100, 70 + 2 x Abstand in %)  -> an der Linie 70, 5 % darunter 80.
+      r <= 1 (an oder unter der Linie), seit 22.11.2026 spät (Wunsch Marc, „das beste Modell“): nach Seltenheit der Tiefe.
+        Ampel = 70 + 30 x Anteil aller FRÜHEREN Wochen unter der Linie, die weniger tief lagen (r größer).
+        An der Linie 70; so tief wie nie zuvor = 100; so tief wie meistens unter der Linie = etwa 85.
+        Gibt es weniger als min_unter frühere Wochen unter der Linie: Ersatzformel min(100, 70 + 2 x Abstand in %).
       r > 1 (über der Linie): Ampel = 70 x (1 - Rang), Rang = Anteil aller FRÜHEREN Wochen über der Linie mit kleinerem r.
         So weit über der Linie wie meistens -> etwa 35 (teuer); weiter darüber als fast immer -> nahe 0.
     Kaufzonen je Woche exakt aus derselben Formel: Ampel A bei Kurs p, wobei die Linie p selbst enthält
     (Linie = (Summe der 199 Vorwochen + p) / 200, also p = r * S199 / (200 - r)).
     min_linie: Wochen, aus denen die Linie mindestens besteht (200; für die vorläufige Ampel weniger).
-    Rückgabe: score, {80,60,40,15: Kurs}, rang_ueber (Rang heute, nur über der Linie, sonst NaN)."""
+    Rückgabe: score, {80,60,40,15: Kurs}, rang_ueber (über der Linie, sonst NaN), rang_unter (unter der Linie: Anteil
+    früherer Wochen unter der Linie, die tiefer lagen; sonst NaN)."""
     n = len(c)
-    score = np.full(n, np.nan); rang_ueber = np.full(n, np.nan)
+    score = np.full(n, np.nan); rang_ueber = np.full(n, np.nan); rang_unter = np.full(n, np.nan)
     kz = {z: np.full(n, np.nan) for z in (80, 60, 40, 15)}
     C = np.concatenate([[0.0], np.cumsum(c)])
     ueber: list[float] = []
+    unter: list[float] = []
     for t in range(n):
         m = min(t + 1, 200)
         if m < min_linie:
@@ -162,19 +169,43 @@ def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min
         if t >= start:
             s_vor = C[t] - C[t + 1 - m]          # Summe der Vorwochen innerhalb der Linie (ohne Woche t)
             p_zu = lambda rr: rr * s_vor / (m - rr)  # Kurs p, bei dem Kurs/Linie = rr wäre
+            L = len(unter)
             if r <= 1:
-                score[t] = min(100.0, ANKER + ANKER_STEIL * (1 - r) * 100)
+                if L >= min_unter:
+                    br = bisect.bisect_right(unter, r)          # frühere Wochen, die mindestens so tief lagen
+                    score[t] = ANKER + (100 - ANKER) * (L - br) / L
+                    rang_unter[t] = bisect.bisect_left(unter, r) / L
+                else:
+                    score[t] = min(100.0, ANKER + ANKER_STEIL * (1 - r) * 100)
             elif len(ueber) >= min_ueber:
                 rg = bisect.bisect_left(ueber, r) / len(ueber)
                 score[t] = ANKER * (1 - rg); rang_ueber[t] = rg
-            kz[80][t] = p_zu(1 - (80 - ANKER) / (ANKER_STEIL * 100))
+            if L >= min_unter:
+                # Ampel >= 80  <=>  (L - br)/L >= 1/3  <=>  br <= k  <=>  r < unter[k]
+                k = math.floor(L * (1 - (80 - ANKER) / (100 - ANKER)) + 1e-9)
+                kz[80][t] = p_zu(min(1.0, unter[k]))
+            else:
+                kz[80][t] = p_zu(1 - (80 - ANKER) / (ANKER_STEIL * 100))
             if len(ueber) >= min_ueber:
                 for z in (60, 40, 15):
                     k = math.ceil((1 - z / ANKER) * len(ueber) - 1e-9)
                     kz[z][t] = p_zu(1.0 if k <= 0 else ueber[k - 1])
         if r > 1:
             bisect.insort(ueber, r)
-    return score, kz, rang_ueber
+        else:
+            bisect.insort(unter, r)
+    return score, kz, rang_ueber, rang_unter
+
+
+def ampel_rechnen(c: np.ndarray, krypto: bool = False, start: int = None):
+    """Die Ampel des Werts (seit 22.11.2026 spät für alle Gruppen dasselbe Modell: Anker-Ampel mit Seltenheit).
+    Geprüft ohne Zukunftswissen gegen eine Kurve je Wert (isotone Regression „Abstand zur Linie → Rang der
+    3-Jahres-Rendite“): bei ETFs gleich, bei Aktien und Rohstoffen schlechter; bei Bitcoin nur wegen der frühen,
+    extrem schwankenden Jahre besser – ab 2018 gemessen 0,79 gegen 0,80, ab 2020 0,84 gegen 0,88 (Anker besser).
+    Rückgabe: art, score, kz, rang_ueber, rang_unter."""
+    start = WARMUP if start is None else start
+    score, kz, ru, rn = anker_ampel(c, start)
+    return "anker200s", score, kz, ru, rn
 
 
 KQ_H, VQ_H = 156, 52   # Kaufqualität: Rendite der folgenden 3 Jahre; Verkaufsqualität: Kurs 1 Jahr später
@@ -518,11 +549,13 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     # AMPEL seit 22.11.2026 abends (Wunsch Marc): an der 200-Wochen-Linie verankert – an der Linie 70 (günstig), darunter
     # schnell sehr günstig, darüber nach Seltenheit des Abstands in der eigenen Geschichte (anker_ampel). Davor (22.11.):
     # Studien-Ampel (Mittel aus 3–4 Perzentilen je Gruppe), davor reine 200-Wochen-Perzentil-Ampel, bis 21.11. Mischung.
-    art = "anker200"
-    score, kzv, rang_ueber = anker_ampel(c, WARMUP)
+    # AMPEL seit 22.11.2026 spät (Wunsch Marc: „je Wert neu rechnen“, „überall das beste Modell“): Anker-Ampel, unter der Linie
+    # jetzt nach Seltenheit der Tiefe statt +2 Punkte je % (100 nur noch bei Rekordtiefe). Bestes Modell in der Prüfung ohne
+    # Zukunftswissen für alle Gruppen (Bitcoin ab 2018 gemessen, weil die frühen Jahre so nicht wiederkommen).
+    art, score, kzv, rang_ueber, rang_unter = ampel_rechnen(c, krypto)
     # Vorläufige Ampel für die Anfangsjahre (ab 2 Jahren, nur Anzeige im Chart, nur wo die echte fehlt): gleiche Formel,
     # Linie aus allen bisherigen Wochen (mindestens 104), schon ab 26 früheren Wochen über der Linie.
-    score_v, _, _ = anker_ampel(c, VORL_WARMUP, min_ueber=26, min_linie=VORL_WARMUP)
+    score_v = anker_ampel(c, VORL_WARMUP, min_ueber=26, min_linie=VORL_WARMUP, min_unter=13)[0]
     score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
 
@@ -556,6 +589,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         g = f"{abs(ratio[-1] - 1) * 100:.0f} % {'über' if ratio[-1] >= 1 else 'unter'} der 200-Wochen-Linie"
         if not math.isnan(rang_ueber[-1]):
             g += f" – weiter darüber als in {rang_ueber[-1] * 100:.0f} % der früheren Wochen über der Linie"
+        elif not math.isnan(rang_unter[-1]):
+            g += f" – tiefer als in {(1 - rang_unter[-1]) * 100:.0f} % der früheren Wochen unter der Linie"
         grund.append(g)
     grund.append(f"{abs(dd[-1]) * 100:.0f} % unter dem Allzeithoch")
     if krypto:
@@ -581,8 +616,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "datum": tag.index[-1].strftime("%Y-%m-%d"),
         "kurs": r(tag_c.iloc[-1], 4),
         "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
-        "ampel_art": art,                    # anker200: an der 200-Wochen-Linie verankert
+        "ampel_art": art,                    # anker200s: an der 200-Wochen-Linie verankert, unter der Linie nach Seltenheit
         "rang_ueber": r(rang_ueber[-1] * 100, 0),   # über der Linie: Anteil früherer Wochen über der Linie, die näher an der Linie lagen
+        "rang_unter": r(rang_unter[-1] * 100, 0),   # unter der Linie: Anteil früherer Wochen unter der Linie, die tiefer lagen
         "cagr20": r(cagr20 * 100 if cagr20 is not None else None, 1), "cagr_jahre": r(j20, 1),
         "cagr20_div": mit_div(start20), "cagr10": r(cagr10 * 100 if cagr10 is not None else None, 1),
         "cagr_max": r(cagr_max * 100 if cagr_max is not None else None, 1), "jahre_daten": r(jmax, 1),
@@ -670,7 +706,7 @@ def tagebuch(zeilen):
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
-    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "anker200", "signale": eintraege}, ensure_ascii=False, indent=0))
+    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "anker200s", "signale": eintraege}, ensure_ascii=False, indent=0))
 
 
 def _etfs():

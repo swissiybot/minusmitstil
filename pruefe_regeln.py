@@ -6,11 +6,14 @@ Geprueft wird mit echten Daten an einer festen Stichprobe (alle ETFs, Krypto, Ro
   2. Kurs ueber der Kaufzone „15“ (sehr teuer)   => Ampel <= 15.
      Kurs unter der Kaufzone „80“ (sehr guenstig) => Ampel >= 80.
   3. Kaufzonen geordnet: 80 <= 60 <= 40 <= 15 (Kurs).
-  4. Unter der 200-Wochen-Linie gilt die Anker-Formel: Ampel = min(100, 70 + 2 x Abstand in %).
+  4. Anker-Ampel: an oder unter der 200-Wochen-Linie liegt die Ampel zwischen 70 und 100,
+     darueber unter 70; unter der Linie gilt die Seltenheits-Formel (bzw. 70 + 2 x Abstand, solange es zu wenige fruehere
+     Wochen unter der Linie gibt).
   5. Die letzte Woche der Kaufzonen im Chart = Kaufzonen in der Kopfzeile (info.kz) und in der Rangliste.
   6. Kauf- und Verkaufsqualitaet liegen zwischen 0 und 100.
-  7. Die ausgegebene Ampel ist genau die der Formel (nachgerechnet mit anker_ampel).
-Dazu Rechenproben mit kuenstlichen Kursreihen (konstanter Kurs = an der Linie = 70, steiler Absturz = 100).
+  7. Die ausgegebene Ampel ist genau die der Formel (nachgerechnet mit ampel_rechnen).
+Dazu Rechenproben mit kuenstlichen Kursreihen (konstanter Kurs = an der Linie = 70, Absturz tiefer als je zuvor = 100,
+Kurs knapp unter/ueber der Kaufzone 80).
 
 Aufruf: python pruefe_regeln.py          (Ausgabe: Anzahl gepruefter Werte und Fehler; Rueckgabecode 1 bei Fehlern)
 """
@@ -32,16 +35,25 @@ def pruef(bed: bool, text: str):
 
 def kuenstlich():
     c = np.full(400, 100.0)
-    s, kz, _ = A.anker_ampel(c, A.WARMUP)
+    s = A.anker_ampel(c, A.WARMUP)[0]
     pruef(abs(s[-1] - A.ANKER) < 1e-9, f"Probe konstanter Kurs: Ampel {s[-1]} statt {A.ANKER}")
     c2 = np.concatenate([np.full(399, 100.0), [50.0]])
-    s2, _, _ = A.anker_ampel(c2, A.WARMUP)
+    s2 = A.anker_ampel(c2, A.WARMUP)[0]
     pruef(s2[-1] == 100.0, f"Probe Absturz um 50 %: Ampel {s2[-1]} statt 100")
-    # Kurs genau an der Kaufzone 80 -> Ampel 80
-    p = kz[80][-1]
-    c3 = np.concatenate([c[:-1], [p]])
-    s3, _, _ = A.anker_ampel(c3, A.WARMUP)
-    pruef(abs(s3[-1] - 80) < 1e-6, f"Probe Kurs = Kaufzone 80: Ampel {s3[-1]:.4f} statt 80")
+    # schwankender Kurs: knapp unter der Kaufzone 80 -> Ampel >= 80, knapp darüber -> unter 80; Absturz unter alle Tiefs -> 100
+    rng = np.random.default_rng(7)
+    c4 = 100 * np.exp(np.cumsum(rng.normal(0.002, 0.04, 700)))
+    s4, kz4 = A.anker_ampel(c4, A.WARMUP)[:2]
+    p = kz4[80][-1]
+    for faktor, soll in ((1 - 1e-6, True), (1 + 1e-3, False)):
+        s5 = A.anker_ampel(np.concatenate([c4[:-1], [p * faktor]]), A.WARMUP)[0]
+        pruef((s5[-1] >= 80 - 1e-9) == soll, f"Probe Kurs {'unter' if soll else 'über'} Kaufzone 80: Ampel {s5[-1]:.3f}")
+    s6 = A.anker_ampel(np.concatenate([c4[:-1], [c4.min() * 0.3]]), A.WARMUP)[0]
+    pruef(s6[-1] == 100.0, f"Probe Rekordtiefe unter der Linie: Ampel {s6[-1]} statt 100")
+    # tieferer Kurs -> nie niedrigere Ampel
+    kurz = c4[:-1]
+    werte = [A.anker_ampel(np.concatenate([kurz, [kurz[-1] * f]]), A.WARMUP)[0][-1] for f in (0.5, 0.8, 1.0, 1.2, 1.6)]
+    pruef(all(werte[i] >= werte[i + 1] - 1e-9 for i in range(len(werte) - 1)), f"Probe: Ampel steigt mit dem Kurs ({werte})")
 
 
 def ein_wert(z: dict, rl: dict):
@@ -51,7 +63,8 @@ def ein_wert(z: dict, rl: dict):
     zeile, chart, roh = erg
     wid = z["id"]
     c = roh["w"]["Close"].values.astype(float)
-    score, kz, _ = A.anker_ampel(c, A.WARMUP)
+    art, score, kz, _, _ = A.ampel_rechnen(c)
+    pruef(zeile.get("ampel_art") == art, f"{wid}: Modell {zeile.get('ampel_art')} statt {art}")
     s_aus = np.asarray(roh["score"], dtype=float)
     gleich = np.isclose(score, s_aus, atol=1e-6) | (np.isnan(score) & np.isnan(s_aus))
     pruef(bool(gleich.all()), f"{wid}: ausgegebene Ampel weicht von der Formel ab ({int((~gleich).sum())} Wochen)")
@@ -68,8 +81,9 @@ def ein_wert(z: dict, rl: dict):
     linie = np.convolve(c, np.ones(200) / 200, "valid")
     lin = np.full(len(c), np.nan); lin[199:] = linie
     unter = ok & ~np.isnan(lin) & (c <= lin)
-    soll = np.minimum(100, A.ANKER + A.ANKER_STEIL * (1 - c / lin) * 100)
-    pruef(bool(np.allclose(score[unter], soll[unter], atol=1e-6)), f"{wid}: Anker-Formel unter der Linie verletzt")
+    ueber = ok & ~np.isnan(lin) & (c > lin)
+    pruef(bool(((score[unter] >= A.ANKER - 1e-6) & (score[unter] <= 100 + 1e-6)).all()), f"{wid}: unter der Linie Ampel außerhalb 70–100")
+    pruef(bool((score[ueber] <= A.ANKER + 1e-6).all()), f"{wid}: über der Linie Ampel über 70")
     # Kopfzeile, Chart und Rangliste
     zk = zeile.get("kz") or {}
     for k in ("80", "60", "40", "15"):

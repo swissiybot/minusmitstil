@@ -20,8 +20,8 @@ JAHRE = (1, 3, 5)
 ZONEN = ["historisch sehr guenstig", "guenstig", "neutral", "teuer", "historisch sehr teuer"]
 
 
-AMPEL = "anker200"
-AMPEL_SEIT = "2026-11-22"          # seit diesem Tag gilt die Anker-Ampel (200-Wochen-Linie)
+AMPEL = "anker200s"
+AMPEL_SEIT = "2026-11-22"          # seit diesem Tag (spät) gilt die Anker-Ampel mit Seltenheit unter der Linie
 ANDERE = []                        # Tage mit Einträgen einer früheren Ampel (werden nicht mitgezählt)
 
 
@@ -31,7 +31,7 @@ def eintraege() -> list[dict]:
     for f in sorted(ORDNER.glob("*.json")):
         with open(f, "r", encoding="utf-8") as fh:       # nur lesen
             d = json.load(fh)
-        if d.get("ampel") != AMPEL:   # nur Einträge der heutigen Ampel (seit 22.11.2026 abends), frühere nicht vermischen
+        if d.get("ampel") != AMPEL:   # nur Einträge der heutigen Ampel (seit 22.11.2026 spät), frühere nicht vermischen
             ANDERE.append(f.stem)
             continue
         for s in d.get("signale", []):
