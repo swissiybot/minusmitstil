@@ -5,7 +5,7 @@ web/daten bleibt unveraendert (lokale Fassung).
 
 Schalter KURSE_OEFFENTLICH (unten):
   True  = Variante a (Entscheidung Marc, 21.11.2026 abends): die Online-Seite zeigt den eigenen Chart
-          mit Kursen wie lokal (Pfeile, 200-Wochen-Linie, Pi Cycle, Prognose-Kegel). Kurse: Yahoo Finance.
+          mit Kursen wie lokal (Günstig-/Teuer-Phasen, 200-Wochen-Linie, Pi Cycle, Prognose-Kegel). Kurse: Yahoo Finance.
   False = reduzierter Modus (Variante b), wie folgt beschrieben:
 
 Reduzierter, oeffentlicher Modus (frueher Entscheidung Marc: Variante b): Die Online-Seite enthaelt KEINE

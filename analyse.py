@@ -3,12 +3,10 @@
 Grundsatz: Jede Kennzahl zum Zeitpunkt t wird NUR mit der Historie bis t verglichen
 (kein Blick in die Zukunft). Nur so sind die Trefferquoten aus der Vergangenheit ehrlich.
 
-Ampel (0-100, hoch = historisch guenstig) = Mittel aus vier Perzentilen:
-  1. Abstand zum Allzeithoch        (tiefer = guenstiger)
-  2. Kurs / 200-Wochen-Linie         (niedriger = guenstiger)
-  3. Abweichung vom log. Langfristtrend in Standardabweichungen
-  4. Wochen-RSI(14)
-Bitcoin zusaetzlich: Mayer Multiple (Kurs / 200-Tage-Linie); Pi Cycle Bottom/Top als Markierung.
+Ampel (0-100, hoch = historisch guenstig), seit 22.11.2026: nur Kurs / 200-Wochen-Linie, als Perzentil gegen alle
+frueheren Wochen desselben Werts. Ampel = 100 - Anteil der frueheren Wochen, in denen der Kurs im Verhaeltnis zur Linie
+noch tiefer lag. (Bis 21.11.2026: Mittel aus Allzeithoch-Abstand, 200-Wochen-Abstand, Langfristtrend, Wochen-RSI.)
+Zusaetzlich die violette „neue Ampel“ (neue_ampel, Studie 21.11.2026). Bitcoin: Pi Cycle Bottom/Top als Markierung.
 Pi Cycle Bottom: faellt die 150-Tage-EMA UNTER die 471-Tage-SMA x 0,745, beginnt die
 Bodenbildungszone; steigt sie wieder DARUEBER, ist das das Boden-Signal. Der Boden liegt laut Indikator
 zwischen beiden Kreuzungen. EMA ueber der Linie = Aufwaertstrend bzw. Bodenbildung noch nicht begonnen.
@@ -149,7 +147,7 @@ def kaufzonen(c: np.ndarray, komponenten: dict, rsi_n: int = 14, mayer_sma: floa
         if len(h) < 50 or math.isnan(arr[-1]):
             continue
         hist[k] = h
-    if len(hist) < 2:
+    if len(hist) < 1:
         return None
     ath_vor = float(np.max(vor))
     summe199 = float(np.sum(c[-200:-1]))
@@ -190,7 +188,7 @@ def kaufzonen(c: np.ndarray, komponenten: dict, rsi_n: int = 14, mayer_sma: floa
             if v is None or math.isnan(v):
                 continue
             teile.append(bisect.bisect_left(h, v) / (len(h) + 1))
-        return (1 - sum(teile) / len(teile)) * 100 if len(teile) >= 2 else float("nan")
+        return (1 - sum(teile) / len(teile)) * 100 if len(teile) >= 1 else float("nan")
     p0 = float(c[-1])
     out = {"jetzt": r(ampel(p0), 1)}
     for ziel in (80, 60, 40, 15):
@@ -283,7 +281,7 @@ NEUE_AMPEL = {   # Bausteine der neuen Ampel je Gruppe (Ergebnis der Ampel-Studi
 
 def neue_ampel(zeile: dict, w: pd.DataFrame, c: np.ndarray, komponenten: dict, krypto: bool, bitcoin: bool) -> np.ndarray:
     """Zweite, zusätzliche Ampel (0–100, hoch = günstig) mit je Gruppe in der Studie besser abschneidenden Bausteinen.
-    Die alte Ampel bleibt unverändert; Rangliste, Prüfungen und Signale nutzen weiter die alte."""
+    Rangliste, Prüfungen und Signale nutzen die Hauptampel (200-Wochen-Linie)."""
     s = w["Close"]
     teile = {"dd": komponenten["dd"], "ratio": komponenten["ratio"], "trend": komponenten["trend"],
              "r3j": expandierendes_perzentil(c / s.shift(156).values - 1, WARMUP),
@@ -328,7 +326,6 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     if krypto:
         mayer_tag = tag_c / tag_c.rolling(200).mean()
         mayer_w = mayer_tag.resample("W-FRI").last().reindex(w.index).values
-        komponenten["mayer"] = expandierendes_perzentil(mayer_w, 104)
         extra = {"mayer": r(mayer_tag.iloc[-1]), "mayer_w": mayer_w}
     if bitcoin:
         ema150 = tag_c.ewm(span=150, adjust=False).mean()
@@ -373,21 +370,15 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
             "pi_top350x2": sma350x2.resample("W-FRI").last().reindex(w.index).values,
             "mayer_w": mayer_w,
         }
-    teile = np.vstack(list(komponenten.values()))
-    with np.errstate(invalid="ignore"):
-        anzahl = np.sum(~np.isnan(teile), axis=0)
-        score = np.where(anzahl >= 2, (1 - np.nanmean(np.where(np.isnan(teile), np.nan, teile), axis=0)) * 100, np.nan)
-    # Vorläufige Ampel für die Anfangsjahre (Wunsch Marc): gleiche Bausteine, aber schon ab VORL_WARMUP Wochen eigener
-    # Geschichte (die 200-Wochen-Linie fehlt dann meist noch). Nur dort, wo es die echte Ampel noch nicht gibt; nur für die
-    # Anzeige im Chart – Rangliste, Prüfungen und Signale nutzen weiter nur die echte Ampel.
-    kv = {"dd": expandierendes_perzentil(dd, VORL_WARMUP), "ratio": expandierendes_perzentil(ratio, VORL_WARMUP),
-          "trend": expandierendes_perzentil(tz, VORL_WARMUP), "rsi": expandierendes_perzentil(rs, VORL_WARMUP)}
-    if "mayer" in komponenten:
-        kv["mayer"] = komponenten["mayer"]
-    tv = np.vstack(list(kv.values()))
-    with np.errstate(invalid="ignore"):
-        anz_v = np.sum(~np.isnan(tv), axis=0)
-        score_v = np.where(anz_v >= 2, (1 - np.nanmean(tv, axis=0)) * 100, np.nan)
+    # AMPEL (seit 22.11.2026, Wunsch Marc): nur der Abstand des Kurses zur 200-Wochen-Linie, verglichen mit allen
+    # frueheren Wochen desselben Werts (nur Vergangenheit). Ampel 85 = nur in 15 % der bisherigen Wochen lag der Kurs
+    # im Verhaeltnis zur Linie noch tiefer. Die fruehere Mischung (Allzeithoch, Trend, RSI, Mayer) ist entfernt.
+    score = (1 - komponenten["ratio"]) * 100
+    # Vorläufige Ampel für die Anfangsjahre: solange es noch keine 200 Wochen gibt, zählt der Durchschnitt aller bisherigen
+    # Wochen (mindestens 2 Jahre) als Linie. Nur Anzeige im Chart, nur wo die echte Ampel fehlt; Rangliste und Prüfungen
+    # nutzen nur die echte Ampel.
+    linie_v = w["Close"].rolling(200, min_periods=VORL_WARMUP).mean().values
+    score_v = (1 - expandierendes_perzentil(c / linie_v, VORL_WARMUP)) * 100
     score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
     score2 = neue_ampel(zeile, w, c, komponenten, krypto, bitcoin)
@@ -407,10 +398,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     stat = statistik(c, w["Low"].values.astype(float), score, s_jetzt) if not math.isnan(s_jetzt) else {}
     # Kaufzonen: Kurse, bei denen die Ampel heute 80 / 60 / 40 / 15 zeigen wuerde
     try:
-        roh_k = {"dd": dd, "ratio": ratio, "trend": tz, "rsi": rs}
-        if krypto and "mayer_w" in extra:
-            roh_k["mayer"] = extra["mayer_w"]
-        kz = kaufzonen(c, roh_k, mayer_sma=float(tag_c.rolling(200).mean().iloc[-1]) if krypto else None) if not math.isnan(s_jetzt) else None
+        kz = kaufzonen(c, {"ratio": ratio}) if not math.isnan(s_jetzt) else None
     except Exception:
         kz = None
     r2 = trendguete(w["Close"])
@@ -420,13 +408,11 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     # Begruendung in Worten
     def perz_text(k):
         p = komponenten[k][-1]
-        return "" if math.isnan(p) else f" (so tief nur in {max(p * 100, 0.1):.0f} % der Wochen)" if p < 0.5 else f" (hoeher als in {p * 100:.0f} % der Wochen)"
-    grund = [f"{abs(dd[-1]) * 100:.0f} % unter Allzeithoch{perz_text('dd')}"]
+        return "" if math.isnan(p) else f" – so tief nur in {max(p * 100, 0.1):.0f} % der Wochen" if p < 0.5 else f" – höher als in {p * 100:.0f} % der Wochen"
+    grund = []
     if not math.isnan(ratio[-1]):
-        grund.append(f"{(ratio[-1] - 1) * 100:+.0f} % zur 200-Wochen-Linie{perz_text('ratio')}")
-    if not math.isnan(tz[-1]):
-        grund.append(f"{tz[-1]:+.1f} Standardabw. zum Langfristtrend")
-    grund.append(f"Wochen-RSI {rs[-1]:.0f}")
+        grund.append(f"{abs(ratio[-1] - 1) * 100:.0f} % {'über' if ratio[-1] >= 1 else 'unter'} der 200-Wochen-Linie{perz_text('ratio')}")
+    grund.append(f"{abs(dd[-1]) * 100:.0f} % unter dem Allzeithoch")
     if krypto:
         grund.append(f"Mayer Multiple {extra['mayer']}")
         if extra.get("pi_status"): grund.append(extra["pi_status"])
@@ -466,6 +452,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
         "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
+        "linie200": r(sma200[-1], 4),        # 200-Wochen-Linie heute
+        "ampel_wochen": int(np.sum(~np.isnan(ratio))),   # Vergleichswochen der Ampel (Wochen mit 200-Wochen-Linie)
+        "ampel_seit": w.index[int(np.flatnonzero(~np.isnan(ratio))[0])].strftime("%Y") if np.any(~np.isnan(ratio)) else None,
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -473,12 +462,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     voll = np.polyfit(np.arange(len(logp)), logp, 1)
     trendlinie = voll[1] + voll[0] * np.arange(len(logp))
     resid_sd = float(np.std(logp - trendlinie))
-    marken = []
-    for i in range(1, len(score)):
-        if not math.isnan(score[i]) and score[i] >= 80 and not (score[i - 1] >= 80):
-            marken.append([t_unix[i], "kauf", r(score[i], 0)])
-        if not math.isnan(score[i]) and score[i] <= 15 and not (score[i - 1] <= 15):
-            marken.append([t_unix[i], "teuer", r(score[i], 0)])
+    marken = []   # Pfeile günstig/teuer entfernt (Wunsch Marc 22.11.2026); nur noch Pi-Cycle-Marken bei Bitcoin
     rund = lambda a, n=4: [None if (x is None or (isinstance(x, float) and math.isnan(x))) else float(f"{x:.{n}g}") for x in a]
     chart = {
         "t": t_unix,
@@ -537,7 +521,7 @@ def tagebuch(zeilen):
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
-    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "signale": eintraege}, ensure_ascii=False, indent=0))
+    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "200w", "signale": eintraege}, ensure_ascii=False, indent=0))
 
 
 def _etfs():

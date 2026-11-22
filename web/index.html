@@ -345,6 +345,16 @@ h3{font-size:14px;margin:16px 14px 8px;font-weight:650}
 .af-n .klein{display:block}
 .kern{padding:14px 16px;border-radius:var(--r);border:1px solid var(--line);background:linear-gradient(135deg,var(--akzent-weich),transparent 60%),var(--panel);margin-bottom:16px}
 .kern b{color:var(--text)}
+.schritte{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.schritt{padding:12px 14px;border-radius:var(--r);border:1px solid var(--line);background:var(--panel);font-size:13px;color:var(--text2);line-height:1.5}
+.schritt h4{margin:0 0 6px;font-size:14px;color:var(--text);display:flex;align-items:center}
+.schritt .nr{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--akzent-weich);color:var(--text);margin-right:8px;font-size:12px;font-weight:700;flex:none}
+.chip-zeile{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}
+.chip-titel{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:112px;font-weight:600}
+.kz-tab td,.kz-tab th{padding:6px 8px}
+.kz-tab tr.kz-heute td{font-weight:650;background:color-mix(in srgb,var(--akzent) 13%,transparent)}
+.kz-farbe{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:-1px}
+@media (max-width:760px){.schritte{grid-template-columns:1fr}}
 
 /* So liest du das Tool (Seitenleiste) */
 #lese-bereich{min-width:0;min-height:0;overflow-y:auto;background:var(--bg2);padding:0 18px 30px}
@@ -411,6 +421,9 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   body[data-ansicht="lesen"] #lese-bereich{display:block}
   #haupt{padding:12px 12px 24px}
   .wert-kopf{grid-template-columns:1fr;padding:14px}
+  .wert-kopf.mit-neu{grid-template-columns:1fr 1fr}
+  .wert-kopf.mit-neu>div:first-child{grid-column:1/-1}
+  .wert-kopf.mit-neu .neu-ampel{width:auto;order:-1}
   .gauge{margin:0 auto;order:-1;transform:scale(.9);margin-bottom:-8px}
   .chart-flaeche{height:min(var(--g-chart,540px),68vh)}
   .unten-nav{display:grid;grid-template-columns:repeat(6,1fr);flex-shrink:0;background:var(--bg2);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -418,7 +431,9 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .unten-nav button svg{width:21px;height:21px}
   .unten-nav button[aria-current="page"]{color:var(--akzent)}
   .wtab{font-size:12px}
-  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .chips{flex-direction:column;flex-wrap:nowrap}
+  .chip-zeile{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .chip-titel{min-width:auto;white-space:nowrap}
   .fk{left:6px;top:4px;padding:3px 7px;font-size:10.5px;line-height:1.4;max-width:calc(100% - 64px)}
   .fk .r:nth-child(2){display:none}
 }
@@ -482,8 +497,24 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
     <div class="lese-kopf"><h2>So liest du das Tool</h2><button class="knopf-ikon" id="lese-zu" aria-label="Seitenleiste schließen">✕</button></div>
     <div class="lese">
       <div class="merke" id="lesehilfe-kern"></div>
-      <h4>Was „historisch günstig“ bedeutet</h4>
-      <p>Die Ampel vergleicht den heutigen Stand eines Werts mit seiner eigenen Geschichte: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI. Ab Ampel 80 steht ein Wert im Mittel dieser Messgrößen günstiger als in etwa 80 % seiner bisherigen Wochen. Das ist eine Beschreibung, keine Vorhersage.</p>
+      <h4>So funktioniert die Ampel</h4>
+      <p>Die Ampel schaut auf eine einzige Linie: die <b>200-Wochen-Linie</b>. Das ist der Durchschnittskurs der letzten 200 Wochen, also knapp 4 Jahre. Man kann sie sich als den „normalen Preis“ eines Werts vorstellen, der sich nur langsam bewegt.</p>
+      <ol>
+        <li><b>Abstand messen:</b> Wie weit liegt der Kurs heute über oder unter dieser Linie? Zum Beispiel 10 % darunter.</li>
+        <li><b>Mit früher vergleichen:</b> Derselbe Abstand wird für jede frühere Woche berechnet – immer nur mit den Kursen, die es damals schon gab.</li>
+        <li><b>Ampel ablesen:</b> Wie selten war es früher noch günstiger? Lag der Kurs nur in 5 % aller Wochen noch tiefer unter der Linie, zeigt die Ampel 95 (historisch sehr günstig). Lag er in 90 % aller Wochen tiefer, zeigt sie 10 (historisch sehr teuer).</li>
+      </ol>
+      <p>Jeder Wert wird nur mit sich selbst verglichen. Deshalb passt die Ampel für ruhige ETFs genauso wie für Bitcoin: Beim S&amp;P 500 sind 20 % über der Linie ziemlich normal, bei Bitcoin eher günstig.</p>
+      <h4>Die fünf Stufen</h4>
+      <ul>
+        <li><b>ab 80 – historisch sehr günstig:</b> höchstens in 1 von 5 Wochen war es noch günstiger.</li>
+        <li><b>60 bis 80 – günstig:</b> günstiger als meistens.</li>
+        <li><b>40 bis 60 – neutral:</b> ungefähr der übliche Abstand zur Linie.</li>
+        <li><b>15 bis 40 – teuer:</b> teurer als meistens.</li>
+        <li><b>bis 15 – historisch sehr teuer:</b> in mindestens 85 % aller Wochen war es günstiger.</li>
+      </ul>
+      <h4>Was die Ampel nicht kann</h4>
+      <p>Sie sagt nicht voraus, ob der Kurs steigt. Ein Kurs kann lange „günstig“ bleiben oder noch weiter fallen, und bei schwachen Firmen sinkt die Linie mit. Die violette <b>neue Ampel</b> rechnet zusätzlich mit anderen Bausteinen. Sind sich beide einig, ist das ein stärkerer Hinweis – ein Kaufsignal ist es trotzdem nicht.</p>
       <h4>Was die Prüfung zeigt</h4>
       <div id="lesehilfe-zahlen"><div class="lade" style="height:90px"></div></div>
       <h4>Wie du das Tool liest</h4>
@@ -654,7 +685,6 @@ function zeichneOnline(w, c){
 const legendeOnline = (w) => `
   <span data-e="tv_chart">Kurs-Chart: TradingView (Monatskerzen, 200-Wochen-Linie = Durchschnitt über 46 Monate)</span>
   <span data-e="l_ampelverlauf">darunter: Ampel im Zeitverlauf</span>
-  <span data-e="l_pfeile">Pfeile: Ampel ≥ 80 (grün) · ≤ 15 (rot)</span>
   ${w.pi ? '<span data-e="l_pizone"><i style="background:#e040fb55;height:9px"></i>Pi-Cycle-Bodenbildungszone</span><span data-e="pi_bottom" style="color:#e040fb">● Bodenbildung beginnt</span><span data-e="pi_signal" style="color:#00e676">▼ Pi Boden-Signal</span>' : ""}`;
 
 // Monte Carlo online: Verteilungen als Verhältnis zum heutigen Kurs (Export), Eingaben in Prozent
@@ -721,8 +751,8 @@ const pruefSatz = () => {
 };
 const ERKLAERUNG = {
   // --- Liste und Filter
-  ampel: {titel:"Ampel 0–100", text:() => `Fasst vier Messgrößen zusammen: Abstand zum Allzeithoch, Kurs zur 200-Wochen-Linie, Abweichung vom Langfristtrend und Wochen-RSI (bei Krypto zusätzlich Mayer Multiple). Jede wird als Rang gegenüber der eigenen Vergangenheit bis zu diesem Tag gemessen, ohne Blick in die Zukunft. Hoch = historisch günstig, niedrig = historisch teuer. Die Ampel allein ist kein Kaufsignal. ${pruefSatz()} Mehr dazu in der Seitenleiste „So liest du das Tool“.`},
-  zonen: {titel:"Ampel-Zonen", text:"Ab 80: historisch sehr günstig. 60–80: günstig. 40–60: neutral. 15–40: teuer. Bis 15: historisch sehr teuer. Die Grenzen sind eine feste Einteilung, keine Kaufempfehlung; „günstig“ heißt nur, dass der Kurs gemessen an seiner eigenen Geschichte tief steht."},
+  ampel: {titel:"Ampel 0–100", text:() => `Die Ampel misst eine einzige Sache: Wie weit steht der Kurs über oder unter seiner 200-Wochen-Linie – und wie selten war das früher? Die 200-Wochen-Linie ist der Durchschnittskurs der letzten 200 Wochen (knapp 4 Jahre), also so etwas wie der „normale Preis“ des Werts. Für jede frühere Woche wird derselbe Abstand berechnet, immer nur mit den Kursen bis dahin. Dann zählt die Ampel: In wie vielen früheren Wochen war es noch günstiger? Ampel 90 heißt: nur in 10 % aller Wochen lag der Kurs im Verhältnis zur Linie noch tiefer. Ampel 10 heißt: in 90 % der Wochen lag er tiefer – heute ist es also teuer. Jeder Wert wird nur mit sich selbst verglichen; deshalb passt das für ruhige ETFs genauso wie für Bitcoin. Die Ampel beschreibt die Lage, sie sagt nicht voraus, ob der Kurs steigt. ${pruefSatz()}`},
+  zonen: {titel:"Ampel-Stufen", text:"Ab 80: historisch sehr günstig – höchstens in 1 von 5 früheren Wochen stand der Kurs im Verhältnis zur 200-Wochen-Linie noch tiefer. 60 bis 80: günstig. 40 bis 60: neutral, ungefähr der übliche Abstand. 15 bis 40: teuer. Bis 15: historisch sehr teuer – in mindestens 85 % aller Wochen war es günstiger. Die Grenzen sind eine feste Einteilung, keine Kaufempfehlung."},
   cagr20: {titel:"Ø Jahresrendite", text:"Durchschnittlicher jährlicher Zuwachs (mit Zinseszins) über die letzten 20 Jahre, bei kürzerer Historie über die verfügbare Zeit. „Mit Dividenden“ heißt: ausgeschüttete Dividenden stecken im bereinigten Kurs, als wären sie wieder angelegt. Reine Kursindizes und Rohstoffe haben keine Dividenden. Vor Steuern und Kosten; die Vergangenheit garantiert nichts."},
   cagr_max: {titel:"Ø seit Beginn", text:"Durchschnittlicher jährlicher Zuwachs über die gesamte vorhandene Historie. Bei ETFs zählt die vorgeschaltete Index-Historie mit. Sehr lange Zeiträume glätten Krisen, sehr kurze (z. B. junge Kryptowährungen) sind kaum aussagekräftig."},
   p3: {titel:"3J höher", text:"In wie viel Prozent der früheren Wochen mit ähnlicher Ampel (±7,5 Punkte) stand der Kurs 3 Jahre später höher. Gezählt werden nur Wochen, deren Ergebnis heute bekannt ist. Aufeinanderfolgende Wochen hängen zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner. Die Prüfung ohne Zukunftswissen zeigt: diese Quote hat früher nicht besser vorhergesagt als die einfache Basis-Quote."},
@@ -730,14 +760,14 @@ const ERKLAERUNG = {
   check: {titel:"Lohnt-sich-Check", text:"Vergleicht für diesen Wert 500 je Monat als Sparplan mit „nur bei Ampel 60/75/90 kaufen, sonst auf dem Tagesgeld parken“ – über die echte Vergangenheit, nach Kosten und Abgeltungssteuer. „Ja“ heißt: das Warten hätte früher mehr gebracht. Ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage."},
   rueckschlag: {titel:"Rückschlagrisiko", text:"So oft fiel der Kurs nach einer ähnlichen Lage innerhalb eines Jahres noch mindestens 10 % unter den damaligen Kaufkurs. Dazu der typische (Median-)Tiefpunkt. Zeigt, wie viel Geduld man nach einem „günstigen“ Kauf früher brauchte."},
   vom_hoch: {titel:"Abstand zum Allzeithoch", text:"Wie weit der Kurs unter seinem bisher höchsten Wochenschluss liegt. −30 % heißt: 30 % unter dem Hoch. Ein großer Abstand kann günstig sein, aber auch ein Zeichen, dass das Geschäft dauerhaft schlechter läuft (bei Einzelaktien besonders)."},
-  w4: {titel:"Änderung in 4 Wochen", text:"Um wie viele Punkte sich die Ampel in den letzten 4 Wochen verändert hat. Plus heißt: der Wert ist günstiger geworden (meist weil der Kurs gefallen ist)."},
+  w4: {titel:"Änderung in 4 Wochen", text:"Um wie viele Punkte sich die Ampel in den letzten 4 Wochen verändert hat. Plus heißt: der Wert ist günstiger geworden, meist weil der Kurs gefallen ist. Minus heißt: teurer geworden, meist weil der Kurs gestiegen ist."},
   f_minj: {titel:"min. Jahre", text:"Zeigt nur Werte mit mindestens so vielen Jahren Kursdaten. Je länger die Historie, desto mehr Vergleichsphasen hat die Ampel. Unter 10 Jahren sind die Quoten sehr unsicher."},
   f_stabil: {titel:"Nur stabiler Aufwärtstrend", text:"Zeigt nur Aktien mit Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahren Daten. Achtung: Dieser Filter nutzt den ganzen Kursverlauf bis heute, er kennt also die Zukunft der Vergangenheit. ETFs, Krypto und Rohstoffe sind ausgenommen."},
   f_umsatz: {titel:"min. Umsatz pro Tag", text:"Durchschnittlicher Handelsumsatz der letzten 3 Monate in US-Dollar. Kleine, wenig gehandelte Aktien haben große Kurssprünge und hohe Handelskosten. ETFs, Krypto und Rohstoffe sind ausgenommen."},
   f_gruppe: {titel:"Gruppe", text:"Nasdaq: alle an der Nasdaq gelisteten Aktien. ETF: große Index-ETFs mit Index-Historie davor. Krypto: Bitcoin, Ethereum, Solana, Chainlink, Stellar. Rohstoffe: Endlos-Futures und ein Rohstoff-Korb. FTSE All-World erscheint, sobald die Vanguard-Liste da ist."},
   // --- Detail
-  grund: {titel:"Begründung", text:"Die Messgrößen hinter der Ampel in Worten. „So tief nur in X % der Wochen“ heißt: gemessen an der eigenen Geschichte bis heute war dieser Wert nur selten so niedrig."},
-  zu200w: {titel:"Kurs zur 200-Wochen-Linie", text:"Die 200-Wochen-Linie ist der Durchschnitt der letzten 200 Wochenschlüsse (knapp 4 Jahre). Liegt der Kurs darunter, ist er gemessen am langen Durchschnitt tief. Bei stark wachsenden Werten kommt das selten vor; bei schwachen Werten kann der Kurs auch lange darunter bleiben."},
+  grund: {titel:"Die Zahlen dahinter", text:"Die erste Zahl ist die Grundlage der Ampel: der Abstand des Kurses zur 200-Wochen-Linie und wie selten dieser Abstand war. „So tief nur in 5 % der Wochen“ heißt: In 95 % aller früheren Wochen stand der Kurs im Verhältnis zur Linie höher – heute ist es also selten günstig. Der Abstand zum Allzeithoch steht nur zur Information da und fließt nicht in die Ampel ein."},
+  zu200w: {titel:"Kurs zur 200-Wochen-Linie", text:"Die 200-Wochen-Linie ist der Durchschnitt der Schlusskurse der letzten 200 Wochen, also knapp 4 Jahre. Man kann sie sich als „normalen Preis“ vorstellen, der sich nur langsam bewegt. +20 % heißt: der Kurs liegt 20 % über diesem Durchschnitt, −10 %: 10 % darunter. Wie viel das ist, hängt vom Wert ab – für einen ruhigen Index sind +20 % viel, für Bitcoin wenig. Deshalb vergleicht die Ampel den Abstand mit der eigenen Geschichte des Werts. Vorsicht: Bei schwachen Firmen kann der Kurs jahrelang unter der Linie bleiben, und die Linie sinkt dann mit."},
   r2: {titel:"Trendgüte (R²)", text:"Wie gut der Kurs der letzten 20 Jahre auf einer gleichmäßig steigenden Linie (logarithmisch) liegt. 1 = perfekt gleichmäßig, 0 = kein Zusammenhang. Hohe Werte machen Trendkanal und Ampel verlässlicher; bei Rohstoffen und jungen Werten ist sie meist niedrig."},
   stabil: {titel:"Stabiler Aufwärtstrend", text:"Erfüllt, wenn Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahre Daten. Ohne stabilen Trend ist „historisch günstig“ wenig wert: ein fallender Wert ist immer wieder „günstig“."},
   rsi: {titel:"Wochen-RSI (14)", text:"Relative Stärke der letzten 14 Wochen: Verhältnis der Aufwärts- zu den Abwärtsbewegungen, Skala 0–100. Unter 30 gilt als „überverkauft“, über 70 als „überkauft“. Allein ist der RSI ein schwaches Signal; er fließt mit einem Viertel in die Ampel ein."},
@@ -747,17 +777,16 @@ const ERKLAERUNG = {
   pi_top: {titel:"Pi Cycle Top", text:"Steigt die 111-Tage-Linie über das Doppelte der 350-Tage-Linie, galt das bei Bitcoin früher als Zeichen für ein Zyklushoch. Nur für Bitcoin geeicht, sehr wenige Fälle."},
   pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
   // --- Chart-Legende
-  l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Durchschnitt der letzten 200 Wochenschlüsse. Langfristige Unterstützung bei starken Werten; der Kurs fällt selten darunter."},
+  l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Gelbe Linie: der Durchschnitt der letzten 200 Wochenschlusskurse (knapp 4 Jahre). Sie ist die Grundlage der Ampel. Liegt der Kurs nahe an der Linie oder darunter, ist er gemessen an den letzten Jahren günstig; liegt er weit darüber, ist er teuer. Bei starken Werten wie dem S&P 500 oder Bitcoin war die Linie früher oft ein Boden, unter den der Kurs nur selten und kurz fiel."},
   l_trend: {titel:"Langfristtrend ±2 Standardabw. (blau)", text:"Gerade durch den ganzen Kursverlauf auf logarithmischer Skala, dazu ein Band von ±2 Standardabweichungen. Achtung: Diese Linie im Chart nutzt die ganze Historie bis heute (Rückblick). Die Ampel rechnet dagegen nur mit dem jeweils damals bekannten Trend."},
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
-  l_pfeile: {titel:"Pfeile im Chart", text:"Blaugrüner Pfeil „alt 82“: Die alte Ampel stieg auf 80 oder mehr (historisch sehr günstig). Oranger Pfeil „alt 13“: Sie fiel auf 15 oder weniger (historisch sehr teuer). Die Zahl ist der Ampelwert in dieser Woche. Violette Pfeile „neu …“ zeigen dasselbe für die neue Ampel (nur wenn der Schalter „Neue Ampel“ an ist). Je Phase gibt es nur einen Pfeil: Ein neuer kommt erst, wenn die Ampel zwischendurch deutlich zurück war (nach „teuer“ über 25, nach „günstig“ unter 70) – sonst blinkt es bei Werten knapp an der Grenze. Der Pfeil steht beim Überschreiten der Grenze, nicht am Hoch oder Tief. Beschreibung, kein Kauf- oder Verkaufssignal."},
-  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Die gestrichelten Linien markieren 80 und 15."},
+  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe blaugrüne Balken = günstig, niedrige orange Balken = teuer. Die gestrichelten Linien liegen bei 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 3 Jahre (die Karte „Prognose“ zeigt die Zahlen nach 12 Monaten). Je weiter in der Zukunft, desto breiter der Kegel: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
-  tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Pfeile und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
+  tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Günstig-/Teuer-Phasen und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
   // --- Wahrscheinlichkeitstabelle
-  t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel höchstens 7,5 Punkte vom heutigen Wert entfernt war. Für jede wird geschaut, wie der Kurs nach 1, 3 und 5 Jahren stand."},
+  t_aehnlich: {titel:"Ähnliche Lage früher", text:"Alle früheren Wochen, in denen die Ampel ähnlich stand wie heute (höchstens 7,5 Punkte daneben) – also der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war, gemessen an der Geschichte. Für jede dieser Wochen wird nachgeschaut, wo der Kurs 1, 3 und 5 Jahre später stand."},
   t_hoeher: {titel:"Kurs höher", text:"Anteil der ähnlichen Wochen, nach denen der Kurs am Ende des Zeitraums höher stand. Das ist eine Häufigkeit aus der Vergangenheit, keine Zusage. In der Prüfung ohne Zukunftswissen war diese Quote nicht treffsicherer als die Quote „an allen Tagen“."},
   t_alle: {titel:"An allen Tagen", text:"Basis-Quote: Anteil aller Wochen (egal welche Ampel), nach denen der Kurs höher stand. Das ist der Vergleichsmaßstab für einen beliebigen Kauftag."},
   t_median: {titel:"Median p.a.", text:"Typische Jahresrendite nach ähnlichen Lagen gegenüber allen Wochen. Median heißt: die Hälfte der Fälle lag darüber, die Hälfte darunter. Ausreißer verzerren ihn weniger als einen Durchschnitt."},
@@ -803,8 +832,8 @@ const ERKLAERUNG = {
   u_vix: {titel:"VIX", text:"Die vom Optionsmarkt erwartete Schwankung des S&P 500 für die nächsten 30 Tage, in Prozent pro Jahr („Angstbarometer“). Unter 15 ruhig, 15–25 normal, 25–35 nervös, über 35 Panik. Hohe Werte gab es oft in der Nähe von Tiefpunkten, aber auch mitten in langen Abschwüngen."},
   u_zinskurve: {titel:"Zinskurve 10 J. – 2 J.", text:"Zins 10-jähriger minus 2-jähriger US-Staatsanleihen in Prozentpunkten. Negativ („invertiert“) heißt: kurzfristiges Geld ist teurer als langfristiges. Vor den meisten US-Rezessionen seit 1976 war die Kurve invertiert, der zeitliche Abstand schwankte aber zwischen Monaten und Jahren."},
   l_schwelle: {titel:"Ab welcher Ampel hat es sich gelohnt?", text:"Für genau diesen Wert: Wie oft stand der Kurs 1, 3 und 5 Jahre nach einer Woche mit dieser Ampel höher, und wie groß war die mittlere Veränderung? Die Zeile „jede Woche“ ist der Vergleich. So siehst du, ob eine höhere Ampel bei diesem Wert früher wirklich besser war (z. B. Bitcoin) oder nicht (z. B. Nasdaq-100, wegen der Dotcom-Krise 2000–2002). Eine Grenze, die zurückblickend perfekt passt, ist auf die Vergangenheit zugeschnitten – sie muss in Zukunft nicht gelten."},
-  l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60): Kreis = Einstieg, also der Schlusskurs der ersten Woche mit Ampel ab 60 (Datum und Kurs stehen daneben). Gestrichelte Linie bis zum Quadrat = derselbe Wert genau 52 Wochen später, dort steht das Ergebnis in Prozent (grün = höher, orange = tiefer, grau = noch kein Jahr vergangen). Der Einstieg ist der Phasenbeginn, nicht der Tiefpunkt – der tiefste Kurs kam oft erst später (siehe „Tief-/Hochpunkte“). Rückblick ohne Kosten und Steuern."},
-  l_tiefhoch: {titel:"Tief-/Hochpunkte (Rückblick)", text:"Grüner Kreis: die Woche mit dem tiefsten Schlusskurs in jeder günstigen Phase (Ampel ab 60), mit der Ampel dieser Woche. Orange: die Woche mit dem höchsten Schlusskurs in jeder teuren Phase (Ampel bis 15). Achtung: Den Tief- oder Hochpunkt kennt man immer erst hinterher – damals wusste niemand, dass es der tiefste Kurs war. Die Pfeile dagegen erscheinen in der Woche, in der die Ampel die Grenze überschreitet, und waren damals schon sichtbar."},
+  l_ergebnis: {titel:"Kauf-Ergebnis", text:"Für jede günstige Phase (Ampel ab 60) zeigt ein Kreis den Einstieg: den Schlusskurs der ersten Woche mit Ampel ab 60, mit Datum und Kurs. Eine gestrichelte Linie führt zu einem Quadrat genau 52 Wochen (1 Jahr) später. Dort steht, was aus dem Kauf geworden wäre: grün = höher, orange = tiefer, grau = noch kein Jahr vergangen. So siehst du direkt im Chart, ob Kaufen in günstigen Phasen bei diesem Wert früher gut ausging. Der Einstieg ist der Anfang der Phase, nicht der Tiefpunkt. Ohne Kosten und Steuern."},
+  l_tiefhoch: {titel:"Tief-/Hochpunkte (Rückblick)", text:"Grüner Kreis: die Woche mit dem tiefsten Kurs in jeder günstigen Phase (Ampel ab 60), mit dem Ampelwert dieser Woche. Oranger Kreis: die Woche mit dem höchsten Kurs in jeder teuren Phase (Ampel bis 15). Achtung: Tief- und Hochpunkte kennt man immer erst hinterher – damals wusste niemand, dass es der tiefste oder höchste Kurs war."},
   l_tief: {titel:"Noch tiefer in der Phase", text:"Wie weit der Kurs nach Beginn der günstigen Phase noch fiel, bevor sie endete (mit Monat des Tiefpunkts). Zeigt, dass „günstig“ nicht „ganz unten“ heißt – den Tiefpunkt kennt man erst im Nachhinein."},
   f_sec: {titel:"Geschäft (SEC)", text:"Gewinn, Umsatz und Aktienzahl aus den Pflichtberichten an die US-Börsenaufsicht SEC (EDGAR, gemeinfrei). „12 Monate“ = die letzten vier Quartale, sonst das letzte Geschäftsjahr. Nur Firmen, die nach US-Regeln in Dollar berichten; ausländische Firmen fehlen. Kurs und Aktienzahl ergeben den Börsenwert."},
   f_kgv: {titel:"KGV", text:"Kurs-Gewinn-Verhältnis: Börsenwert geteilt durch den Gewinn der letzten 12 Monate. 20 heißt: Man zahlt das 20-Fache des Jahresgewinns. Niedrig ist nicht automatisch billig (Gewinn kann fallen), hoch nicht automatisch teuer (Gewinn kann stark wachsen). Bei Verlust gibt es kein KGV."},
@@ -961,28 +990,28 @@ const ERKLAERUNG_NEU = {
   mp_streifen: {titel:"Phasen-Verlauf", text:"Jeder Strich ist eine Woche der letzten 10 Jahre: blau = Aufwärtstrend, orange = Abwärtstrend."},
   ts_studie: {titel:"Trendstudie", text:"23 verbreitete Trend-Indikatoren, jeder nur mit dem Wissen der jeweiligen Woche. Gemessen ab 2005 (Prüfzeit): Trendfilter (investiert bei „aufwärts“, sonst Geldmarktzins, 0,1 % Kosten je Wechsel) gegen Kaufen und Halten. ΔSharpe = Rendite je Schwankung gegenüber Halten (positiv = besser), ΔRückgang = um so viele Prozentpunkte kleinerer größter Rückgang. „Besser als Zufall“: Anteil von 200 Zufallssignalen je Wert (gleich oft „aufwärts“, gleich lange Phasen), die der Indikator schlägt – um 50 % heißt: nicht von Zufall zu unterscheiden. Rang Ø: mittlerer Rang über ETFs, Rohstoffe, Aktien und Krypto."},
   datenstand: {titel:"Datenstand", text:() => STAND_TEXT || "lädt …"},
-  sparkline: {titel:"Ampel im letzten Jahr", text:"Kleine Linie: die Ampel alle 4 Wochen über das letzte Jahr. Steigt sie, ist der Wert gemessen an seiner Geschichte günstiger geworden (meist, weil der Kurs gefallen ist)."},
-  gauge: {titel:"Ampel-Halbkreis", text:"Links teuer, rechts günstig. Die Markierung zeigt die heutige Ampel, die Farbbänder die Zonen (bis 15 / 15–40 / 40–60 / 60–80 / ab 80). Zahl und Wort sind entscheidend, die Farbe hilft nur beim schnellen Erfassen."},
-  klartext: {titel:"In einem Satz", text:"Fasst die wichtigsten Messgrößen in Worten zusammen. Beschreibung der Lage, keine Empfehlung."},
+  sparkline: {titel:"Ampel im letzten Jahr", text:"Die kleine Linie zeigt die Ampel des letzten Jahres, alle 4 Wochen ein Punkt. Steigt sie, ist der Wert günstiger geworden (meist, weil der Kurs gefallen ist); fällt sie, ist er teurer geworden."},
+  gauge: {titel:"Ampel-Halbkreis", text:"Der Halbkreis zeigt die Ampel von heute: links teuer (orange), rechts günstig (blaugrün). Entscheidend ist die Zahl von 0 bis 100 und das Wort darunter. Ganz unten steht, wo die Ampel vor 4 Wochen stand."},
+  klartext: {titel:"In wenigen Sätzen", text:"Die Lage in Worten: wo der Kurs zur 200-Wochen-Linie steht, wie selten das früher war, was die Ampel daraus macht und ab welchem Kurs es günstig wäre. Beschreibung, keine Empfehlung."},
   lineal: {titel:"Lineal", text:"Messen im Chart: 1. Klick setzt den Start, dann zieht das Lineal mit der Maus mit. 2. Klick setzt das Ende, die Messung bleibt stehen. 3. Klick beendet das Lineal, die Maus ist wieder frei. Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
-  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Hinterlegt die ganze Zeit, in der die Ampel bei 80 oder mehr (kräftig blaugrün, „sehr günstig“), zwischen 60 und 80 (hell blaugrün, „günstig“) bzw. bei 15 oder weniger (orange) stand. Der Pfeil markiert nur den Anfang einer solchen Phase; der tiefste Kurs kam oft erst später, mitten in der Phase (z. B. März 2020)."},
+  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Farbige Flächen hinter dem Kurs zeigen, wann die Ampel günstig oder teuer war: kräftig blaugrün = Ampel ab 80 (historisch sehr günstig), hell blaugrün = 60 bis 80 (günstig), orange = bis 15 (historisch sehr teuer). So siehst du auf einen Blick, wie lange solche Phasen dauerten und wie es danach weiterging. Wichtig: Der tiefste Kurs kam oft erst mitten in einer günstigen Phase (z. B. März 2020) – „günstig“ heißt nicht „ganz unten“."},
   l_ema: {titel:"EMA-Band (Ribbon)", text:"Acht exponentielle gleitende Durchschnitte über 20, 25, 30, 35, 40, 45, 50 und 55 Kerzen der gewählten Zeitebene, eingefärbt von grün (kurz) über gelb bis rot (lang) – wie das bekannte EMA-Ribbon bei TradingView. Liegen die Linien eng beieinander, ist der Trend schwach oder dreht; fächern sie auf und liegt der Kurs darüber, läuft ein Aufwärtstrend, liegt er darunter ein Abwärtstrend. Achtung: Im Wochenchart sind 55 Kerzen gut ein Jahr, im Tageschart knapp drei Monate. Die Trendstudie im Tool fand für solche Linien keinen verlässlichen Vorteil bei der Richtung, nur kleinere Rückgänge auf Kosten von Rendite."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
-  l_kaufzonen: {titel:"Kaufzonen", text:"Waagerechte Linien: zu welchem Kurs der Wert HEUTE gemessen an seiner eigenen Geschichte günstig oder teuer wäre. Unter der dunkel-blaugrünen Linie stünde die Ampel bei 80 oder mehr (historisch sehr günstig), unter der hellen bei 60 (günstig); über der hell-orangen bei 40 oder weniger (teuer), über der dunkel-orangen bei 15 (historisch sehr teuer). Gerechnet mit denselben Bausteinen wie die Ampel (Abstand zum Hoch, zur 200-Wochen-Linie, zum Langfristtrend, RSI). Die Linien verschieben sich jede Woche. Beschreibung, keine Kaufempfehlung – „günstig“ hat in der Prüfung nicht verlässlich mehr Rendite gebracht."},
+  l_kaufzonen: {titel:"Kaufzonen", text:"Waagerechte Linien im Chart: Ab welchem Kurs wäre der Wert HEUTE günstig oder teuer? Dunkel-blaugrün: darunter stünde die Ampel bei 80 oder mehr (historisch sehr günstig). Hell-blaugrün: darunter bei 60 oder mehr (günstig). Hell-orange: darüber bei 40 oder weniger (teuer). Dunkel-orange: darüber bei 15 oder weniger (historisch sehr teuer). Gerechnet aus der 200-Wochen-Linie: Für jede Stufe wird nachgesehen, wie weit der Kurs früher über oder unter der Linie stand. Die Grenzen wandern jede Woche ein wenig mit, weil sich auch die Linie bewegt. Dieselben Grenzen stehen als Tabelle in der Karte „Kaufzonen heute“. Beschreibung, keine Kaufempfehlung."},
   l_mvrv: {titel:"MVRV-Z-Score (Bitcoin)", text:"Vergleicht den Marktwert aller Bitcoin mit dem „Realized Value“: jeder Coin zu dem Preis bewertet, zu dem er zuletzt bewegt wurde – grob der Durchschnittseinstand aller Besitzer. Z-Score = (Marktwert − Einstand) / Schwankung des Marktwerts. Unter 0: Kurs unter dem Ø-Einstand, die meisten Besitzer liegen im Minus – das war 2011, 2015, 2018/19, März 2020 und 2022 der Fall (Böden). Über 7: überhitzt (2013, 2017, 2021). In der Prüfung ohne Zukunftswissen leicht besser als die Grundquote; nur wenige Fälle. Blaue Linie im Ampel-Bereich, gestrichelte Linie im Kurs-Chart = Ø-Einstand."},
   kegel_pruefung: {titel:"Prüfung des Prognose-Kegels", text:"Ein Kegel ist gut, wenn er so oft trifft, wie er verspricht: Das 90-%-Band soll den späteren Kurs in etwa 9 von 10 Fällen enthalten, das 50-%-Band in etwa jedem zweiten. Trifft er seltener, ist er zu schmal (zu selbstsicher), trifft er öfter, ist er zu breit. Geprüft werden Varianten: wie viel Geschichte, ob die heutige Schwankung zählt (nach einem Einbruch ist der Markt meist unruhiger) und ob eine vorsichtigere Grundrendite besser passt. Die Variante mit der besten Trefferquote rechnet im Tool."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
-  intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
+  intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Günstig-/Teuer-Phasen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
   skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
-  quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Pfeilen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Pfeile und Kegel gibt es dort nicht."},
-  neue_ampel: {titel:"Neue Ampel (zusätzlich)", text:"Eine zweite Ampel neben der bisherigen, violett und gestrichelt umrandet. Gleiche Skala 0–100 (ab 80 sehr günstig, bis 15 sehr teuer), aber andere Bausteine je Gruppe – gewählt in einer Studie mit bis zu 1.585 Varianten, Auswahl nur in der Lernzeit, Prüfung danach. Aktien: Abstand zum Allzeithoch + 3- und 5-Jahres-Rendite (in der Prüfzeit klar und stabil besser als die alte Ampel). Indizes/ETFs/Rohstoffe: Abstand zum Hoch + 200-Wochen-Linie + Langfristtrend + 5-Jahres-Rendite statt Wochen-RSI (etwas besser und ruhiger). Krypto: Langfristtrend + 3-Jahres-Rendite, bei Bitcoin zusätzlich MVRV (nur wenige Zyklen – unsicher). Beim Nasdaq-100 sagte keine der Varianten die spätere Rendite voraus. Die alte Ampel bleibt unverändert; Listen, Prüfungen und Signale nutzen weiter die alte."},
-  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Die Ampel jeder Woche, so wie sie damals berechnet worden wäre. Blaugrün = günstig, orange = teuer. Gestrichelt: 80 und 15. Die Trennlinie darüber lässt sich ziehen. Blasse Balken am Anfang = vorläufige Ampel: Die normale Ampel braucht 5 Jahre eigene Kursgeschichte; vorher rechnet das Tool ab 2 Jahren schon eine vorläufige mit weniger Vergleichsgeschichte (und meist noch ohne 200-Wochen-Linie). Sie ist weniger verlässlich und zählt nicht in Prüfungen, Ranglisten und Signalen."},
+  quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Günstig-/Teuer-Phasen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Phasen und Kegel gibt es dort nicht."},
+  neue_ampel: {titel:"Neue Ampel (violett, zusätzlich)", text:"Eine zweite Ampel neben der Hauptampel. Die Hauptampel schaut nur auf die 200-Wochen-Linie; die violette rechnet je Gruppe mit den Bausteinen, die in einer Studie (bis zu 1.585 Varianten, Auswahl nur in der Lernzeit, danach geprüft) am besten abschnitten. Aktien: Abstand zum Allzeithoch + Rendite der letzten 3 und 5 Jahre. Indizes, ETFs und Rohstoffe: Abstand zum Hoch + 200-Wochen-Linie + Langfristtrend + 5-Jahres-Rendite. Krypto: Langfristtrend + 3-Jahres-Rendite, bei Bitcoin zusätzlich MVRV (nur wenige Zyklen, unsicher). Gleiche Skala 0–100. Zeigen beide günstig, sind sich zwei verschiedene Rechenwege einig. Listen, Phasen, Kaufzonen und Prüfungen nutzen die Hauptampel."},
+  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe blaugrüne Balken = günstig, niedrige orange Balken = teuer. Gestrichelt: 80 (ab da historisch sehr günstig) und 15 (bis da historisch sehr teuer). Die violette Linie ist die zusätzliche neue Ampel (Schalter „Neue Ampel“). Blasse Balken am Anfang = vorläufige Ampel: Die richtige Ampel braucht gut 5 Jahre Kurse – knapp 4 Jahre für die 200-Wochen-Linie und danach gut 1 Jahr zum Vergleichen. Vorher nimmt das Tool ab 2 Jahren den Durchschnitt aller bisherigen Wochen als Ersatzlinie. Das ist unsicherer und zählt nicht in Prüfungen und Ranglisten. Die Trennlinie darüber lässt sich ziehen."},
   l_pitop: {titel:"Pi Cycle Top (gestrichelt)", text:"111-Tage-Durchschnitt (orange) und 2 × 350-Tage-Durchschnitt (rosa). Stieg die 111-Tage-Linie darüber, lag bei Bitcoin früher ein Zyklushoch nahe (Markierung „Pi Top“). Nur für Bitcoin geeicht, sehr wenige Fälle."},
   l_mayer: {titel:"Mayer Multiple (unten, linke Skala)", text:"Kurs geteilt durch den 200-Tage-Durchschnitt, je Woche. Gestrichelt: 0,8 (früher tief) und 2,4 (früher überhitzt) – Grenzen aus der Bitcoin-Geschichte, für andere Coins nicht erprobt."},
   prognose: {titel:"Prognose (Simulation, 12 Monate)", text:"Monte-Carlo-Simulation: Aus echten Wochenrenditen der letzten 20 Jahre (bei kürzerer Historie der vorhandenen) werden 10.000 mögliche Wege gebaut. Gezeigt werden der mittlere Weg und die Spanne, in der 90 % der Wege enden. Keine Vorhersage: die Zukunft muss der Vergangenheit nicht ähneln, die heutige Ampel fließt nicht ein."},
-  signale: {titel:"Signale", text:"Letzter Pfeil (Ampel stieg auf 80 oder fiel auf 15), Lage zur 200-Wochen-Linie und Wochen-RSI; bei Kryptowährungen das Mayer Multiple, bei Bitcoin der Pi Cycle. Rückblickend sehen Signale oft gut aus – wie viel sie wirklich brachten, zeigt die Prüfung."},
+  signale: {titel:"Weitere Kennzahlen", text:"Zusätzliche Zahlen zum Wert. Die Ampel nutzt davon nur den Abstand zur 200-Wochen-Linie. Wochen-RSI, Abstand zum Langfristtrend, bei Kryptowährungen das Mayer Multiple und bei Bitcoin der Pi Cycle sind andere, bekannte Messgrößen – sie fließen nicht in die Ampel ein. Ein Klick auf den Namen erklärt jede."},
   heatmap: {titel:"Heatmap", text:"Alle Index-ETFs, Kryptowährungen und Rohstoffe nach ihrer heutigen Ampel. Blaugrün = historisch günstig, orange = historisch teuer. Antippen öffnet den Wert."},
   auffaellig: {titel:"Heute auffällig", text:"Werte, deren Ampel sich stark bewegt hat oder neu eine Grenze überschritten hat. Auffällig heißt nicht kaufenswert: die Prüfung zeigt, dass Warten auf eine günstige Ampel meist weniger brachte als ein Sparplan."},
   favorit: {titel:"Favorit", text:"Merkt den Wert in diesem Browser unter „Meine“. Nichts wird hochgeladen."},
@@ -1495,6 +1524,11 @@ function zeigeUebersicht(){
     <h1 class="seiten-titel">Marktüberblick</h1>
     <p class="seiten-unter">Wie günstig stehen die großen Märkte gemessen an ihrer <b>eigenen</b> Geschichte? Die Ampel (0–100) beschreibt die Lage – sie ist kein Kaufsignal.</p>
     <div class="kern" id="kern-uebersicht"></div>
+    <div class="schritte" data-e="ampel">
+      <div class="schritt"><h4><span class="nr">1</span>Die Linie</h4>Für jeden Wert wird die <b>200-Wochen-Linie</b> berechnet: der Durchschnittskurs der letzten knapp 4 Jahre – sozusagen der „normale Preis“.</div>
+      <div class="schritt"><h4><span class="nr">2</span>Der Abstand</h4>Wie weit liegt der Kurs heute darüber oder darunter? Darunter heißt: billiger als im Schnitt der letzten Jahre.</div>
+      <div class="schritt"><h4><span class="nr">3</span>Der Vergleich</h4>War der Abstand früher nur selten so klein, steht die Ampel hoch (blaugrün = günstig). War er oft kleiner, steht sie niedrig (orange = teuer).</div>
+    </div>
     <div class="wetter">${wetter}</div>
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
     <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
@@ -1545,7 +1579,9 @@ async function lohntSichCheck(id){
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
-let CHIPS = {neu:true, w200:true, trend:true, kegel:true, pfeile:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
+let CHIPS = {neu:true, w200:true, trend:true, kegel:true, phasen:true, ergebnis:true, tiefhoch:true, bb:false, ema:false, fib:false, gp:true, kaufzonen:true, ampel:true, pi:true, pitop:true, mayer:true, mvrv:true, ...lade("chips", {})};
+delete CHIPS.pfeile;   // Pfeile günstig/teuer entfernt (22.11.2026)
+const CHIPS_WICHTIG = ["w200", "phasen", "kaufzonen", "ampel", "ergebnis", "tiefhoch", "neu"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = lade("zeitraum", "10"), SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1571,12 +1607,19 @@ function gaugeSvg(s){
   return svg;
 }
 function klartext(w){
-  if (w.score == null) return `Für ${esc(kurzname(w))} gibt es noch keine Ampel: dafür braucht es mindestens 5 Jahre Kursdaten, hier sind es ${fmt(w.jahre_daten,1)} Jahre.`;
-  const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
-  let t = `${esc(kurzname(w))} steht gemessen an der eigenen Geschichte <b style="white-space:nowrap">${zonenWort(w.score)}</b> (Ampel ${fmt(w.score,0)} von 100). `;
-  if (w.dd != null) t += w.dd > -1 ? `Der Kurs ist nahe am Allzeithoch` : `Der Kurs liegt ${fmt(-w.dd,0)} % unter dem Allzeithoch`;
-  if (w.zu200w != null) t += ` und ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % über" : fmt(-w.zu200w,0) + " % unter"} der 200-Wochen-Linie. `; else t += ". ";
-  if (de != null && Math.abs(de) >= 5) t += `In den letzten 4 Wochen ist er ${de > 0 ? "günstiger" : "teurer"} geworden (${vz(de,0)} Punkte). `;
+  if (w.score == null) return `Für ${esc(kurzname(w))} gibt es noch keine Ampel. Sie braucht gut 5 Jahre Kursdaten: knapp 4 Jahre für die 200-Wochen-Linie und danach gut 1 Jahr zum Vergleichen. Hier sind es ${fmt(w.jahre_daten,1)} Jahre.`;
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, seit = w.ampel_seit ? ` seit ${w.ampel_seit}` : "";
+  let t = "";
+  if (w.zu200w != null) t += `${esc(kurzname(w))} steht <b>${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % über" : fmt(-w.zu200w,0) + " % unter"}</b> der 200-Wochen-Linie${w.linie200 ? ` (${fmt(w.linie200, nk)})` : ""}, dem Durchschnittskurs der letzten knapp 4 Jahre. `;
+  const tiefer = Math.round(100 - w.score);
+  t += tiefer <= 50 ? `Im Verhältnis zur Linie stand der Kurs nur in <b>${Math.max(tiefer, 1)} %</b> aller Wochen${seit} noch tiefer. `
+                    : `In <b>${tiefer} %</b> aller Wochen${seit} stand der Kurs im Verhältnis zur Linie tiefer als heute. `;
+  t += `Deshalb zeigt die Ampel <b>${fmt(w.score,0)} von 100: <span style="white-space:nowrap">${zonenWort(w.score)}</span></b>. `;
+  const kz = w.kz;
+  if (kz && w.score < 60 && kz["60"] != null) t += `Günstig wäre es unter ${fmt(kz["60"], nk)}${kz["80"] != null ? `, historisch sehr günstig unter ${fmt(kz["80"], nk)}` : ""}. `;
+  else if (kz && w.score < 80 && kz["80"] != null) t += `Historisch sehr günstig wäre es unter ${fmt(kz["80"], nk)}. `;
+  const de = w.score_vor4w != null ? w.score - w.score_vor4w : null;
+  if (de != null && Math.abs(de) >= 5) t += `In den letzten 4 Wochen ist es ${de > 0 ? "günstiger" : "teurer"} geworden (${vz(de,0)} Punkte). `;
   return t + `Das beschreibt die Lage – ein Kaufsignal ist es nicht.`;
 }
 function wahrKarte(w){
@@ -1592,12 +1635,25 @@ function wahrKarte(w){
     ${zeile("1","1 Jahr")}${zeile("3","3 Jahren")}${zeile("5","5 Jahren")}
     <p class="klein" style="margin-top:8px">Häufigkeiten aus der Vergangenheit. In der Prüfung ohne Zukunftswissen waren sie nicht treffsicherer als „beliebiger Tag“.</p>`;
 }
-function signalKarte(w, c){
-  const marken = (c?.marken || []).filter(m => m[1] === "kauf" || m[1] === "teuer");
-  const letzte = marken[marken.length - 1];
+function kaufzonenKarte(w){   // Kaufzonen heute als Tabelle: Kursbereiche je Ampel-Stufe (aus der 200-Wochen-Linie)
+  const kz = w.kz; if (!kz || w.kurs == null) return "";
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => x == null ? "–" : fmt(x, nk);
+  const stufen = [[4, "historisch sehr günstig", "ab 80", null, kz["80"]], [3, "günstig", "60–80", kz["80"], kz["60"]],
+                  [2, "neutral", "40–60", kz["60"], kz["40"]], [1, "teuer", "15–40", kz["40"], kz["15"]], [0, "historisch sehr teuer", "bis 15", kz["15"], null]];
+  const s = w.score, heute = s == null ? -1 : s >= 80 ? 4 : s >= 60 ? 3 : s > 40 ? 2 : s > 15 ? 1 : 0;
+  const bereich = (lo, hi) => lo == null ? `unter ${k(hi)}` : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
+  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<tr class="${i === heute ? "kz-heute" : ""}"><td style="text-align:left"><i class="kz-farbe" style="background:${AMPEL_FARBEN[i]}"></i>${wort}</td><td>${amp}</td><td>${bereich(lo, hi)}</td><td style="text-align:left">${i === heute ? `◀ heute: ${k(w.kurs)}` : ""}</td></tr>`).join("");
+  const abst = w.linie200 ? (w.kurs / w.linie200 - 1) * 100 : null;
+  return `<section class="karte breit2" id="kaufzonen-karte"><div class="karte-kopf"><span data-e="l_kaufzonen" tabindex="0">Kaufzonen heute · ab welchem Kurs günstig oder teuer?</span><span>${datumDe(w.datum)}</span></div>
+    <p style="margin:0 0 8px">Die <b>200-Wochen-Linie</b> (Durchschnittskurs der letzten knapp 4 Jahre) liegt heute bei <b>${k(w.linie200)}</b>. Der Kurs steht <b>${abst == null ? "–" : abst >= 0 ? fmt(abst,0) + " % darüber" : fmt(-abst,0) + " % darunter"}</b>. Aus der Geschichte von ${esc(kurzname(w))}${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} ergeben sich heute diese Grenzen:</p>
+    <div class="tab-scroll"><table class="wtab kz-tab"><thead><tr><th style="text-align:left">Stufe</th><th>Ampel</th><th>Kurs</th><th></th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <p class="klein" style="margin:8px 0 0">So gelesen: Fällt der Kurs unter ${k(kz["60"])}, zeigt die Ampel „günstig“, unter ${k(kz["80"])} „historisch sehr günstig“. Steigt er über ${k(kz["40"])}, zeigt sie „teuer“. Die Grenzen verschieben sich jede Woche ein wenig, weil die 200-Wochen-Linie mitwandert. Im Chart stehen sie als waagerechte Linien (Schalter „Kaufzonen“). Beschreibung, keine Kaufempfehlung.</p></section>`;
+}
+function signalKarte(w, c){   // weitere Kennzahlen (nicht Teil der Ampel, außer dem Abstand zur 200-Wochen-Linie)
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4;
   const zeilen = [
-    [`<span data-e="l_pfeile">Letzter Pfeil</span>`, letzte ? `<span class="${letzte[1] === "kauf" ? "pos" : "neg"}">${letzte[1] === "kauf" ? "▲ günstig" : "▼ teuer"} ${letzte[2]}</span> · ${tDe(letzte[0])}` : "noch keiner"],
-    [`<span data-e="zu200w">zur 200-Wochen-Linie</span>`, `<span class="${w.zu200w < 0 ? "pos" : ""}">${vz(w.zu200w,0," %")}</span>`],
+    [`<span data-e="zu200w">zur 200-Wochen-Linie</span>`, `<span class="${w.zu200w < 0 ? "pos" : ""}">${vz(w.zu200w,0," %")}</span>${w.linie200 ? ` · Linie ${fmt(w.linie200, nk)}` : ""}`],
+    [`<span data-e="vom_hoch">vom Allzeithoch</span>`, `${fmt(w.dd,0," %")}`],
     [`<span data-e="rsi">Wochen-RSI</span>`, `${fmt(w.rsi,0)}${w.rsi < 30 ? " · überverkauft" : w.rsi > 70 ? " · überkauft" : ""}`],
     [`<span data-e="trend_z">zum Langfristtrend</span>`, `${vz(w.trend_z,1)} Standardabw.`],
   ];
@@ -1606,7 +1662,7 @@ function signalKarte(w, c){
     zeilen.push([`<span data-e="pi_bottom">Pi Cycle Bottom</span>`, w.pi_bottom_aktiv ? `<b style="color:var(--lila)">Bodenbildungszone</b>` : `keine Zone (${vz(w.pi_abstand,1," %")})`]);
     zeilen.push([`<span data-e="pi_top">Pi Cycle Top</span>`, w.pi_top_aktiv ? `<b class="neg">AKTIV</b>` : "aus"]);
   }
-  return `<div class="karte-kopf"><span data-e="signale" tabindex="0">Signale</span><span>${marken.filter(m => m[1] === "kauf").length} × ▲ · ${marken.filter(m => m[1] === "teuer").length} × ▼</span></div>`
+  return `<div class="karte-kopf"><span data-e="signale" tabindex="0">Weitere Kennzahlen</span><span>nur Info</span></div>`
     + zeilen.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("");
 }
 function prognoseKarte(m){
@@ -1656,7 +1712,6 @@ async function zeige(id, opt={}){
     ["w200", "200-Wochen-Linie", `<i style="color:var(--gelb)"></i>`, "l_200w", eigen],
     ["trend", "Trendkanal", `<i style="color:var(--akzent)"></i>`, "l_trend", eigen],
     ["kegel", "Prognose-Kegel", `<i class="flaeche" style="color:var(--kegel)"></i>`, "l_kegel", eigen],
-    ["pfeile", "Pfeile günstig/teuer", `<i class="pfeil"><span style="color:var(--guenstig)">▲</span><span style="color:var(--teuer)">▼</span></i>`, "l_pfeile", true],
     ["phasen", "Günstig-/Teuer-Phasen", `<i class="flaeche" style="color:var(--guenstig);opacity:.5"></i>`, "l_phasen", eigen],
     ["ergebnis", "Kauf-Ergebnis", `<i class="pfeil"><span style="color:var(--guenstig)">●</span></i>`, "l_ergebnis", eigen && !!c.c],
     ["tiefhoch", "Tief-/Hochpunkte", `<i class="pfeil"><span style="color:var(--guenstig)">●</span><span style="color:var(--teuer)">●</span></i>`, "l_tiefhoch", eigen && !!c.c],
@@ -1669,9 +1724,10 @@ async function zeige(id, opt={}){
     ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
     ["mvrv", "MVRV-Z", `<i style="color:var(--mvrv)"></i>`, "l_mvrv", !!c.mvrv],
-    ["ampel", "Ampel-Verlauf", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
-    ["neu", "Neue Ampel", `<i style="color:var(--neu)"></i>`, "neue_ampel", eigen && !!c.score2],
-  ].filter(x => x[4]);
+    ["ampel", "Ampel-Verlauf (unten)", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
+    ["neu", "Neue Ampel (violett)", `<i style="color:var(--neu)"></i>`, "neue_ampel", eigen && !!c.score2],
+  ].filter(x => x[4]).sort((a, b) => (CHIPS_WICHTIG.includes(a[0]) ? CHIPS_WICHTIG.indexOf(a[0]) : 99) - (CHIPS_WICHTIG.includes(b[0]) ? CHIPS_WICHTIG.indexOf(b[0]) : 99));
+  const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
     <section class="karte wert-kopf${w.score2 != null ? " mit-neu" : ""}" id="wert-kopf">
       <div style="min-width:0">
@@ -1696,7 +1752,9 @@ async function zeige(id, opt={}){
         ${eigen ? `<button class="werkzeug" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
         ${eigen && w.tv ? `<div class="segment rechts" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
       </div>
-      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">${chips.map(([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`).join("")}</div>
+      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">
+        <div class="chip-zeile"><span class="chip-titel">Das Wichtigste</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div>
+        <div class="chip-zeile"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
       <div class="chart-flaeche">
         <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
@@ -1710,9 +1768,8 @@ async function zeige(id, opt={}){
     ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
     <div class="raster">
+      ${kaufzonenKarte(w)}
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
-      ${marktphaseKarte(w, c)}
-      ${mvrvKarte(c)}
       ${phasenKarte(c)}
       ${schwellenKarte(c)}
       <section class="karte" id="wahr">${wahrKarte(w)}</section>
@@ -1727,6 +1784,8 @@ async function zeige(id, opt={}){
         <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
         <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
         <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></section>
+      ${marktphaseKarte(w, c)}
+      ${mvrvKarte(c)}
       <section class="karte" id="signale">${signalKarte(w, c)}</section>
       ${id === "SPY" ? bewKarte() : ""}
       ${geschaeftKarte(w)}
@@ -1790,7 +1849,7 @@ function tvHinweis(){
   const art = {M:"Monatskerzen, 200-Wochen-Linie als Durchschnitt über 46 Monate.", W:"Wochenkerzen mit 200-Wochen-Linie.",
     D:`Tageskerzen, 200-Wochen-Linie als Durchschnitt über ${krypto ? "1.400 Tage (Krypto wird täglich gehandelt)" : "1.000 Handelstage"}.`,
     "60":"Stundenkerzen.", "30":"30-Minuten-Kerzen.", "15":"15-Minuten-Kerzen."}[INTERVALL] || "";
-  return `TradingView: ${art} ${INTRADAY.includes(INTERVALL) ? "Eine 200-Wochen-Linie lässt sich hier nicht sinnvoll zeigen (sie bräuchte mehrere Tausend Kerzen) – sie steht im Monats-, Wochen- und Tageschart. " : ""}Pfeile, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart (Monat, Woche, Tag); die Ampel-Leiste darunter ist wöchentlich und gilt weiter.`;
+  return `TradingView: ${art} ${INTRADAY.includes(INTERVALL) ? "Eine 200-Wochen-Linie lässt sich hier nicht sinnvoll zeigen (sie bräuchte mehrere Tausend Kerzen) – sie steht im Monats-, Wochen- und Tageschart. " : ""}Günstig-/Teuer-Phasen, Prognose-Kegel und Pi Cycle gibt es nur im eigenen Chart (Monat, Woche, Tag); die Ampel-Leiste darunter ist wöchentlich und gilt weiter.`;
 }
 function meldung(text){ const m = $("#chart-meldung"); if (!m) return; m.hidden = !text; m.textContent = text || ""; }
 async function intervallSetzen(iv){
@@ -1940,10 +1999,10 @@ function markenSetzen(){
   const tiefHoch = !CHIPS.tiefhoch || !CDATA?.c ? [] : [
     ...kp.map(p => [naechste(p.tTief), "tief", p]),
     ...teuerPhasen(CDATA).map(p => [naechste(p.tHoch), "hoch", p])];
-  const alle = [...m, ...tiefHoch, ...neuMarken()].sort((a, b) => a[0] - b[0]);
+  const alle = [...m, ...tiefHoch].sort((a, b) => a[0] - b[0]);
   KERZEN.setMarkers(alle.map(([t, art, s]) => ({
-    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Tief bisher" : "Tief"} · Ampel alt ${fmt(s.aTief,0)}`} : null,
-    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel alt ${fmt(s.aHoch,0)}`} : null,
+    tief:     art === "tief" ? {time:t, position:"belowBar", color:f.gut, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Tief bisher" : "Tief"} · Ampel ${fmt(s.aTief,0)}`} : null,
+    hoch:     art === "hoch" ? {time:t, position:"aboveBar", color:f.teuer, shape:"circle", text:MARKEN_ENG ? "" : `${s.laeuft ? "Hoch bisher" : "Hoch"} · Ampel ${fmt(s.aHoch,0)}`} : null,
     kauf:     {time:t, position:"belowBar", color:f.gut, shape:"arrowUp", text:`alt ${s}`},
     teuer:    {time:t, position:"aboveBar", color:f.teuer, shape:"arrowDown", text:`alt ${s}`},
     neu_kauf: {time:t, position:"belowBar", color:f.neu, shape:"arrowUp", text:`neu ${s}`},
@@ -1952,7 +2011,7 @@ function markenSetzen(){
     pi_boden: {time:t, position:"belowBar", color:f.lila, shape:"arrowUp", text:"Pi Boden-Signal"},
     pi_top:   {time:t, position:"aboveBar", color:f.pitop2, shape:"arrowDown", text:"Pi Top"},
   })[art]));
-  if (ZWEI?._sc) ZWEI._sc.setMarkers(CHIPS.pfeile ? CD.marken.filter(([, a]) => a === "kauf" || a === "teuer").map(([t, art, s]) => ({time:t, position:"aboveBar", color:art === "kauf" ? f.guenstig : f.teuer, shape:art === "kauf" ? "arrowUp" : "arrowDown", text:""})) : []);
+  if (ZWEI?._sc) ZWEI._sc.setMarkers([]);
 }
 // Kauf-Ergebnis: Einstieg (Schlusskurs der ersten günstigen Woche) → gestrichelte Linie → Kurs 52 Wochen später
 let ERG_SERIEN = [], ERG_CHART = null;
@@ -3113,8 +3172,8 @@ const ERKLAERUNG_DEPOT = {
 };
 function grundMitErklaerung(g){
   return umlaut(g)
-    .replace(/(\d+ % unter Allzeithoch)/, (m) => ek("vom_hoch", m))
-    .replace(/(zur 200-Wochen-Linie)/, (m) => ek("zu200w", m))
+    .replace(/(\d+ % unter dem Allzeithoch)/, (m) => ek("vom_hoch", m))
+    .replace(/(der 200-Wochen-Linie)/, (m) => ek("zu200w", m))
     .replace(/(Standardabw\. zum Langfristtrend)/, (m) => ek("trend_z", m))
     .replace(/(Wochen-RSI \d+)/, (m) => ek("rsi", m))
     .replace(/(Mayer Multiple [\d.,]+)/, (m) => ek("mayer", m))

@@ -25,6 +25,8 @@ def eintraege() -> list[dict]:
     for f in sorted(ORDNER.glob("*.json")):
         with open(f, "r", encoding="utf-8") as fh:       # nur lesen
             d = json.load(fh)
+        if d.get("ampel") != "200w":   # Einträge der früheren Ampel (bis 21.11.2026) nicht mit der heutigen vermischen
+            continue
         for s in d.get("signale", []):
             if s.get("datum") and s.get("kurs") is not None:
                 zeilen.append({**s, "datei": f.stem})
