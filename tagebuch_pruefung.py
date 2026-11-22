@@ -20,12 +20,19 @@ JAHRE = (1, 3, 5)
 ZONEN = ["historisch sehr guenstig", "guenstig", "neutral", "teuer", "historisch sehr teuer"]
 
 
+AMPEL = "anker200"
+AMPEL_SEIT = "2026-11-22"          # seit diesem Tag gilt die Anker-Ampel (200-Wochen-Linie)
+ANDERE = []                        # Tage mit Einträgen einer früheren Ampel (werden nicht mitgezählt)
+
+
 def eintraege() -> list[dict]:
     zeilen = []
+    ANDERE.clear()
     for f in sorted(ORDNER.glob("*.json")):
         with open(f, "r", encoding="utf-8") as fh:       # nur lesen
             d = json.load(fh)
-        if d.get("ampel") != "anker200":   # nur Einträge der heutigen Ampel (seit 22.11.2026 abends), frühere nicht vermischen
+        if d.get("ampel") != AMPEL:   # nur Einträge der heutigen Ampel (seit 22.11.2026 abends), frühere nicht vermischen
+            ANDERE.append(f.stem)
             continue
         for s in d.get("signale", []):
             if s.get("datum") and s.get("kurs") is not None:
@@ -45,7 +52,8 @@ def kursreihe(zid: str, symbol: str, gruppe: dict):
 
 def main():
     zeilen = eintraege()
-    out = {"stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "tage": 0, "signale": len(zeilen)}
+    out = {"stand": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "tage": 0, "signale": len(zeilen),
+           "ampel": AMPEL, "ampel_seit": AMPEL_SEIT, "andere_tage": len(ANDERE)}
     if not zeilen:
         out["hinweis"] = "Noch keine Tagebuch-Eintraege."
     else:
@@ -53,7 +61,9 @@ def main():
         erstes = pd.Timestamp(min(z["datum"] for z in zeilen))
         out.update(tage=len(tage), erster_tag=tage[0], letzter_tag=tage[-1],
                    werte=len({z["id"] for z in zeilen}),
-                   faellig_ab={str(j): (erstes + pd.DateOffset(years=j)).strftime("%Y-%m-%d") for j in JAHRE})
+                   faellig_ab={str(j): (erstes + pd.DateOffset(years=j)).strftime("%Y-%m-%d") for j in JAHRE},
+                   erstes_signal=erstes.strftime("%Y-%m-%d"),
+                   zonen_heute={zn: sum(1 for z in zeilen if z["datei"] == tage[-1] and z.get("zone") == zn) for zn in ZONEN})
         etfs = {e["id"]: e for e in E.ETFS}
         reihen: dict = {}
         heute = pd.Timestamp(dt.date.today())
@@ -81,9 +91,11 @@ def main():
             for zn in ZONEN:
                 t = df[df["zone"] == zn]
                 if len(t):
+                    tp = t["p"].dropna()
                     zonen.append({"zone": zn, "signale": len(t), "werte": int(t["id"].nunique()),
                                   "quote": round(float((t["r"] > 0).mean()) * 100, 1),
-                                  "median": round(float(t["r"].median()) * 100, 1)})
+                                  "median": round(float(t["r"].median()) * 100, 1),
+                                  "angezeigt": round(float(tp.mean()), 1) if len(tp) else None})   # damals angezeigte Quote (Rückblick)
             kal = []
             mit_p = df.dropna(subset=["p"])
             if len(mit_p):
@@ -92,7 +104,8 @@ def main():
                     kal.append({"von": int(k) * 10, "bis": int(k) * 10 + 10, "n": len(t),
                                 "angezeigt": round(float(t["p"].mean()), 1), "eingetreten": round(float((t["r"] > 0).mean()) * 100, 1)})
             erg[str(j)] = {"faellig": len(faellig), "geprueft": len(df), "werte": int(df["id"].nunique()),
-                           "quote": round(float((df["r"] > 0).mean()) * 100, 1), "zonen": zonen, "kalibrierung": kal}
+                           "quote": round(float((df["r"] > 0).mean()) * 100, 1), "zonen": zonen, "kalibrierung": kal,
+                           "angezeigt": round(float(mit_p["p"].mean()), 1) if len(mit_p) else None}
         out["ergebnisse"] = erg
     tmp = E.WEB_DATEN / "tagebuch_pruefung.tmp"
     tmp.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))

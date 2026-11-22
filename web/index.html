@@ -850,6 +850,7 @@ const ERKLAERUNG = {
   k_pruefung: {titel:"Prüfung der Ampel", text:"Übersicht über alle Werte: Walk-forward-Kalibrierung, Strategie-Vergleich und Signal-Tagebuch. Zeigt ehrlich, ob die Ampel früher etwas gebracht hätte."},
   // --- Gesamtprüfung
   g_strategie: {titel:"Strategie über viele Werte", text:"Für jeden Wert derselbe Vergleich (500 je Monat, bis 20 Jahre). „Besser“ = Anteil der Werte, bei denen die Strategie einen höheren internen Zinsfuß hatte als der Sparplan; „±“ = Median-Unterschied in Prozentpunkten pro Jahr. Aktien enthalten nur heute noch gelistete Firmen."},
+  erfolgsbilanz: {titel:"Erfolgsbilanz", text:"Die meisten Prüfungen im Tool sind Rückblicke: Man rechnet aus, wie die Ampel früher gelegen hätte. Das kann unbemerkt zu gut aussehen. Ehrlicher ist die Echtzeit-Prüfung: Seit dem Start wird jeden Tag festgehalten, was das Tool für jeden Wert anzeigt (Ampel, Stufe und die angekündigte Wahrscheinlichkeit „Kurs nach 1/3/5 Jahren höher“), und unveränderbar gesichert. Sobald ein Jahr vergangen ist, wird nachgesehen, was wirklich passierte. „Rückblick: angekündigt“ ist die damals gezeigte Quote, „Echtzeit: eingetreten“ der Anteil der Signale, nach denen der Kurs wirklich höher stand. Gezählt werden nur Einträge der heutigen Ampel (seit 22.11.2026)."},
   tagebuch: {titel:"Signal-Tagebuch", text:"Jeden Tag wird festgehalten, was das Tool anzeigt, und nie geändert. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen. Das ist die ehrlichste Prüfung, weil sie erst nach dem Signal stattfindet."},
 };
 
@@ -1494,6 +1495,37 @@ function zeigeKarte(opt = {}){
   KARTE_RO?.disconnect(); KARTE_RO = new ResizeObserver(() => { if (document.body.contains(cv)) zeichnen(); }); KARTE_RO.observe(box);
   zeichnen();
 }
+function erfolgsbilanzHtml(){   // Signal-Tagebuch auf der Übersicht: seit wann, wie viele Signale, wann fällig, Echtzeit gegen Rückblick
+  const tb = TAGEBUCH; if (!tb) return "";
+  const ZW = {"historisch sehr guenstig":"sehr günstig (ab 80)", "guenstig":"günstig (60–80)", "neutral":"neutral (40–60)", "teuer":"teuer (15–40)", "historisch sehr teuer":"sehr teuer (bis 15)"};
+  const tageBis = d => Math.ceil((Date.parse(d) - Date.now()) / 864e5);
+  let inhalt;
+  if (!tb.signale) {
+    inhalt = `<p class="text" style="margin:0">Hier zeigt sich, ob die Ampel <b>in Echtzeit</b> recht behält – nicht nur im Rückblick. Jeden Tag hält das Tool fest, was es für jeden Wert anzeigt, und sichert das unveränderbar in Git. Nach 1, 3 und 5 Jahren wird mit dem echten Kursverlauf verglichen.</p>
+      <p class="text" style="margin:8px 0 0"><b>Stand:</b> Das Tagebuch für die heutige Ampel (an der 200-Wochen-Linie, seit ${datumDe(tb.ampel_seit)}) beginnt mit dem nächsten täglichen Online-Lauf. Erste Ergebnisse gibt es ein Jahr nach dem ersten Eintrag.${tb.andere_tage ? ` ${tb.andere_tage} ältere Tage stammen von früheren Ampel-Formeln und zählen nicht mit.` : ""}</p>`;
+  } else {
+    const f1 = tb.faellig_ab?.["1"], rest = f1 ? tageBis(f1) : null, seit = tb.erstes_signal || tb.erster_tag;
+    const fort = Math.max(0, Math.min(100, (Date.now() - Date.parse(seit)) / (365.25 * 864e5) * 100));
+    const zh = tb.zonen_heute || {}, zhText = Object.entries(ZW).filter(([k]) => zh[k]).map(([k, t]) => `${zh[k].toLocaleString("de-DE")} ${t}`).join(" · ");
+    inhalt = `<div class="raster" style="grid-template-columns:repeat(auto-fit,minmax(170px,1fr))">
+        <div><div class="klein">läuft seit</div><div class="gross-zahl" style="font-size:24px">${datumDe(tb.erster_tag)}</div><div class="klein">${tb.tage.toLocaleString("de-DE")} Tag${tb.tage === 1 ? "" : "e"} festgehalten</div></div>
+        <div><div class="klein">Signale</div><div class="gross-zahl" style="font-size:24px">${tb.signale.toLocaleString("de-DE")}</div><div class="klein">zu ${(tb.werte || 0).toLocaleString("de-DE")} Werten</div></div>
+        <div><div class="klein">erste Ergebnisse (nach 1 Jahr)</div><div class="gross-zahl" style="font-size:24px">${datumDe(f1)}</div><div class="klein">${rest > 0 ? `noch ${rest.toLocaleString("de-DE")} Tage` : "fällig – siehe unten"}</div></div>
+      </div>
+      <div style="height:8px;border-radius:5px;background:var(--panel2);margin:12px 0 4px;overflow:hidden" role="progressbar" aria-valuenow="${Math.round(fort)}" aria-valuemin="0" aria-valuemax="100" aria-label="Zeit bis zu den ersten Ergebnissen"><div style="height:100%;width:${fort}%;background:var(--akzent)"></div></div>
+      <div class="klein">${zhText ? `Zuletzt festgehalten (${datumDe(tb.letzter_tag)}): ${zhText}.` : ""}</div>`;
+    ["1", "3", "5"].forEach(j => {
+      const x = tb.ergebnisse?.[j]; if (!x?.geprueft) return;
+      const d = x.angezeigt != null ? x.quote - x.angezeigt : null, wenig = x.geprueft < 200 || (x.werte || 0) < 20;
+      inhalt += `<h3 style="margin:14px 0 4px">Nach ${j} Jahr${j === "1" ? "" : "en"}: ${x.geprueft.toLocaleString("de-DE")} Signale geprüft</h3>
+        <p class="text" style="margin:0">In Echtzeit stand der Kurs bei <b>${fmt(x.quote, 0, " %")}</b> der Signale danach höher.${x.angezeigt != null ? ` Angekündigt hatte das Tool damals im Schnitt <b>${fmt(x.angezeigt, 0, " %")}</b> (aus dem Rückblick auf ähnliche Lagen) – ${Math.abs(d) <= 5 ? "das passte ungefähr." : d < 0 ? `der Rückblick war also <b>zu optimistisch</b> (${vz(d, 0)} Prozentpunkte).` : `der Rückblick war also zu vorsichtig (${vz(d, 0)} Prozentpunkte).`}` : ""}${wenig ? " Noch wenige Fälle oder Werte – das Ergebnis kann Zufall sein." : ""}</p>
+        <div class="tab-scroll"><table class="wtab" style="margin:8px 0 0;width:100%"><thead><tr><th>Ampel damals</th><th>Signale</th><th data-e="erfolgsbilanz">Rückblick: angekündigt</th><th data-e="erfolgsbilanz">Echtzeit: eingetreten</th><th>Median danach</th></tr></thead><tbody>
+          ${(x.zonen || []).map(z => `<tr><td>${ZW[z.zone] || esc(z.zone)}</td><td>${z.signale.toLocaleString("de-DE")}</td><td>${fmt(z.angezeigt, 0, " %")}</td><td><b>${fmt(z.quote, 0, " %")}</b></td><td class="${klasse(z.median)}">${vz(z.median, 0, " %")}</td></tr>`).join("")}</tbody></table></div>`;
+    });
+  }
+  return `<h2 class="abschnitt-titel"><span data-e="erfolgsbilanz">Erfolgsbilanz: Behält die Ampel recht?</span><span class="klein"><button class="linkknopf" id="zu-tagebuch">Details in der Prüfung</button></span></h2>
+    <section class="karte seite-karte" id="erfolgsbilanz" style="padding:14px 16px">${inhalt}</section>`;
+}
 function zeigeUebersicht(){
   seiteAnfang("uebersicht"); hashSetzen("seite=uebersicht");
   const f = F(), u = UMFELD, b = u?.breite, v = u?.vix, z = u?.zinskurve;
@@ -1536,6 +1568,7 @@ function zeigeUebersicht(){
       <div class="schritt"><h4><span class="nr">3</span>Darüber: je weiter, desto teurer</h4>Wie weit darüber normal ist, zeigt die eigene Geschichte des Werts: so weit wie meistens = <b>teuer</b>, weiter als fast immer = <b>sehr teuer</b>.</div>
     </div>
     <div class="wetter">${wetter}</div>
+    ${erfolgsbilanzHtml()}
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
     <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
     ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
@@ -1559,6 +1592,7 @@ function zeigeUebersicht(){
   geh("#w-mp", () => zeige("SPY"));
   geh("#w-bewertung", () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); });
   geh("#w-pruefung", () => zeigePruefungGesamt());
+  if ($("#zu-tagebuch")) $("#zu-tagebuch").onclick = () => { zeigePruefungGesamt(); $$("#haupt h3").find(h => /Signal-Tagebuch/.test(h.textContent))?.scrollIntoView({block:"start"}); };
   $("#zu-aktien").onclick = () => { LISTE_REITER = "aktien"; sichere("liste_reiter", LISTE_REITER); $("#nurq").checked = true; $("#minu").value = "1e7"; SORT = {k:"score", dir:-1}; $("#sortierung").value = "score"; reiterZahlen(); listeNeu(); if (istHandy()) ansicht("liste"); };
 }
 
