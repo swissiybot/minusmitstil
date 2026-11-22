@@ -2809,6 +2809,8 @@ function zeigeDepot(){
       : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
     </section>
     <div class="abstand"></div>
+    <section class="karte seite-karte" id="d-risiko" hidden></section>
+    <div class="abstand"></div>
     <section class="karte seite-karte">
       <h2 style="margin:0;font-size:16px;padding:12px 14px 0">Sparplan und Annahmen</h2>
       <div class="eingabe">
@@ -2869,6 +2871,7 @@ function zeigeDepot(){
   $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
   $("#d-rechnen").onclick = depotRechnen;
   if (DEPOT_ERG) depotErgebnisZeigen(DEPOT_ERG);
+  risikoZeigen();
   if (PDF_WARTESCHLANGE.length) {   // mehrere PDF-Dateien: mit der nächsten weitermachen
     $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x.dataset.imp === "pdf")); depotImport("pdf"); naechstePdf();
     $("#d-import").scrollIntoView({block:"start"});
@@ -3258,7 +3261,198 @@ function depotErgebnisZeigen(r){
   $$("#d-ergebnis [data-dsk]").forEach(b => b.onclick = () => { DEPOT_SKALA = +b.dataset.dsk; sichere("depot_skala", DEPOT_SKALA); ch.priceScale("right").applyOptions({mode:DEPOT_SKALA});
     $$("#d-ergebnis [data-dsk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
 }
+// ------------------------------------------------------------ Depot-Risiko: Klumpen, Gleichlauf, Stresstest, Rebalancing (alles nur im Browser)
+let INDEXANTEILE = undefined, RISIKO_ERG = null, RISIKO_SCHL = "", RISIKO_LAEUFT = "";
+// Krisen: vom Hoch bis zum Tief des S&P 500 (Schlusskurse); gerechnet mit Wochenkursen, deshalb auf die Woche genau
+const STRESS = [
+  {titel:"Finanzkrise 2008", von:"2007-10-09", bis:"2009-03-09", text:"Immobilienblase in den USA, Pleite der Bank Lehman Brothers, weltweite Bankenkrise."},
+  {titel:"Corona-Crash 2020", von:"2020-02-19", bis:"2020-03-23", text:"Ausbruch der Pandemie, Lockdowns – der schnellste Absturz der Börsengeschichte."},
+  {titel:"Zinswende 2022", von:"2022-01-03", bis:"2022-10-12", text:"Hohe Inflation, Notenbanken erhöhen die Zinsen kräftig; Technologie, Anleihen und Krypto fallen gemeinsam."},
+];
+const FIRMA_GLEICH = {GOOG:"GOOGL", "005935.KS":"005930.KS", "2330.TW":"TSM", "9988.HK":"BABA", SKHY:"000660.KS", "HDFCBANK.NS":"HDB", "BRK-A":"BRK-B"};   // gleiche Firma, andere Aktiengattung oder Börse
+const firmaVon = id => FIRMA_GLEICH[id] || id;
+function risikoGruppen(){   // Positionen mit Zuordnung, gleiche Werte zusammengefasst (wie in der Prognose)
+  const g = new Map();
+  for (const p of DEPOT.positionen) {
+    if (!p.id || !(p.wert > 0)) continue;
+    const x = g.get(p.id);
+    if (!x) g.set(p.id, {id:p.id, wert:p.wert, namen:[p.name], ersatz:!!p.ersatz, isin:p.isin || ""});
+    else { x.wert += p.wert; if (!x.namen.includes(p.name)) x.namen.push(p.name); x.ersatz = x.ersatz && !!p.ersatz; }
+  }
+  return [...g.values()].sort((a, b) => b.wert - a.wert);
+}
+function klumpen(G, summe){   // durchgerechnete Anteile einzelner Firmen: direkt + über Index-ETFs (nur bekannte Gewichte)
+  const ind = INDEXANTEILE?.indizes || {}, firmen = new Map(), genutzt = [], nurMitglied = [];
+  const firma = (key, name) => { if (!firmen.has(key)) firmen.set(key, {key, name, teile:[], mitglied:[]}); return firmen.get(key); };
+  for (const x of G) {   // Einzelaktien direkt
+    const w = wertVon(x.id);
+    if (!w || x.ersatz || ["ETF", "Krypto", "Rohstoffe"].includes(w.gruppe)) continue;
+    firma(firmaVon(x.id), kurzname(w)).teile.push({quelle:"direkt", euro:x.wert});
+  }
+  for (const [k, I] of Object.entries(ind)) {
+    const pos = G.filter(x => !x.ersatz && I.etfs.includes(x.id)), euro = pos.reduce((a, x) => a + x.wert, 0);
+    if (!euro) continue;
+    if (I.nur_mitglieder) { nurMitglied.push({...I, euro}); continue; }
+    genutzt.push({...I, euro, top:I.titel.reduce((a, t) => a + (t.gewicht || 0), 0)});
+    I.titel.forEach(t => { if (!t.gewicht) return; const key = firmaVon(t.ids[0]), f = firma(key, kurzname(wertVon(t.ids.find(i => wertVon(i)) || "") || {name:t.name}));
+      const alt = f.teile.find(z => z.quelle === I.name); if (alt) alt.euro += euro * t.gewicht / 100; else f.teile.push({quelle:I.name, euro:euro * t.gewicht / 100, gewicht:t.gewicht}); });
+  }
+  for (const I of nurMitglied) for (const t of I.titel) { const f = firmen.get(firmaVon(t.ids[0])); if (f && !f.mitglied.includes(I.name)) f.mitglied.push(I.name); }
+  const zeilen = [...firmen.values()].map(f => ({...f, euro:f.teile.reduce((a, z) => a + z.euro, 0)})).map(f => ({...f, anteil:f.euro / summe * 100, orte:f.teile.length + f.mitglied.length}))
+    .filter(f => (f.orte >= 2 && f.anteil >= 0.5) || f.anteil >= 2).sort((a, b) => b.anteil - a.anteil).slice(0, 15);
+  const top10 = [...firmen.values()].map(f => f.teile.reduce((a, z) => a + z.euro, 0)).sort((a, b) => b - a).slice(0, 10).reduce((a, b) => a + b, 0) / summe * 100;
+  return {zeilen, genutzt, nurMitglied, top10};
+}
+const reiheArr = m => { const t = [...m.keys()], c = [...m.values()]; return {t, c}; };
+function kursAm(r, t){   // letzter Wochenkurs bis t (null, wenn die Reihe erst danach beginnt)
+  let lo = 0, hi = r.t.length - 1, k = -1;
+  while (lo <= hi) { const m = (lo + hi) >> 1; if (r.t[m] <= t) { k = m; lo = m + 1; } else hi = m - 1; }
+  return k < 0 ? null : {i:k, c:r.c[k]};
+}
+function stressErsatz(x){   // Wert ohne Kurse in der Krise: grober Ersatz (Aktien/Fonds: Markt des Landes bzw. S&P 500); Krypto und Rohstoffe ohne Ersatz
+  const w = wertVon(x.id);
+  if (!w || ["Krypto", "Rohstoffe"].includes(w.gruppe)) return null;
+  const isin = String(x.isin || "").toUpperCase();
+  if (isin && !/^(IE|LU)/.test(isin)) for (const [re, id, t] of LAND_ERSATZ) if (re.test(isin) && id !== x.id) return {id, name:t};
+  return x.id === "SPY" ? null : {id:"SPY", name:"S&P 500"};
+}
+async function risikoRechnen(G, summe, schl){
+  if (INDEXANTEILE === undefined) INDEXANTEILE = await holeJson("daten/indexanteile.json");
+  const ids = [...new Set(["SPY", "EEM", "EXS1", "SX5E", "ISF", "EWJ", ...G.map(x => x.id)])];
+  const roh = Object.fromEntries(await Promise.all(ids.map(async id => [id, wertVon(id) ? await reiheHolen(id) : null])));
+  const R = Object.fromEntries(Object.entries(roh).filter(([, m]) => m && m.size).map(([id, m]) => [id, reiheArr(m)]));
+  // Gleichlauf: Wochenrenditen der letzten 5 Jahre, je Paar nur gemeinsame Wochen (mind. 52)
+  const P = G.filter(x => R[x.id]).slice(0, 12), letzte = Math.max(...P.map(x => R[x.id].t.at(-1))), ab = letzte - 5 * 365.25 * 86400;
+  const ren = P.map(x => { const m = rendite(roh[x.id]), o = new Map(); for (const [t, r] of m) if (t >= ab) o.set(t, r); return o; });
+  const korr = P.map((_, i) => P.map((_, j) => {
+    if (i === j) return 1;
+    const xs = [], ys = []; for (const [t, r] of ren[i]) if (ren[j].has(t)) { xs.push(r); ys.push(ren[j].get(t)); }
+    if (xs.length < 52) return null;
+    const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
+    let sxy = 0, sxx = 0, syy = 0; for (let k = 0; k < xs.length; k++) { sxy += (xs[k] - mx) * (ys[k] - my); sxx += (xs[k] - mx) ** 2; syy += (ys[k] - my) ** 2; }
+    return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null;
+  }));
+  let kw = 0, ks = 0;   // durchschnittlicher Gleichlauf, nach Wert gewichtet
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (korr[i][j] != null) { const g = P[i].wert * P[j].wert; kw += g; ks += g * korr[i][j]; }
+  // Stresstest: Kauf am Hoch, gehalten bis zum Tief (feste Stückzahl, kein Umschichten); danach: wann war der alte Stand wieder erreicht?
+  const stress = STRESS.map(S => {
+    const t0 = Date.parse(S.von) / 1000, t1 = Date.parse(S.bis) / 1000, zeilen = [];
+    for (const x of G) {
+      let id = x.id, ers = null;
+      const deckt = id => R[id] && R[id].t[0] <= t0 - 7 * 86400 && R[id].t.at(-1) >= t1;
+      if (!deckt(id)) { ers = stressErsatz(x); id = ers && deckt(ers.id) ? ers.id : null; }
+      const w = wertVon(x.id);
+      if (!id) { zeilen.push({x, w, fehlt:true}); continue; }
+      const a = kursAm(R[id], t0), b = kursAm(R[id], t1);
+      zeilen.push({x, w, id, ers, r:b.c / a.c - 1, a});
+    }
+    const mit = zeilen.filter(z => !z.fehlt), wSum = mit.reduce((a, z) => a + z.x.wert, 0);
+    if (!wSum) return {...S, zeilen, leer:true};
+    // Depotverlauf Woche für Woche ab dem Hoch (gleiche Wochen wie der S&P 500)
+    const spy = R.SPY, i0 = kursAm(spy, t0).i, i1 = kursAm(spy, t1).i, verlauf = [];
+    for (let k = i0; k < spy.t.length; k++) {
+      const t = spy.t[k]; let v = 0;
+      for (const z of mit) { const c = kursAm(R[z.id], t); v += z.x.wert / wSum * (c ? c.c / z.a.c : 1); }
+      verlauf.push({t, v});
+    }
+    const bisTief = verlauf.filter(p => p.t <= t1 + 3 * 86400), tief = bisTief.reduce((m, p) => p.v < m.v ? p : m, bisTief[0]);
+    const zurueck = verlauf.find(p => p.t > tief.t && p.v >= 1);
+    const ende = bisTief.at(-1).v - 1, spyR = spy.c[i1] / spy.c[i0] - 1;
+    return {...S, zeilen, abgedeckt:wSum / summe * 100, ende, tief:tief.v - 1, tiefT:tief.t, zurueck:zurueck ? zurueck.t : null, euroEnde:ende * wSum, spyR, letzteT:spy.t.at(-1)};
+  });
+  return {schl, P, korr, schnitt:kw ? ks / kw : null, stress, klumpen:klumpen(G, summe), ab};
+}
+const monateZwischen = (a, b) => Math.max(0, Math.round((b - a) / (30.44 * 86400)));
+const dauerWorte = m => m < 1 ? "weniger als einem Monat" : m < 24 ? `${m} Monat${m === 1 ? "" : "en"}` : `${fmt(m / 12, 1)} Jahren`;   // nach … (Dativ)
+function korrFarbe(k){ if (k == null) return "transparent"; return k >= 0 ? `color-mix(in srgb,var(--teuer) ${Math.round(Math.max(0, k) * 70)}%,transparent)` : `color-mix(in srgb,var(--guenstig) ${Math.round(-k * 70)}%,transparent)`; }
+function rebalHtml(G, summe){
+  const z = DEPOT.e.ziele || {}, gesetzt = G.filter(x => z[x.id] > 0), zSum = gesetzt.reduce((a, x) => a + z[x.id], 0);
+  const hinweise = [];
+  const zeilen = G.map(x => {
+    const ist = x.wert / summe * 100, ziel = z[x.id] > 0 ? z[x.id] : null, ab = ziel != null ? ist - ziel : null;
+    const deutlich = ziel != null && ab > 0 && (ab >= 5 || (ab >= 1 && ist >= ziel * 1.25));
+    const w = wertVon(x.id), name = esc(x.namen[0] || (w ? kurzname(w) : x.id));
+    if (deutlich) hinweise.push(`<b>${name}</b> ist auf ${fmt(ist, 1, " %")} gewachsen (Ziel ${fmt(ziel, 1, " %")}). Zurück zum Ziel wären es etwa <b>${geld((ist - ziel) / 100 * summe)} €</b>, die du in andere Positionen lenken könntest.`);
+    return `<tr><td style="text-align:left;white-space:normal">${name}</td><td>${geld(x.wert)} €</td><td>${fmt(ist, 1, " %")}</td>
+      <td><input class="feld" style="width:72px;text-align:right" data-rz="${esc(x.id)}" value="${ziel != null ? fmt(ziel, 1) : ""}" placeholder="–" aria-label="Zielanteil in Prozent"></td>
+      <td class="${deutlich ? "neg" : ""}">${ab == null ? "–" : (ab > 0 ? "+" : "") + fmt(ab, 1, " Pp.")}${deutlich ? " ⚠" : ""}</td></tr>`;
+  }).join("");
+  return `<h3 style="margin:14px 14px 4px">${ek("d_rebal", "Rebalancing: Zielanteile")}</h3>
+    <p class="text" style="padding:0 14px">Trag ein, welchen Anteil jede Position haben <b>soll</b>. Ist eine Position deutlich darüber gewachsen (mindestens 5 Prozentpunkte oder ein Viertel mehr als geplant), erscheint ein Hinweis.</p>
+    <div class="tab-scroll"><table class="wtab"><thead><tr><th>Position</th><th>Wert</th><th>Anteil heute</th><th>Ziel %</th><th>Abweichung</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <div style="padding:0 14px 6px;display:flex;gap:14px;flex-wrap:wrap;align-items:center" class="klein">
+      <span>Summe der Ziele: <b class="${gesetzt.length && Math.abs(zSum - 100) > 0.5 ? "neg" : ""}">${gesetzt.length ? fmt(zSum, 1, " %") : "–"}</b>${gesetzt.length && Math.abs(zSum - 100) > 0.5 ? " (sollte 100 % sein)" : ""}</span>
+      <button class="linkknopf" id="d-rz-spar">Sparplan-Anteile als Ziel übernehmen</button><button class="linkknopf" id="d-rz-weg" style="color:var(--muted)">Ziele löschen</button></div>
+    ${hinweise.length ? `<div class="merke schlecht">${hinweise.join("<br>")}<div class="klein" style="margin-top:6px">Umschichten heißt meist: verkaufen und anderes kaufen – das kann Steuern und Gebühren kosten. Oft reicht es, die nächsten Sparraten eine Zeit lang in die anderen Positionen zu lenken. Nur ein Hinweis aus deinen eigenen Zielen, keine Empfehlung.</div></div>`
+      : gesetzt.length ? `<div class="merke gut">Keine Position liegt deutlich über ihrem Ziel.</div>` : ""}`;
+}
+function risikoZeigen(){
+  const el = $("#d-risiko"); if (!el) return;
+  const G = risikoGruppen(), summe = G.reduce((a, x) => a + x.wert, 0);
+  if (!G.length) { el.hidden = true; return; }
+  el.hidden = false;
+  const schl = JSON.stringify(G.map(x => [x.id, Math.round(x.wert), x.ersatz]));
+  const r = RISIKO_ERG && RISIKO_ERG.schl === schl ? RISIKO_ERG : null;
+  let html = `<h2 style="margin:0;font-size:16px;padding:12px 14px 0">Risiko im Depot</h2>
+    <p class="text" style="padding:4px 14px 0">Vier Blicke auf dein Depot: Steckt dieselbe Firma mehrfach drin? Laufen die Positionen im Gleichschritt? Was wäre in früheren Krisen passiert? Und ist etwas über seinen geplanten Anteil hinausgewachsen? Alles wird nur hier im Browser gerechnet.</p>`;
+  if (!r) {
+    html += `<p class="klein" style="padding:10px 14px">lädt Kursreihen und rechnet …</p>`;
+    if (RISIKO_LAEUFT !== schl) { RISIKO_LAEUFT = schl;
+      isinListeLaden().then(() => risikoRechnen(G, summe, schl)).then(erg => { RISIKO_ERG = erg; if (RISIKO_LAEUFT === schl) RISIKO_LAEUFT = ""; if (SEITE === "depot") risikoZeigen(); })
+        .catch(ex => { RISIKO_LAEUFT = ""; const e2 = $("#d-risiko"); if (e2) e2.insertAdjacentHTML("beforeend", `<p class="neg" style="padding:0 14px 12px">Risiko nicht berechenbar: ${esc(ex.message)}</p>`); }); }
+  } else {
+    // 1) Klumpen
+    const K = r.klumpen;
+    html += `<h3 style="margin:14px 14px 4px">${ek("d_klumpen", "Klumpenrisiko: dieselbe Firma mehrfach")}</h3>`;
+    if (K.zeilen.length) {
+      html += `<p class="text" style="padding:0 14px">Die zehn größten Firmen machen zusammen <b>mindestens ${fmt(K.top10, 0, " %")}</b> deines Depots aus – direkt gekauft und über deine Index-ETFs zusammengerechnet.</p>
+      <div class="tab-scroll"><table class="wtab"><thead><tr><th>Firma</th><th>Anteil am Depot</th><th>davon</th></tr></thead><tbody>${K.zeilen.map(f => `<tr><td style="text-align:left"><b>${esc(f.name)}</b></td>
+        <td><b>${fmt(f.anteil, 1, " %")}</b> <span class="klein">(${geld(f.euro)} €)</span></td>
+        <td style="text-align:left;white-space:normal">${f.teile.map(z => `${z.quelle === "direkt" ? "als Einzelaktie" : "im " + esc(z.quelle)} ${geld(z.euro)} €`).join(" · ")}${f.mitglied.length ? `${f.teile.length ? " · " : ""}<span class="klein">auch im ${f.mitglied.map(esc).join(", ")} (Gewicht unbekannt)</span>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
+    } else html += `<p class="text" style="padding:0 14px">Keine Firma steckt mehrfach in deinem Depot – soweit die bekannten Indexgewichte reichen.</p>`;
+    html += `<div class="klein" style="padding:0 14px 4px">${K.genutzt.map(I => `${esc(I.name)}: die ${I.titel.length} größten von ${I.bestand ? I.bestand.toLocaleString("de-DE") : "vielen"} Titeln (zusammen ${fmt(I.top, 0, " %")} des Index) · Quelle: ${esc(I.quelle)}`).join("<br>")}
+      ${K.nurMitglied.map(I => `<br>${esc(I.name)} (${geld(I.euro)} € in deinem Depot): enthält ${I.bestand} Firmen; die genauen Gewichte veröffentlicht Nasdaq nur nach Anmeldung, deshalb ist dieser Teil oben nicht eingerechnet – nur markiert, welche Firmen auch darin stecken. Quelle: ${esc(I.quelle)}`).join("")}
+      ${!K.genutzt.length && !K.nurMitglied.length ? "Für deine Fonds liegen keine Indexgewichte vor; gezählt sind nur Einzelaktien." : ""}
+      Ersatzwerte (automatisch zugeordnet) zählen hier nicht mit, weil ihr Inhalt nicht deinem echten Fonds entspricht.</div>`;
+    // 2) Gleichlauf
+    html += `<h3 style="margin:16px 14px 4px">${ek("d_gleichlauf", "Gleichlauf der Positionen")}</h3>`;
+    if (r.P.length >= 2) {
+      const paare = []; r.P.forEach((a, i) => r.P.forEach((b, j) => { if (j > i && r.korr[i][j] != null) paare.push([a, b, r.korr[i][j]]); }));
+      const eng = paare.filter(p => p[2] >= 0.85).sort((a, b) => b[2] - a[2]), gegen = paare.filter(p => p[2] <= 0.2);
+      const nm = x => { const w = wertVon(x.id); return esc(w ? kurzname(w) : x.id); };
+      html += `<p class="text" style="padding:0 14px">Durchschnittlicher Gleichlauf deines Depots (nach Wert gewichtet, Wochenkurse der letzten 5 Jahre): <b>${fmt(r.schnitt, 2)}</b> – ${r.schnitt == null ? "" : r.schnitt >= 0.8 ? "sehr hoch: deine Positionen fallen in Krisen fast alle gemeinsam, die Streuung schützt wenig." : r.schnitt >= 0.6 ? "hoch: die meisten Positionen bewegen sich ähnlich." : r.schnitt >= 0.3 ? "mittel: die Positionen gleichen sich teilweise aus." : "niedrig: die Positionen gleichen sich oft gegenseitig aus."}
+        ${eng.length ? `<br>Fast im Gleichschritt (ab 0,85): ${eng.slice(0, 6).map(p => `${nm(p[0])} & ${nm(p[1])} (${fmt(p[2], 2)})`).join(", ")}.` : ""}
+        ${gegen.length ? `<br>Wenig gemeinsam (bis 0,2): ${gegen.sort((a, b) => a[2] - b[2]).slice(0, 4).map(p => `${nm(p[0])} & ${nm(p[1])} (${fmt(p[2], 2)})`).join(", ")}.` : ""}</p>
+      <div class="tab-scroll"><table class="wtab" style="width:auto"><thead><tr><th></th>${r.P.map((x, i) => `<th title="${nm(x)}">${i + 1}</th>`).join("")}</tr></thead><tbody>${r.P.map((x, i) => `<tr><td style="text-align:left">${i + 1}. ${nm(x)}</td>${r.P.map((_, j) => `<td style="text-align:center;background:${i === j ? "var(--panel2)" : korrFarbe(r.korr[i][j])}">${i === j ? "" : fmt(r.korr[i][j], 2)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <div class="klein" style="padding:0 14px 4px">1 = immer gemeinsam, 0 = unabhängig, negativ = gegenläufig. Orange = eng verbunden, grün = gleicht aus. Es zählen nur Wochen, in denen beide Werte Kurse hatten (mindestens ein Jahr).${G.length > r.P.length ? ` Gezeigt: die ${r.P.length} größten Positionen.` : ""}</div>`;
+    } else html += `<p class="text" style="padding:0 14px">Dafür braucht es mindestens zwei Positionen mit Kursen.</p>`;
+    // 3) Stresstest
+    html += `<h3 style="margin:16px 14px 4px">${ek("d_stress", "Stresstest: frühere Krisen")}</h3>
+      <p class="text" style="padding:0 14px">Was wäre mit deinem <b>heutigen</b> Depot passiert, wenn du es genau am Hoch vor der Krise gekauft und bis zum Tiefpunkt gehalten hättest? Gerechnet mit den echten Kursverläufen deiner Positionen.</p>
+      <div class="raster" style="padding:0 14px">${r.stress.map(S => S.leer ? `<section class="karte"><div class="karte-kopf"><span>${esc(S.titel)}</span></div><p class="klein">Für keine deiner Positionen gibt es Kurse aus dieser Zeit.</p></section>` : `<section class="karte">
+        <div class="karte-kopf"><span>${esc(S.titel)}</span><span>${datumDe(S.von)} – ${datumDe(S.bis)}</span></div>
+        <div class="gross-zahl ${S.ende < 0 ? "neg" : ""}">${S.ende > 0 ? "+" : ""}${fmt(S.ende * 100, 0, " %")}</div>
+        <p>also etwa <b>${S.euroEnde > 0 ? "+" : ""}${geld(S.euroEnde)} €</b> ${S.abgedeckt < 99.5 ? `(für ${fmt(S.abgedeckt, 0, " %")} des Depots)` : ""}</p>
+        <div class="kv"><span>S&P 500 zum Vergleich</span><b>${fmt(S.spyR * 100, 0, " %")}</b></div>
+        <div class="kv"><span>tiefster Stand</span><b class="neg">${fmt(S.tief * 100, 0, " %")}</b></div>
+        <div class="kv"><span>alter Stand wieder erreicht</span><b>${S.zurueck ? `nach ${dauerWorte(monateZwischen(Date.parse(S.von) / 1000, S.zurueck))}` : S.tief >= 0 ? "nie darunter" : "noch nicht"}</b></div>
+        <p class="klein" style="margin-top:8px">${esc(S.text)}</p>
+        <details class="klein"><summary>je Position</summary>${S.zeilen.map(z => `<div class="kv"><span>${esc(z.x.namen[0] || z.x.id)}${z.ers ? ` <i>(Ersatz: ${esc(z.ers.name)})</i>` : ""}</span><b style="white-space:nowrap" class="${!z.fehlt && z.r < 0 ? "neg" : ""}">${z.fehlt ? "keine Kurse" : fmt(z.r * 100, 0, " %")}</b></div>`).join("")}</details>
+      </section>`).join("")}</div>
+      <div class="klein" style="padding:8px 14px 4px">Feste Stückzahl, kein Nachkaufen. Gibt es für eine Position aus dieser Zeit keine Kurse (z. B. ein ETF, der erst später aufgelegt wurde), steht dafür ein grober Ersatz (Markt ihres Landes bzw. S&P 500, markiert unter „je Position“). Kryptowährungen und Rohstoffe ohne Kurse aus dieser Zeit fehlen – dann gilt das Ergebnis nur für den genannten Teil des Depots. Renditen in der Währung der Werte, ohne Wechselkurs und ohne Dividenden bei reinen Indexreihen. Frühere Krisen wiederholen sich nie genau gleich.</div>`;
+  }
+  html += rebalHtml(G, summe);
+  el.innerHTML = html;
+  $$("#d-risiko [data-rz]").forEach(inp => inp.onchange = () => { const v = zahlDe(inp.value); DEPOT.e.ziele = {...(DEPOT.e.ziele || {})};
+    if (v > 0) DEPOT.e.ziele[inp.dataset.rz] = Math.min(100, v); else delete DEPOT.e.ziele[inp.dataset.rz]; depotSichern(); risikoZeigen(); });
+  const sp = $("#d-rz-spar"); if (sp) sp.onclick = () => { const z = {}; for (const x of G) { const s = DEPOT.positionen.filter(p => p.id === x.id).reduce((a, p) => a + (p.spar || 0), 0); if (s > 0) z[x.id] = Math.round(s * 10) / 10; } DEPOT.e.ziele = z; depotSichern(); risikoZeigen(); };
+  const wg = $("#d-rz-weg"); if (wg) wg.onclick = () => { DEPOT.e.ziele = {}; depotSichern(); risikoZeigen(); };
+}
 const ERKLAERUNG_DEPOT = {
+  d_klumpen: {titel:"Klumpenrisiko", text:"Viele Index-ETFs enthalten dieselben großen Firmen. Wer einen MSCI-World-ETF, einen Nasdaq-100-ETF und dazu Nvidia-Aktien hat, besitzt Nvidia dreimal – und ist davon abhängiger, als es aussieht. Hier wird zusammengerechnet: dein Betrag im ETF mal das Gewicht der Firma im Index plus das, was du direkt hältst. Bekannt sind nur die größten Titel je Index (aus den offiziellen Factsheets bzw. der Bestandsliste des SPY-Fonds), deshalb „mindestens“."},
+  d_gleichlauf: {titel:"Gleichlauf (Korrelation)", text:"Wie ähnlich sich zwei Positionen Woche für Woche bewegt haben, von −1 bis 1. Nahe 1: steigen und fallen fast immer gemeinsam – zwei solche Positionen streuen das Risiko kaum. Nahe 0: unabhängig. Negativ: gegenläufig, gleicht aus. Gerechnet aus den Wochenkursen der letzten 5 Jahre. In Krisen steigt der Gleichlauf oft noch."},
+  d_stress: {titel:"Stresstest", text:"Dein heutiges Depot mit den heutigen Anteilen, zurückversetzt an das Hoch vor einer echten Krise und gehalten bis zum Tiefpunkt des S&P 500. Die Zahl zeigt den Verlust bis zum Tief, „alter Stand wieder erreicht“ die Zeit vom Hoch, bis das Depot wieder so viel wert war. Keine Vorhersage – die nächste Krise verläuft anders."},
+  d_rebal: {titel:"Rebalancing", text:"Wenn eine Position stark steigt, wird sie ein immer größerer Teil des Depots – und das Risiko verschiebt sich, ohne dass du etwas getan hast. Rebalancing heißt: ab und zu zurück zu den geplanten Anteilen. Hinweis erscheint ab 5 Prozentpunkten oder einem Viertel über dem Ziel (z. B. 25 % statt 20 % oder 13 % statt 10 %). Die Ziele bleiben nur in diesem Browser (wenn „merken“ an ist)."},
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},

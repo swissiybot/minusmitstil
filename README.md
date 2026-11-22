@@ -40,6 +40,13 @@ Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopier
 - Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
 - Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
 
+### Risiko im Depot (22.11.2026)
+Abschnitt unter den Positionen, alles nur im Browser:
+- **Klumpenrisiko:** dieselbe Firma direkt und über Index-ETFs zusammengerechnet (Betrag im ETF × Gewicht der Firma im Index). Gewichte nur aus echten Quellen (`indexanteile.py` → `web/daten/indexanteile.json`): S&P 500 aus der täglichen Bestandsliste des SPDR S&P 500 ETF (State Street, 100 größte Titel), MSCI World, MSCI ACWI, MSCI EM und FTSE All-World als Top 10 aus den offiziellen Factsheets (Stand 30.10.2026, stehen fest im Code und müssen von Hand erneuert werden). Nasdaq-100 nur als Mitgliederliste (Wikipedia), weil Nasdaq die Gewichte nur nach Anmeldung zeigt. Automatische Ersatzwerte zählen nicht mit.
+- **Gleichlauf:** Korrelation der Wochenrenditen der letzten 5 Jahre je Paar (mind. 52 gemeinsame Wochen), gewichteter Durchschnitt, Matrix der 12 größten Positionen.
+- **Stresstest:** heutiges Depot mit fester Stückzahl vom Hoch bis zum Tief des S&P 500 in der Finanzkrise (09.10.2007–09.03.2009), im Corona-Crash (19.02.–23.03.2020) und in der Zinswende (03.01.–12.10.2022), mit S&P-500-Vergleich, tiefstem Stand und Zeit bis zum alten Stand. Fehlen Kurse einer Position, steht ein markierter Ersatz (Markt des Landes bzw. S&P 500); Krypto/Rohstoffe ohne Kurse fehlen, der abgedeckte Anteil wird genannt.
+- **Rebalancing:** Zielanteil je Position (oder Sparplan-Anteile übernehmen); Hinweis ab 5 Prozentpunkten oder einem Viertel über dem Ziel, mit dem Betrag bis zum Ziel. Ziele bleiben im Browser.
+
 ### ISIN, WKN und Kurzbeschreibung (22.11.2026)
 Im Kopf jeder Wertseite und in der Liste steht statt des Börsenkürzels die ISIN (geprüft über Wikidata oder aus der CUSIP berechnet, dann mit „berechnet“ markiert), die WKN nur, wo sie sicher bekannt ist (deutsche ISINs, einige europäische ETFs), darunter eine Kurzbeschreibung in 1–2 Sätzen: bei ETFs, Rohstoffen und Krypto selbst geschrieben, bei Aktien aus Wikidata (CC0; deutsche Kurzbeschreibung oder Branche, Land, Gründungsjahr). `beschreibung.py`, höchstens einmal pro Woche neu. Suche auch per ISIN oder WKN.
 
@@ -89,6 +96,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `analyse.py` | Ampel 0–100, Ø Jahresrendite, Wahrscheinlichkeiten, Rangliste, Signal-Tagebuch |
 | `bewertung.py` | Shiller-CAPE des S&P 500: Bewertung 0–100 ohne Blick in die Zukunft, Renditen danach, Walk-forward-Prüfung, Sparplan gegen Warten |
 | `fundamente.py` | Geschäftszahlen aus SEC EDGAR (frames-Schnittstelle): KGV, KUV, Gewinn-/Umsatztrend, Fallen-Warnung und deren Prüfung; lädt nur mit `SEC_KONTAKT` |
+| `indexanteile.py` | Grobe Indexgewichte der größten Titel für das Klumpenrisiko (SPY-Bestandsliste täglich, Factsheet-Top-10 fest im Code, Nasdaq-100-Mitglieder) → `web/daten/indexanteile.json` |
 | `isin.py` | ISIN-Liste für den Depot-Import aus den SEC-Fails-to-Deliver-Daten (13 Monate, je Halbmonat ca. 1 MB); lädt nur mit `SEC_KONTAKT`, schreibt `web/daten/isin.json` |
 | `welt.py` | Wichtige Auslandsaktien aus Wikidata (ISIN, Heimatbörse → Yahoo-Kürzel, US-ADR), höchstens wöchentlich neu; schreibt `daten/welt.csv` für `universum.py` und `isin.py` |
 | `umfeld.py` | FRED-Reihen (Zinskurve T10Y2Y, 3-Monats-Zins TB3MS); Marktumfeld (Marktbreite, VIX, Zinskurve) |
