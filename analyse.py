@@ -3,10 +3,10 @@
 Grundsatz: Jede Kennzahl zum Zeitpunkt t wird NUR mit der Historie bis t verglichen
 (kein Blick in die Zukunft). Nur so sind die Trefferquoten aus der Vergangenheit ehrlich.
 
-Ampel (0-100, hoch = historisch guenstig), seit 22.11.2026: nur Kurs / 200-Wochen-Linie, als Perzentil gegen alle
-frueheren Wochen desselben Werts. Ampel = 100 - Anteil der frueheren Wochen, in denen der Kurs im Verhaeltnis zur Linie
-noch tiefer lag. (Bis 21.11.2026: Mittel aus Allzeithoch-Abstand, 200-Wochen-Abstand, Langfristtrend, Wochen-RSI.)
-Zusaetzlich die violette „neue Ampel“ (neue_ampel, Studie 21.11.2026). Bitcoin: Pi Cycle Bottom/Top als Markierung.
+Ampel (0-100, hoch = historisch guenstig), seit 22.11.2026 abends: je Gruppe 3-4 Bausteine aus der Ampel-Studie
+(AMPEL_BAUSTEINE), jeder als Perzentil gegen alle frueheren Wochen desselben Werts; Ampel = 100 - Mittel der Perzentile.
+(22.11. mittags: nur Kurs / 200-Wochen-Linie; bis 21.11.: Allzeithoch, 200-Wochen-Abstand, Langfristtrend, Wochen-RSI.)
+Bitcoin: Pi Cycle Bottom/Top als Markierung.
 Pi Cycle Bottom: faellt die 150-Tage-EMA UNTER die 471-Tage-SMA x 0,745, beginnt die
 Bodenbildungszone; steigt sie wieder DARUEBER, ist das das Boden-Signal. Der Boden liegt laut Indikator
 zwischen beiden Kreuzungen. EMA ueber der Linie = Aufwaertstrend bzw. Bodenbildung noch nicht begonnen.
@@ -132,101 +132,96 @@ def jahresrendite(tag: pd.Series, jahre: int):
     return (s.iloc[-1] / s.iloc[0]) ** (1 / j) - 1, j, s.index[0]
 
 
-def kaufzonen(c: np.ndarray, komponenten: dict, rsi_n: int = 14, mayer_sma: float | None = None) -> dict | None:
-    """Zu welchem Kurs stuende die Ampel HEUTE bei 80 / 60 / 40 / 15?
-    Rechnet die Ampel der letzten Woche fuer gedachte Schlusskurse p neu (gleiche Bausteine, gleiche Vergleichsgeschichte
-    bis zur Vorwoche) und sucht p per Halbierung. Hoeherer Kurs = teurer, die Ampel faellt also mit p."""
-    n = len(c)
-    if n < 210:
-        return None
-    vor = c[:-1]
-    hist = {}
-    for k, arr in komponenten.items():
-        h = arr[:-1]
-        h = np.sort(h[~np.isnan(h)])
-        if len(h) < 50 or math.isnan(arr[-1]):
-            continue
-        hist[k] = h
-    if len(hist) < 1:
-        return None
-    ath_vor = float(np.max(vor))
-    summe199 = float(np.sum(c[-200:-1]))
-    logp = np.log(vor)
-    t = np.arange(n, dtype=float)
-    S1, St, Stt = n, t.sum(), (t * t).sum()
-    Sy0, Sty0, Syy0 = logp.sum(), (t[:-1] * logp).sum(), (logp * logp).sum()
-    d = np.diff(vor)
-    alpha = 1 / rsi_n
-    auf = ab = None
-    for x in d:   # RSI-Glaettung bis zur Vorwoche (wie pandas ewm adjust=False)
-        a_, b_ = max(x, 0.0), max(-x, 0.0)
-        auf = a_ if auf is None else auf * (1 - alpha) + alpha * a_
-        ab = b_ if ab is None else ab * (1 - alpha) + alpha * b_
-    def wert(k, p):
-        if k == "dd":
-            return p / max(ath_vor, p) - 1
-        if k == "ratio":
-            return p / ((summe199 + p) / 200)
-        if k == "trend":
-            lp = math.log(p); tn = n - 1
-            Sy, Sty, Syy = Sy0 + lp, Sty0 + tn * lp, Syy0 + lp * lp
-            nen = S1 * Stt - St * St
-            b = (S1 * Sty - St * Sy) / nen; a = (Sy - b * St) / S1
-            sd = math.sqrt(max(Syy - a * Sy - b * Sty, 0) / max(S1 - 2, 1))
-            return (lp - (a + b * tn)) / sd if sd > 0 else 0.0
-        if k == "rsi":
-            dx = p - vor[-1]
-            au = auf * (1 - alpha) + alpha * max(dx, 0); abw = ab * (1 - alpha) + alpha * max(-dx, 0)
-            return 100.0 if abw == 0 else 100 - 100 / (1 + au / abw)
-        if k == "mayer" and mayer_sma:
-            return p / mayer_sma
-        return None
-    def ampel(p):
-        teile = []
-        for k, h in hist.items():
-            v = wert(k, p)
-            if v is None or math.isnan(v):
-                continue
-            teile.append(bisect.bisect_left(h, v) / (len(h) + 1))
-        return (1 - sum(teile) / len(teile)) * 100 if len(teile) >= 1 else float("nan")
-    p0 = float(c[-1])
-    out = {"jetzt": r(ampel(p0), 1)}
-    for ziel in (80, 60, 40, 15):
-        lo, hi = p0 * 0.02, p0 * 50
-        if not (ampel(lo) >= ziel >= ampel(hi)):
-            out[str(ziel)] = None
-            continue
-        for _ in range(60):
-            mid = math.sqrt(lo * hi)
-            if ampel(mid) >= ziel:
-                lo = mid
-            else:
-                hi = mid
-        out[str(ziel)] = float(f"{math.sqrt(lo * hi):.4g}")
-    return out
-
-
-def kaufzonen_verlauf(c: np.ndarray, ratio: np.ndarray, gueltig: np.ndarray) -> dict:
-    """Kaufzonen fuer jede Woche (wandern mit der 200-Wochen-Linie): Kurs, bei dem die Ampel in DIESER Woche
-    80 / 60 / 40 / 15 gezeigt haette. Gleiche Rechnung wie kaufzonen(): Vergleich nur mit den frueheren Wochen
-    (ohne die Woche selbst), Linie aus den 199 Vorwochen plus dem gedachten Kurs. Ampel >= ziel heisst
-    Abstand <= h[m] mit m = floor((100 - ziel) / 100 * (N + 1)); daraus der Kurs p = r * Summe199 / (200 - r)."""
+def kaufzonen_verlauf(c: np.ndarray, roh: dict, perz: dict, score: np.ndarray) -> dict:
+    """Kaufzonen fuer jede Woche (wandern mit): Kurs, bei dem die Ampel in DIESER Woche 80 / 60 / 40 / 15 gezeigt haette.
+    Gleiche Rechnung wie die Ampel: jeder Baustein wird fuer einen gedachten Schlusskurs p neu berechnet und mit allen
+    frueheren Wochen verglichen (Perzentil = Anzahl frueherer Werte < Wert / (Anzahl + 1), genau wie
+    expandierendes_perzentil). p wird per Halbierung gesucht, fuer alle Wochen gleichzeitig (numpy).
+    Die letzte Woche ergibt die Kaufzonen von heute."""
     n = len(c)
     out = {z: np.full(n, np.nan) for z in (80, 60, 40, 15)}
-    sortiert: list[float] = []
-    kum = np.concatenate([[0.0], np.cumsum(c)])
-    for t in range(n):
-        if t >= 200 and gueltig[t] and len(sortiert) >= 50:
-            N = len(sortiert)
-            s199 = kum[t] - kum[t - 199]
-            for z in out:
-                m = min(int(math.floor((100 - z) * (N + 1) / 100 + 1e-9)), N - 1)
-                rz = sortiert[m]
-                if rz < 200:
-                    out[z][t] = rz * s199 / (200 - rz)
-        v = ratio[t]
-        if not math.isnan(v):
-            bisect.insort(sortiert, v)
+    sel_alle = np.flatnonzero(~np.isnan(score))
+    if len(sel_alle) == 0:
+        return out
+    logp = np.log(c)
+    k_idx = np.arange(n, dtype=float)
+    cum = lambda a: np.concatenate([[0.0], np.cumsum(a)])
+    C, Clp, Ctlp, Clp2 = cum(c), cum(logp), cum(k_idx * logp), cum(logp * logp)
+    ath_vor = np.concatenate([[np.nan], np.maximum.accumulate(c)[:-1]])
+
+    def f(k, t, p):   # Baustein k in Woche t fuer gedachten Kurs p (Vektoren)
+        if k == "dd":
+            return p / np.maximum(ath_vor[t], p) - 1
+        if k == "ratio":
+            s199 = C[t] - C[t - 199]
+            return p / ((s199 + p) / 200)
+        if k == "r3j":
+            return p / c[t - 156] - 1
+        if k == "r5j":
+            return p / c[t - 260] - 1
+        if k == "mvrv":
+            return roh["mvrv"][t] * p / c[t]
+        if k == "trend":   # log-linearer Trend ueber Woche 0..t inklusive des gedachten Kurses
+            lp = np.log(p); tf = t.astype(float); S1 = tf + 1
+            St = tf * (tf + 1) / 2; Stt = tf * (tf + 1) * (2 * tf + 1) / 6
+            Sy = Clp[t] + lp; Sty = Ctlp[t] + tf * lp; Syy = Clp2[t] + lp * lp
+            nen = S1 * Stt - St * St
+            b = (S1 * Sty - St * Sy) / nen; a = (Sy - b * St) / S1
+            sd = np.sqrt(np.maximum(Syy - a * Sy - b * Sty, 0) / np.maximum(S1 - 2, 1))
+            return np.where(sd > 0, (lp - (a + b * tf)) / np.where(sd > 0, sd, 1), 0.0)
+        raise KeyError(k)
+
+    teile = [k for k in roh if k in perz]
+    for start in range(0, len(sel_alle), 400):   # in Stuecken, damit der Speicher klein bleibt
+        T = sel_alle[start:start + 400]
+        m = len(T)
+        daten = {}
+        for k in teile:
+            x = roh[k]
+            G = np.sort(x[~np.isnan(x)])
+            if len(G) == 0:
+                continue
+            M = len(G) + 1
+            rang = np.searchsorted(G, x, "left")
+            pref = np.sort(rang[:T[0]][~np.isnan(x[:T[0]])])
+            stuecke, offs, anz, zuletzt = [], np.zeros(m, dtype=np.int64), np.zeros(m), T[0]
+            pos = 0
+            for i, t in enumerate(T):
+                if t > zuletzt:
+                    neu = rang[zuletzt:t][~np.isnan(x[zuletzt:t])]
+                    if len(neu):
+                        pref = np.sort(np.concatenate([pref, neu]))
+                    zuletzt = t
+                stuecke.append(i * M + pref); offs[i] = pos; anz[i] = len(pref); pos += len(pref)
+            flach = np.concatenate(stuecke) if stuecke else np.zeros(0, dtype=np.int64)
+            aktiv = ~np.isnan(perz[k][T])
+            daten[k] = (G, M, flach, offs, anz, aktiv)
+        if not daten:
+            continue
+        ii = np.arange(m)
+
+        def ampel(p):
+            summe = np.zeros(m); zahl = np.zeros(m)
+            for k, (G, M, flach, offs, anz, aktiv) in daten.items():
+                with np.errstate(invalid="ignore", divide="ignore"):
+                    v = f(k, T, p)
+                ok = aktiv & ~np.isnan(v)
+                rv = np.searchsorted(G, np.where(ok, v, 0.0), "left")
+                cnt = np.searchsorted(flach, ii * M + rv, "left") - offs
+                summe += np.where(ok, cnt / (anz + 1), 0.0); zahl += ok
+            with np.errstate(invalid="ignore"):
+                return np.where(zahl >= 2, (1 - summe / np.maximum(zahl, 1)) * 100, np.nan)
+
+        ct = c[T]
+        a_lo, a_hi = ampel(ct / 50), ampel(ct * 50)
+        for ziel in out:
+            gueltig = (a_lo >= ziel) & (a_hi <= ziel)
+            lo, hi = ct / 50, ct * 50
+            for _ in range(16):
+                mid = np.sqrt(lo * hi)
+                g = ampel(mid) >= ziel
+                lo = np.where(g, mid, lo); hi = np.where(g, hi, mid)
+            out[ziel][T] = np.where(gueltig, np.sqrt(lo * hi), np.nan)
     return out
 
 
@@ -296,33 +291,37 @@ def r(x, n=2):
     return None if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))) else round(float(x), n)
 
 
-NEUE_AMPEL = {   # Bausteine der neuen Ampel je Gruppe (Ergebnis der Ampel-Studie vom 21.11.2026, siehe README)
+AMPEL_BAUSTEINE = {   # Bausteine der Ampel je Gruppe (Ergebnis der Ampel-Studie vom 21.11.2026, siehe README); seit 22.11.2026 Hauptampel
     "aktien": ["dd", "r3j", "r5j"],                   # Abstand zum Allzeithoch, 3- und 5-Jahres-Rendite
-    "index":  ["dd", "ratio", "trend", "r5j"],        # Wochen-RSI durch 5-Jahres-Rendite ersetzt
+    "index":  ["dd", "ratio", "trend", "r5j"],        # Abstand zum Hoch, 200-Wochen-Linie, Langfristtrend, 5-Jahres-Rendite
     "krypto": ["trend", "r3j", "mvrv"],               # Langfristtrend, 3-Jahres-Rendite, MVRV (nur Bitcoin)
 }
+BAUSTEIN_NAME = {"dd": "Abstand zum Allzeithoch", "ratio": "Abstand zur 200-Wochen-Linie", "trend": "Abstand zum Langfristtrend",
+                 "r3j": "Rendite der letzten 3 Jahre", "r5j": "Rendite der letzten 5 Jahre", "mvrv": "MVRV (Bewertung auf der Blockchain)"}
 
 
-def neue_ampel(zeile: dict, w: pd.DataFrame, c: np.ndarray, komponenten: dict, krypto: bool, bitcoin: bool) -> np.ndarray:
-    """Zweite, zusätzliche Ampel (0–100, hoch = günstig) mit je Gruppe in der Studie besser abschneidenden Bausteinen.
-    Rangliste, Prüfungen und Signale nutzen die Hauptampel (200-Wochen-Linie)."""
+def ampel_bausteine(zeile: dict, w: pd.DataFrame, c: np.ndarray, roh_alle: dict, krypto: bool, bitcoin: bool):
+    """Rohwerte der Bausteine der Gruppe (je Woche). Rueckgabe: (art, {baustein: rohwerte})."""
     s = w["Close"]
-    teile = {"dd": komponenten["dd"], "ratio": komponenten["ratio"], "trend": komponenten["trend"],
-             "r3j": expandierendes_perzentil(c / s.shift(156).values - 1, WARMUP),
-             "r5j": expandierendes_perzentil(c / s.shift(260).values - 1, WARMUP)}
+    roh = {"dd": roh_alle["dd"], "ratio": roh_alle["ratio"], "trend": roh_alle["trend"],
+           "r3j": c / s.shift(156).values - 1, "r5j": c / s.shift(260).values - 1}
     if bitcoin:
         try:
             import mvrv as _mv
             d = _mv.reihe()
             if d is not None and "mvrv" in d:
-                teile["mvrv"] = expandierendes_perzentil(d["mvrv"].resample("W-FRI").last().reindex(w.index, method="ffill").values.astype(float), 104)
+                roh["mvrv"] = d["mvrv"].resample("W-FRI").last().reindex(w.index, method="ffill").values.astype(float)
         except Exception:
             pass
     art = "krypto" if krypto else "index" if zeile["gruppe"] in ("ETF", "Rohstoffe") else "aktien"
-    m = np.vstack([teile[k] for k in NEUE_AMPEL[art] if k in teile])
+    return art, {k: roh[k] for k in AMPEL_BAUSTEINE[art] if k in roh}
+
+
+def ampel_aus(perz: dict, mindest: int) -> np.ndarray:
+    m = np.vstack(list(perz.values()))
     with np.errstate(invalid="ignore"):
         anz = np.sum(~np.isnan(m), axis=0)
-        return np.where(anz >= 2, (1 - np.nanmean(m, axis=0)) * 100, np.nan)
+        return np.where(anz >= mindest, (1 - np.nanmean(m, axis=0)) * 100, np.nan)
 
 
 def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
@@ -394,18 +393,21 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
             "pi_top350x2": sma350x2.resample("W-FRI").last().reindex(w.index).values,
             "mayer_w": mayer_w,
         }
-    # AMPEL (seit 22.11.2026, Wunsch Marc): nur der Abstand des Kurses zur 200-Wochen-Linie, verglichen mit allen
-    # frueheren Wochen desselben Werts (nur Vergangenheit). Ampel 85 = nur in 15 % der bisherigen Wochen lag der Kurs
-    # im Verhaeltnis zur Linie noch tiefer. Die fruehere Mischung (Allzeithoch, Trend, RSI, Mayer) ist entfernt.
-    score = (1 - komponenten["ratio"]) * 100
-    # Vorläufige Ampel für die Anfangsjahre: solange es noch keine 200 Wochen gibt, zählt der Durchschnitt aller bisherigen
-    # Wochen (mindestens 2 Jahre) als Linie. Nur Anzeige im Chart, nur wo die echte Ampel fehlt; Rangliste und Prüfungen
-    # nutzen nur die echte Ampel.
+    # AMPEL (seit 22.11.2026 abends, Wunsch Marc): die fruehere violette Ampel ist die Hauptampel. Je Gruppe 3–4 Bausteine
+    # aus der Ampel-Studie, jeder als Perzentil gegen alle frueheren Wochen desselben Werts (nur Vergangenheit),
+    # Ampel = 100 − Mittel der Perzentile (mindestens 2 Bausteine). Bis 22.11. mittags: nur 200-Wochen-Linie; bis 21.11.:
+    # Mischung aus Allzeithoch, 200-Wochen-Linie, Trend und RSI.
+    art, roh = ampel_bausteine(zeile, w, c, {"dd": dd, "ratio": ratio, "trend": tz}, krypto, bitcoin)
+    start_von = lambda k: 104 if k == "mvrv" else WARMUP
+    perz = {k: expandierendes_perzentil(x, start_von(k)) for k, x in roh.items()}
+    score = ampel_aus(perz, 2)
+    # Vorläufige Ampel für die Anfangsjahre (ab 2 Jahren, nur Anzeige im Chart, nur wo die echte fehlt): dieselben Bausteine,
+    # aber schon ab 104 Wochen verglichen, die 200-Wochen-Linie als Durchschnitt aller bisherigen Wochen; ein Baustein reicht.
     linie_v = w["Close"].rolling(200, min_periods=VORL_WARMUP).mean().values
-    score_v = (1 - expandierendes_perzentil(c / linie_v, VORL_WARMUP)) * 100
+    roh_v = {k: (c / linie_v if k == "ratio" else x) for k, x in roh.items()}
+    score_v = ampel_aus({k: expandierendes_perzentil(x, VORL_WARMUP) for k, x in roh_v.items()}, 1)
     score_v = np.where(np.isnan(score), score_v, np.nan)
     s_jetzt = score[-1]
-    score2 = neue_ampel(zeile, w, c, komponenten, krypto, bitcoin)
 
     jahre_daten = (tag.index[-1] - tag.index[0]).days / 365.25
     cagr20, j20, start20 = jahresrendite(tag_c, 20)
@@ -420,25 +422,34 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         return QUELLEN_TEXT.get(art, ("", True))[1]
 
     stat = statistik(c, w["Low"].values.astype(float), score, s_jetzt) if not math.isnan(s_jetzt) else {}
-    # Kaufzonen: Kurse, bei denen die Ampel heute 80 / 60 / 40 / 15 zeigen wuerde
+    # Kaufzonen je Woche (mitwandernd) und heute: Kurse, bei denen die Ampel 80 / 60 / 40 / 15 zeigen wuerde
+    kz, kzv = None, None
     try:
-        kz = kaufzonen(c, {"ratio": ratio}) if not math.isnan(s_jetzt) else None
-    except Exception:
-        kz = None
+        kzv = kaufzonen_verlauf(c, roh, perz, score)
+        if not math.isnan(s_jetzt):
+            kz = {"jetzt": r(s_jetzt, 1), **{str(z): (None if math.isnan(a[-1]) else float(f"{a[-1]:.4g}")) for z, a in kzv.items()}}
+    except Exception as ex:
+        print(f"Kaufzonen nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     r2 = trendguete(w["Close"])
     qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
 
     # Begruendung in Worten
-    def perz_text(k):
-        p = komponenten[k][-1]
-        return "" if math.isnan(p) else f" – so tief nur in {max(p * 100, 0.1):.0f} % der Wochen" if p < 0.5 else f" – höher als in {p * 100:.0f} % der Wochen"
-    grund = []
-    if not math.isnan(ratio[-1]):
-        grund.append(f"{abs(ratio[-1] - 1) * 100:.0f} % {'über' if ratio[-1] >= 1 else 'unter'} der 200-Wochen-Linie{perz_text('ratio')}")
-    grund.append(f"{abs(dd[-1]) * 100:.0f} % unter dem Allzeithoch")
+    def perz_text(k):   # Seltenheit eines Bausteins (Perzentil gegen fruehere Wochen)
+        p = perz[k][-1]
+        return "" if math.isnan(p) else f" – so tief nur in {max(p * 100, 1):.0f} % der Wochen" if p < 0.5 else f" – höher als in {p * 100:.0f} % der Wochen"
+    def wert_text(k):
+        x = roh[k][-1]
+        if math.isnan(x): return None
+        if k == "dd": return f"{abs(x) * 100:.0f} % unter dem Allzeithoch"
+        if k == "ratio": return f"{abs(x - 1) * 100:.0f} % {'über' if x >= 1 else 'unter'} der 200-Wochen-Linie"
+        if k == "trend": return f"{abs(x):.1f} Standardabweichungen {'über' if x >= 0 else 'unter'} dem Langfristtrend".replace(".", ",")
+        if k == "r3j": return f"in 3 Jahren {x * 100:+.0f} %"
+        if k == "r5j": return f"in 5 Jahren {x * 100:+.0f} %"
+        if k == "mvrv": return f"MVRV {x:.2f}".replace(".", ",")
+    grund = [wert_text(k) + perz_text(k) for k in roh if wert_text(k) and not math.isnan(perz[k][-1])]
     if krypto:
-        grund.append(f"Mayer Multiple {extra['mayer']}")
+        grund.append(f"Mayer Multiple {extra['mayer']}".replace(".", ","))
         if extra.get("pi_status"): grund.append(extra["pi_status"])
         if extra.get("pi_top_aktiv"): grund.append("Pi Cycle Top AKTIV")
     vor4 = score[-5] if len(score) > 5 else np.nan
@@ -460,7 +471,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "datum": tag.index[-1].strftime("%Y-%m-%d"),
         "kurs": r(tag_c.iloc[-1], 4),
         "score": r(s_jetzt, 1), "score_vor4w": r(vor4, 1), "zone": zone(s_jetzt),
-        "score2": r(score2[-1], 1), "score2_vor4w": r(score2[-5] if len(score2) > 5 else np.nan, 1),   # neue Ampel (zusätzlich)
+        "ampel_art": art,                    # Bausteine der Ampel: aktien / index / krypto
+        "bausteine": [{"k": k, "name": BAUSTEIN_NAME[k], "wert": r(roh[k][-1] * (1 if k in ("trend", "mvrv") else 100), 2 if k in ("trend", "mvrv") else 1),
+                       "perz": r(perz[k][-1] * 100, 0)} for k in roh if not math.isnan(perz[k][-1])],
         "cagr20": r(cagr20 * 100 if cagr20 is not None else None, 1), "cagr_jahre": r(j20, 1),
         "cagr20_div": mit_div(start20), "cagr10": r(cagr10 * 100 if cagr10 is not None else None, 1),
         "cagr_max": r(cagr_max * 100 if cagr_max is not None else None, 1), "jahre_daten": r(jmax, 1),
@@ -477,8 +490,8 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
         "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
         "linie200": r(sma200[-1], 4),        # 200-Wochen-Linie heute
-        "ampel_wochen": int(np.sum(~np.isnan(ratio))),   # Vergleichswochen der Ampel (Wochen mit 200-Wochen-Linie)
-        "ampel_seit": w.index[int(np.flatnonzero(~np.isnan(ratio))[0])].strftime("%Y") if np.any(~np.isnan(ratio)) else None,
+        "ampel_wochen": int(np.sum(~np.isnan(score))),   # Wochen mit Ampel
+        "ampel_seit": w.index[int(np.flatnonzero(~np.isnan(score))[0])].strftime("%Y") if np.any(~np.isnan(score)) else None,
     }
 
     # Chartdaten (kompakt als Spaltenlisten)
@@ -497,15 +510,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
-    try:   # Kaufzonen je Woche (mitwandernde Linien im Chart, Wunsch Marc 22.11.2026)
-        kzv = kaufzonen_verlauf(c, ratio, ~np.isnan(score))
-        for z, arr in kzv.items():
-            if not np.all(np.isnan(arr)):
-                chart[f"kz{z}"] = rund(arr)
-    except Exception as ex:
-        print(f"Kaufzonen-Verlauf nicht berechenbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
-    if not np.all(np.isnan(score2)):
-        chart["score2"] = rund(score2, 3)   # neue Ampel (zusätzlich, Studie 21.11.2026)
+    for z, arr in (kzv or {}).items():   # Kaufzonen je Woche (mitwandernde Linien im Chart)
+        if not np.all(np.isnan(arr)):
+            chart[f"kz{z}"] = rund(arr)
     if not np.all(np.isnan(score_v)):
         chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)
     if mp:
@@ -552,7 +559,7 @@ def tagebuch(zeilen):
         for z in zeilen
         if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
     ]
-    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "200w", "signale": eintraege}, ensure_ascii=False, indent=0))
+    datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "studie", "signale": eintraege}, ensure_ascii=False, indent=0))
 
 
 def _etfs():
@@ -584,7 +591,6 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "o": rund(t["Open"].values), "h": rund(t["High"].values), "l": rund(t["Low"].values), "c": rund(t["Close"].values),
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
         **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
-        **({"score2": rund(woche(chart["score2"]), 3)} if "score2" in chart else {}),
         **{k: rund(woche(chart[k])) for k in ("kz80", "kz60", "kz40", "kz15") if k in chart},
         **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
     }

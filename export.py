@@ -38,7 +38,7 @@ from kurse import alle_laden
 
 # Felder, die Kurse oder Kursreihen enthalten und deshalb nie veroeffentlicht werden
 KURSE_OEFFENTLICH = True
-VERBOTEN = set() if KURSE_OEFFENTLICH else {"o", "h", "l", "c", "kurs", "sma200w", "trend", "trend_o", "trend_u", "pi_ema150", "pi_sma471",
+VERBOTEN = set() if KURSE_OEFFENTLICH else {"o", "h", "l", "c", "kurs", "sma200w", "kz80", "kz60", "kz40", "kz15", "linie200", "trend", "trend_o", "trend_u", "pi_ema150", "pi_sma471",
             "preis", "pfad", "p0", "ende_median", "reihe_kurs"}
 STUFEN = np.linspace(0, 100, 101)   # Perzentile fuer die Monte-Carlo-Verteilungen
 
