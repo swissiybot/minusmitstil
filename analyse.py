@@ -111,23 +111,6 @@ def trend_z(logp: np.ndarray) -> np.ndarray:
     return z
 
 
-def trend_kanal(logp: np.ndarray, start: int = 104):
-    """Mitwandernder Trendkanal (Wunsch Marc 22.11.2026): fuer jede Woche die Gerade durch alle BIS DAHIN bekannten
-    Wochen (log. Skala) und deren Streuung – ohne Blick in die Zukunft, gleiche Rechnung wie trend_z.
-    Rueckgabe: (Trendwert der Woche, Standardabweichung), vor 'start' NaN."""
-    n = len(logp)
-    t = np.arange(n, dtype=float)
-    S1 = np.cumsum(np.ones(n)); St = np.cumsum(t); Sy = np.cumsum(logp)
-    Stt = np.cumsum(t * t); Sty = np.cumsum(t * logp); Syy = np.cumsum(logp * logp)
-    with np.errstate(invalid="ignore", divide="ignore"):
-        b = (S1 * Sty - St * Sy) / (S1 * Stt - St * St)
-        a = (Sy - b * St) / S1
-        sd = np.sqrt(np.maximum(Syy - a * Sy - b * Sty, 0) / np.maximum(S1 - 2, 1))
-    mitte = a + b * t
-    mitte[:start] = np.nan; sd[:start] = np.nan
-    return mitte, sd
-
-
 def rsi(close: pd.Series, n: int = 14) -> pd.Series:
     d = close.diff()
     auf = d.clip(lower=0).ewm(alpha=1 / n, adjust=False).mean()
@@ -513,15 +496,12 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
 
     # Chartdaten (kompakt als Spaltenlisten)
     t_unix = [int(x) for x in (w.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)]
-    trendlinie, trend_sd = trend_kanal(logp)   # mitwandernd: je Woche nur mit der Geschichte bis dahin
     marken = []   # Pfeile günstig/teuer entfernt (Wunsch Marc 22.11.2026); nur noch Pi-Cycle-Marken bei Bitcoin
     rund = lambda a, n=4: [None if (x is None or (isinstance(x, float) and math.isnan(x))) else float(f"{x:.{n}g}") for x in a]
     chart = {
         "t": t_unix,
         "o": rund(w["Open"].values), "h": rund(w["High"].values), "l": rund(w["Low"].values), "c": rund(c),
         "sma200w": rund(sma200),
-        "trend": rund(np.exp(trendlinie)),
-        "trend_o": rund(np.exp(trendlinie + 2 * trend_sd)), "trend_u": rund(np.exp(trendlinie - 2 * trend_sd)),
         "score": rund(score, 3),
         "marken": marken,
     }
@@ -607,7 +587,6 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
         **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
         **{k: rund(woche(chart[k])) for k in ("kz80", "kz60", "kz40", "kz15") if k in chart},
-        **{k: rund(woche(chart[k])) for k in ("trend", "trend_o", "trend_u")},
     }
     if info.get("gruppe") == "Krypto":
         out["mayer"] = rund((voll / voll.rolling(200).mean()).reindex(t.index).values, 3)

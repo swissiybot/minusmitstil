@@ -779,7 +779,7 @@ const ERKLAERUNG = {
   pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
   // --- Chart-Legende
   l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Gelbe Linie: der Durchschnitt der letzten 200 Wochenschlusskurse (knapp 4 Jahre). Bei Indizes, ETFs und Rohstoffen ist der Abstand zu ihr einer der Bausteine der Ampel. Liegt der Kurs nahe an der Linie oder darunter, ist er gemessen an den letzten Jahren günstig; liegt er weit darüber, ist er teuer. Bei starken Werten wie dem S&P 500 oder Bitcoin war die Linie früher oft ein Boden, unter den der Kurs nur selten und kurz fiel."},
-  l_trend: {titel:"Trendkanal (blau, wandert mit)", text:"Die mittlere blaue Linie ist der Langfristtrend: eine Gerade durch alle Kurse auf logarithmischer Skala. Sie wird für jede Woche neu gezogen, und zwar nur mit den Kursen, die es bis dahin gab – deshalb wandert der Kanal mit und knickt nach großen Auf- oder Abschwüngen ein wenig. Die gestrichelten Linien darüber und darunter liegen 2 Standardabweichungen entfernt: Dazwischen bewegte sich der Kurs bis dahin meistens. Über dem oberen Rand war der Kurs weit über seinem langen Trend (z. B. Nasdaq-100 im März 2000), unter dem unteren Rand weit darunter (z. B. Oktober 2002). Kein Kaufsignal; bei Werten ohne echten Aufwärtstrend (viele Rohstoffe) sagt der Kanal wenig."},
+  l_trend: {titel:"Trendkanal (blau)", text:"So zeichnen ihn Profis in Charting-Programmen (lineare Regression, z. B. „Regression Trend“ bei TradingView): Durch die Schlusskurse der gerade sichtbaren Kerzen wird die Gerade gelegt, die am besten passt (Methode der kleinsten Quadrate) – das ist die durchgezogene Mittellinie. Die gestrichelten Linien liegen 2 Standardabweichungen darüber und darunter; dazwischen lagen im sichtbaren Zeitraum etwa 95 % der Kurse. Der Kanal passt sich immer der Ansicht an: Zoomen, Verschieben, Zeitebene (Monat, Woche, Tag) oder Log/Linear wechseln rechnet ihn neu. Bei Log-Skala steht die Gerade für gleichmäßiges prozentuales Wachstum (bei langen Zeiträumen die richtige Wahl), bei Linear für gleichmäßigen Zuwachs in Dollar. Im Fadenkreuz steht, wie stark der Trend pro Jahr steigt oder fällt und wo der letzte sichtbare Kurs im Kanal liegt (über dem Kanal = weit über dem Trend, unter dem Kanal = weit darunter). Rückblick auf den gewählten Ausschnitt, keine Vorhersage: Ein anderer Ausschnitt ergibt einen anderen Kanal."},
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
@@ -1626,6 +1626,13 @@ function ampelRang(reihe, i){
   for (let j = 0; j <= i; j++) { const x = reihe[j]; if (x == null) continue; n++; if (x > s) g++; else if (x < s) t++; }
   return n < 52 ? null : {guenstiger:g / n * 100, teurer:t / n * 100, n};
 }
+// Rang zu einem Zeitpunkt immer aus der ganzen Wochen-Geschichte (CDATA), egal ob Monats-, Wochen- oder Tageschart gezeigt wird
+function rangZuZeit(t){
+  const a = CDATA?.t; if (!a?.length || !CDATA.score) return null;
+  let lo = 0, hi = a.length - 1; if (t < a[0]) return null;
+  while (lo < hi) { const mi = (lo + hi + 1) >> 1; if (a[mi] <= t) lo = mi; else hi = mi - 1; }
+  return ampelRang(CDATA.score, lo);
+}
 const rangText = r => r == null ? "" : r.guenstiger >= r.teurer ? `teurer als in ${fmt(r.guenstiger,0)} % der Zeit davor` : `günstiger als in ${fmt(r.teurer,0)} % der Zeit davor`;
 function klartext(w, c){
   if (w.score == null) return `Für ${esc(kurzname(w))} gibt es noch keine Ampel. Sie braucht gut 5 Jahre Kursdaten, damit es genug frühere Wochen zum Vergleichen gibt. Hier sind es ${fmt(w.jahre_daten,1)} Jahre.`;
@@ -1826,7 +1833,7 @@ async function zeige(id, opt={}){
   $("#stern").onclick = () => favUmschalten(id);
   $$("#vertiefung .reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
   $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
-  $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); trendkanalAktualisieren(); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
   $$("#chart-karte [data-iv]").forEach(b => b.onclick = () => intervallSetzen(b.dataset.iv));
   if ($("#lineal-knopf")) $("#lineal-knopf").onclick = () => linealUmschalten();
@@ -1852,6 +1859,7 @@ function chipUmschalten(k, b){
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
+  if (k === "trend") trendkanalAktualisieren();
   if (k === "kaufzonen" || k === "mvrv") kaufzonenLinien();
   (SERIEN[k] || []).forEach(s => s.applyOptions({visible:CHIPS[k]}));
   if (k === "kegel") KEGEL.forEach(s => s.applyOptions({visible:CHIPS.kegel}));
@@ -1885,7 +1893,7 @@ async function intervallSetzen(iv){
 }
 // ------------------------------------------------------------ Zeitebenen für den eigenen Chart
 function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
-  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz80","kz60","kz40","kz15","trend","trend_o","trend_u","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz80","kz60","kz40","kz15","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
   linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
   const zuMonat = new Map(); let schl = null, i0 = 0;
   const abschliessen = i1 => {   // Wochen i0..i1-1
@@ -2215,7 +2223,10 @@ function zeichne(c, w){
   }
   const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
   kerzen.setData(c.t.map((t,i) => ({time:t, open:c.o[i] ?? c.c[i], high:c.h[i] ?? c.c[i], low:c.l[i] ?? c.c[i], close:c.c[i]})));
-  linie("trend", c.trend_o, f.akzent + "66", 1, 2, true); linie("trend", c.trend, f.akzent, 1, 0, true); linie("trend", c.trend_u, f.akzent + "66", 1, 2, true);
+  {   // Trendkanal: drei Linien, die trendkanalAktualisieren() auf den sichtbaren Ausschnitt legt (Regressionskanal wie in Charting-Programmen)
+    const tk = (farbe, stil, breite) => { const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.trend, autoscaleInfoProvider:() => null}); SERIEN.trend.push(s); return s; };
+    TK_SERIEN = [tk(f.akzent, 0, 2), tk(f.akzent + "aa", 2, 1), tk(f.akzent + "aa", 2, 1)];
+  }
   const w200 = linie("w200", c.sma200w, f.gelb, 2);
   w200.applyOptions({lastValueVisible:true, title:"200W"});
   if (c.kz80 || c.kz15) {   // Kaufzonen je Woche: wandern mit (Kurs, bei dem die Ampel in der Woche 80/60/40/15 gezeigt hätte)
@@ -2245,7 +2256,7 @@ function zeichne(c, w){
   }
   if (c.pi_ema150) { linie("pi", c.pi_ema150, f.lila, 2); linie("pi", c.pi_sma471, f.cyan, 2); }
   if (c.pi_top111) { linie("pitop", c.pi_top111, f.pitop1, 1, 2, true); linie("pitop", c.pi_top350x2, f.pitop2, 1, 2, true); }
-  KERZEN = kerzen; HAUPT = ch;
+  KERZEN = kerzen; HAUPT = ch; TK_INFO = null;
   // Ampel-Leiste unten (mit Mayer Multiple bei Krypto auf der linken Skala)
   const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, layout:{...basis.layout, attributionLogo:false}, timeScale:{...basis.timeScale, visible:false}, rightPriceScale:{...basis.rightPriceScale, scaleMargins:{top:0.18, bottom:0.02}},
     leftPriceScale:{...basis.leftPriceScale, visible:!!c.mayer && CHIPS.mayer, scaleMargins:{top:0.18, bottom:0.02}}, handleScale:false, handleScroll:false});
@@ -2280,7 +2291,7 @@ function zeichne(c, w){
   sync(ch, ch2); sync(ch2, ch);
   // Fibonacci neu, wenn sich der sichtbare Ausschnitt ändert; Lineal folgt Zoom und Verschieben
   let fibZeit = 0;
-  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(() => { fibAktualisieren(); if (eng() !== MARKEN_ENG) markenSetzen(); }, 120); linealZeichnen(); });
+  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(() => { fibAktualisieren(); trendkanalAktualisieren(); if (eng() !== MARKEN_ENG) markenSetzen(); }, 120); linealZeichnen(); });
   ch.subscribeClick(p => linealKlick(p));
   // Fadenkreuz mit Werten
   const fk = $("#fk");
@@ -2298,8 +2309,9 @@ function zeichne(c, w){
     fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
       <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>
-      ${c.score[i] != null && ampelRang(c.score, i) ? `<span class="fk-rang">${rangText(ampelRang(c.score, i))}</span>` : ""}
+      ${c.score[i] != null && rangZuZeit(c.t[i]) ? `<span class="fk-rang">${rangText(rangZuZeit(c.t[i]))}</span>` : ""}
       ${danachText(c, i)}
+      ${CHIPS.trend && TK_INFO ? `<span class="fk-tk" data-e="l_trend"><i class="sw" style="background:var(--akzent)"></i>Trendkanal (sichtbar, ${fmt(TK_INFO.jahre, TK_INFO.jahre < 2 ? 1 : 0)} J.): ${TK_INFO.pa == null ? "–" : vz(TK_INFO.pa,1," %")} pro Jahr · Kurs ${TK_INFO.z > 2 ? "über dem Kanal" : TK_INFO.z > 1 ? "im oberen Teil" : TK_INFO.z < -2 ? "unter dem Kanal" : TK_INFO.z < -1 ? "im unteren Teil" : "nahe der Mitte"}</span>` : ""}
       ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: sehr günstig unter <b>${fmt(c.kz80[i],nk)}</b> · günstig unter ${fmt(c.kz60[i],nk)} · teuer über ${fmt(c.kz40[i],nk)} · sehr teuer über <b>${fmt(c.kz15[i],nk)}</b></span>` : ""}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
@@ -2314,7 +2326,7 @@ function zeichne(c, w){
     if (p?.time != null && p.point && ch.setCrosshairPosition) { const i = ZEIT_I.get(p.time); if (i != null) try { ch.setCrosshairPosition(c.c[i], p.time, kerzen); } catch(e){} }
     else if (ch.clearCrosshairPosition) try { ch.clearCrosshairPosition(); } catch(e){} });
   charts = [ch, ch2]; FIB_LINIEN = [];
-  setTimeout(() => { zeitraumSetzen(ZEITRAUM, false); fibAktualisieren(); kaufzonenLinien(); }, 30);
+  setTimeout(() => { zeitraumSetzen(ZEITRAUM, false); fibAktualisieren(); trendkanalAktualisieren(); kaufzonenLinien(); }, 30);
 }
 // ------------------------------------------------------------ Fibonacci-Zonen (Hoch und Tief des sichtbaren Ausschnitts)
 const FIB_STUFEN = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
@@ -2339,6 +2351,30 @@ class GoldenPocketBand {
   setze(p1, p2, t0, farbe){ this.p1 = p1; this.p2 = p2; this.t0 = t0; if (farbe) this.farbe = farbe; this._neu?.(); }
 }
 const GP_STUFEN = [0.382, 0.5, 0.618, 0.65];
+// Trendkanal wie in Charting-Programmen (lineare Regression mit Standardabweichungs-Band, z. B. „Regression Trend“ bei TradingView):
+// Gerade nach der Methode der kleinsten Quadrate durch die Schlusskurse der GERADE SICHTBAREN Kerzen der gewählten Zeitebene,
+// bei Log-Skala durch die Logarithmen (gleichmäßiges prozentuales Wachstum), dazu ±2 Standardabweichungen der Abstände.
+// Zoomen, Verschieben, Zeitebene oder Skala wechseln rechnet ihn neu – er passt also immer zur Ansicht. Rückblick, keine Vorhersage.
+let TK_SERIEN = [], TK_INFO = null;
+function trendkanalAktualisieren(){
+  TK_INFO = null;
+  if (!HAUPT || !CD || TK_SERIEN.length !== 3) return;
+  const leer = () => TK_SERIEN.forEach(s => { try { s.setData([]); } catch(e){} });
+  if (!CHIPS.trend) { leer(); return; }
+  const r = HAUPT.timeScale().getVisibleLogicalRange(); if (!r) { leer(); return; }
+  const von = Math.max(0, Math.floor(r.from)), bis = Math.min(CD.c.length - 1, Math.ceil(r.to));
+  const log = SKALA === 1, tr = x => log ? Math.log(x) : x, zurueck = y => log ? Math.exp(y) : y;
+  let n = 0, sx = 0, sy = 0, sxx = 0, sxy = 0;
+  for (let i = von; i <= bis; i++) { const v = CD.c[i]; if (!(v > 0)) continue; const y = tr(v); n++; sx += i; sy += y; sxx += i * i; sxy += i * y; }
+  if (n < 10) { leer(); return; }
+  const b = (n * sxy - sx * sy) / (n * sxx - sx * sx), a = (sy - b * sx) / n;
+  let ss = 0; for (let i = von; i <= bis; i++) { const v = CD.c[i]; if (!(v > 0)) continue; const d = tr(v) - (a + b * i); ss += d * d; }
+  const sd = Math.sqrt(ss / Math.max(n - 2, 1)), m = i => a + b * i;
+  [[0], [2], [-2]].forEach(([k], j) => TK_SERIEN[j].setData([{time:CD.t[von], value:zurueck(m(von) + k * sd)}, {time:CD.t[bis], value:zurueck(m(bis) + k * sd)}]));
+  const jahre = (CD.t[bis] - CD.t[von]) / (365.25 * 86400), mv = zurueck(m(von)), mb = zurueck(m(bis));
+  const letzter = (() => { for (let i = bis; i >= von; i--) if (CD.c[i] > 0) return i; return bis; })();
+  TK_INFO = {pa: jahre > 0.2 && mv > 0 && mb > 0 ? (Math.pow(mb / mv, 1 / jahre) - 1) * 100 : null, z:(tr(CD.c[letzter]) - m(letzter)) / sd, jahre};
+}
 function fibAktualisieren(){
   if (!KERZEN) return;
   FIB_LINIEN.forEach(l => { try { KERZEN.removePriceLine(l); } catch(e){} }); FIB_LINIEN = [];
