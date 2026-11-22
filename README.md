@@ -40,6 +40,9 @@ Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopier
 - Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
 - Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
 
+### Kauf- und Verkaufsqualität je Titel (22.11.2026)
+Im Chart zwei schmale Bänder (Rückblick): unten Kaufqualität = Rang der Rendite der folgenden 3 Jahre unter allen Wochen des Titels, oben Verkaufsqualität = wie stark der Kurs im Jahr danach fiel. Karte „Heute im Vergleich“: die 10 % früheren Wochen mit ähnlichstem Abstand zur 200-Wochen-Linie und wie Kauf bzw. Verkauf danach ausgingen, beste Kauf-/Verkaufswochen und eine Probe ohne Zukunftswissen je Titel (`kauf_verkauf_qualitaet` in `analyse.py`).
+
 ### Nachprüfung der Ampel-Varianten (22.11.2026)
 Gleicher Test ohne Zukunftswissen für alte Mischung / 200-Wochen-Perzentil / Studien-Ampel / Anker-Ampel (14 ETFs, 15 Rohstoffe, 5 Krypto, rund 2.200 Aktien, Prüfzeit ab 2005). Rangkorrelation Ampel ↔ 3-Jahres-Rendite: ETFs 0,46 / 0,49 / 0,47 / **0,50**; Aktien 0,24 / 0,22 / **0,27** / 0,25; Rohstoffe 0,13 / 0,09 / 0,12 / **0,22**; Krypto **0,66** / 0,61 / 0,41 / 0,40. Die Quoten „ähnliche Lage“ sind bei allen Varianten schlechter als die Grundquote. Schwäche der Anker-Ampel: Bei Krypto folgten auf „sehr teuer“ oft noch Anstiege, bei Einzelaktien liefen „sehr günstige“ Kurse im Schnitt weiter schlecht (fallende Firmen bleiben unter der Linie).
 

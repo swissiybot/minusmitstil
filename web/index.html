@@ -999,6 +999,10 @@ const ERKLAERUNG_NEU = {
   kegel_pruefung: {titel:"Prüfung des Prognose-Kegels", text:"Ein Kegel ist gut, wenn er so oft trifft, wie er verspricht: Das 90-%-Band soll den späteren Kurs in etwa 9 von 10 Fällen enthalten, das 50-%-Band in etwa jedem zweiten. Trifft er seltener, ist er zu schmal (zu selbstsicher), trifft er öfter, ist er zu breit. Geprüft werden Varianten: wie viel Geschichte, ob die heutige Schwankung zählt (nach einem Einbruch ist der Markt meist unruhiger) und ob eine vorsichtigere Grundrendite besser passt. Die Variante mit der besten Trefferquote rechnet im Tool."},
   ampel_rang: {titel:"Teurer oder günstiger als …", text:"Übersetzt die Ampelzahl in einen Satz, der sich direkt vergleichen lässt: „teurer als in 91 % der Zeit davor“ heißt, dass die Ampel bis zu diesem Zeitpunkt in 91 % aller Wochen höher stand – es war also fast immer günstiger als jetzt. Zwei Zeitpunkte vergleichst du so: „teurer als in 91 %“ ist teurer als „teurer als in 69 %“. Merke: Bei der Ampelzahl selbst heißt eine HOHE Zahl günstig und eine NIEDRIGE Zahl teuer (Ampel 9 ist teurer als Ampel 31)."},
   jung: {titel:"Junger Wert (noch keine Ampel)", text:"Dieser Wert ist erst seit wenigen Monaten an der Börse. Die Ampel richtet sich nach der 200-Wochen-Linie, dem Durchschnitt der letzten knapp 4 Jahre – die gibt es hier noch nicht. Eine vorläufige Ampel rechnet das Tool ab 2 Jahren Kursen. Bis dahin stehen hier nur Fakten seit dem Börsengang: erster Kurs, Hoch, Tief, Durchschnitt und wo der Kurs heute steht. Ob das günstig oder teuer ist, lässt sich bei so kurzer Geschichte nicht seriös sagen."},
+  kq: {titel:"Kaufqualität (Rückblick, unteres Band)", text:"Das schmale Band ganz unten im Kurs-Chart zeigt für jede vergangene Woche, wie gut ein Kauf genau dann war – gemessen an der Rendite der folgenden 3 Jahre und verglichen mit allen Wochen dieses Titels. Dunkelgrün: einer der besten 20 % Kaufzeitpunkte. Hellgrün: besser als 60 %. Hellrot: schlechter als 60 %. Rot: einer der schlechtesten 20 %. Ohne Farbe: Durchschnitt. Das weiß man immer erst hinterher; die letzten 3 Jahre haben noch keine Farbe, weil ihr Ergebnis offen ist. Im Fadenkreuz steht für jede Woche „Kauf hier: besser als X % der Kaufwochen“."},
+  vq: {titel:"Verkaufsqualität (Rückblick, oberes Band)", text:"Das schmale Band ganz oben im Kurs-Chart zeigt, wann ein Verkauf im Rückblick gut war: Orange heißt, der Kurs stand ein Jahr später deutlich tiefer – kräftig orange gehört zu den besten 20 % Verkaufszeitpunkten dieses Titels, hell orange zu den besten 40 %. Ohne Farbe: Verkaufen war dort nicht besonders gut, meist stieg der Kurs weiter. Das letzte Jahr hat noch keine Farbe."},
+  kv_heute: {titel:"Heute im Vergleich", text:"Das Tool sucht die früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt, wie es danach ausging: Wie oft stand der Kurs 3 Jahre später höher, wie viel brachte das pro Jahr, wie oft gehörte so ein Kauf zu den besten 30 % aller Kaufwochen – und wie oft war Verkaufen richtig, weil der Kurs ein Jahr später tiefer stand. Zum Vergleich steht daneben der Wert über alle Wochen. Ist die ähnliche Lage deutlich besser als „alle Wochen“, war das früher eher ein guter Kaufzeitpunkt. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der Phasen."},
+  kv_probe: {titel:"Wie verlässlich bei diesem Titel?", text:"Die Probe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode „besser oder schlechter als üblich“ voraus, und es wird nachgeschaut, ob das stimmte. 50 % richtig wäre Zufall. Liegt der Wert darunter oder nur knapp darüber, sollte man der Karte „Heute im Vergleich“ bei diesem Titel wenig Gewicht geben."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
   intervall: {titel:"Zeitebene", text:"Wie viel Zeit eine Kerze umfasst: Monat, Woche oder Tag im eigenen Chart (mit 200-Wochen-Linie, Günstig-/Teuer-Phasen, Prognose-Kegel und bei Bitcoin Pi Cycle; Tag: letzte 15 Jahre). 1 Stunde, 30 und 15 Minuten zeigt das TradingView-Widget – eigene Intraday-Kurse hat das Tool nicht. Die Ampel selbst wird immer aus Wochenkursen berechnet."},
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
@@ -1578,8 +1582,13 @@ let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL
 let SERIEN = {}, ZEIT_I = new Map();
 // Startzustand bei JEDEM Aufruf (Wunsch Marc 22.11.2026): 200-Wochen-Linie, Kaufzonen, Ampel-Verlauf, Tief-/Hochpunkte und
 // Prognose-Kegel an, alles andere aus; Wochenansicht, 10 Jahre. Umschalten gilt bis zum nächsten Neuladen der Seite.
-let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:false, mayer:false, mvrv:false};
-const CHIPS_WICHTIG = ["w200", "kaufzonen", "ampel", "tiefhoch", "kegel", "phasen", "ergebnis"];
+let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, kq:true, vq:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:false, mayer:false, mvrv:false};
+// Kauf-/Verkaufsqualität (Rückblick): Farben der Bänder im Kurs-Chart
+const KQ_FARBEN = ["#e2583e", "#e2583e80", "transparent", "#14a08580", "#0b7a64"];   // schlecht … sehr gut gekauft
+const VQ_FARBE = "#f59e0b";
+const kqFarbe = v => v == null ? null : v >= 80 ? KQ_FARBEN[4] : v >= 60 ? KQ_FARBEN[3] : v > 40 ? null : v > 20 ? KQ_FARBEN[1] : KQ_FARBEN[0];
+const vqFarbe = v => v == null ? null : v >= 80 ? VQ_FARBE : v >= 60 ? VQ_FARBE + "70" : null;
+const CHIPS_WICHTIG = ["w200", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -1673,6 +1682,29 @@ function jungKarte(w){   // junge Werte (z. B. SpaceX): Lage seit Börsengang st
     ${z.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")}
     <p class="klein" style="margin:8px 0 0">Die Ampel braucht die 200-Wochen-Linie (knapp 4 Jahre Kurse), eine vorläufige Ampel gibt es ab 2 Jahren. Ab dann erscheint sie hier automatisch. Junge Börsengänge schwanken oft besonders stark. Keine Anlageberatung.</p></section>`;
 }
+function kvKarte(w){   // Heute im Vergleich: wie ging es früher in ähnlicher Lage aus (kaufen und verkaufen), dazu beste Zeitpunkte im Rückblick
+  const v = w.kv; if (!v || (!v.kauf && !v.verkauf)) return "";
+  const k = v.kauf, s = v.verkauf, p = v.probe;
+  const satzK = k ? (k.top30 >= 40 && k.median > k.median_alle ? "eher ein guter Kaufzeitpunkt" : k.top30 <= 20 || k.median < k.median_alle ? "eher ein mittelmäßiger Kaufzeitpunkt" : "ein durchschnittlicher Kaufzeitpunkt") : "";
+  const satzV = s ? (s.richtig >= s.richtig_alle + 10 ? "Verkaufen war hier öfter richtig als sonst" : s.richtig <= s.richtig_alle - 10 ? "Verkaufen war hier seltener richtig als sonst" : "Verkaufen war hier etwa so oft richtig wie sonst") : "";
+  const zl = (txt, a, b, e) => `<tr><td style="text-align:left">${txt}</td><td><b>${a}</b></td><td>${b}</td>${e != null ? `<td>${e}</td>` : ""}</tr>`;
+  const bw = (liste, art) => (liste || []).map(x => `${datumDe(x.datum)}${x.abstand != null ? ` (${vz(x.abstand,0," %")} zur Linie)` : ""}: danach ${vz(x.danach,0," %")}${art === "k" ? " pro Jahr (3 J.)" : " (1 J.)"}`).join(" · ");
+  return `<section class="karte breit2" id="kv-karte"><div class="karte-kopf"><span data-e="kv_heute" tabindex="0">Heute im Vergleich · kaufen oder verkaufen?</span><span>${v.heute_abstand != null ? `heute ${vz(v.heute_abstand,0," %")} zur 200-Wochen-Linie` : ""}</span></div>
+    ${k ? `<p style="margin:0 0 6px">In früheren Wochen von ${esc(kurzname(w))} mit ähnlichem Abstand zur 200-Wochen-Linie (${vz(k.von,0," %")} bis ${vz(k.bis,0," %")}, ${k.wochen} Wochen in ${k.phasen} Phasen) war das <b>${satzK}</b>${s ? `; ${satzV}` : ""}.${p && p.richtig < 50 ? ` <b style="color:var(--teuer)">Achtung: Bei diesem Titel lag diese Methode früher öfter falsch als richtig (siehe unten).</b>` : ""}</p>
+    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Kauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
+      ${zl("3 Jahre später im Plus", fmt(k.plus,0," %"), fmt(k.plus_alle,0," %"))}
+      ${zl("Rendite pro Jahr danach (Median)", vz(k.median,1," %"), vz(k.median_alle,1," %"))}
+      ${zl("davon unter den besten 30 % der Kaufwochen", fmt(k.top30,0," %"), "30 %")}
+      ${zl("schlechteste 10 % (pro Jahr)", vz(k.schlecht10,0," %"), "–")}
+    </tbody></table></div>` : ""}
+    ${s ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th style="text-align:left">Verkauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
+      ${zl("1 Jahr später tiefer (Verkauf war richtig)", fmt(s.richtig,0," %"), fmt(s.richtig_alle,0," %"))}
+      ${zl("Kursveränderung im Jahr danach (Median)", vz(s.median,1," %"), vz(s.median_alle,1," %"))}
+    </tbody></table></div>` : ""}
+    ${v.beste_kauf?.length ? `<p class="klein" style="margin:8px 0 2px"><b style="color:var(--guenstig)">Beste Kaufwochen im Rückblick:</b> ${bw(v.beste_kauf, "k")}</p>` : ""}
+    ${v.beste_verkauf?.length ? `<p class="klein" style="margin:2px 0"><b style="color:${VQ_FARBE}">Beste Verkaufswochen im Rückblick:</b> ${bw(v.beste_verkauf, "v")}</p>` : ""}
+    <p class="klein" style="margin:8px 0 0"><b data-e="kv_probe" tabindex="0">Wie verlässlich bei diesem Titel?</b> ${p ? `In einer Probe ohne Zukunftswissen (${p.zeitpunkte} Zeitpunkte, nur mit den damals bekannten Ergebnissen) lag diese Methode in <b>${fmt(p.richtig,0," %")}</b> der Fälle richtig – ${p.richtig >= 60 ? "besser als Zufall (50 %)" : p.richtig <= 45 ? "<b>nicht besser als Zufall (50 %)</b>, hier also kaum verlässlich" : "etwa wie Zufall (50 %)"}.` : "Zu wenig Geschichte für eine Probe."} Häufigkeiten aus der Vergangenheit, keine Garantie und keine Anlageberatung.</p></section>`;
+}
 function kaufzonenKarte(w){   // Kaufzonen heute als Tabelle: Kursbereiche je Ampel-Stufe (aus der 200-Wochen-Linie, wie die Ampel)
   const kz = w.kz; if (!kz || w.kurs == null) return "";
   const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => x == null ? "–" : fmt(x, nk);
@@ -1761,6 +1793,8 @@ async function zeige(id, opt={}){
     ["pitop", "Pi Cycle Top", `<i style="color:var(--pitop1)"></i>`, "l_pitop", btc && eigen && !!c.pi_top111],
     ["mayer", "Mayer Multiple", `<i style="color:var(--mayer)"></i>`, "l_mayer", krypto && !!c.mayer],
     ["mvrv", "MVRV-Z", `<i style="color:var(--mvrv)"></i>`, "l_mvrv", !!c.mvrv],
+    ["kq", "Kaufqualität (Rückblick)", `<i class="flaeche" style="background:linear-gradient(90deg,${KQ_FARBEN[0]},${KQ_FARBEN[4]})"></i>`, "kq", eigen && !!c.kq],
+    ["vq", "Verkaufsqualität (Rückblick)", `<i class="flaeche" style="background:linear-gradient(90deg,transparent,${VQ_FARBE})"></i>`, "vq", eigen && !!c.vq],
     ["ampel", "Ampel-Verlauf (unten)", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
   ].filter(x => x[4]).sort((a, b) => (CHIPS_WICHTIG.includes(a[0]) ? CHIPS_WICHTIG.indexOf(a[0]) : 99) - (CHIPS_WICHTIG.includes(b[0]) ? CHIPS_WICHTIG.indexOf(b[0]) : 99));
   const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
@@ -1805,6 +1839,7 @@ async function zeige(id, opt={}){
     <div class="raster">
       ${jungKarte(w)}
       ${kaufzonenKarte(w)}
+      ${kvKarte(w)}
       <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
       ${phasenKarte(c)}
       ${schwellenKarte(c)}
@@ -1898,7 +1933,7 @@ async function intervallSetzen(iv){
 }
 // ------------------------------------------------------------ Zeitebenen für den eigenen Chart
 function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
-  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz80","kz60","kz40","kz15","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz80","kz60","kz40","kz15","kq","vq","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
   linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
   const zuMonat = new Map(); let schl = null, i0 = 0;
   const abschliessen = i1 => {   // Wochen i0..i1-1
@@ -1986,7 +2021,10 @@ function danachText(c, i){
     const p = x => x == null ? "–" : fmt(x, x >= 100 ? 0 : 2);
     return `<span class="fk-kz">Heute: sehr günstig unter <b>${p(kz["80"])}</b> · günstig unter <b>${p(kz["60"])}</b> · teuer über <b>${p(kz["40"])}</b> · sehr teuer über <b>${p(kz["15"])}</b></span>`;
   }
-  return `<span>danach: 1 J. <b class="${klasse(r1)}">${vz(r1,0," %")}</b>${r3 != null ? ` · 3 J. <b class="${klasse(r3)}">${vz(r3,0," %")}</b>` : ""}</span>`;
+  const kq = c.kq?.[i], vq = c.vq?.[i];
+  return `<span>danach: 1 J. <b class="${klasse(r1)}">${vz(r1,0," %")}</b>${r3 != null ? ` · 3 J. <b class="${klasse(r3)}">${vz(r3,0," %")}</b>` : ""}</span>`
+    + (CHIPS.kq && kq != null ? `<span data-e="kq">Kauf hier: <b style="color:${kq >= 60 ? "var(--guenstig)" : kq <= 40 ? "var(--teuer)" : "inherit"}">besser als ${fmt(kq,0)} %</b> der Kaufwochen</span>` : "")
+    + (CHIPS.vq && vq != null ? `<span data-e="vq">Verkauf hier: <b style="color:${vq >= 60 ? VQ_FARBE : "inherit"}">besser als ${fmt(vq,0)} %</b></span>` : "");
 }
 // Kaufzonen: Kurse, bei denen die Ampel HEUTE 80 / 60 / 40 / 15 zeigen würde (als waagerechte Linien)
 let KZ_LINIEN = [];
@@ -2209,7 +2247,7 @@ function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[], kaufzonen:[]};
+  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[], kaufzonen:[], kq:[], vq:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
   const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
@@ -2220,6 +2258,13 @@ function zeichne(c, w){
     zone.setData(c.t.map((t,i) => c.pi_zone[i] ? {time:t, value:1} : {time:t})); SERIEN.pi.push(zone);
   }
   {   // Günstig-/Teuer-Phasen: ganze Zeit mit Ampel ≥ 80 (kräftig), 60–80 (hell) bzw. ≤ 15 als Fläche (nicht nur der Pfeil am Anfang)
+    if (c.kq) {   // Kaufqualität (unten) und Verkaufsqualität (oben) als schmale Farbbänder – Rückblick, erst hinterher bekannt
+      const band = (id, werte, farbe, oben) => { const b = ch.addHistogramSeries({priceScaleId:id, priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS[id] !== false});
+        ch.priceScale(id).applyOptions({scaleMargins:oben ? {top:0, bottom:0.965} : {top:0.965, bottom:0}, visible:false});
+        b.setData(c.t.map((t,i) => { const f = farbe(werte[i]); return f ? {time:t, value:1, color:f} : {time:t}; })); SERIEN[id] = [b]; };
+      band("kq", c.kq, kqFarbe, false);
+      if (c.vq) band("vq", c.vq, vqFarbe, true);
+    }
     const ph = ch.addHistogramSeries({priceScaleId:"phasen", priceLineVisible:false, lastValueVisible:false, priceFormat:{type:"price", precision:0, minMove:1}, visible:CHIPS.phasen});
     ch.priceScale("phasen").applyOptions({scaleMargins:{top:0, bottom:0}, visible:false});
     ph.setData(c.t.map((t,i) => { const v = c.score[i] == null && c.score_v?.[i] != null, s = c.score[i] ?? c.score_v?.[i]; if (s == null) return {time:t};   // vorläufige Ampel (Anfangsjahre) blasser

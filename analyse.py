@@ -177,6 +177,79 @@ def anker_ampel(c: np.ndarray, start: int, min_ueber: int = ANKER_MIN_UEBER, min
     return score, kz, rang_ueber
 
 
+KQ_H, VQ_H = 156, 52   # Kaufqualität: Rendite der folgenden 3 Jahre; Verkaufsqualität: Kurs 1 Jahr später
+
+
+def kauf_verkauf_qualitaet(idx: pd.DatetimeIndex, c: np.ndarray, ratio: np.ndarray):
+    """Wunsch Marc 22.11.2026: Je Titel (1) im RÜCKBLICK für jede Woche, wie gut ein Kauf bzw. Verkauf war, und (2) wie es
+    früher in ähnlicher Lage wie heute ausging.
+    (1) Kaufqualität kq[t] = Rang (0–100) der Jahresrendite der folgenden 3 Jahre unter allen Wochen dieses Titels mit bekanntem
+        Ergebnis (100 = bester Kaufzeitpunkt). Verkaufsqualität vq[t] = 100 − Rang der Kursveränderung im folgenden Jahr
+        (100 = danach am stärksten gefallen, Verkauf war am besten). Kennt man erst hinterher; die letzten 3 bzw. 1 Jahr fehlen.
+    (2) Vergleich: die 10 % der früheren Wochen (mindestens 26), deren Abstand zur 200-Wochen-Linie dem heutigen am nächsten
+        lag, und wie es danach ausging – gegen alle Wochen. Dazu eine Probe ohne Zukunftswissen (alle 13 Wochen nur mit den
+        damals bekannten Ergebnissen vorhergesagt): Wie oft lag die Methode bei diesem Titel richtig (über/unter dem
+        damals bekannten Durchschnitt)? 50 % wäre Zufall."""
+    n = len(c)
+    f3 = np.full(n, np.nan); f1 = np.full(n, np.nan)
+    if n > KQ_H:
+        f3[:n - KQ_H] = (c[KQ_H:] / c[:n - KQ_H]) ** (52 / KQ_H) - 1
+    if n > VQ_H:
+        f1[:n - VQ_H] = c[VQ_H:] / c[:n - VQ_H] - 1
+    kq = (pd.Series(f3).rank(pct=True).values * 100)
+    vq = 100 - (pd.Series(f1).rank(pct=True).values * 100)
+    info = {}
+    lr = np.log(ratio)
+    jetzt = lr[-1] if n and not np.isnan(lr[-1]) else np.nan
+    def aehnlich(f):
+        ok = ~np.isnan(lr) & ~np.isnan(f)
+        if math.isnan(jetzt) or ok.sum() < 52:
+            return None, ok
+        d = np.where(ok, np.abs(lr - jetzt), np.inf)
+        k = max(26, int(ok.sum() * 0.10))
+        return np.argsort(d)[:k], ok
+    sel3, ok3 = aehnlich(f3)
+    sel1, ok1 = aehnlich(f1)
+    if sel3 is not None:
+        rang3 = pd.Series(f3).rank(pct=True).values
+        info["kauf"] = {"wochen": int(len(sel3)), "von": r((np.exp(lr[sel3].min()) - 1) * 100, 0), "bis": r((np.exp(lr[sel3].max()) - 1) * 100, 0),
+                        "plus": r(float((f3[sel3] > 0).mean()) * 100, 0), "plus_alle": r(float((f3[ok3] > 0).mean()) * 100, 0),
+                        "median": r(float(np.median(f3[sel3])) * 100, 1), "median_alle": r(float(np.median(f3[ok3])) * 100, 1),
+                        "top30": r(float((rang3[sel3] >= 0.7).mean()) * 100, 0), "schlecht10": r(float(np.percentile(f3[sel3], 10)) * 100, 0),
+                        "phasen": int(1 + np.sum(np.diff(np.sort(sel3)) > 13))}
+    if sel1 is not None:
+        info["verkauf"] = {"wochen": int(len(sel1)), "richtig": r(float((f1[sel1] < 0).mean()) * 100, 0), "richtig_alle": r(float((f1[ok1] < 0).mean()) * 100, 0),
+                           "median": r(float(np.median(f1[sel1])) * 100, 1), "median_alle": r(float(np.median(f1[ok1])) * 100, 1),
+                           "phasen": int(1 + np.sum(np.diff(np.sort(sel1)) > 13))}
+    # Probe ohne Zukunftswissen: alle 13 Wochen; Vorhersage = Median der ähnlichen früheren Wochen mit damals bekanntem Ergebnis
+    treffer = gesamt = 0
+    for t in range(260, n - KQ_H, 13):
+        bekannt = np.arange(0, t - KQ_H + 1)
+        bekannt = bekannt[~np.isnan(lr[bekannt]) & ~np.isnan(f3[bekannt])]
+        if len(bekannt) < 104 or np.isnan(lr[t]):
+            continue
+        d = np.abs(lr[bekannt] - lr[t]); k = max(26, int(len(bekannt) * 0.10))
+        vorher = np.median(f3[bekannt[np.argsort(d)[:k]]]); mitte = np.median(f3[bekannt])
+        treffer += int((vorher > mitte) == (f3[t] > mitte)); gesamt += 1
+    if gesamt >= 8:
+        info["probe"] = {"richtig": r(treffer / gesamt * 100, 0), "zeitpunkte": gesamt}
+    # beste Kauf- und Verkaufswochen im Rückblick (je höchstens eine pro Jahr Abstand)
+    def beste(f, umgekehrt):
+        o = np.argsort(np.where(np.isnan(f), np.inf, f)) if umgekehrt else np.argsort(np.where(np.isnan(f), -np.inf, f))[::-1]
+        aus = []
+        for j in o:
+            if np.isnan(f[j]) or len(aus) >= 3:
+                break
+            if all(abs(j - g) > 52 for g in aus):
+                aus.append(j)
+        return [{"datum": idx[j].strftime("%Y-%m-%d"), "abstand": r((ratio[j] - 1) * 100, 0) if not np.isnan(ratio[j]) else None,
+                 "danach": r(f[j] * 100, 0)} for j in aus]
+    info["beste_kauf"] = beste(f3, False)
+    info["beste_verkauf"] = beste(f1, True)
+    info["heute_abstand"] = r((math.exp(jetzt) - 1) * 100, 0) if not math.isnan(jetzt) else None
+    return kq, vq, info
+
+
 def kaufzonen_verlauf(c: np.ndarray, roh: dict, perz: dict, score: np.ndarray) -> dict:
     """Kaufzonen fuer jede Woche (wandern mit): Kurs, bei dem die Ampel in DIESER Woche 80 / 60 / 40 / 15 gezeigt haette.
     Gleiche Rechnung wie die Ampel: jeder Baustein wird fuer einen gedachten Schlusskurs p neu berechnet und mit allen
@@ -541,6 +614,13 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "score": rund(score, 3),
         "marken": marken,
     }
+    try:   # Kauf-/Verkaufsqualität im Rückblick und Vergleich mit heute
+        kq, vq, kv_info = kauf_verkauf_qualitaet(w.index, c, ratio)
+        chart["kq"] = [None if math.isnan(x) else int(round(x)) for x in kq]
+        chart["vq"] = [None if math.isnan(x) else int(round(x)) for x in vq]
+        zeile_out["kv"] = kv_info
+    except Exception as ex:
+        print(f"Kauf-/Verkaufsqualität nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     for z, arr in (kzv or {}).items():   # Kaufzonen je Woche (mitwandernde Linien im Chart)
         if not np.all(np.isnan(arr)):
             chart[f"kz{z}"] = rund(arr)
@@ -623,6 +703,7 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         "sma200w": rund(woche(chart["sma200w"])), "score": rund(woche(chart["score"]), 3),
         **({"score_v": rund(woche(chart["score_v"]), 3)} if "score_v" in chart else {}),
         **{k: rund(woche(chart[k])) for k in ("kz80", "kz60", "kz40", "kz15") if k in chart},
+        **{k: rund(woche(chart[k])) for k in ("kq", "vq") if k in chart},
     }
     if info.get("gruppe") == "Krypto":
         out["mayer"] = rund((voll / voll.rolling(200).mean()).reindex(t.index).values, 3)
