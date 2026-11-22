@@ -56,6 +56,11 @@ def kuenstlich():
     pruef(all(werte[i] >= werte[i + 1] - 1e-9 for i in range(len(werte) - 1)), f"Probe: Ampel steigt mit dem Kurs ({werte})")
 
 
+def stufe_passt(zone, score) -> bool:
+    """Stufe passt zur Ampel; die Ampel ist auf 1 Nachkommastelle gerundet (79,96 → 80,0 bleibt „günstig“)."""
+    return zone in {A.zone(score - 0.05), A.zone(score), A.zone(score + 0.05)}
+
+
 def ein_wert(z: dict, rl: dict):
     erg = A.werte_eines(z)
     if erg is None or erg[0].get("jung") or erg[0].get("score") is None:
@@ -91,10 +96,10 @@ def ein_wert(z: dict, rl: dict):
         if zk.get(k) is None or not reihe:
             continue
         pruef(math.isclose(reihe[-1], zk[k], rel_tol=1e-3, abs_tol=0.011), f"{wid}: Kaufzone {k} im Chart ({reihe[-1]}) ≠ Kopfzeile ({zk[k]})")
-        rz = (rl.get(wid) or {}).get("kz") or {}
+        rz = (rl.get((wid, z["gruppe"])) or {}).get("kz") or {}   # nach Kennung UND Gruppe (z. B. GOLD = Rohstoff Gold und Aktie Barrick)
         if rz.get(k) is not None:
             pruef(math.isclose(rz[k], zk[k], rel_tol=1e-3, abs_tol=0.011), f"{wid}: Kaufzone {k} in der Rangliste ({rz[k]}) ≠ Kopfzeile ({zk[k]})")
-    pruef(zeile.get("zone") == A.zone(zeile["score"]), f"{wid}: Stufe {zeile.get('zone')} passt nicht zur Ampel {zeile['score']}")
+    pruef(stufe_passt(zeile.get("zone"), zeile["score"]), f"{wid}: Stufe {zeile.get('zone')} passt nicht zur Ampel {zeile['score']}")
     for k in ("kq", "vq"):
         v = [x for x in chart.get(k, []) if x is not None]
         pruef(all(0 <= x <= 100 for x in v), f"{wid}: {'Kauf' if k == 'kq' else 'Verkaufs'}qualität außerhalb 0–100")
@@ -104,11 +109,11 @@ def ein_wert(z: dict, rl: dict):
 def main():
     kuenstlich()
     rl_datei = E.WEB_DATEN / "rangliste.json"
-    rl = {w["id"]: w for w in json.loads(rl_datei.read_text())["werte"]} if rl_datei.exists() else {}
+    rl = {(w["id"], w.get("gruppe")): w for w in json.loads(rl_datei.read_text())["werte"]} if rl_datei.exists() else {}
     for w in rl.values():   # Rangliste: Ampel und Stufe
         if w.get("score") is not None:
             pruef(0 <= w["score"] <= 100, f"Rangliste {w['id']}: Ampel {w['score']} außerhalb 0–100")
-            pruef(w.get("zone") == A.zone(w["score"]), f"Rangliste {w['id']}: Stufe {w.get('zone')} passt nicht zur Ampel {w['score']}")
+            pruef(stufe_passt(w.get("zone"), w["score"]), f"Rangliste {w['id']}: Stufe {w.get('zone')} passt nicht zur Ampel {w['score']}")
     uni = A.universum()
     sonder = uni[uni["gruppe"].isin(["ETF", "Krypto", "Rohstoffe"])]
     aktien = uni[~uni["gruppe"].isin(["ETF", "Krypto", "Rohstoffe"])].iloc[::25]
