@@ -834,6 +834,7 @@ const ERKLAERUNG = {
   l_tief: {titel:"Noch tiefer in der Phase", text:"Wie weit der Kurs nach Beginn der günstigen Phase noch fiel, bevor sie endete (mit Monat des Tiefpunkts). Zeigt, dass „günstig“ nicht „ganz unten“ heißt – den Tiefpunkt kennt man erst im Nachhinein."},
   f_sec: {titel:"Geschäft (SEC)", text:"Gewinn, Umsatz und Aktienzahl aus den Pflichtberichten an die US-Börsenaufsicht SEC (EDGAR, gemeinfrei). „12 Monate“ = die letzten vier Quartale, sonst das letzte Geschäftsjahr. Nur Firmen, die nach US-Regeln in Dollar berichten; ausländische Firmen fehlen. Kurs und Aktienzahl ergeben den Börsenwert."},
   f_kgv: {titel:"KGV", text:"Kurs-Gewinn-Verhältnis: Börsenwert geteilt durch den Gewinn der letzten 12 Monate. 20 heißt: Man zahlt das 20-Fache des Jahresgewinns. Niedrig ist nicht automatisch billig (Gewinn kann fallen), hoch nicht automatisch teuer (Gewinn kann stark wachsen). Bei Verlust gibt es kein KGV."},
+  f_laie: {titel:"KGV und Geschäft in Worten", text:"Das KGV (Kurs-Gewinn-Verhältnis) sagt, wie viel man für den Gewinn bezahlt: KGV 28 heißt, für 1 € Jahresgewinn zahlst du 28 € – oder: Bliebe der Gewinn gleich, bräuchte die Firma 28 Jahre, um ihren heutigen Börsenwert einmal zu verdienen. Zum Vergleich mit früher wurde das KGV für jede Woche der letzten 10 Jahre nachgerechnet: Wochenkurs mal damalige Aktienzahl (um Aktiensplits bereinigt) geteilt durch den Gewinn der letzten 12 Monate, der damals schon bekannt war. „Höher als in 70 %“ heißt: In 7 von 10 Wochen war die Aktie gemessen am Gewinn billiger als heute. Hoch heißt nicht automatisch zu teuer – wächst der Gewinn schnell, sinkt das KGV von allein. Bei Firmen mit hoher Dividende wirken frühere KGVs etwas niedriger, weil die Kursreihe um Dividenden bereinigt ist. Fehlt der Vergleich, gab es zu wenig oder unklare Daten (z. B. ungewöhnliche Sprünge in der Aktienzahl) – dann wird nichts geschätzt. Quelle: Pflichtberichte an die US-Börsenaufsicht SEC; nur US-Firmen."},
   f_kuv: {titel:"KUV", text:"Kurs-Umsatz-Verhältnis: Börsenwert geteilt durch den Umsatz der letzten 12 Monate. Hilft bei Firmen ohne Gewinn. Je nach Branche sehr unterschiedlich (Software hoch, Handel niedrig)."},
   f_trend: {titel:"Gewinn und Umsatz", text:"Summe der letzten 12 Monate (bzw. des letzten Geschäftsjahrs) in US-Dollar; in Klammern die Veränderung zum gleichen Zeitraum ein Jahr davor. Bei Verlust (jetzt oder im Vorjahr) wird keine Prozentzahl gezeigt."},
   falle: {titel:"Fallen-Warnung", text:"Die Ampel steht günstig (ab 60), aber das Geschäft ist schwach: Verlust, oder Gewinn mindestens 25 % bzw. Umsatz mindestens 10 % unter Vorjahr. Dann ist der gefallene Kurs womöglich kein Schnäppchen, sondern die Reaktion auf schlechtere Zahlen. Wie oft das früher stimmte, steht unter „Prüfung der Ampel“, Abschnitt 4. Kein Verkaufssignal."},
@@ -1815,6 +1816,7 @@ async function zeige(id, opt={}){
         <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
         ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
         <p class="klartext" data-e="klartext">${klartext(w, c)}</p>
+        ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
         <div class="grund-chips">${umlaut(w.grund).split(" · ").map(g => `<span>${grundMitErklaerung(g)}</span>`).join("")}</div>
       </div>
       <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
@@ -3751,6 +3753,28 @@ function zeigeUmfeld(){
 // ------------------------------------------------------------ Bewertung des US-Markts (Shiller-CAPE)
 const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
 const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
+function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SEC-Daten, nur US-Firmen)
+  const f = w.f; if (!f || SONDERGRUPPE(w)) return "";
+  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd. $") : fmt(x, 0, " Mio. $");
+  const zum = x => x == null ? "" : ` (${vz(x, 0, " %")} zum Vorjahr)`;
+  let t = "";
+  if (f.kgv != null) {
+    const k = f.kgv >= 100 ? fmt(f.kgv, 0) : fmt(f.kgv, f.kgv < 10 ? 1 : 0);
+    t += `<b>KGV ${k}</b> – du zahlst ${k} € für 1 € Jahresgewinn der Firma. Bliebe der Gewinn gleich, bräuchte sie ${k} Jahre, um ihren Börsenwert einmal zu verdienen. `;
+    if (f.kgv_rang != null) {
+      const j = Math.round(f.kgv_jahre);
+      t += f.kgv_rang >= 50 ? `Das ist <b>höher als in ${fmt(f.kgv_rang, 0)} %</b> der letzten ${j} Jahre` : `Das ist <b>niedriger als in ${fmt(100 - f.kgv_rang, 0)} %</b> der letzten ${j} Jahre`;
+      t += ` (in dieser Zeit lag es zwischen ${fmt(f.kgv_min, 0)} und ${fmt(f.kgv_max, 0)}, in der Mitte bei ${fmt(f.kgv_median, 0)}${f.kgv_verlust_anteil ? `; in ${fmt(f.kgv_verlust_anteil, 0)} % der Wochen machte die Firma Verlust` : ""}). `;
+    }
+  } else if (f.verlust) t += `Die Firma macht gerade <b>Verlust</b> (${mio(f.gewinn)} in ${f.art === "12 Monate" ? "12 Monaten" : "einem Geschäftsjahr"}) – ein KGV gibt es dann nicht. `;
+  if (!f.verlust && f.gewinn != null) t += `Sie verdiente ${f.art === "12 Monate" ? "in den letzten 12 Monaten" : "im letzten Geschäftsjahr"} <b>${mio(f.gewinn)}</b>${zum(f.d_gewinn)}`;
+  if (f.umsatz != null) t += !f.verlust && f.gewinn != null ? ` bei <b>${mio(f.umsatz)}</b> Umsatz${zum(f.d_umsatz)}` : `Der Umsatz lag bei <b>${mio(f.umsatz)}</b>${zum(f.d_umsatz)}`;
+  if (f.umsatz_pa != null) t += `; über ${f.umsatz_pa_jahre} Jahre ${f.umsatz_pa >= 0 ? "wuchs" : "schrumpfte"} der Umsatz im Schnitt um ${fmt(Math.abs(f.umsatz_pa), 0)} % pro Jahr`;
+  if (f.jahre) t += `, Gewinn gab es in ${f.jahre_gewinn} von ${f.jahre} Geschäftsjahren`;
+  t = t.replace(/ $/, "") + ".";
+  if (f.veraltet) t += ` <span class="neg">Achtung: Die neuesten Zahlen sind älter als 18 Monate.</span>`;
+  return t;
+}
 function geschaeftKarte(w){
   if (SONDERGRUPPE(w) || !/Nasdaq|NYSE/.test(String(w.gruppe))) return "";
   const f = w.f;
@@ -3764,6 +3788,9 @@ function geschaeftKarte(w){
     <p>${f.kgv != null ? ek("f_kgv","KGV") + " (Kurs-Gewinn-Verhältnis)" : f.verlust ? "kein KGV – die Firma macht Verlust" : "KGV nicht berechenbar"}</p>
     <div class="kv"><span data-e="f_trend">Gewinn</span><b>${mio(f.gewinn)}${d(f.d_gewinn)}</b></div>
     <div class="kv"><span data-e="f_trend">Umsatz</span><b>${mio(f.umsatz)}${d(f.d_umsatz)}</b></div>
+    ${f.kgv_rang != null ? `<div class="kv"><span data-e="f_laie">KGV ${fmt(f.kgv_jahre,0)} Jahre (tief · Mitte · hoch)</span><b>${fmt(f.kgv_min,0)} · ${fmt(f.kgv_median,0)} · ${fmt(f.kgv_max,0)}</b></div>
+    <div class="kv"><span data-e="f_laie">KGV heute höher als</span><b>${fmt(f.kgv_rang,0)} % der Zeit</b></div>` : ""}
+    ${f.umsatz_pa != null ? `<div class="kv"><span data-e="f_trend">Umsatz Ø pro Jahr (${f.umsatz_pa_jahre} J.)</span><b class="${klasse(f.umsatz_pa)}">${vz(f.umsatz_pa,0," %")}</b></div>` : ""}
     <div class="kv"><span data-e="f_kuv">KUV</span><b>${fmt(f.kuv,2)}</b></div>
     <div class="kv"><span>Jahre mit Gewinn</span><b>${f.jahre_gewinn} von ${f.jahre}</b></div>
     ${f.veraltet ? `<p class="klein neg">Zahlen älter als 18 Monate – keine Warnung möglich.</p>` : ""}

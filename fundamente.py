@@ -244,11 +244,85 @@ def kennzahlen() -> dict:
             continue
         kand = [x for x in (sorted(roh.get("sh", {}).values())[-1:] + sorted(roh.get("sd", {}).values())[-1:])]
         aktien = max(kand, key=lambda x: x[0]) if kand else None
+        sd = sorted(roh.get("sd", {}).values()); sh = sorted(roh.get("sh", {}).values())
         f = {"cik": int(cik), "ni_jahr": ni_j, "rv_jahr": rv_j,
-             "ni_ttm": _ttm(_quartale(ni_j, ni_q)), "rv_ttm": _ttm(_quartale(rv_j, rv_q)), "aktien": aktien}
+             "ni_ttm": _ttm(_quartale(ni_j, ni_q)), "rv_ttm": _ttm(_quartale(rv_j, rv_q)), "aktien": aktien,
+             "aktien_reihe": _aktien_bereinigt(sd if len(sd) >= 8 else sh)}
         for t in cik_zu[cik]:
             out[t] = f
     return out
+
+
+SPLIT_FAKTOREN = (1.5, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20, 25, 30, 40, 50)
+KGV_LAG_TAGE = 60                 # KGV-Geschichte: Quartalszahlen gelten 60 Tage nach Quartalsende als bekannt (Berichtsfrist 40–90 Tage)
+
+
+def _aktien_bereinigt(reihe: list) -> list | None:
+    """Aktienzahl der letzten gut 11 Jahre, um Aktiensplits bereinigt (auf heutige Stueckelung).
+    Ein Sprung um mehr als 40 % gilt nur dann als Split, wenn er bis auf 4 % einem ueblichen Verhaeltnis entspricht
+    (2:1, 3:2, 10:1 … oder umgekehrt); sonst ist die Reihe unklar -> None (dann keine KGV-Geschichte, nicht raten)."""
+    ab = pd.Timestamp(dt.date.today()) - pd.DateOffset(years=11, months=6)
+    reihe = [(e, v) for e, v in reihe if e >= ab and v and v > 0]
+    if len(reihe) < 8:
+        return None
+    out, faktor = [list(x) for x in reihe], 1.0
+    for i in range(len(reihe) - 1, 0, -1):
+        q = reihe[i][1] / reihe[i - 1][1]
+        if not 0.7 < q < 1.4:
+            r = q if q >= 1 else 1 / q
+            split = min(SPLIT_FAKTOREN, key=lambda x: abs(r / x - 1))
+            if abs(r / split - 1) > 0.04:
+                return None
+            faktor *= split if q >= 1 else 1 / split
+        out[i - 1][1] = reihe[i - 1][1] * faktor
+    return [(e, v) for e, v in out]
+
+
+def _kgv_geschichte(f: dict, w, kgv_heute) -> dict:
+    """KGV Woche fuer Woche in den letzten 10 Jahren (Wochenkurs x damalige Aktienzahl / damals bekannter Gewinn der
+    letzten 12 Monate) und der Rang des heutigen KGV darin. Nur bei mind. 5 Jahren Daten und wenn die Rechnung fuer die
+    letzte Woche zum heutigen KGV passt (sonst stimmt etwas mit Aktienzahl oder Gattung nicht -> nichts zeigen)."""
+    reihe = f.get("aktien_reihe")
+    if w is None or kgv_heute is None or not reihe or "Close" not in w:
+        return {}
+    gewinn = sorted({e: (e, v) for e, v in list(f["ni_jahr"]) + list(f["ni_ttm"])}.values())
+    if not gewinn:
+        return {}
+    lag = pd.Timedelta(days=KGV_LAG_TAGE).value
+    g_ab = np.array([e.value + lag for e, _ in gewinn], dtype=np.int64)
+    a_ab = np.array([e.value + lag for e, _ in reihe], dtype=np.int64)
+    c = w["Close"]
+    c = c[c.index >= c.index[-1] - pd.DateOffset(years=10)]
+    kgvs, verlust, letzte = [], 0, None
+    for t, p in zip(c.index.values.astype("datetime64[ns]").astype(np.int64), c.values.astype(float)):
+        k = int(np.searchsorted(g_ab, t, "right")) - 1; j = int(np.searchsorted(a_ab, t, "right")) - 1
+        if k < 0 or j < 0 or t - gewinn[k][0].value > pd.Timedelta(days=550).value or not p > 0:
+            continue
+        ni = gewinn[k][1]
+        if ni <= 0:
+            verlust += 1; letzte = None
+            continue
+        letzte = p * reihe[j][1] / ni
+        kgvs.append(letzte)
+    if len(kgvs) + verlust < 260 or len(kgvs) < 52:
+        return {}
+    if letzte is None or not 0.7 <= letzte / kgv_heute <= 1.4:   # Plausibilitaet: letzte Woche muss zum heutigen KGV passen
+        return {}
+    a = np.array(kgvs)
+    r = lambda x: round(float(x), 1)
+    return {"kgv_rang": round(float((a < kgv_heute).mean()) * 100), "kgv_min": r(a.min()), "kgv_median": r(np.median(a)),
+            "kgv_max": r(a.max()), "kgv_jahre": round((len(kgvs) + verlust) / 52.18, 1), "kgv_verlust_anteil": round(verlust / (len(kgvs) + verlust) * 100)}
+
+
+def _wachstum_pa(jahr: list, n: int = 5):
+    """Durchschnittliches Wachstum pro Jahr ueber die letzten n Geschaeftsjahre (mind. 3 Jahre Abstand, beide Werte positiv)."""
+    j = jahr[-(n + 1):]
+    if len(j) < 4 or j[0][1] <= 0 or j[-1][1] <= 0:
+        return None, None
+    jahre = (j[-1][0] - j[0][0]).days / 365.25
+    if jahre < 2.5:
+        return None, None
+    return (math.pow(j[-1][1] / j[0][1], 1 / jahre) - 1) * 100, round(jahre)
 
 
 def _veraenderung(neu, alt):
@@ -257,7 +331,7 @@ def _veraenderung(neu, alt):
     return (neu / alt - 1) * 100
 
 
-def fuer_zeile(f: dict, kurs: float | None, score: float | None) -> dict:
+def fuer_zeile(f: dict, kurs: float | None, score: float | None, w=None) -> dict:
     """Kennzahlen fuer die Rangliste: KGV, KUV, Trend, Fallen-Warnung (alles mit dem heutigen Stand)."""
     def letzte_zwei(ttm, jahr):
         """Neuester Stand (12 Monate aus Quartalen oder letztes Geschaeftsjahr) und der Wert ein Jahr davor."""
@@ -289,11 +363,17 @@ def fuer_zeile(f: dict, kurs: float | None, score: float | None) -> dict:
     elif d_ni is not None and d_ni <= FALLE_GEWINN: gruende.append(f"Gewinn {d_ni:+.0f} %")
     if d_rv is not None and d_rv <= FALLE_UMSATZ: gruende.append(f"Umsatz {d_rv:+.0f} %")
     r = lambda x, n=1: None if x is None or (isinstance(x, float) and (math.isnan(x) or math.isinf(x))) else round(float(x), n)
-    return {
+    kgv_out = r(kgv, 1) if kgv is not None and kgv < 1000 else None
+    try:
+        hist = _kgv_geschichte(f, w, kgv_out) if not alt else {}
+    except Exception:
+        hist = {}
+    u_pa, u_j = _wachstum_pa(f["rv_jahr"]); g_pa, g_j = _wachstum_pa(f["ni_jahr"])
+    return {**hist, "umsatz_pa": r(u_pa, 0), "umsatz_pa_jahre": u_j, "gewinn_pa": r(g_pa, 0), "gewinn_pa_jahre": g_j,
         "stand": stand.strftime("%Y-%m-%d") if stand is not None else None, "art": art, "veraltet": bool(alt),
         "gewinn": r(ni / 1e6, 1), "umsatz": r(rv / 1e6, 1) if rv else None,
         "mw": r(mw / 1e6, 0) if mw else None,   # Boersenwert in Mio. USD (Kurs x Aktienzahl laut SEC), Groesse der Heatmap-Kacheln
-        "kgv": r(kgv, 1) if kgv is not None and kgv < 1000 else None, "kuv": r(kuv, 2) if kuv is not None and kuv < 1000 else None,
+        "kgv": kgv_out, "kuv": r(kuv, 2) if kuv is not None and kuv < 1000 else None,
         "d_gewinn": r(d_ni, 0), "d_umsatz": r(d_rv, 0), "verlust": bool(ni <= 0),
         "jahre_gewinn": sum(1 for _, v in jahre if v > 0), "jahre": len(jahre),
         "schwach": bool(schwach and not alt), "falle": bool(schwach and not alt and score is not None and score >= FALLE_AMPEL),

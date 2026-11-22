@@ -974,7 +974,7 @@ def main(argv):
                 f = fund.get(z["symbol"]) if ("Nasdaq" in z["gruppe"] or "NYSE" in z["gruppe"]) else None   # SEC-Zahlen für US-Firmen beider Börsen
                 if f is not None:
                     try:
-                        erg[0]["f"] = fundamente.fuer_zeile(f, erg[0].get("kurs"), erg[0].get("score")) or None
+                        erg[0]["f"] = fundamente.fuer_zeile(f, erg[0].get("kurs"), erg[0].get("score"), erg[2]["w"]) or None
                         if s2 is not None and not erg[0].get("jung"):
                             s2.fallen.add(z["symbol"], f, erg[2]["w"], erg[2]["score"])
                     except Exception as ex:
