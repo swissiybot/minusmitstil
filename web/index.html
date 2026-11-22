@@ -2847,6 +2847,16 @@ function zeigeDepot(){
     <div class="abstand"></div>
     <section class="karte seite-karte" id="d-risiko" hidden></section>
     <div class="abstand"></div>
+    <section class="karte seite-karte" id="d-alarm" style="padding:12px 14px">
+      <h2 style="margin:0;font-size:16px">${ek("d_alarm", "Alarme aufs Handy")}</h2>
+      <p class="text" style="margin:6px 0">Du bekommst eine Push-Nachricht (App „ntfy“), wenn ein Wert <b>historisch sehr günstig</b> (Ampel ab 80) oder <b>historisch sehr teuer</b> (bis 15) wird. Das läuft im Online-Lauf auf GitHub, nicht auf deinem PC. Standard: <b>alle Werte</b> – ETFs, Krypto und Rohstoffe melden sich einzeln, Aktien gesammelt einmal am Tag. Wer nur bestimmte Werte beobachten will, kopiert hier die Liste (★ Merkliste und Depot) in die geheime Einstellung ALARM_WERTE:</p>
+      <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <textarea id="d-alarm-liste" class="feld" readonly rows="2" style="flex:1;min-width:220px;height:auto;padding:8px 10px;font-family:inherit" aria-label="Alarm-Liste">${esc(alarmListe())}</textarea>
+        <button class="knopf leise" id="d-alarm-kopieren" ${alarmListe() ? "" : "disabled"}>Alarm-Liste kopieren</button>
+      </div>
+      <p class="klein" id="d-alarm-status" style="margin:6px 0 0">${alarmListe() ? `${alarmListe().split(", ").length} Werte. Nur nötig, wenn du statt aller Werte nur diese beobachten willst; nach Änderungen neu kopieren und ALARM_WERTE ersetzen.` : "Noch keine Werte: Sterne in der Liste setzen oder Positionen eintragen."}</p>
+    </section>
+    <div class="abstand"></div>
     <section class="karte seite-karte">
       <h2 style="margin:0;font-size:16px;padding:12px 14px 0">Sparplan und Annahmen</h2>
       <div class="eingabe">
@@ -2906,6 +2916,9 @@ function zeigeDepot(){
   $$("#haupt [data-el]").forEach(b => b.onclick = () => { DEPOT.e.einmal.splice(+b.dataset.el, 1); depotSichern(); zeigeDepot(); });
   $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
   $("#d-rechnen").onclick = depotRechnen;
+  $("#d-alarm-kopieren").onclick = async () => { const t = alarmListe(), st = $("#d-alarm-status");
+    try { await navigator.clipboard.writeText(t); st.textContent = "Kopiert. Jetzt bei GitHub unter Settings → Secrets and variables → Actions die Einstellung ALARM_WERTE damit füllen."; }
+    catch (e) { const ta = $("#d-alarm-liste"); ta.focus(); ta.select(); st.textContent = "Bitte den markierten Text mit Strg+C kopieren."; } };
   if (DEPOT_ERG) depotErgebnisZeigen(DEPOT_ERG);
   risikoZeigen();
   if (PDF_WARTESCHLANGE.length) {   // mehrere PDF-Dateien: mit der nächsten weitermachen
@@ -3307,6 +3320,10 @@ const STRESS = [
 ];
 const FIRMA_GLEICH = {GOOG:"GOOGL", "005935.KS":"005930.KS", "2330.TW":"TSM", "9988.HK":"BABA", SKHY:"000660.KS", "HDFCBANK.NS":"HDB", "BRK-A":"BRK-B"};   // gleiche Firma, andere Aktiengattung oder Börse
 const firmaVon = id => FIRMA_GLEICH[id] || id;
+function alarmListe(){   // beobachtete Werte für die Alarme: Merkliste + Depot (nur Kennungen, keine Beträge)
+  const ids = [...FAV, ...(DEPOT?.positionen || []).map(p => p.id).filter(Boolean)];
+  return [...new Set(ids)].join(", ");
+}
 function risikoGruppen(){   // Positionen mit Zuordnung, gleiche Werte zusammengefasst (wie in der Prognose)
   const g = new Map();
   for (const p of DEPOT.positionen) {
@@ -3485,6 +3502,7 @@ function risikoZeigen(){
   const wg = $("#d-rz-weg"); if (wg) wg.onclick = () => { DEPOT.e.ziele = {}; depotSichern(); risikoZeigen(); };
 }
 const ERKLAERUNG_DEPOT = {
+  d_alarm: {titel:"Alarme aufs Handy", text:"Einmal einrichten: die kostenlose App „ntfy“ installieren und das geheime Thema abonnieren (den Namen hast du von Claude bekommen; er steht nirgends öffentlich). Danach prüft jeder Online-Lauf (mehrmals täglich), ob ein Wert neu ab 80 (historisch sehr günstig) oder neu bis 15 (historisch sehr teuer) steht – jeden Wechsel nur einmal, mit Puffer gegen Hin-und-her (sehr günstig endet erst unter 75, sehr teuer erst über 20). ETFs, Krypto und Rohstoffe kommen einzeln, die über 4.000 Aktien gesammelt einmal am Tag (die bekanntesten zuerst). Optional nur bestimmte Werte: diese Liste als geheime Einstellung ALARM_WERTE speichern. Beschreibt die Lage, ist keine Kaufempfehlung."},
   d_klumpen: {titel:"Klumpenrisiko", text:"Viele Index-ETFs enthalten dieselben großen Firmen. Wer einen MSCI-World-ETF, einen Nasdaq-100-ETF und dazu Nvidia-Aktien hat, besitzt Nvidia dreimal – und ist davon abhängiger, als es aussieht. Hier wird zusammengerechnet: dein Betrag im ETF mal das Gewicht der Firma im Index plus das, was du direkt hältst. Bekannt sind nur die größten Titel je Index (aus den offiziellen Factsheets bzw. der Bestandsliste des SPY-Fonds), deshalb „mindestens“."},
   d_gleichlauf: {titel:"Gleichlauf (Korrelation)", text:"Wie ähnlich sich zwei Positionen Woche für Woche bewegt haben, von −1 bis 1. Nahe 1: steigen und fallen fast immer gemeinsam – zwei solche Positionen streuen das Risiko kaum. Nahe 0: unabhängig. Negativ: gegenläufig, gleicht aus. Gerechnet aus den Wochenkursen der letzten 5 Jahre. In Krisen steigt der Gleichlauf oft noch."},
   d_stress: {titel:"Stresstest", text:"Dein heutiges Depot mit den heutigen Anteilen, zurückversetzt an das Hoch vor einer echten Krise und gehalten bis zum Tiefpunkt des S&P 500. Die Zahl zeigt den Verlust bis zum Tief, „alter Stand wieder erreicht“ die Zeit vom Hoch, bis das Depot wieder so viel wert war. Keine Vorhersage – die nächste Krise verläuft anders."},

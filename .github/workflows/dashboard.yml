@@ -61,6 +61,13 @@ jobs:
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
 
+      - name: Stand der Alarme holen (nur Prüfsummen, keine Werte im Klartext)
+        uses: actions/cache/restore@v4
+        with:
+          path: daten/alarm_stand.json
+          key: alarm-${{ github.run_id }}
+          restore-keys: alarm-
+
       - name: Auslandsaktien (Wikidata, höchstens wöchentlich neu)
         continue-on-error: true
         run: python welt.py
@@ -139,6 +146,20 @@ jobs:
           python analyse.py
           python tagebuch_pruefung.py
           python trendstudie.py || echo "::warning::Trendstudie nicht gerechnet"
+
+      - name: Alarme aufs Handy (ntfy, nur mit geheimem Themennamen)
+        continue-on-error: true
+        env:
+          NTFY_THEMA: ${{ secrets.NTFY_THEMA }}    # geheimer Themenname der ntfy-App
+          ALARM_WERTE: ${{ secrets.ALARM_WERTE }}  # optional: nur diese Werte (sonst alle) – nie ins Repo
+        run: python alarm.py
+
+      - name: Stand der Alarme sichern
+        if: always() && hashFiles('daten/alarm_stand.json') != ''
+        uses: actions/cache/save@v4
+        with:
+          path: daten/alarm_stand.json
+          key: alarm-${{ github.run_id }}
 
       - name: Statischer Export
         run: python export.py

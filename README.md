@@ -41,6 +41,9 @@ Vermögensübersicht laden (von Hand, CSV-Datei, **PDF-Depotauszug** oder kopier
 - Ehrlich: Simulation aus der Vergangenheit, keine Vorhersage und keine Beratung; Renditen in Währung der Werte ohne Wechselkurs; kurze Historien und überlebende Aktien lassen die Vergangenheit zu gut aussehen. Feste Vorlagen für einzelne Banken gibt es noch nicht.
 - Bildschirmfotos mit „TESTDATEN“ im Namen zeigen ein ausgedachtes Testdepot.
 
+### Alarme aufs Handy (22.11.2026)
+`alarm.py` läuft im Online-Lauf nach der Auswertung und schickt über [ntfy.sh](https://ntfy.sh) eine Push-Nachricht, wenn ein beobachteter Wert neu **historisch sehr günstig** (Ampel ab 80) oder **historisch sehr teuer** (bis 15) wird – jeden Wechsel nur einmal (Puffer: sehr günstig endet erst unter 75, sehr teuer erst über 20); beim ersten Lauf eine Startmeldung mit dem aktuellen Stand. Standard (Wunsch Marc): **alle Werte** – ETFs, Krypto und Rohstoffe je Wechsel sofort einzeln, Aktien gesammelt höchstens einmal am Tag (nach Handelsumsatz sortiert, mit Hinweis „Geschäft schwach“). Einrichten: App „ntfy“ installieren, ein geheimes Thema abonnieren und auf GitHub die geheime Einstellung `NTFY_THEMA` (Themenname) anlegen; ohne sie passiert nichts. Optional `ALARM_WERTE` (Liste wie „BTC, QQQ, NVDA“; in „Mein Depot“ per Knopf „Alarm-Liste kopieren“ aus Merkliste und Depot) – dann nur diese Werte, alle einzeln. Datenschutz: Protokolle zeigen nur Anzahlen; der Zwischenstand liegt im GitHub-Zwischenspeicher nur als HMAC-Prüfsumme je Wert.
+
 ### Risiko im Depot (22.11.2026)
 Abschnitt unter den Positionen, alles nur im Browser:
 - **Klumpenrisiko:** dieselbe Firma direkt und über Index-ETFs zusammengerechnet (Betrag im ETF × Gewicht der Firma im Index). Gewichte nur aus echten Quellen (`indexanteile.py` → `web/daten/indexanteile.json`): S&P 500 aus der täglichen Bestandsliste des SPDR S&P 500 ETF (State Street, 100 größte Titel), MSCI World, MSCI ACWI, MSCI EM und FTSE All-World als Top 10 aus den offiziellen Factsheets (Stand 30.10.2026, stehen fest im Code und müssen von Hand erneuert werden). Nasdaq-100 nur als Mitgliederliste (Wikipedia), weil Nasdaq die Gewichte nur nach Anmeldung zeigt. Automatische Ersatzwerte zählen nicht mit.
@@ -98,6 +101,7 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `bewertung.py` | Shiller-CAPE des S&P 500: Bewertung 0–100 ohne Blick in die Zukunft, Renditen danach, Walk-forward-Prüfung, Sparplan gegen Warten |
 | `fundamente.py` | Geschäftszahlen aus SEC EDGAR (frames-Schnittstelle): KGV, KUV, Gewinn-/Umsatztrend, Fallen-Warnung und deren Prüfung; lädt nur mit `SEC_KONTAKT` |
 | `indexanteile.py` | Grobe Indexgewichte der größten Titel für das Klumpenrisiko (SPY-Bestandsliste täglich, Factsheet-Top-10 fest im Code, Nasdaq-100-Mitglieder) → `web/daten/indexanteile.json` |
+| `alarm.py` | Alarme aufs Handy (ntfy.sh) bei Wechsel in „sehr günstig“ (≥ 80) oder „sehr teuer“ (≤ 15); nur im Online-Lauf mit `NTFY_THEMA`, Standard alle Werte (optional `ALARM_WERTE`) |
 | `isin.py` | ISIN-Liste für den Depot-Import aus den SEC-Fails-to-Deliver-Daten (13 Monate, je Halbmonat ca. 1 MB); lädt nur mit `SEC_KONTAKT`, schreibt `web/daten/isin.json` |
 | `welt.py` | Wichtige Auslandsaktien aus Wikidata (ISIN, Heimatbörse → Yahoo-Kürzel, US-ADR), höchstens wöchentlich neu; schreibt `daten/welt.csv` für `universum.py` und `isin.py` |
 | `umfeld.py` | FRED-Reihen (Zinskurve T10Y2Y, 3-Monats-Zins TB3MS); Marktumfeld (Marktbreite, VIX, Zinskurve) |
