@@ -147,6 +147,9 @@ jobs:
           python tagebuch_pruefung.py
           python trendstudie.py || echo "::warning::Trendstudie nicht gerechnet"
 
+      - name: Rechenregeln prüfen (bei Fehler wird nicht veröffentlicht)
+        run: python pruefe_regeln.py
+
       - name: Alarme aufs Handy (ntfy, nur mit geheimem Themennamen)
         continue-on-error: true
         env:
@@ -210,3 +213,9 @@ jobs:
       - name: Veröffentlichen
         id: veroeffentlichen
         uses: actions/deploy-pages@v4
+
+      - name: Ausfall-Alarm (Online-Lauf gescheitert)
+        if: failure()
+        env:
+          NTFY_THEMA: ${{ secrets.NTFY_THEMA }}
+        run: python3 alarm.py --ausfall "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

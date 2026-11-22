@@ -18,7 +18,11 @@ Datenschutz: Protokolle der Online-Laeufe sind oeffentlich – das Skript schrei
 oder eine eigene Werteliste. Der Zwischenstand liegt im GitHub-Zwischenspeicher; Werte darin als HMAC-Pruefsumme
 (Schluessel = Themenname), nur die noch nicht gemeldeten Aktien des Tages im Klartext (im Modus „alle“ ohnehin oeffentlich).
 
+Ausfall-Alarm (gleicher Kanal): Kurse älter als 3 Tage (höchstens einmal am Tag) und – über `--ausfall URL` im
+Workflow-Schritt mit if: failure() – wenn der Online-Lauf scheitert (z. B. weil pruefe_regeln.py eine Regel verletzt sieht).
+
 Aufruf: python alarm.py                 senden (nur mit NTFY_THEMA)
+        python alarm.py --ausfall URL   Ausfall-Alarm „Online-Lauf gescheitert“ (nur Standardbibliothek)
         python alarm.py --probe [WERTE] nichts senden, Startmeldung nur anzeigen (zum Testen am PC)
 """
 import hashlib
@@ -28,7 +32,7 @@ import os
 import re
 import sys
 import datetime as dt
-import requests
+
 
 import einstellungen as E
 
@@ -37,6 +41,7 @@ SEITE = "https://swissiybot.github.io/minusmitstil/"
 GUENSTIG_AB, GUENSTIG_BIS = 80, 75     # Stufe beginnt ab 80, endet erst unter 75
 TEUER_AB, TEUER_BIS = 15, 20           # Stufe beginnt ab 15 abwaerts, endet erst ueber 20
 MAX_MELDUNGEN = 8
+VERALTET_TAGE = 3                      # Kurse älter als 3 Tage -> Ausfall-Alarm (höchstens einmal am Tag)
 SONDER = ("ETF", "Krypto", "Rohstoffe")
 
 
@@ -89,11 +94,31 @@ def senden(server: str, thema: str, m: dict, probe: bool):
     if probe:
         print(json.dumps(m, ensure_ascii=False))
         return
+    import requests
     r = requests.post(server.rstrip("/"), json={"topic": thema, **m}, timeout=30)
     r.raise_for_status()
 
 
+def ausfall(url: str):
+    """Ausfall-Alarm, wenn der Online-Lauf scheitert (Schritt mit if: failure() im Workflow). Nur Standardbibliothek,
+    damit er auch meldet, wenn schon die Paket-Installation gescheitert ist."""
+    import urllib.request
+    thema = os.environ.get("NTFY_THEMA", "").strip()
+    if not thema:
+        print("Ausfall-Alarm: NTFY_THEMA fehlt – nichts gesendet.")
+        return
+    m = {"topic": thema, "title": "Aktien-Kaufplan: Online-Lauf gescheitert", "tags": ["rotating_light"], "priority": 4, "click": url,
+         "message": "Der Online-Lauf ist abgebrochen (z. B. Fehler in einer Rechenregel oder beim Herunterladen). Die Seite zeigt weiter den letzten guten Stand. Details: Link antippen."}
+    req = urllib.request.Request(os.environ.get("NTFY_SERVER", "https://ntfy.sh").strip().rstrip("/"), data=json.dumps(m).encode(),
+                                 headers={"Content-Type": "application/json"})
+    urllib.request.urlopen(req, timeout=30).read()
+    print("Ausfall-Alarm gesendet.")
+
+
 def main(argv):
+    if "--ausfall" in argv:
+        i = argv.index("--ausfall")
+        return ausfall(argv[i + 1] if len(argv) > i + 1 else SEITE)
     probe = "--probe" in argv
     thema = os.environ.get("NTFY_THEMA", "").strip() or ("probe" if probe else "")
     liste = os.environ.get("ALARM_WERTE", "").strip()
@@ -136,6 +161,15 @@ def main(argv):
                     offen[st].remove(w["id"])
             offen[neu].append(w["id"])
     heute = dt.date.today().isoformat()
+    # Ausfall-Alarm: Kurse zu alt (Krypto hat täglich Kurse, deshalb das neueste Datum aller Werte)
+    neuester = max((w["datum"] for w in rl["werte"] if w.get("datum")), default=None)
+    alter = (dt.date.today() - dt.date.fromisoformat(neuester)).days if neuester else 999
+    veraltet = None
+    if alter > VERALTET_TAGE and stand.get("veraltet_tag") != heute:
+        veraltet = {"title": "Aktien-Kaufplan: Kurse veraltet",
+                    "message": (f"Die neuesten Kurse auf der Seite sind vom {dt.date.fromisoformat(neuester).strftime('%d.%m.%Y')} ({alter} Tage alt). " if neuester else "Keine Kurse gefunden. ")
+                               + "Wahrscheinlich liefert Yahoo gerade keine Daten; die Seite zeigt den letzten Stand. Alarme beziehen sich auf diesen alten Stand.",
+                    "tags": ["warning"], "priority": 4, "click": "https://github.com/swissiybot/minusmitstil/actions"}
     sammel = None
     if alle_modus and not erstlauf and stand.get("sammel_tag") != heute:
         # nur Aktien, die noch in der gemeldeten Stufe stehen
@@ -147,6 +181,8 @@ def main(argv):
                     + "Bei Einzelaktien heißt sehr günstig oft: Die Firma steckt in Schwierigkeiten. Keine Kaufempfehlung.")
             sammel = {"title": f"Aktien heute: {len(g)} neu sehr günstig, {len(t)} neu sehr teuer", "message": text, "tags": ["bar_chart"], "click": SEITE}
     try:
+        if veraltet:
+            senden(server, thema, veraltet, probe)
         if erstlauf:
             gs = [w for w in beobachtet if neu_werte[schluessel(thema, w['id'])]["s"] == "guenstig"]
             ts = [w for w in beobachtet if neu_werte[schluessel(thema, w['id'])]["s"] == "teuer"]
@@ -178,13 +214,14 @@ def main(argv):
         return
     neu_stand = {"stand": dt.datetime.now().isoformat(timespec="seconds"), "modus": "alle" if alle_modus else "liste", "werte": neu_werte,
                  "offen": {"guenstig": [], "teuer": []} if sammel or erstlauf else offen,
-                 "sammel_tag": heute if sammel or erstlauf else stand.get("sammel_tag")}
+                 "sammel_tag": heute if sammel or erstlauf else stand.get("sammel_tag"),
+                 "veraltet_tag": heute if veraltet else stand.get("veraltet_tag")}
     if not probe:
         STAND.write_text(json.dumps(neu_stand))
     # nur Anzahlen ins (oeffentliche) Protokoll
     print(f"Alarme: {len(beobachtet)} Werte beobachtet ({'alle' if alle_modus else 'eigene Liste'}), {len(unbekannt)} unbekannt, "
           + ("Startmeldung" if erstlauf else f"{min(len(meldungen), MAX_MELDUNGEN)} Einzelmeldung(en), Tageszusammenfassung: {'ja' if sammel else 'nein'}")
-          + (" angezeigt." if probe else " gesendet."))
+          + (f", Kurse {alter} Tage alt – Ausfall-Alarm" if veraltet else "") + (" angezeigt." if probe else " gesendet."))
 
 
 if __name__ == "__main__":
