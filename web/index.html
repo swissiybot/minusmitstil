@@ -3862,7 +3862,8 @@ function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SE
     t += `<b>KGV ${k}</b> – du zahlst ${k} € für 1 € Jahresgewinn der Firma. Bliebe der Gewinn gleich, bräuchte sie ${k} Jahre, um ihren Börsenwert einmal zu verdienen. `;
     if (f.kgv_rang != null) {
       const j = Math.round(f.kgv_jahre);
-      t += f.kgv_rang >= 50 ? `Das ist <b>höher als in ${fmt(f.kgv_rang, 0)} %</b> der letzten ${j} Jahre` : `Das ist <b>niedriger als in ${fmt(100 - f.kgv_rang, 0)} %</b> der letzten ${j} Jahre`;
+      t += f.kgv_rang >= 100 ? `Das ist <b>so hoch wie nie</b> in den letzten ${j} Jahren` : f.kgv_rang <= 0 ? `Das ist <b>so niedrig wie nie</b> in den letzten ${j} Jahren`
+        : f.kgv_rang >= 50 ? `Das ist <b>höher als in ${fmt(f.kgv_rang, 0)} %</b> der letzten ${j} Jahre` : `Das ist <b>niedriger als in ${fmt(100 - f.kgv_rang, 0)} %</b> der letzten ${j} Jahre`;
       t += ` (in dieser Zeit lag es zwischen ${fmt(f.kgv_min, 0)} und ${fmt(f.kgv_max, 0)}, in der Mitte bei ${fmt(f.kgv_median, 0)}${f.kgv_verlust_anteil ? `; in ${fmt(f.kgv_verlust_anteil, 0)} % der Wochen machte die Firma Verlust` : ""}). `;
     }
   } else if (f.verlust) t += `Die Firma macht gerade <b>Verlust</b> (${mio(f.gewinn)} in ${f.art === "12 Monate" ? "12 Monaten" : "einem Geschäftsjahr"}) – ein KGV gibt es dann nicht. `;
