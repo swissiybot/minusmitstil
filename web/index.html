@@ -2654,8 +2654,10 @@ function steckbrief(w){   // Was ist das? Art mit Zeichen, Branche, Land, Kürze
   const art = w.gruppe === "ETF" ? ["etf", "ETF (Fonds)"] : w.gruppe === "Krypto" ? ["krypto", "Kryptowährung"] : w.gruppe === "Rohstoffe" ? ["rohstoff", "Rohstoff"] : ["aktie", "Aktie" + (["Nasdaq","NYSE"].includes(w.gruppe) ? " · " + w.gruppe : "")];
   const kopie = (l, v, zusatz) => `<button class="st-chip" data-kopie="${esc(v)}" title="Antippen kopiert ${l}">${l} <b>${esc(v)}</b>${zusatz || ""}</button>`;
   const C = [`<span class="st-chip art">${ART_ZEICHEN[art[0]]}${esc(art[1])}</span>`];
-  if (w.branche && w.branche !== art[1] && w.branche !== w.gruppe) C.push(`<span class="st-chip">${SONDERGRUPPE(w) ? "Art" : "Branche"} <b>${esc(w.branche)}</b></span>`);
-  if (w.land && !["Nasdaq","NYSE"].includes(w.gruppe)) C.push(`<span class="st-chip">Land <b>${esc(w.land)}</b></span>`);
+  const br = w.branche_kurz || w.branche;   // branche_kurz = Branche der Firma (amtliche Einstufung); branche gruppiert sonst nur die Heatmap
+  if (br && br !== art[1] && br !== w.gruppe) C.push(`<span class="st-chip">${SONDERGRUPPE(w) ? "Art" : "Branche"} <b>${esc(br)}</b></span>`);
+  if (w.sitz) C.push(`<span class="st-chip">Sitz <b>${esc(w.sitz)}</b></span>`);
+  else if (w.land && !["Nasdaq","NYSE"].includes(w.gruppe)) C.push(`<span class="st-chip">Land <b>${esc(w.land)}</b></span>`);
   if (w.symbol) C.push(kopie("Kürzel", w.symbol));
   if (w.isin) C.push(kopie("ISIN", w.isin, w.isin_geprueft ? "" : ' <span class="klein">(berechnet)</span>'));
   if (w.wkn) C.push(kopie("WKN", w.wkn));
@@ -2915,7 +2917,7 @@ async function zeige(id, opt={}){
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
       ${steckbrief(w)}
-      ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
+      ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}${w.beschreibung_quelle ? ` <span class="klein">Quelle: ${/^https:\/\//.test(w.beschreibung_url || "") ? `<a href="${esc(w.beschreibung_url)}" target="_blank" rel="noopener">${esc(w.beschreibung_quelle)}</a>` : esc(w.beschreibung_quelle)}</span>` : ""}</p>` : ""}
       <div class="wk-haupt">
         <div class="wk-urteil">${urteilBlock(w, c)}</div>
         ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
