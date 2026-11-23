@@ -531,6 +531,65 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .raster .karte{padding:14px}
   .kv-gross{font-size:28px}
 }
+
+/* ------------------------------------------------------------ Titelseite, zweite Runde (23.11.2026): weichere Karten, Ampel mit Farbverlauf, Fakten, Preisleiter, 100 Punkte, Kurven */
+:root{--r:20px}
+.karte{background:linear-gradient(180deg,color-mix(in srgb,var(--text) 3.5%,var(--panel)),var(--panel) 150px);border-color:color-mix(in srgb,var(--text) 9%,transparent)}
+.sekt .nr{width:32px;height:32px;border-radius:11px;background:linear-gradient(135deg,var(--akzent),color-mix(in srgb,var(--akzent) 55%,var(--lila)));color:var(--auf-akzent);font-size:15px;box-shadow:0 6px 18px color-mix(in srgb,var(--akzent) 35%,transparent)}
+.sekt h2{font-size:22px}
+.wert-kopf{background:radial-gradient(620px 300px at 100% -10%,color-mix(in srgb,var(--zf,var(--akzent)) 20%,transparent),transparent 70%),
+  radial-gradient(480px 260px at 0 110%,color-mix(in srgb,var(--akzent) 10%,transparent),transparent 70%),var(--panel)}
+.wk-titel h1{font-size:30px}
+/* Ampel */
+.wert-kopf .gauge{width:264px}
+.wert-kopf .gauge svg{width:264px;height:161px;overflow:visible}
+.wert-kopf .gauge .g-zahl{font-size:50px;font-weight:780;margin-top:-96px;letter-spacing:-.04em}
+.wert-kopf .gauge .g-wort{margin-top:50px;font-size:17px;font-weight:720}
+.wert-kopf .gauge .g-rang{font-size:13px}
+.g-zeiger{transform-origin:115px 112px;transform:rotate(var(--w,0deg));animation:zeiger 1.2s cubic-bezier(.2,.9,.25,1) both}
+@keyframes zeiger{from{transform:rotate(0deg)}}
+/* Fakten statt Fließtext */
+.fakten{display:grid;gap:8px;margin:0 0 4px}
+.fakt{display:grid;grid-template-columns:38px 1fr;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,var(--panel2) 70%,transparent);border:1px solid var(--line)}
+.fakt .f-i{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:color-mix(in srgb,var(--ff,var(--akzent)) 16%,transparent);color:var(--ff,var(--akzent))}
+.fakt .f-i svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fakt .f-t{font-size:15.5px;line-height:1.35;color:var(--text)}
+.fakt .f-u{font-size:12.5px;line-height:1.4;color:var(--text2);margin-top:1px}
+.wk-text .mehr{border-top:0;padding-top:0;margin-top:8px}
+/* Kurven */
+.kurve{display:block;width:100%;height:auto}
+.kurve-leg{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:2px}
+.wk-rendite .kurve{margin:8px 0 0}
+/* Preisleiter */
+.leiter{display:grid;gap:6px}
+.lt{display:grid;grid-template-columns:6px 1fr auto;gap:12px;align-items:center;padding:9px 12px 9px 9px;border-radius:13px;border:1px solid var(--line);background:color-mix(in srgb,var(--zf) 6%,transparent)}
+.lt>i{align-self:stretch;border-radius:4px;background:var(--zf)}
+.lt .lt-n b{display:block;font-size:14px;font-weight:650}
+.lt .lt-n span{font-size:13px;color:var(--text2)}
+.lt .lt-n .lt-a{color:var(--muted);font-size:12px}
+.lt .lt-w{font-size:13px;color:var(--text2);text-align:right;white-space:nowrap}
+.lt.heute{background:color-mix(in srgb,var(--zf) 18%,transparent);border-color:color-mix(in srgb,var(--zf) 60%,transparent);box-shadow:0 0 0 3px color-mix(in srgb,var(--zf) 12%,transparent)}
+.lt-heute{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--text);color:var(--bg);font-weight:700;font-size:13px}
+/* 100 Punkte */
+.p100{display:grid;grid-template-columns:repeat(20,1fr);gap:4px;margin:12px 0 8px}
+.p100 i{aspect-ratio:1;border-radius:50%;background:color-mix(in srgb,var(--text) 11%,transparent)}
+.p100 i.an{background:var(--pf);box-shadow:0 0 8px color-mix(in srgb,var(--pf) 45%,transparent)}
+.p100-vgl{font-size:12.5px;color:var(--text2);margin:0 0 6px}
+.kv-gross{font-size:38px}
+.kv-gross small{font-size:16px}
+.fazit{border-radius:14px;font-size:14.5px}
+.kv-block,.verl{border-radius:16px}
+.kpi{border-radius:14px}
+.wk-rendite{border-radius:16px}
+.balken i,.meter i{transform-origin:left center;animation:wachs .9s cubic-bezier(.2,.9,.25,1) both}
+@keyframes wachs{from{transform:scaleX(0)}}
+@media (prefers-reduced-motion:reduce){.g-zeiger,.balken i,.meter i{animation:none}}
+@media (max-width:900px){
+  .wk-titel h1{font-size:25px}
+  .wert-kopf .gauge{transform:none;margin-bottom:0}
+  .kv-gross{font-size:34px}
+  .lt .lt-n .lt-a{display:none}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1761,16 +1820,67 @@ const ERKLAERUNG_TITEL = {
   r_markt: {titel:"Vergleich mit dem S&P 500", text:"Aus den gemeinsamen Wochen der letzten 10 Jahre, verglichen mit dem S&P 500 (500 große US-Firmen). Schwankung: 1,5-fach heißt, die Ausschläge waren im Schnitt anderthalbmal so groß. Gleichlauf (Korrelation, von −1 bis +1): Bei +1 bewegen sich beide immer in dieselbe Richtung, bei 0 unabhängig voneinander, bei −1 entgegengesetzt. Werte mit niedrigem Gleichlauf können ein Depot ruhiger machen. Bewegung je 1 % (Beta): Um wie viel sich dieser Wert im Schnitt bewegte, wenn der S&P 500 in einer Woche um 1 % stieg oder fiel."},
   kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
 };
+// Fakten statt Fließtext: die Lage in drei, vier kurzen Zeilen mit Symbol (der ausführliche Text bleibt aufklappbar)
+const F_IKON = {
+  ueber: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15h18" stroke-dasharray="3 3"/><circle cx="12" cy="8" r="3"/></svg>`,
+  unter: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18" stroke-dasharray="3 3"/><circle cx="12" cy="16" r="3"/></svg>`,
+  rang: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V11M12 20V4M19 20v-6"/></svg>`,
+  ziel: `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/></svg>`,
+  wandel: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 16l6-6 4 4 6-7"/><path d="M15 7h5v5"/></svg>`,
+};
+function faktenListe(w, c){
+  if (w.jung || w.score == null || w.zu200w == null) return "";
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kz = w.kz || {}, F = [];
+  const weg = x => fmt(Math.abs((x / w.kurs - 1) * 100), 0);
+  const zeile = (ikon, farbe, t, u) => `<div class="fakt" style="--ff:${farbe}"><div class="f-i">${F_IKON[ikon]}</div><div><div class="f-t">${t}</div>${u ? `<div class="f-u">${u}</div>` : ""}</div></div>`;
+  const drueber = w.zu200w >= 0;
+  F.push(zeile(drueber ? "ueber" : "unter", "var(--gelb)", `Der Kurs steht <b>${fmt(Math.abs(w.zu200w),0)} % ${drueber ? "über" : "unter"}</b> der 200-Wochen-Linie`, `Das ist der Durchschnittskurs der letzten knapp 4 Jahre${w.linie200 ? ` (${k(w.linie200)})` : ""}.`));
+  const rg = c?.score ? ampelRang(c.score, c.score.length - 1) : null;
+  if (rg) { const teuer = rg.guenstiger >= rg.teurer;
+    F.push(zeile("rang", teuer ? "var(--teuer)" : "var(--guenstig)", `Heute <b>${teuer ? "teurer" : "günstiger"} als in ${fmt(teuer ? rg.guenstiger : rg.teurer,0)} %</b> der Zeit${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""}`, "Verglichen mit allen Wochen der eigenen Geschichte dieses Werts.")); }
+  if (w.score >= 80) F.push(zeile("ziel", "var(--guenstig)", `<b>Historisch sehr günstig</b>`, kz["80"] != null ? `Der Kurs liegt unter der Grenze von ${k(kz["80"])}.` : ""));
+  else if (w.score >= 60) F.push(zeile("ziel", "var(--guenstig)", `<b>Schon günstig</b>`, kz["80"] != null ? `Historisch sehr günstig wäre es unter ${k(kz["80"])} – dafür müsste der Kurs noch ${weg(kz["80"])} % fallen.` : ""));
+  else if (kz["60"] != null) F.push(zeile("ziel", "var(--guenstig)", `Günstig wäre es <b>unter ${k(kz["60"])}</b>`, `Dafür müsste der Kurs noch ${weg(kz["60"])} % fallen.${kz["80"] != null ? ` Historisch sehr günstig: unter ${k(kz["80"])}.` : ""}`));
+  const de = w.score_vor4w != null ? w.score - w.score_vor4w : null;
+  if (de != null && Math.abs(de) >= 5) F.push(zeile("wandel", de > 0 ? "var(--guenstig)" : "var(--teuer)", `In 4 Wochen <b>${de > 0 ? "günstiger" : "teurer"} geworden</b>`, `Ampel von ${fmt(w.score_vor4w,0)} auf ${fmt(w.score,0)}.`));
+  return `<div class="fakten">${F.join("")}</div>`;
+}
+// kleine Kurven aus echten Wochenkursen (keine Achsen, nur die Form): Fläche unter einer Reihe, auf 300 × h gezeichnet
+function kurveSvg(werte, farbe, h = 56, id = "k"){
+  const n = werte.length; if (n < 8) return "";
+  const schritt = Math.max(1, Math.floor(n / 150)), P = []; for (let i = 0; i < n; i += schritt) P.push(werte[i]); if (P[P.length - 1] !== werte[n - 1]) P.push(werte[n - 1]);
+  const mn = Math.min(...P), mx = Math.max(...P), sp = mx - mn || 1;
+  const pkt = P.map((v, i) => `${(i / (P.length - 1) * 300).toFixed(1)} ${(h - 3 - (v - mn) / sp * (h - 8)).toFixed(1)}`);
+  return `<svg class="kurve" viewBox="0 0 300 ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="kv-${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${farbe}" stop-opacity=".38"/><stop offset="1" stop-color="${farbe}" stop-opacity="0"/></linearGradient></defs>
+    <path d="M0 ${h} L${pkt.join(" L")} L300 ${h} Z" fill="url(#kv-${id})"/><path d="M${pkt.join(" L")}" fill="none" stroke="${farbe}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`;
+}
+function verlaufKurve(w, c){   // Kursverlauf der Jahre, auf die sich die Ø Jahresrendite bezieht
+  const k = c?.c, t = c?.t; if (!k || !t || !w.cagr_jahre) return "";
+  const ab = t[t.length - 1] - w.cagr_jahre * 365.25 * 86400, R = []; for (let i = 0; i < k.length; i++) if (t[i] >= ab && k[i] > 0) R.push(k[i]);
+  const svg = kurveSvg(R, w.cagr20 >= 0 ? "var(--pos)" : "var(--neg)", 52, "rendite"); if (!svg) return "";
+  return `${svg}<div class="kurve-leg"><span>${new Date(ab * 1000).getUTCFullYear()}</span><span>Kursverlauf</span><span>heute</span></div>`;
+}
+function rueckgangKurve(c){   // „unter Wasser“: wie weit der Kurs zu jeder Zeit unter seinem bisherigen Hoch lag (0 = am Hoch)
+  const k = c?.c, t = c?.t; if (!k || k.length < 104) return "";
+  let hoch = 0; const D = []; for (let i = 0; i < k.length; i++) { if (!(k[i] > 0)) continue; if (k[i] > hoch) hoch = k[i]; D.push((k[i] / hoch - 1) * 100); }
+  const n = D.length, m = Math.min(260, n), B = []; for (let j = 0; j < m; j++) { let mn = 0; for (let i = Math.floor(j * n / m); i < Math.floor((j + 1) * n / m); i++) if (D[i] < mn) mn = D[i]; B.push(mn); }
+  const tief = Math.min(...B) || -1, h = 64, pkt = B.map((v, i) => `${(i / (m - 1) * 300).toFixed(1)} ${(2 + v / tief * (h - 6)).toFixed(1)}`);
+  return `<svg class="kurve" viewBox="0 0 300 ${h}" preserveAspectRatio="none" role="img" aria-label="Rückgang vom jeweils bisherigen Hoch über die Zeit" style="margin:10px 0 0"><defs><linearGradient id="kv-wasser" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--teuer)" stop-opacity=".1"/><stop offset="1" stop-color="var(--teuer)" stop-opacity=".55"/></linearGradient></defs>
+    <path d="M0 2 L${pkt.join(" L")} L300 2 Z" fill="url(#kv-wasser)"/><path d="M${pkt.join(" L")}" fill="none" stroke="var(--teuer)" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linejoin="round"/><path d="M0 2H300" stroke="var(--line2)" stroke-width="1" vector-effect="non-scaling-stroke"/></svg>
+    <div class="kurve-leg"><span>${new Date(t[0] * 1000).getUTCFullYear()}</span><span>Abstand zum bisherigen Hoch · oben = am Hoch</span><span>heute</span></div>`;
+}
+const punkte100 = (n, farbe) => { const a = Math.max(0, Math.min(100, Math.round(n))); return `<div class="p100" style="--pf:${farbe}" role="img" aria-label="${a} von 100">${"<i class=\"an\"></i>".repeat(a)}${"<i></i>".repeat(100 - a)}</div>`; };
 function grundRest(w){   // Begründungs-Marken, die nicht schon in der Kennzahlen-Leiste stehen (z. B. Pi Cycle, MVRV)
   const g = umlaut(w.grund || "").split(" · ").filter(x => x && !/200-Wochen-Linie|Allzeithoch|Hoch seit Börsengang/.test(x));
   return g.length ? `<div class="grund-chips">${g.map(x => `<span>${grundMitErklaerung(x)}</span>`).join("")}</div>` : "";
 }
-function renditePanel(w){   // Ø Jahresrendite direkt neben der Ampel (Wunsch Marc 23.11.2026)
+function renditePanel(w, c){   // Ø Jahresrendite direkt neben der Ampel (Wunsch Marc 23.11.2026)
   if (w.cagr20 == null) return "";
   const j = w.cagr_jahre, aus = j ? 10000 * Math.pow(1 + w.cagr20 / 100, j) : null, glatt = x => x >= 20000 ? Math.round(x / 1000) * 1000 : Math.round(x / 100) * 100;
   return `<div class="wk-rendite" id="wk-rendite"><div class="kk-zeile"><span class="kk-kat" style="--kf:var(--akzent)" data-e="cagr20" tabindex="0">Ø Jahresrendite</span><span class="kk-rechts">${fmt(j,0)} J.</span></div>
     <div class="gross-zahl ${klasse(w.cagr20)}">${fmt(w.cagr20,1," %")}</div>
     <div class="klein">${w.cagr20_div ? "mit Dividenden" : "ohne Dividenden"}, vor Steuern und Kosten</div>
+    ${verlaufKurve(w, c)}
     ${aus ? `<div class="wk-aus" data-e="cagr_aus" tabindex="0">Aus 10.000 wurden so in ${fmt(j,0)} Jahren rund <b>${geld(glatt(aus))}</b>.</div>` : ""}
     <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
     <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
@@ -1839,6 +1949,7 @@ function risikoKarte(w, c){
   return `<section class="karte breit2" id="risiko-karte">${kk("risiko", `Wie stark schwankt ${name}?`, `Was man früher aushalten musste – aus allen Wochenkursen seit ${r.von}.`, "", "r_profil")}
     <div class="gross-zahl neg">${fmt(r.mdd,0," %")}</div>
     <p>größter Rückgang: von ${tM(r.a)} bis ${tM(r.b)}${r.erholtJ != null ? `, erst ${dauer(r.erholtJ)} nach dem Hoch wieder aufgeholt` : `, <b>bis heute nicht aufgeholt</b>`}</p>
+    ${rueckgangKurve(c)}
     <div class="kv"><span data-e="r_vola">Schwankung pro Jahr</span><b>${fmt(r.vola,0," %")}</b></div>
     <div id="risiko-vgl"></div>
     <div class="kv"><span data-e="r_profil">Längste Zeit unter altem Hoch</span><b>${dauer(r.langJ)}${r.offen ? " · läuft noch" : ` · ${tM(r.lVon)}–${tM(r.lBis)}`}</b></div>
@@ -1865,15 +1976,19 @@ async function risikoVergleich(id, c){   // Schwankung, Gleichlauf und Beta gege
     <div class="kv"><span data-e="r_markt">Gleichlauf mit dem S&amp;P 500</span><b>${fmt(kor,2)} · ${wort}</b></div>
     <div class="kv"><span data-e="r_markt">Bewegung je 1 % im S&amp;P 500</span><b>${fmt(beta,2)} %</b></div>`;
 }
-function gaugeSvg(s){
-  const cx = 115, cy = 112, r = 92, w = 16;
+function gaugeSvg(s){   // Halbkreis mit Farbverlauf (links teuer, rechts günstig), weichem Schein und Zeiger, der beim Laden einschwenkt
+  const cx = 115, cy = 112, r = 92, w = 15;
   const pt = (v, rr) => { const a = Math.PI * (1 - v / 100); return [cx + rr * Math.cos(a), cy - rr * Math.sin(a)]; };
-  const bogen = (a, b, farbe) => { const [x1, y1] = pt(a, r), [x2, y2] = pt(b, r); return `<path d="M${x1.toFixed(1)} ${y1.toFixed(1)} A${r} ${r} 0 0 1 ${x2.toFixed(1)} ${y2.toFixed(1)}" stroke="${farbe}" stroke-width="${w}" fill="none" opacity="${s == null ? .35 : .9}"/>`; };
-  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${s == null ? "keine" : fmt(s,0)} von 100: ${zonenWort(s)}">`
-    + bogen(0, 14.6, AMPEL_FARBEN[0]) + bogen(15.4, 39.6, AMPEL_FARBEN[1]) + bogen(40.4, 59.6, AMPEL_FARBEN[2]) + bogen(60.4, 79.6, AMPEL_FARBEN[3]) + bogen(80.4, 100, AMPEL_FARBEN[4]);
-  if (s != null) { const [x, y] = pt(s, r), [xi, yi] = pt(s, r - 26);
-    svg += `<line x1="${xi.toFixed(1)}" y1="${yi.toFixed(1)}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--text)" stroke-width="3" stroke-linecap="round"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="9" fill="var(--panel)" stroke="var(--text)" stroke-width="3"/>`; }
-  svg += `<text x="23" y="135" font-size="11" fill="var(--muted)" text-anchor="middle">teuer</text><text x="207" y="135" font-size="11" fill="var(--muted)" text-anchor="middle">günstig</text></svg>`;
+  const bahn = `M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy}`, F5 = AMPEL_FARBEN;
+  const striche = [15, 40, 60, 80].map(v => { const [a, b] = pt(v, r - w / 2 - 1), [c, d] = pt(v, r + w / 2 + 1); return `<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="var(--panel)" stroke-width="2.4"/>`; }).join("");
+  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${s == null ? "keine" : fmt(s,0)} von 100: ${zonenWort(s)}">
+    <defs><linearGradient id="g-verlauf" gradientUnits="userSpaceOnUse" x1="${cx - r}" y1="0" x2="${cx + r}" y2="0"><stop offset="0" stop-color="${F5[0]}"/><stop offset=".28" stop-color="${F5[1]}"/><stop offset=".5" stop-color="${F5[2]}"/><stop offset=".72" stop-color="${F5[3]}"/><stop offset="1" stop-color="${F5[4]}"/></linearGradient>
+    <filter id="g-schein" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="7"/></filter></defs>
+    ${s == null ? "" : `<path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w + 8}" stroke-linecap="round" fill="none" opacity=".3" filter="url(#g-schein)"/>`}
+    <path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none" opacity="${s == null ? .3 : 1}"/>${striche}`;
+  if (s != null) { const zf = F5[stufe(s)];
+    svg += `<g class="g-zeiger" style="--w:${(Math.max(0, Math.min(100, s)) * 1.8).toFixed(1)}deg"><circle cx="${cx - r}" cy="${cy}" r="15" fill="${zf}" opacity=".28"/><circle cx="${cx - r}" cy="${cy}" r="10.5" fill="var(--panel)" stroke="var(--text)" stroke-width="3.5"/><circle cx="${cx - r}" cy="${cy}" r="4.2" fill="${zf}"/></g>`; }
+  svg += `<text x="${cx - r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">teuer</text><text x="${cx + r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">günstig</text></svg>`;
   return svg;
 }
 function bausteinText(b){   // ein Baustein der Ampel in Worten (Wert + Seltenheit)
@@ -1961,8 +2076,7 @@ function kvKarte(w){   // Was passierte früher in ähnlicher Lage? Kaufen und V
   const kU = !k ? null : (k.median - k.median_alle >= 2 && k.plus - k.plus_alle >= -5) ? 1 : (k.median - k.median_alle <= -2 || k.plus - k.plus_alle <= -10) ? -1 : 0;
   const vU = !s ? null : s.richtig - s.richtig_alle >= 10 ? 1 : s.richtig - s.richtig_alle <= -10 ? -1 : 0;
   const unsicher = p && p.richtig < 50, knapp = p && p.richtig >= 50 && p.richtig < 60;
-  const vb = (x, y, farbe) => `<div class="vb"><span>ähnliche Lage</span><div class="balken"><i style="width:${Math.max(0, Math.min(100, x))}%;background:${farbe}"></i></div><b>${fmt(x,0)} von 100</b>
-      <span>jede beliebige Woche</span><div class="balken"><i class="grau" style="width:${Math.max(0, Math.min(100, y))}%"></i></div><b style="font-weight:500;color:var(--text2)">${fmt(y,0)} von 100</b></div>`;
+  const vb = (x, y, farbe) => `${punkte100(x, farbe)}<p class="p100-vgl">Zum Vergleich, in jeder beliebigen Woche: <b style="color:var(--text)">${fmt(y,0)} von 100</b></p>`;
   const kHeisst = !k ? "" : kU === 1 ? `Ein Kauf in solcher Lage ging früher <b>etwas besser</b> aus als ein Kauf in einer beliebigen Woche.`
     : kU === -1 ? `Ein Kauf in solcher Lage ging früher <b>schlechter</b> aus als ein Kauf in einer beliebigen Woche.`
     : `Ein Kauf in solcher Lage ging früher <b>etwa so aus wie in jeder anderen Woche</b> – die Lage war nichts Besonderes.`;
@@ -2027,8 +2141,8 @@ function kaufzonenKarte(w){   // Kursgrenzen der Ampel von heute als Preisleiter
                   [3, "günstig", "60–80", kz["80"], kz["60"]], [4, "historisch sehr günstig", "ab 80", null, kz["80"]]];
   const s = w.score, heute = stufe(s);
   const bereich = (lo, hi) => lo == null ? (hi == null ? "wird nie erreicht" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
-  const abstand = (i, lo, hi) => i === heute ? `<b>◀ heute: ${k(w.kurs)}</b>` : i < heute ? (lo != null ? `ab ${weg(lo)}` : "") : (hi != null ? `ab ${weg(hi)}` : "");
-  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<tr class="${i === heute ? "kz-heute" : ""}"><td style="text-align:left"><i class="kz-farbe" style="background:${AMPEL_FARBEN[i]}"></i>${wort}</td><td>${bereich(lo, hi)}</td><td class="kz-weg" style="text-align:left">${abstand(i, lo, hi)}</td><td class="klein">${amp}</td></tr>`).join("");
+  const abstand = (i, lo, hi) => i === heute ? `<span class="lt-heute">Heute ${k(w.kurs)}</span>` : i < heute ? (lo != null ? `ab ${weg(lo)}` : "") : (hi != null ? `ab ${weg(hi)}` : "");
+  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<div class="lt${i === heute ? " heute" : ""}" style="--zf:${AMPEL_FARBEN[i]}"><i></i><div class="lt-n"><b>${wort}</b><span>${bereich(lo, hi)}</span> <span class="lt-a">· Ampel ${amp}</span></div><div class="lt-w">${abstand(i, lo, hi)}</div></div>`).join("");
   const saetze = [];
   if (heute <= 2 && kz["60"] != null) saetze.push(`Günstig wird es <b>unter ${k(kz["60"])}</b> (${weg(kz["60"])} von heute)${kz["80"] != null ? `, historisch sehr günstig <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])})` : ""}.`);
   else if (heute === 3 && kz["80"] != null) saetze.push(`Historisch sehr günstig wird es <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])} von heute).`);
@@ -2038,7 +2152,7 @@ function kaufzonenKarte(w){   // Kursgrenzen der Ampel von heute als Preisleiter
   else if (heute >= 0 && heute <= 1 && kz["40"] != null) saetze.push(`Neutral wäre es unter ${k(kz["40"])} (${weg(kz["40"])}).`);
   return `<section class="karte breit2" id="kaufzonen-karte">${kk("preis", `Ab welchem Kurs ist ${name} günstig, ab wann teuer?`, "Die Kursgrenzen der Ampel von heute – oben teuer, unten günstig, wie im Chart.", `Stand ${datumDe(w.datum)}`, "l_kaufzonen")}
     <div class="fazit">Heute steht der Kurs bei <b>${k(w.kurs)}</b> – das ist <b>${zonenWort(s)}</b>. ${saetze.join(" ")}</div>
-    <div class="tab-scroll"><table class="wtab kz-tab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Stufe</th><th>Kurs</th><th style="text-align:left">von heute aus</th><th>Ampel</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <div class="leiter" role="list" aria-label="Kursbereiche je Stufe, oben teuer, unten günstig">${zeilen}</div>
     <details class="mehr"><summary>Woher kommen diese Grenzen?</summary>
       <p style="margin:8px 0 0">Die <b>200-Wochen-Linie</b> – der Durchschnittskurs der letzten knapp 4 Jahre – liegt heute bei <b>${k(w.linie200)}</b>${w.zu200w != null ? `, der Kurs ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % darüber" : fmt(-w.zu200w,0) + " % darunter"}` : ""}. An der Linie zeigt die Ampel 70. Die Grenzen kommen aus der Geschichte von ${name}${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""}: wie tief der Kurs früher unter und wie weit er über der Linie lag.</p>
       <p class="klein" style="margin:6px 0 0">Die Grenzen verschieben sich jede Woche ein wenig, weil die 200-Wochen-Linie mitwandert; im Chart stehen sie als mitwandernde Linien und Flächen (Schalter „Kaufzonen“). Liegt eine Grenze weit weg, müsste sich der Kurs stark bewegen, bis die Ampel dort steht.</p></details>
@@ -2156,12 +2270,12 @@ async function zeige(id, opt={}){
       ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
       <div class="wk-haupt">
         <div class="wk-text">
-          <div class="wk-label">Die Lage in wenigen Sätzen</div>
-          <p class="klartext" data-e="klartext">${klartext(w, c)}</p>
+          <div class="wk-label">${faktenListe(w, c) ? "Das Wichtigste auf einen Blick" : "Die Lage in wenigen Sätzen"}</div>
+          ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
           ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
           ${grundRest(w)}
         </div>
-        ${renditePanel(w)}
+        ${renditePanel(w, c)}
         <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
           <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
           ${c?.score && ampelRang(c.score, c.score.length - 1) ? `<div class="g-rang" data-e="ampel_rang">${rangText(ampelRang(c.score, c.score.length - 1))}</div>` : ""}
