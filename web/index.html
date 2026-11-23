@@ -3867,7 +3867,8 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
     const j = JUNG[ISIN_SEC[isin]]; return {id:j.id, quelle:`ISIN · junge Aktie, eigene Kurse seit ${datumDe(j.seit)} (${j.wochen} Wochen), noch keine Ampel`, jung:true, ersatz:false};
   }
   const junger = isin && ISIN_SEC?.[isin] ? ISIN_SEC[isin] : null;   // erkannt, aber unter 10 Jahren Kurse (z. B. junger Börsengang) → unten Ersatz
-  if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k || w.id.toUpperCase() === k); if (w) return {id:w.id, quelle:"Kürzel"}; }
+  if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k) || ALLE.find(w => w.id.toUpperCase() === k);   // zuerst das Börsenkürzel: „GOLD“ im Depot ist die Aktie (Kennung GOLD_NYSE), nicht der Rohstoff mit der Kennung GOLD
+    if (w) return {id:w.id, quelle:"Kürzel"}; }
   const name = String(pos.name || "");
   if (name && !INDEX_AUSNAHMEN.test(name)) for (const [re, id, q] of INDEX_NAMEN) if (re.test(name) && gibt(id)) return {id, quelle:q + " – bitte prüfen"};
   const kern = nameKern(name);
