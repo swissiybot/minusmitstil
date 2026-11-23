@@ -38,7 +38,11 @@ def teilfreistellung(zeile: dict) -> float:
     return TEILFREI_AKTIENFONDS if zeile.get("gruppe") == "ETF" and zeile.get("branche") not in ("Anleihen", "Rohstoff") else 0.0
 
 
-NAMEN = {"spar": "Sparplan", "staffel": "Staffelkauf 60/75/90", "staffel_vk": "Staffelkauf + Teilverkauf ≤ 15"}
+NAMEN = {"spar": "Sparplan", "staffel": "Staffelkauf 60/75/90", "staffel_vk": "Staffelkauf + Teilverkauf ≤ 15",
+         "warten60": "Warten auf günstig (Ampel ab 60)", "warten80": "Warten auf sehr günstig (Ampel ab 80)",
+         "misch": "Mischung: halb Sparplan, halb Warten auf günstig"}
+# Wunsch Marc 23.11.2026: je Titel monatlich kaufen, auf günstig bzw. sehr günstig warten oder mischen – [Schlüssel, Ampel-Grenze, Anteil sofort]
+WARTE_WEGE = (("warten60", 60, 0.0), ("warten80", 80, 0.0), ("misch", 60, 0.5))
 
 
 def _xirr(fluesse: list[tuple[float, float]]) -> float | None:
@@ -191,6 +195,21 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
                 anteil = next((a for grenze, a in STUFEN if s >= grenze), 0.0)
                 if anteil > 0 and d.bar > 0:
                     invest = d.bar * anteil
+                    vorher = d.kaeufe
+                    d.kaufen(invest, kurs)
+                    if d.kaeufe > vorher:
+                        d.bar -= invest
+            for k, grenze, sofort in WARTE_WEGE:
+                d = depots[k]
+                d.zins(letzter_satz)               # Wartegeld wird verzinst (wie beim Staffelkauf)
+                if sofort > 0:
+                    vorher = d.kaeufe
+                    d.kaufen(betrag * sofort, kurs)
+                    if d.kaeufe == vorher:         # Kauf zu klein: Geld bleibt als Bargeld
+                        d.bar += betrag * sofort
+                d.bar += betrag * (1 - sofort)
+                if s >= grenze and d.bar > 0:      # Ampel der Vorwoche erreicht die Grenze: alles Wartegeld anlegen
+                    invest = d.bar
                     vorher = d.kaeufe
                     d.kaufen(invest, kurs)
                     if d.kaeufe > vorher:
