@@ -633,6 +633,76 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .kurve{filter:drop-shadow(0 7px 7px var(--boden))}
 .fazit{box-shadow:inset 0 1px 0 var(--kante),0 14px 26px -18px var(--boden)}
 @media (prefers-reduced-motion:reduce){.wert-kopf .gauge svg{animation:none}}
+
+/* ------------------------------------------------------------ Titelseite, vierte Runde (23.11.2026): Antwort zuerst, Einfach/Profi, Zeitachse, Zukunfts-Rechner */
+#haupt{counter-reset:sekt}
+.sekt{counter-increment:sekt}
+.sekt .nr::before{content:counter(sekt)}
+#haupt[data-modus="einfach"] .nur-profi{display:none!important}
+.modus-wahl{margin-left:auto;border-radius:999px;padding:3px}
+.modus-wahl button{border-radius:999px;padding:6px 14px}
+.modus-wahl button[aria-pressed="true"]{background:linear-gradient(135deg,var(--akzent),color-mix(in srgb,var(--akzent) 60%,var(--lila)));color:var(--auf-akzent);box-shadow:0 6px 16px -6px var(--akzent)}
+.urteil-zeile{display:flex;align-items:center;gap:16px;margin:0 0 14px}
+.ampel-marke{flex:none;width:86px;height:86px;border-radius:50%;display:grid;place-content:center;text-align:center;
+  background:radial-gradient(closest-side,var(--panel) 80%,transparent 82% 100%),conic-gradient(from 180deg,var(--zf,var(--akzent)) calc(var(--p)*1%),color-mix(in srgb,var(--text) 13%,transparent) 0);
+  box-shadow:0 0 30px -6px var(--zf,var(--akzent))}
+.ampel-marke b{font-size:30px;font-weight:780;line-height:1;letter-spacing:-.03em}
+.ampel-marke span{font-size:10.5px;color:var(--muted);font-weight:600}
+.urteil-satz{font-size:31px;line-height:1.1;font-weight:780;letter-spacing:-.035em;background:linear-gradient(100deg,var(--text) 25%,color-mix(in srgb,var(--zf,var(--akzent)) 75%,var(--text)));-webkit-background-clip:text;background-clip:text;color:transparent}
+.urteil-unter{margin-top:6px;font-size:13.5px;color:var(--text2);line-height:1.45}
+.wk-saeule{flex:0 1 350px;min-width:290px;align-self:center}
+.wk-saeule svg{display:block;width:100%;height:auto;overflow:visible}
+.fragen{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.frage{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;border:1px solid var(--line2);background:color-mix(in srgb,var(--panel2) 70%,transparent);color:var(--text);font-size:13.5px;font-weight:600;
+  box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+.frage:hover{border-color:var(--akzent)}
+.frage i{width:7px;height:7px;border-radius:50%;background:var(--akzent);box-shadow:0 0 10px var(--akzent)}
+.regler{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:none;margin:6px 0 0;cursor:pointer}
+.regler::-webkit-slider-runnable-track{height:8px;border-radius:6px;background:linear-gradient(90deg,color-mix(in srgb,var(--text) 16%,transparent) var(--heute,50%),color-mix(in srgb,var(--kegel) 60%,transparent) var(--heute,50%));box-shadow:inset 0 1px 2px var(--boden)}
+.regler::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;margin-top:-10px;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff,var(--akzent) 55%,color-mix(in srgb,var(--akzent) 55%,#000));
+  box-shadow:0 0 0 6px color-mix(in srgb,var(--akzent) 22%,transparent),0 8px 16px -4px var(--boden)}
+.regler::-moz-range-track{height:8px;border-radius:6px;background:color-mix(in srgb,var(--text) 16%,transparent)}
+.regler::-moz-range-thumb{width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:var(--akzent)}
+.regler-achse{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-top:2px}
+#za-bild svg,.zr-bild{display:block;width:100%;height:auto;max-height:320px}
+.za-info{margin-top:12px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+.za-auge{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.za-gross{font-size:30px;font-weight:770;letter-spacing:-.03em;line-height:1.15;margin-top:4px}
+.za-gross small{font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0}
+.za-satz{margin:3px 0 6px!important;color:var(--text2);font-size:14px}
+.leg{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:5px}
+.leg.fl{height:10px;border-radius:3px;opacity:.5}
+.zr-eingabe,.pos-zeile{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+.zr-f{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:650;color:var(--muted)}
+.zr-feld{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line2);background:var(--panel2);box-shadow:inset 0 2px 3px var(--boden)}
+.zr-feld:focus-within{border-color:var(--akzent);box-shadow:0 0 0 3px var(--akzent-weich)}
+.zr-feld input{flex:1;min-width:0;width:100%;border:0;background:none;outline:none;color:var(--text);font-size:20px;font-weight:720;letter-spacing:-.02em;-moz-appearance:textfield}
+.zr-feld input::-webkit-outer-spin-button,.zr-feld input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.zr-feld i{font-style:normal;color:var(--muted);font-size:14px;font-weight:600}
+.zr-annahme{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:8px 0 2px}
+.zr-annahme .segment{flex-wrap:wrap}
+.zr-kacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
+#rechner-karte .p100{max-width:560px}
+.zr-kacheln .kpi .k-u,.zr-kacheln .kpi .k-l{white-space:normal}
+.vgl-tab{table-layout:fixed}
+.vgl-tab th:first-child,.vgl-tab td:first-child{width:36%}
+.vgl-tab th,.vgl-tab td{white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+.vgl-tab th .linkknopf{text-align:right;font-size:12px}
+@media (max-width:900px){
+  .urteil-satz{font-size:27px}
+  .ampel-marke{width:76px;height:76px} .ampel-marke b{font-size:26px}
+  .wk-saeule{flex:none;min-width:0;width:100%;max-width:400px}
+  .za-gross{font-size:27px}
+}
+
+/* Kopf als Raster: Urteil | Säule | Jahresrendite, darunter die Fakten; schmal: Urteil, Säule, Fakten, Jahresrendite untereinander */
+#haupt{container-type:inline-size;container-name:haupt}
+.wk-haupt{display:grid;grid-template-columns:minmax(0,1fr) 350px 240px;grid-template-areas:"u s r" "f s r";gap:6px 26px;align-items:start}
+.wk-urteil{grid-area:u} .wk-text{grid-area:f} .wk-saeule{grid-area:s;align-self:center;min-width:0} .wk-rendite{grid-area:r;align-self:start;min-width:0}
+.urteil-zeile{margin:4px 0 12px}
+@container haupt (max-width:1060px){.wk-haupt{grid-template-columns:minmax(0,1fr) 330px;grid-template-areas:"u s" "f s" "r r"} .wk-rendite{margin-top:8px}}
+@container haupt (max-width:760px){.wk-haupt{grid-template-columns:minmax(0,1fr);grid-template-areas:"u" "s" "f" "r"} .wk-saeule{justify-self:center;width:100%;max-width:400px}}
+@media (max-width:900px){.wk-haupt{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"u" "s" "f" "r";gap:12px} .wk-saeule{justify-self:center}}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1494,7 +1564,8 @@ function sucheRechnen(){
 }
 function trefferOeffnen(i){
   const t = TREFFER[i]; if (!t) return;
-  const ersatz = ERSATZ_FUER; ERSATZ_FUER = null; $("#suche-dlg").close();
+  const ersatz = ERSATZ_FUER, vgl = VERGLEICH_WAHL; ERSATZ_FUER = null; VERGLEICH_WAHL = false; $("#suche-dlg").close();
+  if (vgl && t.art === "wert") { vergleichZeigen(t.w.id); return; }
   if (ersatz != null && t.art === "wert" && DEPOT?.positionen[ersatz]) {   // Depot: gewählten Wert als Ersatz zuordnen
     Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt", ersatz:false, hinweis:""}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
   }
@@ -1511,7 +1582,7 @@ $("#suche-eingabe").addEventListener("keydown", ev => {
 });
 $("#suche-treffer").addEventListener("click", ev => { const t = ev.target.closest(".treffer"); if (t) trefferOeffnen(+t.dataset.i); });
 $("#suche-dlg").addEventListener("click", ev => { if (ev.target === $("#suche-dlg")) $("#suche-dlg").close(); });
-$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
+$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; VERGLEICH_WAHL = false; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
 $("#such-knopf").onclick = sucheOeffnen;
 document.addEventListener("keydown", ev => {
   const imFeld = ev.target.closest?.("input,textarea,select,[contenteditable]");
@@ -1846,14 +1917,13 @@ function alleChartsWeg(){ KZ_LINIEN = []; charts.concat(tabCharts).forEach(ch =>
 // Jede Karte beginnt gleich: farbige Kategorie, Titel als Frage in normaler Schrift, ein Satz „was zeigt die Karte“, rechts der Stand;
 // die ausführliche Erklärung steht hinter dem kleinen „i“ (Maus: darüberfahren, Handy: antippen).
 const KAT = {ueber:["Überblick","var(--akzent)"], preis:["Preis","var(--guenstig)"], rueck:["Rückblick","var(--akzent)"], ausblick:["Ausblick","var(--kegel)"],
-  risiko:["Risiko","var(--teuer)"], trend:["Trend","var(--cyan)"], geschaeft:["Geschäft","var(--gelb)"], zahlen:["Kennzahlen","var(--neutral)"]};
+  risiko:["Risiko","var(--teuer)"], zeit:["Zeit","var(--kegel)"], ich:["Deine Position","var(--gelb)"], trend:["Trend","var(--cyan)"], geschaeft:["Geschäft","var(--gelb)"], zahlen:["Kennzahlen","var(--neutral)"]};
 function kk(kat, titel, unter, rechts, e){
   const [name, farbe] = KAT[kat] || KAT.zahlen;
   return `<header class="kk"><div class="kk-zeile"><span class="kk-kat" style="--kf:${farbe}">${name}</span>${rechts ? `<span class="kk-rechts">${rechts}</span>` : ""}</div>
     <h3 class="kk-titel">${titel}${e ? ` <button type="button" class="kk-i" data-e="${e}" aria-label="Erklärung zu dieser Karte">i</button>` : ""}</h3>
     ${unter ? `<p class="kk-unter">${unter}</p>` : ""}</header>`;
 }
-const sekt = (id, nr, titel, unter) => `<div class="sekt" id="${id}"><span class="nr">${nr}</span><h2>${titel}</h2><p>${unter}</p></div>`;
 const ERKLAERUNG_TITEL = {
   kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
   kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf „besser oder schlechter als üblich“ ausgeht, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
@@ -1861,6 +1931,15 @@ const ERKLAERUNG_TITEL = {
   r_profil: {titel:"Risiko-Profil", text:"Alle Zahlen stammen aus den Wochenschlusskursen dieses Werts über seine ganze Geschichte. Größter Rückgang: der tiefste Fall von einem Hoch bis zum folgenden Tief. Schwankung pro Jahr: wie stark die Wochenrenditen streuen, auf ein Jahr hochgerechnet. Längste Zeit unter altem Hoch: so lange musste man warten, bis ein früherer Höchstkurs wieder erreicht war. Kalenderjahre: Veränderung von Jahresende zu Jahresende, das laufende Jahr zählt nicht mit. Die Vergangenheit ist keine Obergrenze – der nächste Rückgang kann größer ausfallen."},
   r_vola: {titel:"Schwankung pro Jahr (Volatilität)", text:"Das gängigste Risikomaß: Standardabweichung der Wochenrenditen, auf ein Jahr hochgerechnet (× Wurzel aus 52). Grobe Faustregel: In etwa zwei von drei Jahren lag das Jahresergebnis innerhalb dieser Spanne um den Durchschnitt, in jedem dritten Jahr außerhalb. Je höher die Zahl, desto unruhiger der Wert. Zum Einordnen steht darunter der Vergleich mit dem S&P 500."},
   r_markt: {titel:"Vergleich mit dem S&P 500", text:"Aus den gemeinsamen Wochen der letzten 10 Jahre, verglichen mit dem S&P 500 (500 große US-Firmen). Schwankung: 1,5-fach heißt, die Ausschläge waren im Schnitt anderthalbmal so groß. Gleichlauf (Korrelation, von −1 bis +1): Bei +1 bewegen sich beide immer in dieselbe Richtung, bei 0 unabhängig voneinander, bei −1 entgegengesetzt. Werte mit niedrigem Gleichlauf können ein Depot ruhiger machen. Bewegung je 1 % (Beta): Um wie viel sich dieser Wert im Schnitt bewegte, wenn der S&P 500 in einer Woche um 1 % stieg oder fiel."},
+  modus: {titel:"Einfach oder Profi", text:"Einfach zeigt das Wichtigste: die Antwort, den Nachkauf-Kurs, die Zeitachse, den Zukunfts-Rechner und das Risiko. Profi zeigt zusätzlich alles andere – den großen Chart mit allen Linien, Kaufzonen, Rückblick-Karten, Geschäftszahlen und Details. Es wird nichts gelöscht, nur ausgeblendet; die Wahl merkt sich dieser Browser."},
+  saeule: {titel:"Die fünf Stufen als Säule", text:"Jede Schicht ist eine Stufe der Ampel, oben teuer, unten günstig – wie im Chart. Daneben steht der Kursbereich der Stufe von heute. Die Kugel schwebt auf der Höhe des heutigen Kurses: Je weiter unten, desto günstiger gemessen an der eigenen Geschichte des Werts. Die Grenzen wandern jede Woche mit der 200-Wochen-Linie."},
+  zeitachse: {titel:"Zeitachse", text:"Ein Bild für Rückblick und Ausblick. Links vom Strich „Heute“: der echte Kurs der letzten Jahre. Wählst du dort einen Zeitpunkt, zeigt das Tool die Ampel von damals – so, wie sie mit dem Wissen von damals berechnet worden wäre – und was danach wirklich kam. Rechts: mögliche Wege aus der Simulation (echte Wochen der letzten 20 Jahre, neu zusammengesetzt). Das helle Band enthält 9 von 10 Wegen, das kräftige jeden zweiten; die Zahlen darunter nennen den Bereich von 8 von 10 Wegen. Keine Vorhersage."},
+  zrechner: {titel:"Zukunfts-Rechner", text:"Rechnet für deinen Betrag und deine monatliche Rate tausende mögliche Verläufe durch: Aus den echten Wochenrenditen der letzten 20 Jahre werden zusammenhängende 13-Wochen-Stücke zufällig neu aneinandergehängt. „8 von 10“ heißt: In 80 % der Wege lag das Ergebnis in diesem Bereich, in je 10 % darüber oder darunter. Bei Werten in Dollar wird in Euro gerechnet (mit dem Wechselkurs jeder Woche). Die Wege übernehmen die Durchschnittsrendite der letzten 20 Jahre – war sie ungewöhnlich hoch, sind die Ergebnisse entsprechend optimistisch."},
+  zr_annahme: {titel:"Annahme für die Rendite", text:"Die Simulation setzt echte Wochen der letzten 20 Jahre neu zusammen und übernimmt damit auch deren Durchschnittsrendite. Bei Werten, die in dieser Zeit außergewöhnlich stark gestiegen sind, wirkt die Zukunft dadurch sehr rosig. „Vorsichtig“ rechnet mit denselben Schwankungen, aber nur der halben Durchschnittsrendite, „ohne“ ganz ohne sie – dann sieht man nur, wie stark der Wert schwankt. Stieg ein Wert zuletzt im Schnitt über 25 % pro Jahr, ist „vorsichtig“ voreingestellt, über 60 % „ohne“. Welche Annahme stimmt, weiß niemand – der Schalter zeigt, wie stark das Ergebnis davon abhängt."},
+  zr_steuer: {titel:"Steuer (vereinfacht)", text:"Gedachter Verkauf: 26,375 % Abgeltungssteuer (25 % plus Soli) auf den Gewinn, davor 1.000 € Sparerpauschbetrag abgezogen; bei Aktien-ETFs sind 30 % des Gewinns steuerfrei (Teilfreistellung). Ohne Kirchensteuer, ohne Vorabpauschale und ohne andere Gewinne oder Verluste desselben Jahres. Eine grobe Orientierung, keine Steuerberatung."},
+  position: {titel:"Deine Position", text:"Erscheint nur, wenn dieser Titel in „Mein Depot“ liegt. Der Wert stammt aus deinem Depot-Import (Stand des Imports, nicht der heutige Kurs). Den Einstand – was du insgesamt bezahlt hast – trägst du selbst ein. Alles bleibt in diesem Browser gespeichert und wird nirgendwohin übertragen."},
+  vergleich: {titel:"Vergleichen", text:"Wähle einen zweiten Titel: Dann stehen Ampel, Abstand zur 200-Wochen-Linie, Günstig-Grenze, Ø Jahresrendite, größter Rückgang, Schwankung und Trend nebeneinander, dazu der Kursverlauf beider Titel ab demselben Start (beide bei 100). Jede Ampel misst an der eigenen Geschichte des Titels – eine höhere Ampel heißt nicht, dass der Titel der bessere ist."},
+  rendite_euro: {titel:"In Euro gerechnet", text:"Dieselbe Ø Jahresrendite, aber für einen Anleger, der in Euro rechnet: Zuwachs in Dollar mal Veränderung des Wechselkurses Dollar/Euro über denselben Zeitraum (Kurse der Europäischen Zentralbank bzw. der US-Notenbank). Ist der Dollar gegenüber dem Euro gestiegen, liegt die Euro-Rendite höher, sonst niedriger."},
   kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
 };
 // Fakten statt Fließtext: die Lage in drei, vier kurzen Zeilen mit Symbol (der ausführliche Text bleibt aufklappbar)
@@ -1913,6 +1992,284 @@ function rueckgangKurve(c){   // „unter Wasser“: wie weit der Kurs zu jeder 
     <div class="kurve-leg"><span>${new Date(t[0] * 1000).getUTCFullYear()}</span><span>Abstand zum bisherigen Hoch · oben = am Hoch</span><span>heute</span></div>`;
 }
 const punkte100 = (n, farbe) => { const a = Math.max(0, Math.min(100, Math.round(n))); return `<div class="p100" style="--pf:${farbe}" role="img" aria-label="${a} von 100">${"<i class=\"an\"></i>".repeat(a)}${"<i></i>".repeat(100 - a)}</div>`; };
+// ============================================================ Titelseite „Antwort zuerst“ (Umbau 23.11.2026, Marc: „wie im Jahr 2050“)
+// Einfach zeigt das Wichtigste (Antwort, Nachkaufen, eigene Position, Zeitachse, Zukunfts-Rechner, Risiko), Profi zusätzlich alles Bisherige.
+let MODUS = lade("modus", "einfach");
+const URTEIL_SATZ = ["Historisch sehr teuer.", "Eher teuer.", "Weder günstig noch teuer.", "Günstig.", "Historisch sehr günstig."];
+function modusSetzen(m){
+  MODUS = m; sichere("modus", m); $("#haupt").dataset.modus = m;
+  $$("#modus-wahl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m)));
+  abschnittNavInit(); fragenInit();
+}
+function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der Vergleich mit der eigenen Geschichte
+  if (w.score == null) return `<div class="urteil-zeile"><div><div class="urteil-satz">${w.jung ? "Noch zu jung für eine Ampel." : "Noch keine Ampel."}</div></div></div>`;
+  return `<div class="urteil-zeile"><div class="ampel-marke" style="--p:${Math.max(0, Math.min(100, w.score)).toFixed(0)}" data-e="gauge" tabindex="0"><b>${fmt(w.score,0)}</b><span>von 100</span></div>
+    <div><div class="urteil-satz">${URTEIL_SATZ[stufe(w.score)]}</div>
+    <div class="urteil-unter">Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</div></div></div>`;
+}
+// Räumliches Hauptbild: die fünf Stufen als durchscheinende Schichten (oben teuer, unten günstig), der Kurs schwebt als Kugel auf seiner Höhe
+function saeule(w){
+  const kz = w.kz; if (!kz || w.kurs == null || w.score == null) return "";
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), heute = stufe(w.score), F5 = AMPEL_FARBEN;
+  const ber = (lo, hi) => lo == null ? (hi == null ? "nie erreicht" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
+  const zeilen = [["sehr teuer", kz["15"], null], ["teuer", kz["40"], kz["15"]], ["neutral", kz["60"], kz["40"]], ["günstig", kz["80"], kz["60"]], ["sehr günstig", null, kz["80"]]];
+  const cx = 150, a = 58, b = 24, h = 31, lu = 10, y0 = 40, y = i => y0 + i * (h + lu);
+  const [, lo, hi] = zeilen[heute], f = lo && hi && w.kurs > 0 ? Math.max(0, Math.min(1, Math.log(w.kurs / lo) / Math.log(hi / lo))) : .5, oy = y(heute) + b * .5 + h * (1 - f), ox = cx - a - 22;
+  let s = `<svg viewBox="0 0 372 262" role="img" aria-label="Stufen von teuer (oben) bis günstig (unten), heute ${k(w.kurs)}: ${zonenWort(w.score)}">
+    <defs><filter id="s-leucht" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="7"/></filter>
+    <radialGradient id="s-kugel" cx=".34" cy=".28" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="${F5[heute]}"/><stop offset="1" stop-color="#101626"/></radialGradient></defs>
+    <ellipse cx="${cx}" cy="${y(4) + b + h + 8}" rx="${a + 22}" ry="${b * .6}" fill="${F5[heute]}" opacity=".22" filter="url(#s-leucht)"/>`;
+  for (let i = 4; i >= 0; i--) { const yy = y(i), an = i === heute, fa = F5[i];
+    const oben = `${cx},${yy - b} ${cx + a},${yy} ${cx},${yy + b} ${cx - a},${yy}`, links = `${cx - a},${yy} ${cx},${yy + b} ${cx},${yy + b + h} ${cx - a},${yy + h}`, rechts = `${cx},${yy + b} ${cx + a},${yy} ${cx + a},${yy + h} ${cx},${yy + b + h}`;
+    if (an) s += `<polygon points="${cx - a},${yy} ${cx},${yy - b} ${cx + a},${yy} ${cx + a},${yy + h} ${cx},${yy + b + h} ${cx - a},${yy + h}" fill="${fa}" opacity=".55" filter="url(#s-leucht)"/>`;
+    s += `<polygon points="${links}" fill="${fa}" opacity="${an ? .62 : .22}"/><polygon points="${rechts}" fill="${fa}" opacity="${an ? .42 : .13}"/><polygon points="${oben}" fill="${fa}" opacity="${an ? .95 : .36}"/>
+      <polygon points="${oben}" fill="none" stroke="${fa}" stroke-width="${an ? 1.6 : 1}" opacity="${an ? 1 : .8}"/><path d="M${cx - a} ${yy}V${yy + h}L${cx} ${yy + b + h}L${cx + a} ${yy + h}V${yy}M${cx} ${yy + b}V${yy + b + h}" fill="none" stroke="${fa}" stroke-width="1" opacity="${an ? .9 : .5}"/>
+      <path d="M${cx + a + 6} ${yy + h * .5}H${cx + a + 26}" stroke="${fa}" stroke-width="1" opacity=".7"/>
+      <text x="${cx + a + 32}" y="${yy + h * .5 - 2}" font-size="13.5" font-weight="${an ? 750 : 600}" fill="${an ? "var(--text)" : "var(--text2)"}">${zeilen[i][0]}</text>
+      <text x="${cx + a + 32}" y="${yy + h * .5 + 13}" font-size="11.5" fill="var(--muted)">${ber(zeilen[i][1], zeilen[i][2])}</text>`; }
+  s += `<path d="M${ox + 9} ${oy}H${cx - a + 14}" stroke="var(--text)" stroke-width="1.4" stroke-dasharray="2 3" opacity=".85"/>
+    <circle cx="${ox}" cy="${oy}" r="19" fill="${F5[heute]}" opacity=".45" filter="url(#s-leucht)"/><circle cx="${ox}" cy="${oy}" r="10.5" fill="url(#s-kugel)" stroke="rgba(255,255,255,.8)" stroke-width="1"/>
+    <text x="${ox - 18}" y="${oy - 3}" font-size="11" fill="var(--muted)" text-anchor="end">Heute</text><text x="${ox - 18}" y="${oy + 15}" font-size="19" font-weight="780" fill="var(--text)" text-anchor="end">${k(w.kurs)}</text></svg>`;
+  return s;
+}
+// Fragen zum Antippen: springen zur gerechneten Antwort (keine KI)
+function fragenInit(){
+  const el = $("#fragen"); if (!el) return;
+  const da = id => { const e = document.getElementById(id); return e && e.offsetParent !== null; };
+  const F = [["nachkauf-karte", "Soll ich mit dem Kauf warten?"], ["zeitachse-karte", "War das früher ein guter Zeitpunkt?"], ["rechner-karte", "Was wird aus meinem Geld?"], ["risiko-karte", "Wie tief kann es fallen?"], ["position-karte", "Wie steht meine Position?"]].filter(([id]) => da(id));
+  el.innerHTML = F.map(([id, t]) => `<button type="button" class="frage" data-ziel="${id}"><i></i>${t}</button>`).join("") + `<button type="button" class="frage" id="vgl-knopf" data-e="vergleich"><i></i>Mit einem anderen Titel vergleichen</button>`;
+  el.onclick = ev => { const b = ev.target.closest("button"); if (!b) return; if (b.id === "vgl-knopf") vergleichWaehlen(); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
+}
+
+// ------------------------------------------------------------ Simulation im Browser (wie montecarlo.py): Block-Bootstrap echter Wochenrenditen,
+// 13-Wochen-Blöcke aus den letzten 20 Jahren, Schwankung startet beim heutigen Niveau und klingt in 13 Wochen zum Durchschnitt ab.
+function simWege(reihe, wochen, pfade = 4000, saat = "", block = 13, jahre = 20, volTau = 13, drift = 1){
+  const c = []; for (let i = Math.max(0, reihe.length - 1 - Math.round(jahre * 52.18)); i < reihe.length; i++) if (reihe[i] > 0) c.push(reihe[i]);
+  if (c.length < 104) return null;
+  const m = c.length - 1, r = new Float64Array(m); let mu = 0; for (let i = 0; i < m; i++) { r[i] = Math.log(c[i + 1] / c[i]); mu += r[i]; } mu /= m;
+  block = Math.max(1, Math.min(block, Math.floor(m / 4)));
+  let va = 0, ew = (r[0] - mu) ** 2; for (let i = 0; i < m; i++) va += (r[i] - mu) ** 2; for (let i = 1; i < m; i++) ew = .94 * ew + .06 * (r[i] - mu) ** 2;
+  const sRel = volTau ? Math.max(.5, Math.min(3, Math.sqrt(ew) / Math.sqrt(va / m))) : 1, skala = new Float64Array(wochen); for (let j = 0; j < wochen; j++) skala[j] = volTau ? 1 + (sRel - 1) * Math.exp(-j / volTau) : 1;
+  let s = 2166136261; for (const ch of `${saat}|${c.length}|${c[m].toPrecision(6)}`) { s ^= ch.charCodeAt(0); s = Math.imul(s, 16777619); }
+  const zufall = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const n = wochen + 1, L = new Float32Array(pfade * n);
+  for (let p = 0; p < pfade; p++) { let sum = 0, j = 0; const o = p * n;
+    while (j < wochen) { const start = Math.floor(zufall() * (m - block + 1)); for (let b = 0; b < block && j < wochen; b++, j++) { sum += mu * drift + (r[start + b] - mu) * skala[j]; L[o + j + 1] = sum; } } }
+  return {L, wochen, pfade, jahre:m / 52.18};
+}
+function reiheRendite(reihe, jahre = 20){   // Zuwachs pro Jahr (mit Zinseszins) über die Wochen, aus denen die Simulation schöpft
+  let a = Math.max(0, reihe.length - 1 - Math.round(jahre * 52.18)); while (a < reihe.length && !(reihe[a] > 0)) a++;
+  const e = reihe.length - 1; if (e - a < 104 || !(reihe[e] > 0)) return null;
+  return (Math.pow(reihe[e] / reihe[a], 52.18 / (e - a)) - 1) * 100;
+}
+const SIM_GRENZE = 25;   // ab so viel % pro Jahr gilt die Vergangenheit als zu rosig, um sie einfach fortzuschreiben
+const simDrift = r => r == null ? 1 : r > 60 ? 0 : r > SIM_GRENZE ? .5 : 1;   // Anteil der Vergangenheitsrendite in den Wegen: alles, die Hälfte oder nichts
+const driftSatz = d => d === 0 ? "ohne die Durchschnittsrendite der Vergangenheit, nur mit ihren Schwankungen" : d === .5 ? "mit der halben Durchschnittsrendite der Vergangenheit" : "mit der vollen Durchschnittsrendite der Vergangenheit";
+function simQuantile(sim){   // je Woche: Faktor zum heutigen Kurs an den Stellen 5/10/25/50/75/90/95 % und Anteil der Wege unter heute
+  const n = sim.wochen + 1, P = sim.pfade, q = {q5:[], q10:[], q25:[], q50:[], q75:[], q90:[], q95:[], minus:[]}, sp = new Float32Array(P);
+  for (let w = 0; w < n; w++) { for (let p = 0; p < P; p++) sp[p] = sim.L[p * n + w]; sp.sort(); const g = f => Math.exp(sp[Math.min(P - 1, Math.floor(f * P))]);
+    q.q5.push(g(.05)); q.q10.push(g(.1)); q.q25.push(g(.25)); q.q50.push(g(.5)); q.q75.push(g(.75)); q.q90.push(g(.9)); q.q95.push(g(.95));
+    let u = 0; while (u < P && sp[u] < 0) u++; q.minus.push(u / P * 100); }
+  return q;
+}
+
+// ------------------------------------------------------------ Zeitachse: Vergangenheit ← Heute → mögliche Zukunft, ein Regler
+let ZA = null;
+function zeitachseKarte(w, c){
+  if (!c?.c || !c.t || c.c.filter(x => x > 0).length < 110) return "";
+  return `<section class="karte breit2" id="zeitachse-karte">${kk("zeit", "Gestern, heute, mögliche Zukunft", "Schieb den Regler: links siehst du, was das Tool früher gesagt hätte und was danach kam – rechts, wohin der Kurs laufen könnte.", "Zeitachse", "zeitachse")}
+    <div id="za-bild"></div>
+    <input type="range" class="regler" id="za-regler" min="0" max="1" step="1" value="0" aria-label="Zeitpunkt wählen: links Vergangenheit, rechts Zukunft">
+    <div class="regler-achse"><span>◀ Vergangenheit</span><span>Heute</span><span>Zukunft ▶</span></div>
+    <div class="za-info" id="za-info"></div>
+    <p class="klein" style="margin:10px 0 0"><i class="leg" style="background:var(--text)"></i>Kurs &nbsp; <i class="leg" style="background:var(--gelb)"></i>200-Wochen-Linie &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>simulierte Wege (hell: 9 von 10, kräftig: jeder zweite) · Rückblick und Simulation, keine Vorhersage.</p></section>`;
+}
+function zaBild(){
+  const c = ZA.c, n = c.c.length, V = ZA.verg, Z = ZA.zuk, ab = n - 1 - V, B = 400, H = 232, pl = 6, pr = 6, po = 14, pu = 22, kurs = c.c[n - 1], q = ZA.q;
+  const werte = c.c.slice(ab).filter(x => x > 0); if (q) werte.push(kurs * q.q5[Z], kurs * q.q95[Z]);
+  const mn = Math.log(Math.min(...werte) * .92), mx = Math.log(Math.max(...werte) * 1.05);
+  const x = i => pl + (i + V) / (V + Z) * (B - pl - pr), y = v => po + (mx - Math.log(v)) / (mx - mn) * (H - po - pu);
+  const linie = arr => arr.map((v, j) => v > 0 ? `${x(j - V).toFixed(1)} ${y(v).toFixed(1)}` : null).filter(Boolean).join(" L");
+  const verg = linie(c.c.slice(ab)), l200 = c.sma200w ? linie(c.sma200w.slice(ab)) : "";
+  const band = (u, o) => { const a = [], b = []; for (let w = 0; w <= Z; w += 4) { a.push(`${x(w).toFixed(1)} ${y(kurs * q[o][w]).toFixed(1)}`); b.unshift(`${x(w).toFixed(1)} ${y(kurs * q[u][w]).toFixed(1)}`); } return `M${a.join(" L")} L${b.join(" L")} Z`; };
+  const med = []; if (q) for (let w = 0; w <= Z; w += 4) med.push(`${x(w).toFixed(1)} ${y(kurs * q.q50[w]).toFixed(1)}`);
+  const z = ZA.z, zv = z <= 0 ? c.c[n - 1 + z] : q ? kurs * q.q50[z] : kurs, zx = x(z), jahr = j => new Date((c.t[n - 1] + j * 31557600) * 1000).getUTCFullYear(), txt = [];
+  for (let j = -Math.floor(V / 52 / 5) * 5; j <= 5; j += 5) txt.push(`<text x="${x(j * 52).toFixed(1)}" y="${H - 6}" font-size="10.5" fill="var(--muted)" text-anchor="${j * 52 <= -V + 20 ? "start" : j === 5 ? "end" : "middle"}">${j === 0 ? "Heute" : jahr(j)}</text>`);
+  return `<svg viewBox="0 0 ${B} ${H}" role="img" aria-label="Kurs der letzten ${Math.round(V / 52)} Jahre und mögliche Wege der nächsten 5 Jahre">
+    <defs><linearGradient id="za-vl" x1="0" x2="1"><stop offset="0" stop-color="var(--akzent)" stop-opacity=".55"/><stop offset="1" stop-color="var(--text)"/></linearGradient>
+    <linearGradient id="za-fl" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--akzent)" stop-opacity=".26"/><stop offset="1" stop-color="var(--akzent)" stop-opacity="0"/></linearGradient>
+    <filter id="za-gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>
+    <rect x="${x(0)}" y="${po - 6}" width="${x(Z) - x(0)}" height="${H - po - pu + 10}" fill="var(--kegel)" opacity=".06"/>
+    <path d="M${verg} L${x(0)} ${H - pu} L${x(-V)} ${H - pu} Z" fill="url(#za-fl)"/>
+    ${q ? `<path d="${band("q5", "q95")}" fill="var(--kegel)" opacity=".2"/><path d="${band("q25", "q75")}" fill="var(--kegel)" opacity=".36"/><path d="M${med.join(" L")}" fill="none" stroke="var(--kegel)" stroke-width="1.6" stroke-dasharray="4 4"/>` : ""}
+    ${l200 ? `<path d="M${l200}" fill="none" stroke="var(--gelb)" stroke-width="1.3" opacity=".9"/>` : ""}
+    <path d="M${verg}" fill="none" stroke="url(#za-vl)" stroke-width="2.2" stroke-linejoin="round"/>
+    <path d="M${x(0)} ${po - 6}V${H - pu + 4}" stroke="var(--text)" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+    <path d="M${zx.toFixed(1)} ${po - 6}V${H - pu + 4}" stroke="var(--text)" stroke-width="1.4"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="16" fill="var(--akzent)" opacity=".5" filter="url(#za-gl)"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="6.5" fill="var(--panel)" stroke="var(--akzent)" stroke-width="3"/>
+    ${txt.join("")}</svg>`;
+}
+function zaInfo(){
+  const c = ZA.c, n = c.c.length, kurs = c.c[n - 1], z = ZA.z, w = ZA.w, nk = kurs >= 100 ? 0 : kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kl = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+  if (z < 0) { const i = n - 1 + z, s = c.score?.[i], p = c.c[i], nach = wo => i + wo < n && c.c[i + wo] > 0 ? (c.c[i + wo] / p - 1) * 100 : null, r1 = nach(52), r3 = nach(156), bis = (kurs / p - 1) * 100;
+    return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())}</div>
+      <div class="za-gross">${s == null ? "noch keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(s)]}">${zonenWort(s)}</span>`}</div>
+      <p class="za-satz">${s == null ? "Damals gab es noch zu wenig Geschichte für eine Ampel." : `Das hätte das Tool damals gesagt (Ampel <b>${fmt(s,0)}</b>), nur mit dem Wissen von damals.`} Kurs damals: <b>${k(p)}</b>.</p>
+      <div class="kv"><span>Ein Jahr später</span><b class="${kl(r1)}">${r1 == null ? "noch offen" : vz(r1, 0, " %")}</b></div>
+      <div class="kv"><span>Drei Jahre später</span><b class="${kl(r3)}">${r3 == null ? "noch offen" : vz(r3, 0, " %")}</b></div>
+      <div class="kv"><span>Bis heute</span><b class="${kl(bis)}">${vz(bis, 0, " %")}</b></div>`; }
+  if (z === 0) return `<div class="za-auge">Heute · ${datumDe(w.datum)}</div><div class="za-gross">${w.score == null ? "keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(w.score)]}">${zonenWort(w.score)}</span>`}</div>
+      <p class="za-satz">${w.score == null ? "" : `Ampel <b>${fmt(w.score,0)}</b>, `}Kurs <b>${k(kurs)}</b>. Schieb den Regler nach links in die Vergangenheit oder nach rechts in die Zukunft.</p>`;
+  const q = ZA.q; if (!q) return `<div class="za-auge">Mögliche Zukunft</div><p class="za-satz">Die Simulation wird gerechnet …</p>`;
+  const t = c.t[n - 1] + z * 7 * 86400, lo = kurs * q.q10[z], hi = kurs * q.q90[z], d = new Date(t * 1000);
+  return `<div class="za-auge">Mögliche Zukunft · ${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()} (in ${z < 52 ? fmt(z / 4.345, 0) + " Monaten" : fmt(z / 52, z % 52 ? 1 : 0) + (z === 52 ? " Jahr" : " Jahren")})</div>
+    <div class="za-gross">${k(lo)} bis ${k(hi)}</div>
+    <p class="za-satz">In <b>8 von 10</b> simulierten Wegen liegt der Kurs dann in diesem Bereich (${vz((lo / kurs - 1) * 100, 0, " %")} bis ${vz((hi / kurs - 1) * 100, 0, " %")}).</p>
+    <div class="kv"><span>Mittlerer Weg</span><b>${k(kurs * q.q50[z])} (${vz((q.q50[z] - 1) * 100, 0, " %")})</b></div>
+    <div class="kv"><span>Unter dem heutigen Kurs</span><b>${fmt(q.minus[z],0)} von 100 Wegen</b></div>
+    <p class="klein" style="margin:8px 0 0">${fmt(ZA.sim.pfade,0)} Wege aus den echten Wochen der letzten ${fmt(ZA.sim.jahre,0)} Jahre. ${ZA.drift !== 1 ? `<b style="color:var(--teuer)">Vorsichtig gerechnet:</b> Dieser Wert stieg zuletzt im Schnitt um ${fmt(ZA.rendite,0)} % pro Jahr. So etwas lässt sich nicht einfach fortschreiben; gerechnet ist deshalb ${driftSatz(ZA.drift)}.` : "Die Wege übernehmen die Durchschnittsrendite dieser Jahre – war sie ungewöhnlich hoch, ist der mittlere Weg entsprechend optimistisch."}</p>`;
+}
+function zeitachseInit(id, w, c){
+  const r = $("#za-regler"); if (!r) { ZA = null; return; }
+  const n = c.c.length; let erste = 0; while (erste < n && !(c.c[erste] > 0)) erste++;
+  const rend = reiheRendite(c.c);
+  ZA = {id, w, c, verg:Math.min(520, n - 1 - erste), zuk:260, z:0, sim:null, q:null, rendite:rend, drift:simDrift(rend)};
+  r.min = -ZA.verg; r.max = ZA.zuk; r.value = 0; r.style.setProperty("--heute", (ZA.verg / (ZA.verg + ZA.zuk) * 100).toFixed(1) + "%");
+  const neu = () => { $("#za-bild").innerHTML = zaBild(); $("#za-info").innerHTML = zaInfo(); };
+  r.oninput = () => { ZA.z = +r.value; neu(); };
+  neu();
+  setTimeout(() => { if (!ZA || ZA.id !== id || AKTIV !== id || !$("#za-regler")) return; ZA.sim = simWege(c.c, ZA.zuk, 4000, id, 13, 20, 13, ZA.drift); if (!ZA.sim) return; ZA.q = simQuantile(ZA.sim); neu(); }, 80);
+}
+
+// ------------------------------------------------------------ Zukunfts-Rechner: Was wird aus meinem Geld? Freie Eingabe, in Euro gerechnet
+let ZR = null, ZR_T = 0;
+const ZR_STD = {einmal:5000, rate:0, jahre:10};
+function rechnerKarte(w, c){
+  if (!c?.c || c.c.filter(x => x > 0).length < 110) return "";
+  const e = {...ZR_STD, ...lade("zrechner", {})};
+  const feld = (id, titel, wert, einheit, attr) => `<label class="zr-f"><span>${titel}</span><span class="zr-feld"><input type="number" id="${id}" inputmode="numeric" value="${wert}" ${attr}><i>${einheit}</i></span></label>`;
+  return `<section class="karte breit2" id="rechner-karte">${kk("ausblick", "Was wird aus meinem Geld?", "Trag ein, was du anlegen willst. Das Tool spielt tausende mögliche Verläufe durch – aus den echten Wochen der Vergangenheit.", "Simulation", "zrechner")}
+    <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}${feld("zr-jahre", "Wie lange?", e.jahre, "Jahre", 'min="1" max="30" step="1"')}</div>
+    <input type="range" class="regler" id="zr-regler" min="1" max="30" step="1" value="${e.jahre}" style="--heute:0%" aria-label="Anlagedauer in Jahren">
+    <div class="zr-annahme"><span class="klein" data-e="zr_annahme" tabindex="0">Annahme für die Rendite</span><div class="segment" id="zr-drift" role="group" aria-label="Annahme für die Rendite"><button type="button" data-d="1" aria-pressed="true">wie die letzten 20 Jahre</button><button type="button" data-d="0.5" aria-pressed="false">vorsichtig (halb so viel)</button><button type="button" data-d="0" aria-pressed="false">ohne (nur Schwankung)</button></div></div>
+    <div id="zr-aus"><div class="lade" style="height:190px;margin-top:10px"></div></div></section>`;
+}
+function zrRechnen(){
+  const el = $("#zr-aus"); if (!el || !ZR) return;
+  const wo = ZR.jahre * 52; if (!ZR.sim || ZR.sim.wochen !== wo || ZR.sim.drift !== ZR.drift) { ZR.sim = simWege(ZR.reihe, wo, 3000, ZR.id + "|eur", 13, 20, 13, ZR.drift); if (ZR.sim) ZR.sim.drift = ZR.drift; }
+  const sim = ZR.sim; if (!sim) { el.innerHTML = `<p class="klein">Zu wenig Kursgeschichte für eine Simulation.</p>`; return; }
+  const n = wo + 1, P = sim.pfade, zahl = []; for (let m = 1; m * 52 / 12 < wo; m++) zahl.push(Math.round(m * 52 / 12));
+  const ein = ZR.einmal + ZR.rate * zahl.length, end = new Float64Array(P);
+  if (!(ein > 0)) { el.innerHTML = `<p class="klein" style="margin-top:10px">Trag oben einen Betrag oder eine monatliche Rate ein.</p>`; return; }
+  for (let p = 0; p < P; p++) { const o = p * n, LT = sim.L[o + wo]; let v = ZR.einmal * Math.exp(LT); for (const w of zahl) v += ZR.rate * Math.exp(LT - sim.L[o + w]); end[p] = v; }
+  const a = Array.from(end).sort((x, y) => x - y), g = f => a[Math.min(P - 1, Math.floor(f * P))], p10 = g(.1), p50 = g(.5), p90 = g(.9), minus = Math.round(a.filter(x => x < ein).length / P * 100);
+  const netto = v => v - Math.max(0, (v - ein) * (ZR.tf ? .7 : 1) - 1000) * .26375;
+  // Bild: 300 Wege in Geld, daraus die Bänder; 46 davon einzeln gezeichnet
+  const weg = p => { const o = p * n, out = new Float32Array(n); let anteile = ZR.einmal, naechste = 52 / 12; for (let w = 0; w <= wo; w++) { if (w >= naechste && w < wo) { anteile += ZR.rate / Math.exp(sim.L[o + w]); naechste += 52 / 12; } out[w] = anteile * Math.exp(sim.L[o + w]); } return out; };
+  const W = []; for (let p = 0; p < 300; p++) W.push(weg(p * 10));
+  const schritt = Math.max(1, Math.round(wo / 130)), Q = []; for (let w = 0; w <= wo; w += schritt) { const s = W.map(v => v[w]).sort((x, y) => x - y); Q.push([w, s[30], s[150], s[270]]); }
+  const B = 400, H = 190, po = 12, pu = 20, mx = Math.max(...Q.map(z => z[3])) * 1.1, x = w => 6 + w / wo * (B - 12), y = v => po + (1 - Math.min(v, mx) / mx) * (H - po - pu);
+  const pkt = (i) => Q.map(z => `${x(z[0]).toFixed(1)} ${y(z[i]).toFixed(1)}`), einL = Q.map(z => `${x(z[0]).toFixed(1)} ${y(ZR.einmal + ZR.rate * Math.floor(z[0] / (52 / 12))).toFixed(1)}`);
+  const eu = ZR.eur ? " €" : "", jt = ZR.jahre === 1 ? "einem Jahr" : `${ZR.jahre} Jahren`;
+  const warn = ZR.rendite != null && ZR.rendite > SIM_GRENZE ? `<div class="fazit warn" style="margin:12px 0 0"><b>Achtung, Rechenbeispiel:</b> Dieser Wert stieg in den letzten ${fmt(sim.jahre,0)} Jahren im Schnitt um <b>${fmt(ZR.rendite,0)} % pro Jahr</b>. Die Simulation kennt nur diese Vergangenheit. Solche Zuwächse sind über viele Jahre nicht zu erwarten. Gerechnet ist gerade <b>${driftSatz(ZR.drift)}</b> – die Beträge unten zeigen vor allem, wie breit die Spanne ist.</div>` : "";
+  el.innerHTML = warn + `<svg class="zr-bild" viewBox="0 0 ${B} ${H}" role="img" aria-label="Mögliche Verläufe des Betrags über ${jt}">
+      <path d="M${pkt(3).join(" L")} L${pkt(1).reverse().join(" L")} Z" fill="var(--kegel)" opacity=".2"/>
+      ${W.filter((_, i) => i % 7 === 0).map((v, p) => { let d = ""; for (let w = 0; w <= wo; w += schritt) d += `${w ? " L" : "M"}${x(w).toFixed(1)} ${y(v[w]).toFixed(1)}`; return `<path d="${d}" fill="none" stroke="${p % 3 ? "var(--kegel)" : "var(--guenstig)"}" stroke-width=".8" opacity=".4"/>`; }).join("")}
+      <path d="M${pkt(2).join(" L")}" fill="none" stroke="var(--text)" stroke-width="2.2"/><path d="M${einL.join(" L")}" fill="none" stroke="var(--gelb)" stroke-width="1.3" stroke-dasharray="4 4"/>
+      <text x="6" y="${H - 5}" font-size="10.5" fill="var(--muted)">Heute</text><text x="${B - 6}" y="${H - 5}" font-size="10.5" fill="var(--muted)" text-anchor="end">in ${jt}</text></svg>
+    <div class="klein" style="margin-top:4px"><i class="leg" style="background:var(--text)"></i>mittlerer Weg &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>8 von 10 Wegen &nbsp; <i class="leg" style="background:var(--gelb)"></i>eingezahlt</div>
+    <div class="za-gross" style="margin-top:14px">${fmt(p10,0)}${eu} <small>bis</small> ${fmt(p90,0)}${eu}</div>
+    <p class="za-satz">Das wurde in <b>8 von 10</b> simulierten Wegen nach ${jt} aus <b>${fmt(ein,0)}${eu}</b> eingezahltem Geld.</p>
+    <div class="zr-kacheln"><div class="kpi"><div class="k-l">Mittlerer Fall</div><div class="k-w">${fmt(p50,0)}${eu}</div><div class="k-u">${vz((p50 / ein - 1) * 100, 0, " %")} zum Eingezahlten</div></div>
+      <div class="kpi" data-e="zr_steuer" tabindex="0"><div class="k-l">Mittlerer Fall nach Steuern</div><div class="k-w">${fmt(netto(p50),0)}${eu}</div><div class="k-u">bei Verkauf am Ende, vereinfacht</div></div>
+      <div class="kpi"><div class="k-l">Am Ende im Minus</div><div class="k-w">${minus} von 100</div><div class="k-u">weniger als eingezahlt</div></div></div>
+    ${punkte100(minus, "var(--teuer)")}
+    <p class="klein">${fmt(P,0)} Wege aus den echten Wochen der letzten ${fmt(sim.jahre,0)} Jahre (zusammenhängende 13-Wochen-Stücke, Schwankung startet beim heutigen Niveau). ${ZR.umgerechnet ? "<b>In Euro gerechnet:</b> Der Wechselkurs Dollar/Euro jeder Woche ist eingerechnet. " : ZR.eur ? "In Euro. " : "In der Währung des Werts. "}Vor Kosten; gerechnet ${driftSatz(ZR.drift)}${ZR.drift === 1 ? " – war sie ungewöhnlich hoch, ist das Ergebnis optimistisch (Schalter „vorsichtig“)" : ""}.${ZR.jahre > 20 ? " <b>Achtung:</b> Der Zeitraum ist länger als die Geschichte, aus der die Wochen stammen – sehr unsicher." : ""} Eine Spanne, keine Vorhersage und keine Anlageberatung.</p>`;
+}
+async function rechnerInit(id, w, c){
+  if (!$("#zr-aus")) { ZR = null; return; }
+  const e = {...ZR_STD, ...lade("zrechner", {})}, wg = waehrungVon(w);
+  ZR = {id, ...e, drift:1, rendite:null, reihe:c.c, eur:wg === "EUR", umgerechnet:false, tf:false, sim:null};
+  const lesen = () => { const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+$(sel).value || 0)));
+    ZR.einmal = z("#zr-einmal", 0, 1e9); ZR.rate = z("#zr-rate", 0, 1e7); ZR.jahre = z("#zr-jahre", 1, 30); sichere("zrechner", {einmal:ZR.einmal, rate:ZR.rate, jahre:ZR.jahre}); };
+  const spaeter = () => { clearTimeout(ZR_T); ZR_T = setTimeout(() => { if (ZR && ZR.id === id) zrRechnen(); }, 220); };
+  ["#zr-einmal", "#zr-rate"].forEach(s => $(s).oninput = () => { lesen(); spaeter(); });
+  $("#zr-jahre").oninput = () => { lesen(); $("#zr-regler").value = ZR.jahre; spaeter(); };
+  $("#zr-regler").oninput = ev => { $("#zr-jahre").value = ev.target.value; lesen(); spaeter(); };
+  $$("#zr-drift button").forEach(b => b.onclick = () => { ZR.drift = +b.dataset.d; $$("#zr-drift button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); lesen(); zrRechnen(); });
+  if (wg === "USD") { try { await fxLaden(); } catch(_) {} if (!ZR || ZR.id !== id || AKTIV !== id) return; if (FX) { const eu = inEuro(c).c; if (eu.filter(x => x > 0).length >= 110) { ZR.reihe = eu; ZR.eur = true; ZR.umgerechnet = true; } } }
+  ZR.rendite = reiheRendite(ZR.reihe); ZR.drift = simDrift(ZR.rendite);   // zu rosige Vergangenheit: von sich aus vorsichtig
+  $$("#zr-drift button").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.d === ZR.drift)));
+  setTimeout(() => { if (ZR && ZR.id === id && AKTIV === id) zrRechnen(); }, 140);
+  apiStrategie(id).then(s => { if (ZR && ZR.id === id && s && !s.fehler && !!s.teilfrei !== ZR.tf) { ZR.tf = !!s.teilfrei; zrRechnen(); } }).catch(() => {});
+}
+
+// ------------------------------------------------------------ Deine Position (aus „Mein Depot“, bleibt im Browser) und Rendite in Euro
+function positionKarte(w){
+  if (!DEPOT) depotLaden();
+  const P = (DEPOT?.positionen || []).filter(p => p.id === w.id && p.wert > 0); if (!P.length) return "";
+  const wert = P.reduce((a, p) => a + p.wert, 0), alles = DEPOT.positionen.reduce((a, p) => a + (p.wert > 0 ? p.wert : 0), 0), ein = lade("einstand", {})[w.id];
+  return `<section class="karte" id="position-karte" style="padding:18px 20px">${kk("ich", `Deine Position in ${esc(kurzname(w))}`, "Aus „Mein Depot“. Die Zahlen bleiben in diesem Browser, nichts wird hochgeladen.", "nur für dich", "position")}
+    <div class="pos-zeile"><div class="kpi"><div class="k-l">Wert laut Depot</div><div class="k-w">${geld(wert)} €</div><div class="k-u">${alles > 0 ? fmt(wert / alles * 100, 0) + " % deines Depots" : ""}</div></div>
+      <label class="zr-f"><span>Dafür bezahlt (Einstand)</span><span class="zr-feld"><input type="number" id="pos-einstand" inputmode="numeric" min="0" step="50" value="${ein ?? ""}" placeholder="eintragen"><i>€</i></span></label></div>
+    <div id="pos-aus" data-wert="${wert}"></div></section>`;
+}
+function positionInit(id, w){
+  const el = $("#pos-aus"); if (!el) return; const wert = +el.dataset.wert; let tf = false;
+  const neu = () => { const ein = +$("#pos-einstand").value; const alle = lade("einstand", {}); if (ein > 0) alle[w.id] = ein; else delete alle[w.id]; sichere("einstand", alle);
+    const nk = w.nk, nkT = nk?.preis != null ? (nk.jetzt ? `Nachkaufen lohnte sich früher unter ${fmt(nk.preis, w.kurs >= 100 ? 0 : 2)} – das ist heute erfüllt.` : `Nachkaufen lohnte sich früher erst unter ${fmt(nk.preis, w.kurs >= 100 ? 0 : 2)} (noch ${fmt(-nk.abstand,0)} % tiefer).`) : nk?.art === "egal" ? "Warten auf tiefe Kurse brachte bei diesem Titel früher nichts." : "";
+    if (!(ein > 0)) { el.innerHTML = `<p class="klein" style="margin:10px 0 0">Trag ein, was du insgesamt bezahlt hast – dann siehst du Gewinn und Steuer bei einem Verkauf. ${nkT}</p>`; return; }
+    const gew = wert - ein, steuer = Math.max(0, gew * (tf ? .7 : 1) - 1000) * .26375;
+    el.innerHTML = `<div class="zr-kacheln"><div class="kpi"><div class="k-l">Gewinn bisher</div><div class="k-w ${klasse(gew)}">${gew > 0 ? "+" : ""}${geld(gew)} €</div><div class="k-u">${vz(gew / ein * 100, 0, " %")}</div></div>
+      <div class="kpi" data-e="zr_steuer" tabindex="0"><div class="k-l">Steuer bei Verkauf heute</div><div class="k-w">${geld(steuer)} €</div><div class="k-u">vereinfacht${tf ? ", mit Teilfreistellung" : ""}</div></div>
+      <div class="kpi"><div class="k-l">Bliebe übrig</div><div class="k-w">${geld(wert - steuer)} €</div><div class="k-u">nach Steuer</div></div></div>
+      ${nkT ? `<p class="klein" style="margin:10px 0 0">${nkT}</p>` : ""}`; };
+  $("#pos-einstand").oninput = neu; neu();
+  apiStrategie(id).then(s => { if (AKTIV === id && $("#pos-aus") && s && !s.fehler && s.teilfrei) { tf = true; neu(); } }).catch(() => {});
+}
+async function renditeEuroInit(id, w){   // dieselbe Ø Jahresrendite in Euro: Dollar-Zuwachs mal Veränderung des Wechselkurses über denselben Zeitraum
+  const el = $("#rendite-euro"); if (!el || waehrungVon(w) !== "USD" || w.cagr20 == null || !w.cagr_jahre || !w.datum) return;
+  try { await fxLaden(); } catch(_) { return; }
+  if (AKTIV !== id || !FX || !$("#rendite-euro")) return;
+  const t1 = Date.parse(w.datum) / 1000, k0 = dollarJeEuro(t1 - w.cagr_jahre * 31557600), k1 = dollarJeEuro(t1); if (!k0 || !k1) return;
+  const eur = ((1 + w.cagr20 / 100) * Math.pow(k0 / k1, 1 / w.cagr_jahre) - 1) * 100;
+  $("#rendite-euro").innerHTML = `<div class="kv"><span data-e="rendite_euro">In Euro gerechnet</span><b class="${klasse(eur)}">${fmt(eur,1," %")}</b></div>`;
+}
+
+// ------------------------------------------------------------ Vergleich: zwei Titel nebeneinander
+let VERGLEICH_WAHL = false;
+function vergleichWaehlen(){ sucheOeffnen(); VERGLEICH_WAHL = true; $("#suche-eingabe").placeholder = "Zweiten Titel zum Vergleichen wählen …"; }
+async function vergleichZeigen(id2){
+  const el = $("#vergleich"), id = AKTIV; if (!el || !INFO || id2 === id) return;
+  el.innerHTML = `<div class="abstand"></div><section class="karte" style="padding:18px 20px"><div class="lade" style="height:120px"></div></section>`;
+  const d = await apiWert(id2); if (AKTIV !== id || !$("#vergleich")) return;
+  if (!d) { el.innerHTML = ""; return; }
+  const A = {w:INFO, c:CDATA}, Bw = {w:d.info, c:d.chart}, S = [A, Bw], r = S.map(x => risikoProfil(x.c));
+  const nkz = w => w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4;
+  const zeile = (titel, f) => `<tr><td style="text-align:left">${titel}</td>${S.map((x, i) => `<td>${f(x.w, x.c, r[i]) ?? "–"}</td>`).join("")}</tr>`;
+  // gemeinsamer Verlauf: beide auf 100 am gemeinsamen Start (höchstens 10 Jahre), nach Kalenderwoche zugeordnet
+  const wk = t => Math.floor(t / 604800), m2 = new Map(); if (Bw.c?.c) Bw.c.t.forEach((t, i) => { if (Bw.c.c[i] > 0) m2.set(wk(t), Bw.c.c[i]); });
+  const X = []; if (A.c?.c && m2.size) for (let i = Math.max(0, A.c.c.length - 521); i < A.c.c.length; i++) { const b = m2.get(wk(A.c.t[i])); if (A.c.c[i] > 0 && b) X.push([A.c.t[i], A.c.c[i], b]); }
+  let bild = "";
+  if (X.length >= 52) { const a0 = X[0][1], b0 = X[0][2], La = X.map(z => z[1] / a0 * 100), Lb = X.map(z => z[2] / b0 * 100), mn = Math.log(Math.min(...La, ...Lb) * .95), mx = Math.log(Math.max(...La, ...Lb) * 1.05), B = 400, H = 150;
+    const pf = L => L.map((v, i) => `${(6 + i / (L.length - 1) * (B - 12)).toFixed(1)} ${(10 + (mx - Math.log(v)) / (mx - mn) * (H - 30)).toFixed(1)}`).join(" L");
+    bild = `<svg class="zr-bild" viewBox="0 0 ${B} ${H}" role="img" aria-label="Kursverlauf beider Titel, beide bei 100 gestartet"><path d="M${pf(Lb)}" fill="none" stroke="var(--kegel)" stroke-width="2"/><path d="M${pf(La)}" fill="none" stroke="var(--guenstig)" stroke-width="2"/>
+      <text x="6" y="${H - 5}" font-size="10.5" fill="var(--muted)">${new Date(X[0][0] * 1000).getUTCFullYear()}</text><text x="${B - 6}" y="${H - 5}" font-size="10.5" fill="var(--muted)" text-anchor="end">heute</text></svg>
+      <div class="klein"><i class="leg" style="background:var(--guenstig)"></i>${esc(kurzname(A.w))}: aus 100 wurden ${fmt(La[La.length - 1],0)} &nbsp; <i class="leg" style="background:var(--kegel)"></i>${esc(kurzname(Bw.w))}: aus 100 wurden ${fmt(Lb[Lb.length - 1],0)} · je in eigener Währung</div>`; }
+  el.innerHTML = `<div class="abstand"></div><section class="karte" id="vergleich-karte" style="padding:18px 20px">${kk("zahlen", `${esc(kurzname(A.w))} gegen ${esc(kurzname(Bw.w))}`, "Beide Titel nebeneinander – jeweils gemessen an der eigenen Geschichte.", `<button type="button" class="linkknopf" id="vgl-zu">Vergleich schließen</button>`, "vergleich")}
+    <div class="tab-scroll"><table class="wtab vgl-tab" style="margin:0;width:100%"><thead><tr><th></th><th>${esc(kurzname(A.w))}</th><th><button type="button" class="linkknopf" id="vgl-oeffnen">${esc(kurzname(Bw.w))} →</button></th></tr></thead><tbody>
+      ${zeile("Ampel", w => w.score == null ? "keine" : `${pille(w.score)} ${zonenWort(w.score)}`)}
+      ${zeile("Kurs zur 200-Wochen-Linie", w => w.zu200w == null ? null : vz(w.zu200w, 0, " %"))}
+      ${zeile("Günstig wäre es ab", w => w.kz?.["60"] == null || w.score == null ? null : w.score >= 60 ? "schon erreicht" : `${fmt(w.kz["60"], nkz(w))} (${vz((w.kz["60"] / w.kurs - 1) * 100, 0, " %")})`)}
+      ${zeile("Ø Jahresrendite", w => w.cagr20 == null ? null : `${fmt(w.cagr20,1," %")} <span class="klein">${fmt(w.cagr_jahre,0)} J.</span>`)}
+      ${zeile("Größter Rückgang", (w, c, x) => x ? fmt(x.mdd,0," %") : null)}
+      ${zeile("Schwankung pro Jahr", (w, c, x) => x ? fmt(x.vola,0," %") : null)}
+      ${zeile("Trend", (w, c) => c?.mp?.phase == null ? null : `<span style="color:${MP_FARBE[c.mp.phase]}">${MP_PFEIL[c.mp.phase]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][c.mp.phase]}`)}
+    </tbody></table></div>${bild}
+    <p class="klein" style="margin:10px 0 0">Beschreibung, keine Empfehlung für den einen oder anderen Titel.</p></section>`;
+  $("#vgl-zu").onclick = () => { el.innerHTML = ""; };
+  $("#vgl-oeffnen").onclick = () => zeige(id2);
+  $("#vergleich-karte").scrollIntoView({behavior:"smooth", block:"start"});
+}
 function grundRest(w){   // Begründungs-Marken, die nicht schon in der Kennzahlen-Leiste stehen (z. B. Pi Cycle, MVRV)
   const g = umlaut(w.grund || "").split(" · ").filter(x => x && !/200-Wochen-Linie|Allzeithoch|Hoch seit Börsengang/.test(x));
   return g.length ? `<div class="grund-chips">${g.map(x => `<span>${grundMitErklaerung(x)}</span>`).join("")}</div>` : "";
@@ -1925,6 +2282,7 @@ function renditePanel(w, c){   // Ø Jahresrendite direkt neben der Ampel (Wunsc
     <div class="klein">${w.cagr20_div ? "mit Dividenden" : "ohne Dividenden"}, vor Steuern und Kosten</div>
     ${verlaufKurve(w, c)}
     ${aus ? `<div class="wk-aus" data-e="cagr_aus" tabindex="0">Aus 10.000 wurden so in ${fmt(j,0)} Jahren rund <b>${geld(glatt(aus))}</b>.</div>` : ""}
+    <div id="rendite-euro"></div>
     <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
     <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
     <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></div>`;
@@ -1953,14 +2311,10 @@ function abschnittNavSpur(){
   if (h.scrollTop > 0 && h.scrollTop + h.clientHeight >= h.scrollHeight - 4) aktiv = nav.lastElementChild;   // ganz unten: letzter Abschnitt
   for (const b of nav.children) { const an = String(b === aktiv); if (b.getAttribute("aria-current") !== an) b.setAttribute("aria-current", an); }
 }
-function tiefeInit(){   // räumlicher Effekt: die Ampel neigt sich leicht zur Maus (nur mit Maus, nicht bei „weniger Bewegung“)
-  const g = $("#wert-kopf .gauge"); if (!g || !matchMedia("(hover:hover)").matches || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
-  g.onpointermove = ev => { const r = g.getBoundingClientRect(); g.style.setProperty("--ky", (((ev.clientX - r.left) / r.width - .5) * 16).toFixed(1) + "deg"); g.style.setProperty("--kx", ((.5 - (ev.clientY - r.top) / r.height) * 16).toFixed(1) + "deg"); };
-  g.onpointerleave = () => { g.style.setProperty("--kx", "0deg"); g.style.setProperty("--ky", "0deg"); };
-}
 function abschnittNavInit(){
   const nav = $("#abschnitt-nav"); if (!nav) return;
-  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["chart-karte","Chart"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Ausblick und Risiko"],["vertiefung","Details"]].filter(([id]) => document.getElementById(id));
+  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["chart-karte","Chart"],["s-zeit","Zeitachse"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
+    .filter(([id]) => { const e = document.getElementById(id); return e && e.offsetParent !== null; });   // nur, was in der gewählten Ansicht (Einfach/Profi) sichtbar ist
   nav.innerHTML = Z.map(([id, t], i) => `<button type="button" data-ziel="${id}" aria-current="${i === 0}">${t}</button>`).join("");
   nav.onclick = ev => { const b = ev.target.closest("button[data-ziel]"); if (!b) return;
     if (b.dataset.ziel === "wert-kopf") $("#haupt").scrollTo({top:0, behavior:"smooth"}); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
@@ -2023,29 +2377,6 @@ async function risikoVergleich(id, c){   // Schwankung, Gleichlauf und Beta gege
   el.innerHTML = `<div class="kv"><span data-e="r_markt">Schwankung gegenüber dem S&amp;P 500</span><b>${fmt(fach,1)}-fach</b></div>
     <div class="kv"><span data-e="r_markt">Gleichlauf mit dem S&amp;P 500</span><b>${fmt(kor,2)} · ${wort}</b></div>
     <div class="kv"><span data-e="r_markt">Bewegung je 1 % im S&amp;P 500</span><b>${fmt(beta,2)} %</b></div>`;
-}
-function gaugeSvg(s){   // Halbkreis als räumliches Instrument: Bogen mit Tiefe und Glanz, Teilstriche, Kugel-Zeiger, der beim Laden einschwenkt
-  const cx = 115, cy = 108, r = 90, w = 15, tf = 6, F5 = AMPEL_FARBEN;
-  const pt = (v, rr) => { const a = Math.PI * (1 - v / 100); return [cx + rr * Math.cos(a), cy - rr * Math.sin(a)]; };
-  const bogen = rr => `M${cx - rr} ${cy} A${rr} ${rr} 0 0 1 ${cx + rr} ${cy}`, bahn = bogen(r), an = s != null;
-  const strich = (v, a, b, farbe, br) => { const [x1, y1] = pt(v, a), [x2, y2] = pt(v, b); return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${farbe}" stroke-width="${br}" stroke-linecap="round"/>`; };
-  const teil = Array.from({length:21}, (_, i) => strich(i * 5, r - w / 2 - (i % 2 ? 6 : 9), r - w / 2 - 4, "var(--muted)", i % 2 ? .8 : 1.3)).join("");
-  const grenzen = [15, 40, 60, 80].map(v => strich(v, r - w / 2 - .5, r + w / 2 + .5, "var(--panel)", 2.2)).join("");
-  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${an ? fmt(s,0) : "keine"} von 100: ${zonenWort(s)}">
-    <defs><linearGradient id="g-verlauf" gradientUnits="userSpaceOnUse" x1="${cx - r}" y1="0" x2="${cx + r}" y2="0"><stop offset="0" stop-color="${F5[0]}"/><stop offset=".28" stop-color="${F5[1]}"/><stop offset=".5" stop-color="${F5[2]}"/><stop offset=".72" stop-color="${F5[3]}"/><stop offset="1" stop-color="${F5[4]}"/></linearGradient>
-    <radialGradient id="g-glanz" cx=".34" cy=".28" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <radialGradient id="g-dunkel" cx=".42" cy=".38" r=".62"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
-    <filter id="g-schein" x="-20%" y="-40%" width="140%" height="190%"><feGaussianBlur stdDeviation="8"/></filter></defs>
-    ${an ? `<path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w + 10}" stroke-linecap="round" fill="none" opacity=".34" filter="url(#g-schein)"/>` : ""}
-    <g opacity="${an ? 1 : .3}"><g transform="translate(0 ${tf})"><path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none"/><path d="${bahn}" stroke="#000" stroke-width="${w}" stroke-linecap="round" fill="none" opacity=".52"/></g>
-    <path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none"/>
-    <path d="${bogen(r - w / 2 + 2.2)}" stroke="#000" stroke-width="3" fill="none" opacity=".16"/>${grenzen}
-    <path d="${bogen(r + w / 2 - 3)}" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".42"/></g>
-    <g opacity=".55">${teil}</g>`;
-  if (an) { const zf = F5[stufe(s)], mx = cx - r;
-    svg += `<g class="g-zeiger" style="--w:${(Math.max(0, Math.min(100, s)) * 1.8).toFixed(1)}deg"><circle cx="${mx}" cy="${cy}" r="17" fill="${zf}" opacity=".3"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="${zf}" stroke="rgba(255,255,255,.7)" stroke-width="1"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="url(#g-dunkel)"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="url(#g-glanz)"/></g>`; }
-  svg += `<text x="${cx - r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">teuer</text><text x="${cx + r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">günstig</text></svg>`;
-  return svg;
 }
 function bausteinText(b){   // ein Baustein der Ampel in Worten (Wert + Seltenheit)
   const x = b.wert;
@@ -2321,27 +2652,28 @@ async function zeige(id, opt={}){
     <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
     <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AMPEL_FARBEN[stufe(w.score)]}"` : ""}>
       <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
-        <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
+        <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
+        <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
       <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}</div>
       ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
       <div class="wk-haupt">
+        <div class="wk-urteil">${urteilBlock(w, c)}</div>
+        ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
         <div class="wk-text">
-          <div class="wk-label">${faktenListe(w, c) ? "Das Wichtigste auf einen Blick" : "Die Lage in wenigen Sätzen"}</div>
           ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
           ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
           ${grundRest(w)}
         </div>
         ${renditePanel(w, c)}
-        <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
-          <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
-          ${c?.score && ampelRang(c.score, c.score.length - 1) ? `<div class="g-rang" data-e="ampel_rang">${rangText(ampelRang(c.score, c.score.length - 1))}</div>` : ""}
-          <div class="g-vor">${de == null ? "&nbsp;" : `vor 4 Wochen ${fmt(w.score_vor4w,0)} (${w4Html(de)})`}</div></div>
       </div>
+      <div class="fragen" id="fragen"></div>
       ${kpiLeiste(w, c)}
     </section>
+    <div id="vergleich"></div>
     ${nachkaufKarte(w) ? `<div class="abstand"></div>${nachkaufKarte(w)}` : ""}
-    <div class="abstand"></div>
-    <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
+    ${positionKarte(w) ? `<div class="abstand"></div>${positionKarte(w)}` : ""}
+    <div class="abstand nur-profi"></div>
+    <section class="karte chart-karte nur-profi ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
         <div class="segment" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
@@ -2366,23 +2698,24 @@ async function zeige(id, opt={}){
     ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
     ${(() => {
-      let nr = 0;
-      const teil = (sid, titel, unter, karten) => { const k = karten.filter(Boolean); return k.length ? sekt(sid, ++nr, titel, unter) + `<div class="raster">${k.join("")}</div>` : ""; };
-      return teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
+      const teil = (sid, titel, unter, karten, kl = "") => { const k = karten.filter(Boolean); return k.length ? `<div class="sekt${kl}" id="${sid}"><span class="nr"></span><h2>${titel}</h2><p>${unter}</p></div><div class="raster${kl}">${k.join("")}</div>` : ""; };
+      const P = " nur-profi";
+      return teil("s-zeit", "Zeit", "Was war – und was könnte kommen?", [zeitachseKarte(w, c), rechnerKarte(w, c)])
+        + teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
           jungKarte(w), kaufzonenKarte(w),
           `<section class="karte" id="signale">${signalKarte(w, c)}</section>`,
-          geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)])
+          geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)], P)
         + teil("s-rueck", "Rückblick", "Was passierte früher in ähnlicher Lage?", [
           kvKarte(w),
           `<section class="karte breit2" id="check">${kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", "Was hätte bei diesem Wert mehr gebracht? Nachgerechnet mit 500 im Monat.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>`,
-          phasenKarte(c), schwellenKarte(c)])
+          phasenKarte(c), schwellenKarte(c)], P)
         + teil("s-risiko", "Ausblick und Risiko", "Wie könnte es weitergehen – und was kann schiefgehen?", [
-          `<section class="karte" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
-          `<section class="karte" id="wahr">${wahrKarte(w)}</section>`,
-          risikoKarte(w, c), marktphaseKarte(w, c)]);
+          `<section class="karte nur-profi" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
+          `<section class="karte nur-profi" id="wahr">${wahrKarte(w)}</section>`,
+          risikoKarte(w, c), marktphaseKarte(w, c).replace('class="karte breit-voll"', 'class="karte breit-voll nur-profi"')]);
     })()}
-    <div class="abstand"></div>
-    <section class="karte vertiefung" id="vertiefung">
+    <div class="abstand nur-profi"></div>
+    <section class="karte vertiefung nur-profi" id="vertiefung">
       <div class="reiter" role="tablist">
         <button data-r="kennzahlen" data-e="r_kennzahlen">Details</button><button data-r="rechner" data-e="r_rechner">Kurs-Rechner</button>
         <button data-r="pruefung" data-e="r_pruefung">Prüfung</button><button data-r="strategie" data-e="r_strategie">Strategie-Vergleich</button>
@@ -2404,8 +2737,10 @@ async function zeige(id, opt={}){
   if (eigen) eigenNeu(); else zeichneOnline(w, c);
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
   reiter(REITER);
-  abschnittNavInit();
-  tiefeInit();
+  $("#haupt").dataset.modus = MODUS;
+  $$("#modus-wahl button").forEach(b => b.onclick = () => modusSetzen(b.dataset.m));
+  zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w);
+  abschnittNavInit(); fragenInit();
   risikoVergleich(id, c);
   lohntSichCheck(id);
   if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
