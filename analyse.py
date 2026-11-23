@@ -228,6 +228,7 @@ NK_SIMS = 39          # Zufallsvergleich: so viele Zufallsverläufe je Titel (h�
 NK_SIM_MAX_BESSER = 1 # „lohnt“ nur, wenn höchstens so viele Zufallsverläufe mindestens denselben Vorteil zeigen (p ≤ 0,05)
 NK_BLOCK = 26         # Zufallsverläufe: echte Wochenrenditen in neu gereihten 26-Wochen-Blöcken
 NK_SPRUNG = 4.5       # Wochensprung über Faktor 4,5 (oder unter 1/4,5) = vermutlich Datenfehler, kein Beleg möglich
+NK_FERTIG: dict = {}  # id -> fertiger Nachkauf aus rangliste.json; export.py füllt das, damit die Zufallsproben nicht ein zweites Mal laufen
 
 
 def _nk_statistik(c: np.ndarray, score: np.ndarray, H: int | None = None):
@@ -693,7 +694,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     nk = None
     try:   # Nachkauf-Preis je Titel mit Beleg aus der eigenen Geschichte
         if not math.isnan(s_jetzt):
-            nk = nachkauf(c, score, kzv, float(tag_c.iloc[-1]), zeile["id"])
+            nk = NK_FERTIG.get(zeile["id"]) or nachkauf(c, score, kzv, float(tag_c.iloc[-1]), zeile["id"])
     except Exception as ex:
         print(f"Nachkauf nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     r2 = trendguete(w["Close"])

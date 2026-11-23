@@ -119,6 +119,7 @@ def main():
             schreiben(SITE / "daten" / name, json.loads((E.WEB_DATEN / name).read_text()))
     rl = json.loads((E.WEB_DATEN / "rangliste.json").read_text())
     ids = {w["id"] for w in rl["werte"]}
+    analyse.NK_FERTIG = {w["id"]: w["nk"] for w in rl["werte"] if w.get("nk")}   # Nachkauf samt Zufallsproben ist in der Auswertung schon gerechnet
     tmp = SITE / "daten" / "werte"
     tmp.mkdir()
     tage_ordner = SITE / "daten" / "tage"
