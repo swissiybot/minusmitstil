@@ -25,7 +25,7 @@ env:
 jobs:
   bauen:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120   # mit der wöchentlichen Prüfung der Vorhersage (rund 15 Minuten) reichten 90 nicht: Lauf 45194809323 brach beim Veröffentlichen ab
     environment:
       name: github-pages
       url: ${{ steps.veroeffentlichen.outputs.page_url }}

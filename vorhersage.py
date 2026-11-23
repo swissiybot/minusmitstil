@@ -348,6 +348,7 @@ def gegenprobe(zeilen: list[dict], D: dict) -> dict:
     wahl = set(np.random.default_rng(7).choice(akt, min(AKTIEN_SIM, len(akt)), replace=False).tolist()) if akt else set()
     for i, z in enumerate(Z):
         z["_sim"] = gruppe_nr(z) != 4 or i in wahl
+    Z = [z for z in Z if z["_sim"]]                                   # nur die Stichprobe (Online-Lauf: Zeitgrenze)
     GP.clear()
     for g in range(len(GRUPPEN)):
         L = [int(n_von[z["id"]]) - 1 for z in Z if z["_sim"] and gruppe_nr(z) == g]
@@ -379,8 +380,6 @@ def gegenprobe(zeilen: list[dict], D: dict) -> dict:
                     d.update({"besser_sim": round(a_echt * 100), "besser_zufall": round(float(a_null.mean()) * 100),
                               "zufall_5": round(float(np.quantile(a_null, .05)) * 100), "zufall_95": round(float(np.quantile(a_null, .95)) * 100),
                               "p_anteil": round(float((1 + np.sum(a_null >= a_echt)) / (1 + len(a_null))), 3)})
-            if key.startswith("warten") and np.isfinite(E_[:, k]).any():
-                d["besser"] = round(float(np.mean(E_[:, k][np.isfinite(E_[:, k])] > 0)) * 100)      # alle langen Werte der Gruppe (echt)
             eintrag[key] = d
         aus[name] = eintrag
     return aus
