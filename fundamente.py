@@ -220,7 +220,9 @@ def _ausland_auszug(d: dict) -> list[dict]:
             je_einheit = {}
             for (einheit, _), _w in jahre.items():
                 je_einheit[einheit] = je_einheit.get(einheit, 0) + 1
-            haupt = max(je_einheit, key=lambda e: (je_einheit[e], e != "USD"))   # Berichtswaehrung = die mit den meisten Jahren
+            neuestes = max(ende for _, ende in jahre)   # Berichtswaehrung = Waehrung des neuesten Geschaeftsjahrs (z. B. Genmab
+            aktuell = [e for (e, ende) in jahre if ende == neuestes]   # 2025 von DKK auf USD); gibt es dort mehrere (Umrechnung
+            haupt = max(aktuell, key=lambda e: (je_einheit[e], e != "USD"))   # zur Info), die mit den meisten Jahren
             for (einheit, ende), (val, _) in jahre.items():
                 if einheit == haupt:
                     zeilen.append({"k": code, "end": ende, "val": val, "waehrung": haupt,
