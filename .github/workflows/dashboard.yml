@@ -116,6 +116,8 @@ jobs:
         run: python bewertung.py
 
       - name: Geschäftszahlen (SEC EDGAR)
+        continue-on-error: true   # SEC-Fehler sollen den Tageslauf nicht stoppen (vorhandene Zahlen bleiben)
+        timeout-minutes: 25        # erster Lauf mit ausländischen Firmen holt bis zu 400 Firmendaten einzeln
         env:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
         run: python fundamente.py
