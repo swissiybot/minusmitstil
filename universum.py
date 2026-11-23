@@ -124,13 +124,47 @@ def etfs_und_bitcoin() -> pd.DataFrame:
     return pd.DataFrame(zeilen)
 
 
+def kennungen_eindeutig(df: pd.DataFrame) -> pd.DataFrame:
+    """Jede Kennung (id) nur einmal. ETFs, Krypto und Rohstoffe stehen vorn und behalten ihre Kennung (Signal-Tagebuch,
+    Alarme, gemerkte Werte und Depots im Browser hängen daran). Ein Börsenkürzel, das mit einer früheren Kennung
+    kollidiert (z. B. NYSE „GOLD“ gegen den Rohstoff Gold, NYSE „WTI“ gegen Rohöl WTI), bekommt die Börse als Zusatz:
+    GOLD_NYSE. Das Kürzel (symbol) bleibt unverändert, damit die Kurse weiter passen."""
+    gesehen, neu = set(), []
+    for wid, g in zip(df["id"].astype(str), df["gruppe"].astype(str)):
+        if wid in gesehen:
+            boerse = "NYSE" if "NYSE" in g else "NASDAQ" if "Nasdaq" in g else g.split()[0].upper().replace("-", "")
+            kand, n = f"{wid}_{boerse}", 2
+            while kand in gesehen:
+                kand, n = f"{wid}_{boerse}{n}", n + 1
+            print(f"Kennung doppelt: {wid} ({g}) heißt jetzt {kand}")
+            wid = kand
+        gesehen.add(wid)
+        neu.append(wid)
+    df = df.copy()
+    df["id"] = neu
+    if not df["id"].is_unique:   # darf nach dem Umbenennen nicht vorkommen
+        raise SystemExit("Werteliste: Kennungen nicht eindeutig – abgebrochen")
+    return df
+
+
 def main():
-    teile = [etfs_und_bitcoin(), nasdaq(), nyse(), welt(), ftse_all_world()]
+    ziel = E.DATEN / "universum.csv"
+    try:
+        teile = [etfs_und_bitcoin(), nasdaq(), nyse(), welt(), ftse_all_world()]
+    except Exception as ex:
+        # Netzfehler: die zwischengespeicherte Liste weiterverwenden, aber auch dort die Kennungen eindeutig machen
+        if not ziel.exists():
+            raise
+        print(f"Werteliste nicht ladbar ({ex.__class__.__name__}: {ex}) – nutze die zwischengespeicherte", file=sys.stderr)
+        alt = pd.read_csv(ziel, dtype=str, keep_default_na=False)
+        kennungen_eindeutig(alt).to_csv(ziel, index=False)
+        return 0
     df = pd.concat(teile, ignore_index=True)
     # Doppelte (z. B. Apple in Nasdaq und FTSE) zusammenfassen, Gruppen merken
     df["gruppe"] = df.groupby("symbol")["gruppe"].transform(lambda g: " + ".join(dict.fromkeys(g)))
     df = df.drop_duplicates("symbol", keep="first")
-    df.to_csv(E.DATEN / "universum.csv", index=False)
+    df = kennungen_eindeutig(df)
+    df.to_csv(ziel, index=False)
     print(df["gruppe"].value_counts().to_string())
     print("Gesamt:", len(df))
 

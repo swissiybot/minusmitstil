@@ -147,7 +147,9 @@ def bauen() -> dict:
             from kurse import lade_lokal
         except Exception:
             lade_lokal = None
-        ids = set(uni["id"].astype(str))
+        # Kürzel -> Kennung, ohne Rohstoffe/Krypto (z. B. Kürzel GOLD = Aktie GOLD_NYSE, nicht der Rohstoff Gold)
+        sym_id = {s: i for s, i, g in zip(uni["symbol"].astype(str), uni["id"].astype(str), uni["gruppe"].astype(str))
+                  if g not in ("Krypto", "Rohstoffe")}
         def jahre(sym):
             if lade_lokal is None:
                 return 0
@@ -157,11 +159,11 @@ def bauen() -> dict:
         for isin_, sym, us in zip(w["isin"], w["symbol"], w["us"]):
             if isin_ in tabelle:
                 continue
-            kand = [s for s in (sym, us) if s and s in ids]
+            kand = [s for s in (sym, us) if s and s in sym_id]
             if not kand:
                 continue
             gut = [s for s in kand if jahre(s) >= E.MIN_JAHRE_RANGLISTE]
-            tabelle[isin_] = (gut or kand)[0]
+            tabelle[isin_] = sym_id[(gut or kand)[0]]
             welt_n += 1
     E.WEB_DATEN.mkdir(parents=True, exist_ok=True)
     ZIEL.write_text(json.dumps(tabelle, separators=(",", ":"), sort_keys=True))

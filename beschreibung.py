@@ -29,6 +29,7 @@ import requests
 import einstellungen as E
 
 ZIEL = E.DATEN / "beschreibung.json"
+VERSION = 3   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen
 WIKIDATA = "https://query.wikidata.org/sparql"
 KOPF = {"User-Agent": "minusmitstil-kaufplan/1.0 (Lernprojekt, GitHub swissiybot/minusmitstil)", "Accept": "application/sparql-results+json"}
 BOERSE = {"Q82059": "Nasdaq", "Q13677": "NYSE"}
@@ -172,6 +173,28 @@ def sparql(q: str) -> list[dict]:
     return []
 
 
+ALLGEMEIN = {"inc", "corp", "corporation", "ltd", "limited", "company", "co", "holdings", "holding", "group", "plc", "the",
+             "and", "sa", "nv", "ag", "se", "llc", "lp", "class", "ordinary", "shares", "common", "stock", "international", "com"}
+
+
+def _woerter(name: str) -> list[str]:
+    return [w for w in re.findall(r"[a-z0-9äöüß]+", str(name).lower()) if w not in ALLGEMEIN]
+
+
+def name_passt(listenname: str, wikidata_name: str | None) -> bool:
+    """Gehört der Wikidata-Eintrag zur Firma in unserer Liste? Kürzel werden neu vergeben (z. B. NYSE „GOLD“: früher Barrick,
+    heute Gold.com) – dann nicht die Beschreibung der alten Firma zeigen. Passt, wenn das erste markante Wort des Wikidata-Namens
+    in unserem Namen steht oder der Wikidata-Name die Anfangsbuchstaben des Listennamens bildet (z. B. TSMC)."""
+    if not wikidata_name or re.fullmatch(r"Q\d+", str(wikidata_name)):   # ohne deutschen Namen liefert Wikidata nur die Nummer
+        return True
+    a, b = _woerter(listenname), _woerter(wikidata_name)
+    erstes = next((w for w in b if len(w) >= 3), None) or next((w for w in b if len(w) >= 2), None)
+    if erstes and erstes in a:   # das erste markante Wort des Wikidata-Namens steht in unserem Namen
+        return True              # („Barrick Gold“ passt nicht zu „Gold.com“, „The Coca-Cola Company“ passt zu „Coca-Cola“)
+    kurz = "".join(w[0] for w in re.findall(r"[a-z0-9]+", str(listenname).lower()) if w not in {"the", "and", "of"})
+    return any(len(w) >= 2 and kurz.startswith(w) for w in re.findall(r"[a-z0-9]+", str(wikidata_name).lower()))
+
+
 def satz(beschr: str | None, land: str | None, fallback: str) -> str:
     if beschr:
         t = beschr.strip()
@@ -256,7 +279,11 @@ def satz_bereinigen(x: str | None) -> str | None:
 
 def main():
     offen_datei = E.DATEN / "beschreibung_offen.txt"   # noch fehlende Wikipedia-Sätze: dann nicht 7 Tage warten
-    if (ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv
+    try:
+        alte_version = json.loads(ZIEL.read_text()).get("_version") if ZIEL.exists() else None
+    except Exception:
+        alte_version = None
+    if (ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv and alte_version == VERSION
             and not (offen_datei.exists() and offen_datei.read_text().strip() not in ("", "0"))):
         print("Beschreibungen: jünger als 7 Tage, nicht neu geladen")
         return
@@ -274,35 +301,49 @@ def main():
     except Exception:
         pass
     # Wikidata: US-Börsennotierungen (Nasdaq, NYSE) mit Kürzel
-    us = collections.defaultdict(lambda: {"isin": set(), "beschr": None, "land": None})
-    for b in sparql('''SELECT ?ticker ?isin ?beschr ?landLabel ?wp WHERE {
+    # je Kürzel alle Wikidata-Einträge getrennt sammeln (ein Kürzel kann früher einer anderen Firma gehört haben)
+    items = collections.defaultdict(dict)
+    neu_e = lambda: {"isin": set(), "beschr": None, "land": None, "wp": None, "label": None}
+    for b in sparql('''SELECT ?ticker ?item ?isin ?beschr ?landLabel ?wp ?itemLabel WHERE {
         VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
         FILTER NOT EXISTS { ?st pq:P582 ?ende } OPTIONAL { ?item wdt:P946 ?isin }
         OPTIONAL { ?item schema:description ?beschr FILTER(LANG(?beschr) = "de") } OPTIONAL { ?item wdt:P17 ?land }
         OPTIONAL { ?art schema:about ?item ; schema:isPartOf <https://de.wikipedia.org/> ; schema:name ?wp }
         SERVICE wikibase:label { bd:serviceParam wikibase:language "de". } }'''):
-        e = us[b["ticker"].upper()]
+        e = items[b["ticker"].upper()].setdefault(b["item"], neu_e())
         if b.get("isin"): e["isin"].add(b["isin"])
-        e["beschr"] = e["beschr"] or b.get("beschr"); e["land"] = e["land"] or b.get("landLabel"); e["wp"] = e.get("wp") or b.get("wp")
-    for b in sparql('''SELECT ?ticker (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) WHERE {
+        e["beschr"] = e["beschr"] or b.get("beschr"); e["land"] = e["land"] or b.get("landLabel"); e["wp"] = e["wp"] or b.get("wp")
+        e["label"] = e["label"] or b.get("itemLabel")
+    for b in sparql('''SELECT ?ticker ?item (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) WHERE {
         VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
-        FILTER NOT EXISTS { ?st pq:P582 ?ende } ?item wdt:P452 ?br . ?br rdfs:label ?bl FILTER(LANG(?bl) = "de") } GROUP BY ?ticker'''):
-        us[b["ticker"].upper()]["branchen_wd"] = [x for x in (b.get("branchen") or "").split("|") if x]
+        FILTER NOT EXISTS { ?st pq:P582 ?ende } ?item wdt:P452 ?br . ?br rdfs:label ?bl FILTER(LANG(?bl) = "de") } GROUP BY ?ticker ?item'''):
+        items[b["ticker"].upper()].setdefault(b["item"], neu_e())["branchen_wd"] = [x for x in (b.get("branchen") or "").split("|") if x]
     # ohne deutsche Kurzbeschreibung: Branche (P452), Land, Gründungsjahr aus Wikidata für einen Ersatzsatz
-    for b in sparql('''SELECT ?ticker (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) (SAMPLE(?ll) AS ?land) (MIN(YEAR(?gr)) AS ?jahr) WHERE {
+    for b in sparql('''SELECT ?ticker ?item (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) (SAMPLE(?ll) AS ?land) (MIN(YEAR(?gr)) AS ?jahr) WHERE {
         VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
         FILTER NOT EXISTS { ?st pq:P582 ?ende } FILTER NOT EXISTS { ?item schema:description ?d FILTER(LANG(?d) = "de") }
         OPTIONAL { ?item wdt:P452 ?br . ?br rdfs:label ?bl FILTER(LANG(?bl) = "de") }
         OPTIONAL { ?item wdt:P17 ?l . ?l rdfs:label ?ll FILTER(LANG(?ll) = "de") }
-        OPTIONAL { ?item wdt:P571 ?gr } } GROUP BY ?ticker'''):
-        e = us[b["ticker"].upper()]
+        OPTIONAL { ?item wdt:P571 ?gr } } GROUP BY ?ticker ?item'''):
+        e = items[b["ticker"].upper()].setdefault(b["item"], neu_e())
         if e["beschr"]:
             continue
         teile = [x for x in (b.get("branchen") or "").split("|") if x][:2]
         if teile or b.get("land"):
             e["ersatz"] = ("Unternehmen" + (f" aus {LAND.get(b['land'], b['land'])}" if b.get("land") else "") + (f", Branche: {' / '.join(teile)}" if teile else "")
                            + (f", gegründet {b['jahr']}" if b.get("jahr") else "") + ".")
-    print(f"Wikidata USA: {len(us)} Kürzel")
+    print(f"Wikidata USA: {len(items)} Kürzel")
+    # passenden Eintrag je Wert der Liste wählen: der Name muss zur Firma passen
+    us, verworfen = {}, []
+    for s_, n_, g_ in zip(uni["symbol"].astype(str), uni["name"].astype(str), uni["gruppe"].astype(str)):
+        if g_ not in ("Nasdaq", "NYSE") or s_.upper() not in items:
+            continue
+        kand = list(items[s_.upper()].values())
+        passend = [e for e in kand if name_passt(n_, e.get("label"))]
+        if passend:
+            us[s_.upper()] = passend[0]
+        else:
+            verworfen.append(f"{s_}: {n_} ≠ {', '.join(str(e.get('label')) for e in kand)}")
     # Wikidata: Auslandsaktien per ISIN
     welt = {}
     isins = sorted(set(v for v in welt_isin.values() if v))
@@ -340,7 +381,7 @@ def main():
             e["isin"] = next((x for x in cusip[wid] if x.startswith("US")), None)   # US-Fonds: US-ISIN aus der CUSIP
             e["geprueft"] = bool(e["isin"])
         elif g in ("Nasdaq", "NYSE"):
-            wd = us.get(sym.upper())
+            wd = us.get(sym.upper())   # nur ein Eintrag, dessen Name zur Firma passt (sonst keiner)
             kand = cusip.get(wid, [])
             treffer = [x for x in kand if wd and x in wd["isin"]]
             kanada = bool(wd and wd["land"] == "Kanada")
@@ -373,9 +414,10 @@ def main():
         e["wkn"] = e["wkn"] or wkn_aus(e["isin"])
         if any(e.values()):
             out[wid] = e
-    ZIEL.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+    ZIEL.write_text(json.dumps({**out, "_version": VERSION}, ensure_ascii=False, separators=(",", ":")))
     offen_datei.write_text(str(wp_offen))
     n_t = sum(1 for e in out.values() if e["text"] and "noch nicht vor" not in e["text"])
+    print(f"Wikidata-Treffer verworfen, weil der Name nicht passt: {len(verworfen)} (z. B. {'; '.join(verworfen[:5])})")
     print(f"Wikipedia-Satz: {sum(1 for e in out.values() if e.get('text_url'))}, Branche: {sum(1 for e in out.values() if e.get('branche'))}, "
           f"Sitz: {sum(1 for e in out.values() if e.get('sitz'))}")
     print(f"Beschreibungen: {len(out)} Werte, {n_t} mit Kurzbeschreibung, {sum(1 for e in out.values() if e['isin'])} mit ISIN "
