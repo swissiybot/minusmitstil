@@ -1020,7 +1020,10 @@ def beschreibung_fuer(wid: str) -> dict:
             _BESCHR = {}
     e = _BESCHR.get(wid) or {}
     return {k: v for k, v in (("isin", e.get("isin")), ("isin_geprueft", e.get("geprueft")), ("wkn", e.get("wkn")),
-                              ("beschreibung", e.get("text"))) if v}
+                              ("beschreibung", e.get("text")), ("beschreibung_quelle", e.get("text_quelle")),
+                              ("beschreibung_url", e.get("text_url")),
+                              ("branche_kurz", e.get("branche")),   # eigenes Feld: „branche“ gruppiert die Heatmap (Nasdaq-100 nach Wikipedia)
+                              ("sitz", e.get("sitz"))) if v}
 
 
 NAMEN_ALIAS = {"SPCX": "SpaceX (Space Exploration Technologies)"}   # bekannter Name, damit Suche und Kopf ihn zeigen

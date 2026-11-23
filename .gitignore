@@ -30,6 +30,8 @@ daten/isin/
 daten/welt/
 daten/welt.csv
 daten/beschreibung.json
+daten/beschreibung_offen.txt
+daten/wikipedia_saetze.json
 daten/indexanteile_spy.json
 daten/alarm_stand.json
 daten/dividenden.parquet

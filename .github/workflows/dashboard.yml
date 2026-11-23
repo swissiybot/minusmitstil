@@ -55,6 +55,8 @@ jobs:
             daten/vorhersage_pruefung.json
             daten/isin
             daten/beschreibung.json
+            daten/beschreibung_offen.txt
+            daten/wikipedia_saetze.json
             daten/welt
             daten/welt.csv
             daten/btc_alt
@@ -121,6 +123,7 @@ jobs:
         timeout-minutes: 25        # erster Lauf mit ausländischen Firmen holt bis zu 400 Firmendaten einzeln
         env:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}   # Kontaktangabe, die die SEC verlangt – nur als geheime Einstellung
+          STAMM_MINUTEN: "4"   # Branchencode/Sitz je Firma: höchstens 4 Minuten je Lauf, Rest im nächsten Lauf
         run: python fundamente.py
 
       - name: Nasdaq-100-Mitglieder (Wikipedia, für die Heatmap)
@@ -137,8 +140,11 @@ jobs:
           SEC_KONTAKT: ${{ secrets.SEC_KONTAKT }}
         run: python isin.py
 
-      - name: ISIN, WKN und Kurzbeschreibungen (Wikidata, höchstens einmal pro Woche neu)
+      - name: ISIN, WKN, Branche und Kurzbeschreibungen (Wikidata, Wikipedia, SEC; höchstens einmal pro Woche neu)
         continue-on-error: true
+        timeout-minutes: 15   # Wikidata-Abfragen und höchstens 5 Minuten Wikipedia-Sätze (Rest im nächsten Lauf)
+        env:
+          WP_MINUTEN: "5"
         run: python beschreibung.py
 
       - name: Prüfung des Prognose-Kegels (höchstens einmal pro Woche neu)
@@ -165,6 +171,8 @@ jobs:
             daten/vorhersage_pruefung.json
             daten/isin
             daten/beschreibung.json
+            daten/beschreibung_offen.txt
+            daten/wikipedia_saetze.json
             daten/welt
             daten/welt.csv
             daten/btc_alt

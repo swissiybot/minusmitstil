@@ -48,6 +48,9 @@ ABRUFE = ORDNER / "abrufe.json"
 AUSLAND = ORDNER / "ausland.parquet"          # Geschaeftsjahre auslaendischer Firmen (companyfacts)
 AUSLAND_ABRUFE = ORDNER / "ausland_abrufe.json"
 AUSLAND_NEU_TAGE = 27
+STAMM = ORDNER / "stammdaten.json"            # Branchencode (SIC) und Land der Geschaeftsadresse je Firma
+STAMM_NEU_TAGE = 180
+STAMM_MINUTEN = float(os.environ.get("STAMM_MINUTEN", "8"))
 AUSLAND_MAX_JE_LAUF = 400
 AUSLAND_FORMULARE = {"20-F", "20-F/A", "40-F", "40-F/A", "10-K", "10-K/A"}
 AUSLAND_KONZEPTE = {   # Code: [(Taxonomie, Kennzahl), ...] in dieser Reihenfolge
@@ -179,6 +182,10 @@ def laden() -> bool:
         ausland_laden(s)
     except Exception as ex:
         print(f"SEC Ausland: {ex.__class__.__name__}: {ex} – vorhandene Daten bleiben")
+    try:
+        stammdaten_laden(s)
+    except Exception as ex:
+        print(f"SEC Stammdaten: {ex.__class__.__name__}: {ex} – vorhandene Daten bleiben")
     return FAKTEN.exists()
 
 
@@ -229,6 +236,79 @@ def _ausland_auszug(d: dict) -> list[dict]:
                                    "standard": "IFRS" if tax == "ifrs-full" else "US-GAAP"})
             break   # erste vorhandene Kennzahl je Code
     return zeilen
+
+
+def stammdaten_laden(s) -> None:
+    """Branchencode (SIC) und Land der Geschaeftsadresse je Firma aus data.sec.gov/submissions (klein, gzip etwa 30 kB).
+    Aendert sich selten: je Firma hoechstens alle STAMM_NEU_TAGE neu, je Lauf hoechstens STAMM_MINUTEN Minuten,
+    der Rest folgt im naechsten Lauf. Ergebnis daten/sec/stammdaten.json {cik: {sic, sic_text, land, land_text, abruf}}."""
+    t0 = time.time()
+    alt = json.loads(STAMM.read_text()) if STAMM.exists() else {}
+    heute = pd.Timestamp(dt.date.today())
+    uni = pd.read_csv(E.DATEN / "universum.csv")
+    uni = uni[uni["gruppe"].astype(str).str.contains("Nasdaq|NYSE")]
+    tick = _ticker_zu_cik()
+    ciks = sorted({tick[x] for x in (str(s_).upper().replace(".", "-") for s_ in uni["symbol"]) if x in tick})
+    faellig = [c for c in ciks if str(c) not in alt or (heute - pd.Timestamp(alt[str(c)]["abruf"])).days >= STAMM_NEU_TAGE]
+    faellig.sort(key=lambda c: alt.get(str(c), {}).get("abruf", ""))
+    geholt = fehler = 0
+    for c in faellig:
+        if time.time() - t0 > STAMM_MINUTEN * 60:
+            break
+        d = _holen(s, f"https://data.sec.gov/submissions/CIK{c:010d}.json")
+        time.sleep(PAUSE)
+        if not d:
+            fehler += 1
+            if fehler >= 5 and geholt == 0:
+                print("SEC Stammdaten: mehrere Abrufe gescheitert – Abbruch, vorhandene Daten bleiben.")
+                break
+            continue
+        geholt += 1
+        adr = (d.get("addresses") or {}).get("business") or {}
+        alt[str(c)] = {"sic": str(d.get("sic") or ""), "sic_text": d.get("sicDescription") or "",
+                       "land": adr.get("stateOrCountry") or adr.get("countryCode") or "",
+                       "land_text": adr.get("stateOrCountryDescription") or adr.get("country") or "",
+                       "abruf": heute.strftime("%Y-%m-%d")}
+        if geholt % 200 == 0:
+            STAMM.write_text(json.dumps(alt, separators=(",", ":")))
+    STAMM.write_text(json.dumps(alt, separators=(",", ":")))
+    rest = len([c for c in ciks if str(c) not in alt])
+    print(f"SEC Stammdaten: {len(ciks)} Firmen, {geholt} abgerufen, {fehler} gescheitert, noch ohne Daten {rest}")
+
+
+US_STAATEN = set("AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK "
+                 "OR PA RI SC SD TN TX UT VT VA WA WV WI WY PR".split())
+LAND_DE = {   # Laendernamen der SEC (englisch) -> deutsch; unbekannte bleiben in der SEC-Schreibweise
+    "netherlands": "Niederlande", "taiwan": "Taiwan", "china": "China", "hong kong": "Hongkong", "israel": "Israel",
+    "united kingdom": "Großbritannien", "england": "Großbritannien", "ireland": "Irland", "germany": "Deutschland",
+    "france": "Frankreich", "switzerland": "Schweiz", "canada": "Kanada", "ontario, canada": "Kanada", "british columbia, canada": "Kanada",
+    "alberta, canada": "Kanada", "quebec, canada": "Kanada", "japan": "Japan", "korea, republic of": "Südkorea", "south korea": "Südkorea",
+    "india": "Indien", "singapore": "Singapur", "cayman islands": "Kaimaninseln", "bermuda": "Bermuda", "luxembourg": "Luxemburg",
+    "belgium": "Belgien", "denmark": "Dänemark", "sweden": "Schweden", "norway": "Norwegen", "finland": "Finnland", "spain": "Spanien",
+    "italy": "Italien", "australia": "Australien", "brazil": "Brasilien", "mexico": "Mexiko", "argentina": "Argentinien",
+    "chile": "Chile", "colombia": "Kolumbien", "peru": "Peru", "south africa": "Südafrika", "greece": "Griechenland",
+    "cyprus": "Zypern", "monaco": "Monaco", "united arab emirates": "Vereinigte Arabische Emirate", "malaysia": "Malaysia",
+    "thailand": "Thailand", "indonesia": "Indonesien", "philippines": "Philippinen", "vietnam": "Vietnam", "turkey": "Türkei",
+    "austria": "Österreich", "portugal": "Portugal", "poland": "Polen", "jersey": "Jersey", "guernsey": "Guernsey",
+    "virgin islands, british": "Britische Jungferninseln", "british virgin islands": "Britische Jungferninseln", "uruguay": "Uruguay",
+    "new zealand": "Neuseeland", "kazakhstan": "Kasachstan", "puerto rico": "USA",
+}
+
+
+def stammdaten() -> dict:
+    """{Tickersymbol: {sic, branche (deutsch), sitz_us (bool), land_text}} aus stammdaten.json."""
+    if not STAMM.exists():
+        return {}
+    import sic_branchen
+    st = json.loads(STAMM.read_text())
+    out = {}
+    for t, c in _ticker_zu_cik().items():
+        e = st.get(str(c))
+        if e:
+            us = e["land"] in US_STAATEN
+            out[t] = {"sic": e["sic"], "branche": sic_branchen.branche(e["sic"]),
+                      "sitz": "USA" if us else LAND_DE.get(e["land_text"].strip().lower(), e["land_text"].strip().title() or None)}
+    return out
 
 
 def ausland_laden(s) -> None:

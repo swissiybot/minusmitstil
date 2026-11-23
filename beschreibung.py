@@ -9,12 +9,17 @@ Quellen:
     übereinstimmen, gilt sie als „geprüft“. Sonst die aus der CUSIP berechnete ISIN (bei kanadischen Firmen „CA…“)
     mit dem Vermerk „berechnet“.
   - Auslandsaktien: ISIN aus welt.csv (Wikidata), Beschreibung per ISIN aus Wikidata.
+  - Was die Firma macht (Wunsch Marc 23.11.2026): erster Satz des Artikels der deutschen Wikipedia (Lizenz CC BY-SA 4.0,
+    deshalb mit Quelle und Link: text_quelle, text_url); ohne Artikel die Kurzbeschreibung aus Wikidata wie bisher.
+  - Branche: für US-gelistete Firmen der SEC-Branchencode (fundamente.stammdaten, deutsch über sic_branchen.py),
+    sonst die Branche aus Wikidata (P452, deutsche Bezeichnung). Sitzland: Geschäftsadresse laut SEC, sonst Wikidata (P17).
   - WKN: nur, wenn sie sich sicher ableiten lässt (deutsche ISIN: DE000 + WKN + Prüfziffer) oder fest bekannt ist.
     Für US-Aktien gibt es keine freie WKN-Quelle – dann bleibt sie leer (nicht raten).
 Speicher: daten/beschreibung.json (höchstens einmal pro Woche neu, sonst bleibt die letzte Datei).
 Aufruf: python beschreibung.py
 """
 import json
+import re
 import sys
 import time
 import collections
@@ -177,8 +182,82 @@ def satz(beschr: str | None, land: str | None, fallback: str) -> str:
     return fallback
 
 
+ABKUERZUNGEN = {"inc", "co", "corp", "ltd", "plc", "n.v", "s.a", "a.g", "z", "b", "u", "a", "bzw", "etc", "st", "dr", "nr", "ca",
+                "d", "h", "i", "e", "sog", "jh", "mio", "mrd", "bspw", "vgl", "ggf", "usw", "evtl", "hl", "gegr", "kt", "fa"}
+
+
+def erster_satz(text: str) -> str:
+    """Erster Satz eines Absatzes; Punkte nach Abkürzungen (Inc., Co., z. B. …) und Zahlen beenden keinen Satz."""
+    for m in re.finditer(r"\.\s+(?=[A-ZÄÖÜ])", text):
+        wort = re.split(r"[\s(]", text[:m.start()])[-1].lower().rstrip(".")
+        if wort in ABKUERZUNGEN or len(wort) <= 1 or wort.isdigit() or re.fullmatch(r"([a-zäöü]\.)+[a-zäöü]?", wort):
+            continue
+        return text[:m.start() + 1]
+    return text
+
+
+WP_CACHE = E.DATEN / "wikipedia_saetze.json"   # {Titel: [Satz oder None, Abruftag]} – nicht im Repo
+WP_NEU_TAGE = 90
+WP_MINUTEN = float(__import__("os").environ.get("WP_MINUTEN", "10"))   # online 5 (Workflow), der Rest folgt im nächsten Lauf
+
+
+def wp_saetze(titel: list[str]) -> tuple[dict, int]:
+    """Erster Satz der Einleitung je Artikel der deutschen Wikipedia. Wikipedia drosselt schnelle Abrufe (HTTP 429):
+    je Abruf 20 Artikel, Pause dazwischen, bei 429 die verlangte Wartezeit. Bereits geholte Saetze bleiben 90 Tage im
+    Zwischenspeicher; je Lauf hoechstens WP_MINUTEN Minuten, der Rest folgt im naechsten Lauf.
+    Rueckgabe: ({Titel: Satz}, Anzahl noch offener Artikel)."""
+    import datetime as dt
+    t0, heute = time.time(), dt.date.today()
+    cache = json.loads(WP_CACHE.read_text()) if WP_CACHE.exists() else {}
+    titel = sorted(set(x for x in titel if x))
+    faellig = [x for x in titel if x not in cache or (heute - dt.date.fromisoformat(cache[x][1])).days >= WP_NEU_TAGE]
+    s = requests.Session(); s.headers.update({"User-Agent": KOPF["User-Agent"]})
+    i = 0
+    while i < len(faellig) and time.time() - t0 < WP_MINUTEN * 60:
+        teil = faellig[i:i + 20]
+        try:
+            r = s.get("https://de.wikipedia.org/w/api.php", timeout=60, params={
+                "action": "query", "prop": "extracts", "exintro": 1, "explaintext": 1, "exlimit": "max",
+                "titles": "|".join(teil), "format": "json", "redirects": 1})
+            if r.status_code == 429:
+                time.sleep(min(60, int(r.headers.get("retry-after") or 10)) + 1)
+                continue
+            r.raise_for_status()
+            q = r.json().get("query", {})
+        except Exception as ex:
+            print(f"Wikipedia-Abruf fehlgeschlagen ({ex.__class__.__name__}) – nächster Versuch", file=sys.stderr)
+            time.sleep(10)
+            continue
+        um = {x["from"]: x["to"] for x in q.get("normalized", []) + q.get("redirects", [])}
+        texte = {p_.get("title"): p_.get("extract") for p_ in q.get("pages", {}).values()}
+        for x in teil:
+            ziel = um.get(um.get(x, x), um.get(x, x))
+            cache[x] = [satz_bereinigen(erster_satz(texte.get(ziel) or "")), heute.isoformat()]
+        i += 20
+        tmp = WP_CACHE.with_suffix(".tmp"); tmp.write_text(json.dumps(cache, ensure_ascii=False)); tmp.replace(WP_CACHE)
+        time.sleep(2)
+    offen = len(faellig) - min(i, len(faellig))
+    return {x: cache[x][0] for x in titel if x in cache and cache[x][0]}, offen
+
+
+def satz_bereinigen(x: str | None) -> str | None:
+    """Aussprache, Klammern und Trennzeichen raus; nur ein Satz, nicht zu lang (sonst nichts)."""
+    if not x:
+        return None
+    s = x.replace("\u00ad", "").split("\n")[0].strip()
+    for _ in range(2):
+        s = re.sub(r"\s*\[[^\[\]]*\]", "", s)
+        s = re.sub(r"\s*\([^()]*\)", "", s)
+    s = re.sub(r"\s+([,.;:])", r"\1", re.sub(r"\s{2,}", " ", s)).strip()
+    if len(s) < 30 or len(s) > 420 or " ist " not in f" {s} " and " war " not in f" {s} " and " sind " not in f" {s} ":
+        return None
+    return s if s.endswith(".") else s + "."
+
+
 def main():
-    if ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv:
+    offen_datei = E.DATEN / "beschreibung_offen.txt"   # noch fehlende Wikipedia-Sätze: dann nicht 7 Tage warten
+    if (ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv
+            and not (offen_datei.exists() and offen_datei.read_text().strip() not in ("", "0"))):
         print("Beschreibungen: jünger als 7 Tage, nicht neu geladen")
         return
     uni = pd.read_csv(E.DATEN / "universum.csv").fillna("")
@@ -196,14 +275,19 @@ def main():
         pass
     # Wikidata: US-Börsennotierungen (Nasdaq, NYSE) mit Kürzel
     us = collections.defaultdict(lambda: {"isin": set(), "beschr": None, "land": None})
-    for b in sparql('''SELECT ?ticker ?isin ?beschr ?landLabel WHERE {
+    for b in sparql('''SELECT ?ticker ?isin ?beschr ?landLabel ?wp WHERE {
         VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
         FILTER NOT EXISTS { ?st pq:P582 ?ende } OPTIONAL { ?item wdt:P946 ?isin }
         OPTIONAL { ?item schema:description ?beschr FILTER(LANG(?beschr) = "de") } OPTIONAL { ?item wdt:P17 ?land }
+        OPTIONAL { ?art schema:about ?item ; schema:isPartOf <https://de.wikipedia.org/> ; schema:name ?wp }
         SERVICE wikibase:label { bd:serviceParam wikibase:language "de". } }'''):
         e = us[b["ticker"].upper()]
         if b.get("isin"): e["isin"].add(b["isin"])
-        e["beschr"] = e["beschr"] or b.get("beschr"); e["land"] = e["land"] or b.get("landLabel")
+        e["beschr"] = e["beschr"] or b.get("beschr"); e["land"] = e["land"] or b.get("landLabel"); e["wp"] = e.get("wp") or b.get("wp")
+    for b in sparql('''SELECT ?ticker (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) WHERE {
+        VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
+        FILTER NOT EXISTS { ?st pq:P582 ?ende } ?item wdt:P452 ?br . ?br rdfs:label ?bl FILTER(LANG(?bl) = "de") } GROUP BY ?ticker'''):
+        us[b["ticker"].upper()]["branchen_wd"] = [x for x in (b.get("branchen") or "").split("|") if x]
     # ohne deutsche Kurzbeschreibung: Branche (P452), Land, Gründungsjahr aus Wikidata für einen Ersatzsatz
     for b in sparql('''SELECT ?ticker (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) (SAMPLE(?ll) AS ?land) (MIN(YEAR(?gr)) AS ?jahr) WHERE {
         VALUES ?boerse { wd:Q82059 wd:Q13677 } ?item p:P414 ?st . ?st ps:P414 ?boerse ; pq:P249 ?ticker .
@@ -224,16 +308,32 @@ def main():
     isins = sorted(set(v for v in welt_isin.values() if v))
     for i in range(0, len(isins), 200):
         werte = " ".join(f'"{x}"' for x in isins[i:i + 200])
-        for b in sparql(f'''SELECT ?isin ?beschr ?landLabel WHERE {{ VALUES ?isin {{ {werte} }} ?item wdt:P946 ?isin .
+        for b in sparql(f'''SELECT ?isin ?beschr ?landLabel ?wp (GROUP_CONCAT(DISTINCT ?bl; separator="|") AS ?branchen) WHERE {{
+            VALUES ?isin {{ {werte} }} ?item wdt:P946 ?isin .
             OPTIONAL {{ ?item schema:description ?beschr FILTER(LANG(?beschr) = "de") }} OPTIONAL {{ ?item wdt:P17 ?land }}
-            SERVICE wikibase:label {{ bd:serviceParam wikibase:language "de". }} }}'''):
+            OPTIONAL {{ ?art schema:about ?item ; schema:isPartOf <https://de.wikipedia.org/> ; schema:name ?wp }}
+            OPTIONAL {{ ?item wdt:P452 ?br . ?br rdfs:label ?bl FILTER(LANG(?bl) = "de") }}
+            SERVICE wikibase:label {{ bd:serviceParam wikibase:language "de". }} }} GROUP BY ?isin ?beschr ?landLabel ?wp'''):
             welt.setdefault(b["isin"], b)
         time.sleep(1)
     print(f"Wikidata Ausland: {len(welt)} ISINs")
+    # Wikipedia: erster Satz der Einleitung (nur Werte der Liste)
+    us_sym = {str(s).upper() for s, g in zip(uni["symbol"], uni["gruppe"]) if g in ("Nasdaq", "NYSE")}
+    titel = [e.get("wp") for s, e in us.items() if s in us_sym] + [b.get("wp") for b in welt.values()]
+    wp, wp_offen = wp_saetze(titel)
+    print(f"Wikipedia: {len(wp)} von {len(set(x for x in titel if x))} Artikeln mit erstem Satz"
+          + (f", {wp_offen} folgen im nächsten Lauf" if wp_offen else ""))
+    try:
+        import fundamente
+        sec = fundamente.stammdaten()   # Branchencode und Sitz laut SEC (US-gelistete Firmen)
+    except Exception as ex:
+        print(f"SEC-Stammdaten nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+        sec = {}
+    wp_url = lambda titel_: "https://de.wikipedia.org/wiki/" + requests.utils.quote(titel_.replace(" ", "_"))
     out = {}
     for z in uni.to_dict("records"):
         wid, sym, g = z["id"], z["symbol"], z["gruppe"]
-        e = {"isin": None, "geprueft": False, "wkn": None, "text": None}
+        e = {"isin": None, "geprueft": False, "wkn": None, "text": None, "text_quelle": None, "text_url": None, "branche": None, "sitz": None}
         if wid in FEST_ISIN:
             e["isin"], e["wkn"] = FEST_ISIN[wid]; e["geprueft"] = True
         elif g in ("ETF", "Rohstoffe") and "=" not in sym and cusip.get(wid):   # Futures (GC=F …) haben keine ISIN
@@ -251,17 +351,33 @@ def main():
             boerse = "Nasdaq" if g == "Nasdaq" else "New Yorker Börse (NYSE)"
             e["text"] = satz(wd["beschr"] if wd else None, wd["land"] if wd else None,
                              (wd.get("ersatz") if wd else None) or f"Aktie, gehandelt an der {boerse}{(', Branche ' + z['branche']) if z.get('branche') else ''}. Eine Kurzbeschreibung liegt für diesen Wert noch nicht vor.")
+            if wd and wd.get("beschr"):
+                e["text_quelle"] = "Wikidata"
+            if wd and wp.get(wd.get("wp")):
+                e["text"], e["text_quelle"], e["text_url"] = wp[wd["wp"]], "Wikipedia (CC BY-SA 4.0)", wp_url(wd["wp"])
+            s_ = sec.get(sym.upper().replace(".", "-")) or {}
+            e["branche"] = s_.get("branche") or ((wd or {}).get("branchen_wd") or [None])[0]
+            e["sitz"] = s_.get("sitz") or LAND_KURZ.get((wd or {}).get("land"), (wd or {}).get("land"))   # SEC-Geschäftsadresse vor Wikidata
         elif g == "Welt":
             e["isin"] = welt_isin.get(sym) or None; e["geprueft"] = bool(e["isin"])
             b = welt.get(e["isin"] or "", {})
             e["text"] = satz(b.get("beschr"), b.get("landLabel"), "Aktie an ihrer Heimatbörse außerhalb der USA. Eine Kurzbeschreibung liegt für diesen Wert noch nicht vor.")
+            if b.get("beschr"):
+                e["text_quelle"] = "Wikidata"
+            if wp.get(b.get("wp")):
+                e["text"], e["text_quelle"], e["text_url"] = wp[b["wp"]], "Wikipedia (CC BY-SA 4.0)", wp_url(b["wp"])
+            e["branche"] = ([x for x in (b.get("branchen") or "").split("|") if x] or [None])[0]
+            e["sitz"] = LAND_KURZ.get(b.get("landLabel"), b.get("landLabel"))
         if wid in TEXTE:
-            e["text"] = TEXTE[wid]
+            e["text"], e["text_quelle"], e["text_url"] = TEXTE[wid], None, None
         e["wkn"] = e["wkn"] or wkn_aus(e["isin"])
         if any(e.values()):
             out[wid] = e
     ZIEL.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")))
+    offen_datei.write_text(str(wp_offen))
     n_t = sum(1 for e in out.values() if e["text"] and "noch nicht vor" not in e["text"])
+    print(f"Wikipedia-Satz: {sum(1 for e in out.values() if e.get('text_url'))}, Branche: {sum(1 for e in out.values() if e.get('branche'))}, "
+          f"Sitz: {sum(1 for e in out.values() if e.get('sitz'))}")
     print(f"Beschreibungen: {len(out)} Werte, {n_t} mit Kurzbeschreibung, {sum(1 for e in out.values() if e['isin'])} mit ISIN "
           f"({sum(1 for e in out.values() if e['geprueft'])} geprüft), {sum(1 for e in out.values() if e['wkn'])} mit WKN")
 
