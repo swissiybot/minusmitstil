@@ -649,6 +649,8 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .ampel-marke b{font-size:30px;font-weight:780;line-height:1;letter-spacing:-.03em}
 .ampel-marke span{font-size:10.5px;color:var(--muted);font-weight:600}
 .urteil-satz{font-size:31px;line-height:1.1;font-weight:780;letter-spacing:-.035em;background:linear-gradient(100deg,var(--text) 25%,color-mix(in srgb,var(--zf,var(--akzent)) 75%,var(--text)));-webkit-background-clip:text;background-clip:text;color:transparent}
+.verl-zeile{margin:0 0 12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 70%,transparent);font-size:13px;line-height:1.5;color:var(--text2)}
+.verl-marke{display:inline-block;margin-right:8px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:750;color:#0b0e14;background:var(--vf)}
 .urteil-unter{margin-top:6px;font-size:13.5px;color:var(--text2);line-height:1.45}
 .wk-saeule{flex:0 1 350px;min-width:290px;align-self:center}
 .wk-saeule svg{display:block;width:100%;height:auto;overflow:visible}
@@ -1992,6 +1994,8 @@ const ERKLAERUNG_TITEL = {
   etf_inhalt: {titel:"ETF-Inhalt und Kosten", text:"Die zehn größten Positionen mit ihrem Gewicht, die Verteilung auf Branchen und die Anlageklassen (Aktien, Anleihen, Bargeld) laut Fondsdaten, dazu die laufenden Kosten pro Jahr. Machen die zehn größten Positionen einen großen Teil des Fonds aus, hängt das Ergebnis stark an wenigen Firmen. Die Daten werden einmal pro Woche geladen und können einige Wochen alt sein."},
   etf_kosten: {titel:"Laufende Kosten", text:"Was der Fonds pro Jahr für Verwaltung und Betrieb kostet, in Prozent des angelegten Geldes (laut letztem Jahresbericht). Das Geld wird nicht abgebucht, sondern täglich dem Fondsvermögen entnommen – es steckt also schon in der Kursentwicklung und in der Ø Jahresrendite. Kosten für Kauf und Depot bei der Bank kommen dazu."},
   dividenden: {titel:"Ausschüttungen (Dividenden)", text:"Ausschüttungsrendite: die Ausschüttungen der letzten 12 Monate geteilt durch den heutigen Kurs. Wachstum: um wie viel die Ausschüttung je Anteil über fünf volle Kalenderjahre pro Jahr gestiegen ist. Die Balken zeigen die Summe je Kalenderjahr, das laufende Jahr ist noch nicht vollständig. In der Ø Jahresrendite und im Chart sind die Ausschüttungen schon eingerechnet – sie kommen nicht obendrauf."},
+  verl: {titel:"Verlässlichkeit der Ampel bei diesem Titel", text:() => { const v = INFO?.verl; const z = x => x == null ? "–" : fmt(x, 2);
+    return "Für jede frühere Woche wird verglichen: Wie stand die Ampel – und wie viel brachte ein Kauf in den 3 Jahren danach? Daraus ergibt sich eine Zahl von −1 bis +1. Bei +1 gilt: je höher die Ampel, desto mehr Ertrag danach. Bei 0 gibt es keinen Zusammenhang, unter 0 war es eher umgekehrt. Gerechnet wird über die ganze Geschichte und noch einmal über die letzten 10 Jahre mit bekanntem Ergebnis. „Gut“ heißt: beide Zahlen mindestens 0,3. „Gemischt“: eine deutlich, die andere nicht. „Schwach“: keine der beiden erreicht 0,3 und mindestens eine liegt unter 0,1. „Noch offen“: unter 10 Jahre mit bekanntem Ergebnis." + (v ? ` Hier: ganze Geschichte ${z(v.rk)}, letzte 10 Jahre ${z(v.rk10)}, ${fmt(v.jahre,0)} Jahre mit bekanntem Ergebnis, ${v.ph80 ?? "–"} getrennte Phasen mit Ampel ab 80.` : "") + " Mit anderen Formeln für die Ampel wurde am 23.11.2026 nachgeprüft – sie waren bei den meisten Titeln nicht besser."; }},
   rendite_euro: {titel:"In Euro gerechnet", text:"Dieselbe Ø Jahresrendite, aber für einen Anleger, der in Euro rechnet: Zuwachs in Dollar mal Veränderung des Wechselkurses Dollar/Euro über denselben Zeitraum (Kurse der Europäischen Zentralbank bzw. der US-Notenbank). Ist der Dollar gegenüber dem Euro gestiegen, liegt die Euro-Rendite höher, sonst niedriger."},
   kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
 };
@@ -2053,6 +2057,15 @@ function modusSetzen(m){
   MODUS = m; sichere("modus", m); $("#haupt").dataset.modus = m;
   $$("#modus-wahl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m)));
   abschnittNavInit(); fragenInit();
+}
+const verlWort = x => x >= .5 ? "deutlich" : x >= .3 ? "erkennbar" : x >= .1 ? "schwach" : x > -.1 ? "kaum" : "eher umgekehrt";
+function verlBlock(w){   // Wie verlässlich war die Ampel bei genau diesem Titel? (Marc 23.11.2026: „für jeden Titel noch besser geklärt“; geprüft ohne Zukunftswissen)
+  const v = w.verl; if (!v || w.score == null) return "";
+  const name = esc(kurzname(w)), F = {gut:["gut", "var(--guenstig)"], mittel:["mittel", "var(--neutral)"], gemischt:["gemischt", "var(--gelb)"], schwach:["schwach", "var(--teuer)"], "zu wenig":["noch offen", "var(--neutral)"]}[v.stufe] || ["–", "var(--neutral)"];
+  let satz;
+  if (v.stufe === "zu wenig" || v.rk == null) satz = `Bei ${name} weiß man erst für ${fmt(v.jahre,0)} Jahre, wie es nach einer Ampel weiterging. Das ist zu wenig, um zu sagen, ob eine günstige Ampel hier wirklich die besseren Käufe anzeigt.`;
+  else satz = `Brachte ein Kauf bei günstiger Ampel bei ${name} später mehr als ein Kauf bei teurer Ampel? Über die ganze Geschichte seit ${v.seit}: <b>${verlWort(v.rk)}</b>.${v.rk10 != null ? ` In den letzten 10 Jahren: <b>${verlWort(v.rk10)}</b>.` : ""}${v.stufe === "schwach" ? ` <b style="color:var(--teuer)">Als Kaufhilfe hat die Ampel bei ${name} bisher nicht getaugt</b> – sie zeigt, wie teuer es gerade ist, mehr nicht.` : v.stufe === "gemischt" ? " Das Bild ist also nicht eindeutig." : ""}`;
+  return `<div class="verl-zeile" data-e="verl" tabindex="0"><span class="verl-marke" style="--vf:${F[1]}">Verlässlichkeit der Ampel: ${F[0]}</span>${satz}</div>`;
 }
 function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der Vergleich mit der eigenen Geschichte
   if (w.score == null) return `<div class="urteil-zeile"><div><div class="urteil-satz">${w.jung ? "Noch zu jung für eine Ampel." : "Noch keine Ampel."}</div></div></div>`;
@@ -2790,7 +2803,7 @@ async function zeige(id, opt={}){
       <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}</div>
       ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
       <div class="wk-haupt">
-        <div class="wk-urteil">${urteilBlock(w, c)}</div>
+        <div class="wk-urteil">${urteilBlock(w, c)}${verlBlock(w)}</div>
         ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
         <div class="wk-text">
           ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
