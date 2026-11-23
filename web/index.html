@@ -681,6 +681,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .zr-feld i{font-style:normal;color:var(--muted);font-size:14px;font-weight:600}
 .zr-annahme{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:8px 0 2px}
 .zr-annahme .segment{flex-wrap:wrap}
+.zr-annahme-satz{margin:10px 0 0!important;padding:10px 12px;border-radius:12px;background:var(--akzent-weich);color:var(--text)!important;font-size:13.5px;line-height:1.5}
 .zr-kacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:12px}
 #rechner-karte .p100{max-width:560px}
 #zeitachse-karte,#rechner-karte,#etf-karte,#dividenden-karte{align-self:start}
@@ -1888,7 +1889,7 @@ async function lohntSichCheck(id){
   const el = $("#check"); if (!el) return;
   const s = await apiStrategie(id);
   if (AKTIV !== id || !$("#check")) return;
-  const kopf = kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", "Was hätte bei diesem Wert mehr gebracht? Nachgerechnet mit 500 im Monat.", "Lohnt-sich-Check", "check");
+  const kopf = kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", `Was hätte bei ${INFO ? esc(kurzname(INFO)) : "diesem Wert"} mehr gebracht? Nachgerechnet mit 500 im Monat.`, "Lohnt-sich-Check", "check");
   if (!s || s.fehler) { el.innerHTML = kopf + `<p>Zu wenig Jahre mit Ampel für einen Vergleich mit dem Sparplan.</p>`; return; }
   const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
   el.innerHTML = kopf + `
@@ -1941,7 +1942,7 @@ function kk(kat, titel, unter, rechts, e){
 }
 const ERKLAERUNG_TITEL = {
   kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
-  kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf „besser oder schlechter als üblich“ ausgeht, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
+  kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf besser oder schlechter ausgeht als in einer beliebigen Woche, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
   cagr_aus: {titel:"Aus 10.000 wurden …", text:"Die Ø Jahresrendite als Betrag: Was aus einer einmaligen Anlage von 10.000 über den genannten Zeitraum geworden wäre (mit Zinseszins, vor Steuern und Kosten, in der Währung des Werts). Reine Umrechnung der Jahresrendite – kein Versprechen für die Zukunft."},
   r_profil: {titel:"Risiko-Profil", text:"Alle Zahlen stammen aus den Wochenschlusskursen dieses Werts über seine ganze Geschichte. Größter Rückgang: der tiefste Fall von einem Hoch bis zum folgenden Tief. Schwankung pro Jahr: wie stark die Wochenrenditen streuen, auf ein Jahr hochgerechnet. Längste Zeit unter altem Hoch: so lange musste man warten, bis ein früherer Höchstkurs wieder erreicht war. Kalenderjahre: Veränderung von Jahresende zu Jahresende, das laufende Jahr zählt nicht mit. Die Vergangenheit ist keine Obergrenze – der nächste Rückgang kann größer ausfallen."},
   r_vola: {titel:"Schwankung pro Jahr (Volatilität)", text:"Das gängigste Risikomaß: Standardabweichung der Wochenrenditen, auf ein Jahr hochgerechnet (× Wurzel aus 52). Grobe Faustregel: In etwa zwei von drei Jahren lag das Jahresergebnis innerhalb dieser Spanne um den Durchschnitt, in jedem dritten Jahr außerhalb. Je höher die Zahl, desto unruhiger der Wert. Zum Einordnen steht darunter der Vergleich mit dem S&P 500."},
@@ -1950,7 +1951,7 @@ const ERKLAERUNG_TITEL = {
   saeule: {titel:"Die fünf Stufen als Säule", text:"Jede Schicht ist eine Stufe der Ampel, oben teuer, unten günstig – wie im Chart. Daneben steht der Kursbereich der Stufe von heute. Die Kugel schwebt auf der Höhe des heutigen Kurses: Je weiter unten, desto günstiger gemessen an der eigenen Geschichte des Werts. Die Grenzen wandern jede Woche mit der 200-Wochen-Linie."},
   zeitachse: {titel:"Zeitachse", text:"Ein Bild für Rückblick und Ausblick. Links vom Strich „Heute“: der echte Kurs der letzten Jahre. Wählst du dort einen Zeitpunkt, zeigt das Tool die Ampel von damals – so, wie sie mit dem Wissen von damals berechnet worden wäre – und was danach wirklich kam. Rechts: mögliche Wege aus der Simulation (echte Wochen der letzten 20 Jahre, neu zusammengesetzt). Das helle Band enthält 9 von 10 Wegen, das kräftige jeden zweiten; die Zahlen darunter nennen den Bereich von 8 von 10 Wegen. Keine Vorhersage."},
   zrechner: {titel:"Zukunfts-Rechner", text:"Rechnet für deinen Betrag und deine monatliche Rate tausende mögliche Verläufe durch: Aus den echten Wochenrenditen der letzten 20 Jahre werden zusammenhängende 13-Wochen-Stücke zufällig neu aneinandergehängt. „8 von 10“ heißt: In 80 % der Wege lag das Ergebnis in diesem Bereich, in je 10 % darüber oder darunter. Bei Werten in Dollar wird in Euro gerechnet (mit dem Wechselkurs jeder Woche). Die Wege übernehmen die Durchschnittsrendite der letzten 20 Jahre – war sie ungewöhnlich hoch, sind die Ergebnisse entsprechend optimistisch."},
-  zr_annahme: {titel:"Annahme für die Rendite", text:"Die Simulation setzt echte Wochen der letzten 20 Jahre neu zusammen und übernimmt damit auch deren Durchschnittsrendite. Bei Werten, die in dieser Zeit außergewöhnlich stark gestiegen sind, wirkt die Zukunft dadurch sehr rosig. „Vorsichtig“ rechnet mit denselben Schwankungen, aber nur der halben Durchschnittsrendite, „ohne“ ganz ohne sie – dann sieht man nur, wie stark der Wert schwankt. Stieg ein Wert zuletzt im Schnitt über 25 % pro Jahr, ist „vorsichtig“ voreingestellt, über 60 % „ohne“. Welche Annahme stimmt, weiß niemand – der Schalter zeigt, wie stark das Ergebnis davon abhängt."},
+  zr_annahme: {titel:"Wie soll die Vergangenheit zählen?", text:"Die Simulation setzt echte Wochen der letzten 20 Jahre neu zusammen. Damit übernimmt sie, wie stark der Wert in dieser Zeit im Schnitt gestiegen ist. „Alle Jahre gleich“ (Standard): jede Woche zählt gleich viel. „Jüngere Jahre zählen mehr“: Eine Woche von vor 5 Jahren zählt halb so viel wie eine von heute – das passt besser, wenn ein Wert früher viel schneller gewachsen ist und stärker geschwankt hat als heute (zum Beispiel Bitcoin: je größer, desto langsamer und ruhiger). „Vorsichtig“: wie „jüngere Jahre zählen mehr“, aber nur mit etwa der halben Rendite. Ergibt „alle Jahre gleich“ mehr als 25 % pro Jahr, wählt das Tool von sich aus die nächste Stufe. Unter den Knöpfen steht immer, mit wie viel Prozent pro Jahr gerade gerechnet wird."},
   zr_steuer: {titel:"Steuer (vereinfacht)", text:"Gedachter Verkauf: 26,375 % Abgeltungssteuer (25 % plus Soli) auf den Gewinn, davor 1.000 € Sparerpauschbetrag abgezogen; bei Aktien-ETFs sind 30 % des Gewinns steuerfrei (Teilfreistellung). Ohne Kirchensteuer, ohne Vorabpauschale und ohne andere Gewinne oder Verluste desselben Jahres. Eine grobe Orientierung, keine Steuerberatung."},
   position: {titel:"Deine Position", text:"Erscheint nur, wenn dieser Titel in „Mein Depot“ liegt. Der Wert stammt aus deinem Depot-Import (Stand des Imports, nicht der heutige Kurs). Den Einstand – was du insgesamt bezahlt hast – trägst du selbst ein. Alles bleibt in diesem Browser gespeichert und wird nirgendwohin übertragen."},
   vergleich: {titel:"Vergleichen", text:"Wähle einen zweiten Titel: Dann stehen Ampel, Abstand zur 200-Wochen-Linie, Günstig-Grenze, Ø Jahresrendite, größter Rückgang, Schwankung und Trend nebeneinander, dazu der Kursverlauf beider Titel ab demselben Start (beide bei 100). Jede Ampel misst an der eigenen Geschichte des Titels – eine höhere Ampel heißt nicht, dass der Titel der bessere ist."},
@@ -2063,28 +2064,51 @@ function fragenInit(){
 
 // ------------------------------------------------------------ Simulation im Browser (wie montecarlo.py): Block-Bootstrap echter Wochenrenditen,
 // 13-Wochen-Blöcke aus den letzten 20 Jahren, Schwankung startet beim heutigen Niveau und klingt in 13 Wochen zum Durchschnitt ab.
-function simWege(reihe, wochen, pfade = 4000, saat = "", block = 13, jahre = 20, volTau = 13, drift = 1){
-  const c = []; for (let i = Math.max(0, reihe.length - 1 - Math.round(jahre * 52.18)); i < reihe.length; i++) if (reihe[i] > 0) c.push(reihe[i]);
-  if (c.length < 104) return null;
-  const m = c.length - 1, r = new Float64Array(m); let mu = 0; for (let i = 0; i < m; i++) { r[i] = Math.log(c[i + 1] / c[i]); mu += r[i]; } mu /= m;
+const SIM_HALB = 5;      // Jahre: eine Woche von vor so vielen Jahren zählt halb so viel wie eine von heute (Rendite und Schwankung ändern sich mit der Größe eines Werts)
+const SIM_GRENZE = 25;   // % pro Jahr: darüber gilt die Vergangenheit als zu rosig, um sie voll fortzuschreiben
+const ANNAHMEN = {alle:{halb:null, drift:1, name:"alle Jahre gleich"}, neu:{halb:SIM_HALB, drift:1, name:"jüngere Jahre zählen mehr"}, vorsicht:{halb:SIM_HALB, drift:.5, name:"vorsichtig (halbe Rendite)"}};
+function simReihe(reihe, jahre = 20){ const c = []; for (let i = Math.max(0, reihe.length - 1 - Math.round(jahre * 52.18)); i < reihe.length; i++) if (reihe[i] > 0) c.push(reihe[i]); return c; }
+function simGewichte(m, halb){ const g = new Float64Array(m), tau = halb ? halb * 52.18 / Math.LN2 : Infinity; for (let i = 0; i < m; i++) g[i] = Math.exp(-(m - 1 - i) / tau); return g; }
+function reiheRendite(reihe, halb = SIM_HALB, jahre = 20){   // Zuwachs pro Jahr (mit Zinseszins) über die Wochen, aus denen die Simulation schöpft; halb = Halbwertszeit in Jahren (null: alle Wochen gleich)
+  const c = simReihe(reihe, jahre), m = c.length - 1; if (m < 103) return null;
+  const g = simGewichte(m, halb); let sw = 0, mu = 0; for (let i = 0; i < m; i++) { sw += g[i]; mu += g[i] * Math.log(c[i + 1] / c[i]); }
+  return (Math.exp(mu / sw * 52.18) - 1) * 100;
+}
+// Standard: alle Jahre gleich. Ergibt das über 25 % pro Jahr, zählen jüngere Jahre mehr (frühes, schnelles Wachstum verzerrt sonst); liegt auch das darüber: vorsichtig.
+const annahmeStandard = reihe => { const ra = reiheRendite(reihe, null), rn = reiheRendite(reihe); return ra == null || ra <= SIM_GRENZE ? "alle" : rn != null && rn <= SIM_GRENZE ? "neu" : "vorsicht"; };
+const annahmeRendite = (reihe, a) => { const A = ANNAHMEN[a] || ANNAHMEN.alle, r = reiheRendite(reihe, A.halb); return r == null ? null : (Math.pow(1 + r / 100, A.drift) - 1) * 100; };
+function annahmeText(name, reihe, a){   // die Annahme in einem Satz, mit der Zahl, mit der gerechnet wird
+  const r = annahmeRendite(reihe, a), rn = reiheRendite(reihe, SIM_HALB), ra = reiheRendite(reihe, null), z = x => `${x >= 0 ? "+" : ""}${fmt(x, 0)} %`, jh = Math.min(20, (simReihe(reihe).length - 1) / 52.18);
+  if (r == null) return "";
+  return a === "alle" ? `Gerechnet wird mit durchschnittlich <b>${z(r)} pro Jahr</b>: So ist ${name} im Schnitt der letzten ${fmt(jh,0)} Jahre gestiegen, alle Jahre gleich gewichtet.`
+    : a === "vorsicht" ? `Gerechnet wird mit durchschnittlich <b>${z(r)} pro Jahr</b>. Das ist etwa die halbe Rendite von zuletzt (${z(rn)} pro Jahr). Vorsichtig, weil sehr schnelles Wachstum selten anhält: Je größer ein Wert wird, desto langsamer wächst er meist.${r > 20 ? " Auch das ist noch eine hohe Annahme." : ""}`
+    : `Gerechnet wird mit durchschnittlich <b>${z(r)} pro Jahr</b>: So ist ${name} zuletzt gestiegen, wenn jüngere Jahre stärker zählen als ältere – eine Woche von vor ${SIM_HALB} Jahren zählt halb so viel wie eine von heute${Math.abs(ra - r) >= 1 ? ` (alle Jahre gleich gewichtet wären es ${z(ra)})` : ""}.`;
+}
+// schöne Achsenwerte und kurze Zahlen für die kleinen Bilder
+function achsenSchritte(mn, mx, n = 4){ const sp = (mx - mn) / n || 1, p = Math.pow(10, Math.floor(Math.log10(sp))), f = sp / p, st = (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * p, out = []; for (let v = Math.ceil(mn / st) * st; v <= mx + st * 1e-6; v += st) out.push(v); return out; }
+function logSchritte(mn, mx){ let out = []; for (let k = Math.floor(Math.log10(mn)); k <= Math.ceil(Math.log10(mx)); k++) for (const f of [1, 2, 5]) { const v = f * Math.pow(10, k); if (v >= mn && v <= mx) out.push(v); }
+  if (out.length > 5) out = out.filter(v => /^1/.test(v.toExponential()) || /^5/.test(v.toExponential())); if (out.length > 5) out = out.filter(v => /^1/.test(v.toExponential())); return out; }
+const kurzZahl = v => v >= 1e9 ? fmt(v / 1e9, (v / 1e9) % 1 ? 1 : 0) + " Mrd." : v >= 1e6 ? fmt(v / 1e6, (v / 1e6) % 1 ? 1 : 0) + " Mio." : v >= 100 ? fmt(v, 0) : v >= 1 ? fmt(v, v % 1 ? 1 : 0) : v > 0 ? fmt(v, 3) : "0";
+// Simulation im Browser (nach dem Muster von montecarlo.py): Block-Bootstrap echter Wochenrenditen in 13-Wochen-Stücken, Schwankung startet beim
+// heutigen Niveau. Neu (Hinweis Marc 23.11.2026: Rendite und Schwankung sinken mit der Größe): Die Stücke werden nach Alter gewichtet gezogen.
+function simWege(reihe, wochen, pfade = 4000, saat = "", annahme = "alle", block = 13, jahre = 20, volTau = 13){
+  const A = ANNAHMEN[annahme] || ANNAHMEN.alle, c = simReihe(reihe, jahre); if (c.length < 104) return null;
+  const m = c.length - 1, r = new Float64Array(m), g = simGewichte(m, A.halb); let sw = 0, mu = 0;
+  for (let i = 0; i < m; i++) { r[i] = Math.log(c[i + 1] / c[i]); sw += g[i]; mu += g[i] * r[i]; } mu /= sw;
   block = Math.max(1, Math.min(block, Math.floor(m / 4)));
-  let va = 0, ew = (r[0] - mu) ** 2; for (let i = 0; i < m; i++) va += (r[i] - mu) ** 2; for (let i = 1; i < m; i++) ew = .94 * ew + .06 * (r[i] - mu) ** 2;
-  const sRel = volTau ? Math.max(.5, Math.min(3, Math.sqrt(ew) / Math.sqrt(va / m))) : 1, skala = new Float64Array(wochen); for (let j = 0; j < wochen; j++) skala[j] = volTau ? 1 + (sRel - 1) * Math.exp(-j / volTau) : 1;
-  let s = 2166136261; for (const ch of `${saat}|${c.length}|${c[m].toPrecision(6)}`) { s ^= ch.charCodeAt(0); s = Math.imul(s, 16777619); }
+  let va = 0, ew = (r[0] - mu) ** 2; for (let i = 0; i < m; i++) va += g[i] * (r[i] - mu) ** 2; for (let i = 1; i < m; i++) ew = .94 * ew + .06 * (r[i] - mu) ** 2;
+  const sRel = volTau ? Math.max(.5, Math.min(3, Math.sqrt(ew) / Math.sqrt(va / sw))) : 1, skala = new Float64Array(wochen); for (let j = 0; j < wochen; j++) skala[j] = volTau ? 1 + (sRel - 1) * Math.exp(-j / volTau) : 1;
+  let s = 2166136261; for (const ch of `${saat}|${annahme}|${c.length}|${c[m].toPrecision(6)}`) { s ^= ch.charCodeAt(0); s = Math.imul(s, 16777619); }
   const zufall = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+  const nS = m - block + 1, kum = new Float64Array(nS); let ks = 0, muS = 0;   // Gewicht eines Stücks = Gewicht seiner jüngsten Woche
+  for (let a = 0; a < nS; a++) { const gw = g[a + block - 1]; let bs = 0; for (let b = 0; b < block; b++) bs += r[a + b]; muS += gw * bs / block; ks += gw; kum[a] = ks; }
+  muS /= ks;   // Mittel der Wochen, so wie sie gezogen werden – die Wege werden darum zentriert, damit der mittlere Weg genau der genannten Annahme folgt
+  const ziehe = () => { const u = zufall() * ks; let lo = 0, hi = nS - 1; while (lo < hi) { const mi = (lo + hi) >> 1; if (kum[mi] < u) lo = mi + 1; else hi = mi; } return lo; };
   const n = wochen + 1, L = new Float32Array(pfade * n);
   for (let p = 0; p < pfade; p++) { let sum = 0, j = 0; const o = p * n;
-    while (j < wochen) { const start = Math.floor(zufall() * (m - block + 1)); for (let b = 0; b < block && j < wochen; b++, j++) { sum += mu * drift + (r[start + b] - mu) * skala[j]; L[o + j + 1] = sum; } } }
-  return {L, wochen, pfade, jahre:m / 52.18};
+    while (j < wochen) { const start = ziehe(); for (let b = 0; b < block && j < wochen; b++, j++) { sum += mu * A.drift + (r[start + b] - muS) * skala[j]; L[o + j + 1] = sum; } } }
+  return {L, wochen, pfade, jahre:m / 52.18, annahme};
 }
-function reiheRendite(reihe, jahre = 20){   // Zuwachs pro Jahr (mit Zinseszins) über die Wochen, aus denen die Simulation schöpft
-  let a = Math.max(0, reihe.length - 1 - Math.round(jahre * 52.18)); while (a < reihe.length && !(reihe[a] > 0)) a++;
-  const e = reihe.length - 1; if (e - a < 104 || !(reihe[e] > 0)) return null;
-  return (Math.pow(reihe[e] / reihe[a], 52.18 / (e - a)) - 1) * 100;
-}
-const SIM_GRENZE = 25;   // ab so viel % pro Jahr gilt die Vergangenheit als zu rosig, um sie einfach fortzuschreiben
-const simDrift = r => r == null ? 1 : r > 60 ? 0 : r > SIM_GRENZE ? .5 : 1;   // Anteil der Vergangenheitsrendite in den Wegen: alles, die Hälfte oder nichts
-const driftSatz = d => d === 0 ? "ohne die Durchschnittsrendite der Vergangenheit, nur mit ihren Schwankungen" : d === .5 ? "mit der halben Durchschnittsrendite der Vergangenheit" : "mit der vollen Durchschnittsrendite der Vergangenheit";
 function simQuantile(sim){   // je Woche: Faktor zum heutigen Kurs an den Stellen 5/10/25/50/75/90/95 % und Anteil der Wege unter heute
   const n = sim.wochen + 1, P = sim.pfade, q = {q5:[], q10:[], q25:[], q50:[], q75:[], q90:[], q95:[], minus:[]}, sp = new Float32Array(P);
   for (let w = 0; w < n; w++) { for (let p = 0; p < P; p++) sp[p] = sim.L[p * n + w]; sp.sort(); const g = f => Math.exp(sp[Math.min(P - 1, Math.floor(f * P))]);
@@ -2105,61 +2129,67 @@ function zeitachseKarte(w, c){
     <p class="klein" style="margin:10px 0 0"><i class="leg" style="background:var(--text)"></i>Kurs &nbsp; <i class="leg" style="background:var(--gelb)"></i>200-Wochen-Linie &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>simulierte Wege (hell: 9 von 10, kräftig: jeder zweite) · Rückblick und Simulation, keine Vorhersage.</p></section>`;
 }
 function zaBild(){
-  const c = ZA.c, n = c.c.length, V = ZA.verg, Z = ZA.zuk, ab = n - 1 - V, B = 400, H = 232, pl = 6, pr = 6, po = 14, pu = 22, kurs = c.c[n - 1], q = ZA.q;
+  const c = ZA.c, n = c.c.length, V = ZA.verg, Z = ZA.zuk, ab = n - 1 - V, B = 400, H = 252, pl = 44, pr = 8, po = 26, pu = 22, kurs = c.c[n - 1], q = ZA.q;
   const werte = c.c.slice(ab).filter(x => x > 0); if (q) werte.push(kurs * q.q5[Z], kurs * q.q95[Z]);
-  const mn = Math.log(Math.min(...werte) * .92), mx = Math.log(Math.max(...werte) * 1.05);
+  const mnV = Math.min(...werte) * .92, mxV = Math.max(...werte) * 1.05, mn = Math.log(mnV), mx = Math.log(mxV);
   const x = i => pl + (i + V) / (V + Z) * (B - pl - pr), y = v => po + (mx - Math.log(v)) / (mx - mn) * (H - po - pu);
   const linie = arr => arr.map((v, j) => v > 0 ? `${x(j - V).toFixed(1)} ${y(v).toFixed(1)}` : null).filter(Boolean).join(" L");
   const verg = linie(c.c.slice(ab)), l200 = c.sma200w ? linie(c.sma200w.slice(ab)) : "";
   const band = (u, o) => { const a = [], b = []; for (let w = 0; w <= Z; w += 4) { a.push(`${x(w).toFixed(1)} ${y(kurs * q[o][w]).toFixed(1)}`); b.unshift(`${x(w).toFixed(1)} ${y(kurs * q[u][w]).toFixed(1)}`); } return `M${a.join(" L")} L${b.join(" L")} Z`; };
   const med = []; if (q) for (let w = 0; w <= Z; w += 4) med.push(`${x(w).toFixed(1)} ${y(kurs * q.q50[w]).toFixed(1)}`);
-  const z = ZA.z, zv = z <= 0 ? c.c[n - 1 + z] : q ? kurs * q.q50[z] : kurs, zx = x(z), jahr = j => new Date((c.t[n - 1] + j * 31557600) * 1000).getUTCFullYear(), txt = [];
-  for (let j = -Math.floor(V / 52 / 5) * 5; j <= 5; j += 5) txt.push(`<text x="${x(j * 52).toFixed(1)}" y="${H - 6}" font-size="10.5" fill="var(--muted)" text-anchor="${j * 52 <= -V + 20 ? "start" : j === 5 ? "end" : "middle"}">${j === 0 ? "Heute" : jahr(j)}</text>`);
-  return `<svg viewBox="0 0 ${B} ${H}" role="img" aria-label="Kurs der letzten ${Math.round(V / 52)} Jahre und mögliche Wege der nächsten 5 Jahre">
+  const z = ZA.z, zv = z <= 0 ? c.c[n - 1 + z] : q ? kurs * q.q50[z] : kurs, zx = x(z), jahrH = new Date(c.t[n - 1] * 1000).getUTCFullYear(), txt = [];
+  // Achsen: Kurs links (logarithmisch), Jahre unten (alle 2 Jahre), dazu die Marke „Heute“
+  for (const v of logSchritte(mnV, mxV)) txt.push(`<path d="M${pl} ${y(v).toFixed(1)}H${B - pr}" stroke="var(--line2)" stroke-width="1" opacity=".55"/><text x="${pl - 5}" y="${(y(v) + 3.5).toFixed(1)}" font-size="10" fill="var(--muted)" text-anchor="end">${kurzZahl(v)}</text>`);
+  for (let j = -Math.floor(V / 52); j <= Math.floor(Z / 52); j++) { if (j === 0 || j % 2) continue; if (x(j * 52) < pl + 12) continue;
+    txt.push(`<path d="M${x(j * 52).toFixed(1)} ${H - pu}v4" stroke="var(--muted)" stroke-width="1"/><text x="${x(j * 52).toFixed(1)}" y="${H - 6}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${jahrH + j}</text>`); }
+  txt.push(`<text x="${x(0).toFixed(1)}" y="${H - 6}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="middle">Heute</text>`);
+  const d = new Date((c.t[n - 1] + (z > 0 ? z : 0) * 604800) * 1000), dz = z < 0 ? new Date(c.t[n - 1 + z] * 1000) : d, marke = z === 0 ? "Heute" : `${String(dz.getUTCMonth() + 1).padStart(2, "0")}/${dz.getUTCFullYear()}`;
+  const mxp = Math.max(pl + 26, Math.min(B - pr - 26, zx));
+  return `<svg viewBox="0 0 ${B} ${H}" role="img" aria-label="Kurs der letzten ${Math.round(V / 52)} Jahre und mögliche Wege der nächsten ${Math.round(Z / 52)} Jahre">
     <defs><linearGradient id="za-vl" x1="0" x2="1"><stop offset="0" stop-color="var(--akzent)" stop-opacity=".55"/><stop offset="1" stop-color="var(--text)"/></linearGradient>
     <linearGradient id="za-fl" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--akzent)" stop-opacity=".26"/><stop offset="1" stop-color="var(--akzent)" stop-opacity="0"/></linearGradient>
     <filter id="za-gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs>
-    <rect x="${x(0)}" y="${po - 6}" width="${x(Z) - x(0)}" height="${H - po - pu + 10}" fill="var(--kegel)" opacity=".06"/>
+    <rect x="${x(0)}" y="${po - 4}" width="${x(Z) - x(0)}" height="${H - po - pu + 4}" fill="var(--kegel)" opacity=".06"/>
+    ${txt.join("")}
     <path d="M${verg} L${x(0)} ${H - pu} L${x(-V)} ${H - pu} Z" fill="url(#za-fl)"/>
     ${q ? `<path d="${band("q5", "q95")}" fill="var(--kegel)" opacity=".2"/><path d="${band("q25", "q75")}" fill="var(--kegel)" opacity=".36"/><path d="M${med.join(" L")}" fill="none" stroke="var(--kegel)" stroke-width="1.6" stroke-dasharray="4 4"/>` : ""}
     ${l200 ? `<path d="M${l200}" fill="none" stroke="var(--gelb)" stroke-width="1.3" opacity=".9"/>` : ""}
     <path d="M${verg}" fill="none" stroke="url(#za-vl)" stroke-width="2.2" stroke-linejoin="round"/>
-    <path d="M${x(0)} ${po - 6}V${H - pu + 4}" stroke="var(--text)" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
-    <path d="M${zx.toFixed(1)} ${po - 6}V${H - pu + 4}" stroke="var(--text)" stroke-width="1.4"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="16" fill="var(--akzent)" opacity=".5" filter="url(#za-gl)"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="6.5" fill="var(--panel)" stroke="var(--akzent)" stroke-width="3"/>
-    ${txt.join("")}</svg>`;
+    <path d="M${x(0)} ${po - 4}V${H - pu}" stroke="var(--text)" stroke-width="1" stroke-dasharray="2 4" opacity=".5"/>
+    <path d="M${zx.toFixed(1)} ${po - 4}V${H - pu}" stroke="var(--text)" stroke-width="1.4"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="16" fill="var(--akzent)" opacity=".5" filter="url(#za-gl)"/><circle cx="${zx.toFixed(1)}" cy="${y(zv).toFixed(1)}" r="6.5" fill="var(--panel)" stroke="var(--akzent)" stroke-width="3"/>
+    <rect x="${(mxp - 26).toFixed(1)}" y="3" width="52" height="17" rx="8.5" fill="var(--text)"/><text x="${mxp.toFixed(1)}" y="15" font-size="10.5" font-weight="700" fill="var(--bg)" text-anchor="middle">${marke}</text></svg>`;
 }
 function zaInfo(){
-  const c = ZA.c, n = c.c.length, kurs = c.c[n - 1], z = ZA.z, w = ZA.w, nk = kurs >= 100 ? 0 : kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kl = x => x > 0 ? "pos" : x < 0 ? "neg" : "";
+  const c = ZA.c, n = c.c.length, kurs = c.c[n - 1], z = ZA.z, w = ZA.w, nk = kurs >= 100 ? 0 : kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kl = x => x > 0 ? "pos" : x < 0 ? "neg" : "", name = esc(kurzname(w));
   if (z < 0) { const i = n - 1 + z, s = c.score?.[i], p = c.c[i], nach = wo => i + wo < n && c.c[i + wo] > 0 ? (c.c[i + wo] / p - 1) * 100 : null, r1 = nach(52), r3 = nach(156), bis = (kurs / p - 1) * 100;
-    return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())}</div>
+    return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())} · vor ${-z < 52 ? fmt(-z / 4.345, 0) + " Monaten" : fmt(-z / 52, 1) + " Jahren"}</div>
       <div class="za-gross">${s == null ? "noch keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(s)]}">${zonenWort(s)}</span>`}</div>
       <p class="za-satz">${s == null ? "Damals gab es noch zu wenig Geschichte für eine Ampel." : `Das hätte das Tool damals gesagt (Ampel <b>${fmt(s,0)}</b>), nur mit dem Wissen von damals.`} Kurs damals: <b>${k(p)}</b>.</p>
-      <div class="kv"><span>Ein Jahr später</span><b class="${kl(r1)}">${r1 == null ? "noch offen" : vz(r1, 0, " %")}</b></div>
-      <div class="kv"><span>Drei Jahre später</span><b class="${kl(r3)}">${r3 == null ? "noch offen" : vz(r3, 0, " %")}</b></div>
-      <div class="kv"><span>Bis heute</span><b class="${kl(bis)}">${vz(bis, 0, " %")}</b></div>`; }
+      <div class="kv"><span>Ein Jahr später stand der Kurs</span><b class="${kl(r1)}">${r1 == null ? "noch offen" : vz(r1, 0, " %")}</b></div>
+      <div class="kv"><span>Drei Jahre später stand der Kurs</span><b class="${kl(r3)}">${r3 == null ? "noch offen" : vz(r3, 0, " %")}</b></div>
+      <div class="kv"><span>Von damals bis heute</span><b class="${kl(bis)}">${vz(bis, 0, " %")}</b></div>`; }
   if (z === 0) return `<div class="za-auge">Heute · ${datumDe(w.datum)}</div><div class="za-gross">${w.score == null ? "keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(w.score)]}">${zonenWort(w.score)}</span>`}</div>
       <p class="za-satz">${w.score == null ? "" : `Ampel <b>${fmt(w.score,0)}</b>, `}Kurs <b>${k(kurs)}</b>. Schieb den Regler nach links in die Vergangenheit oder nach rechts in die Zukunft.</p>`;
   const q = ZA.q; if (!q) return `<div class="za-auge">Mögliche Zukunft</div><p class="za-satz">Die Simulation wird gerechnet …</p>`;
   const t = c.t[n - 1] + z * 7 * 86400, lo = kurs * q.q10[z], hi = kurs * q.q90[z], d = new Date(t * 1000);
-  return `<div class="za-auge">Mögliche Zukunft · ${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()} (in ${z < 52 ? fmt(z / 4.345, 0) + " Monaten" : fmt(z / 52, z % 52 ? 1 : 0) + (z === 52 ? " Jahr" : " Jahren")})</div>
+  const wann = z < 9 ? `${z} Woche${z === 1 ? "" : "n"}` : z < 52 ? `${fmt(z / 4.345, 0)} Monaten` : z === 52 ? "einem Jahr" : `${fmt(z / 52, z % 52 ? 1 : 0)} Jahren`;
+  return `<div class="za-auge">Mögliche Zukunft · ${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()} · in ${wann}</div>
     <div class="za-gross">${k(lo)} bis ${k(hi)}</div>
-    <p class="za-satz">In <b>8 von 10</b> simulierten Wegen liegt der Kurs dann in diesem Bereich (${vz((lo / kurs - 1) * 100, 0, " %")} bis ${vz((hi / kurs - 1) * 100, 0, " %")}).</p>
+    <p class="za-satz">In <b>8 von 10</b> simulierten Wegen liegt der Kurs in ${wann} in diesem Bereich (${vz((lo / kurs - 1) * 100, 0, " %")} bis ${vz((hi / kurs - 1) * 100, 0, " %")} gegenüber heute).</p>
     <div class="kv"><span>Mittlerer Weg</span><b>${k(kurs * q.q50[z])} (${vz((q.q50[z] - 1) * 100, 0, " %")})</b></div>
-    <div class="kv"><span>Unter dem heutigen Kurs</span><b>${fmt(q.minus[z],0)} von 100 Wegen</b></div>
-    <p class="klein" style="margin:8px 0 0">${fmt(ZA.sim.pfade,0)} Wege aus den echten Wochen der letzten ${fmt(ZA.sim.jahre,0)} Jahre. ${ZA.drift !== 1 ? `<b style="color:var(--teuer)">Vorsichtig gerechnet:</b> Dieser Wert stieg zuletzt im Schnitt um ${fmt(ZA.rendite,0)} % pro Jahr. So etwas lässt sich nicht einfach fortschreiben; gerechnet ist deshalb ${driftSatz(ZA.drift)}.` : "Die Wege übernehmen die Durchschnittsrendite dieser Jahre – war sie ungewöhnlich hoch, ist der mittlere Weg entsprechend optimistisch."}</p>`;
+    <div class="kv"><span>Kurs dann tiefer als heute</span><b>in ${fmt(q.minus[z],0)} von 100 Wegen</b></div>
+    <p class="klein" style="margin:8px 0 0">${fmt(ZA.sim.pfade,0)} mögliche Wege, zusammengesetzt aus den echten Wochen der letzten ${fmt(ZA.sim.jahre,0)} Jahre. ${annahmeText(name, c.c, ZA.annahme)} Niemand kennt die Zukunft – das ist eine Spanne, keine Vorhersage.</p>`;
 }
 function zeitachseInit(id, w, c){
   const r = $("#za-regler"); if (!r) { ZA = null; return; }
   const n = c.c.length; let erste = 0; while (erste < n && !(c.c[erste] > 0)) erste++;
-  const rend = reiheRendite(c.c);
-  ZA = {id, w, c, verg:Math.min(520, n - 1 - erste), zuk:260, z:0, sim:null, q:null, rendite:rend, drift:simDrift(rend)};
+  ZA = {id, w, c, verg:Math.min(520, n - 1 - erste), zuk:260, z:0, sim:null, q:null, annahme:annahmeStandard(c.c)};
   r.min = -ZA.verg; r.max = ZA.zuk; r.value = 0; r.style.setProperty("--heute", (ZA.verg / (ZA.verg + ZA.zuk) * 100).toFixed(1) + "%");
   const neu = () => { $("#za-bild").innerHTML = zaBild(); $("#za-info").innerHTML = zaInfo(); };
   r.oninput = () => { ZA.z = +r.value; neu(); };
   neu();
-  setTimeout(() => { if (!ZA || ZA.id !== id || AKTIV !== id || !$("#za-regler")) return; ZA.sim = simWege(c.c, ZA.zuk, 4000, id, 13, 20, 13, ZA.drift); if (!ZA.sim) return; ZA.q = simQuantile(ZA.sim); neu(); }, 80);
+  setTimeout(() => { if (!ZA || ZA.id !== id || AKTIV !== id || !$("#za-regler")) return; ZA.sim = simWege(c.c, ZA.zuk, 4000, id, ZA.annahme); if (!ZA.sim) return; ZA.q = simQuantile(ZA.sim); neu(); }, 80);
 }
-
 // ------------------------------------------------------------ Zukunfts-Rechner: Was wird aus meinem Geld? Freie Eingabe, in Euro gerechnet
 let ZR = null, ZR_T = 0;
 const ZR_STD = {einmal:5000, rate:0, jahre:10};
@@ -2170,12 +2200,12 @@ function rechnerKarte(w, c){
   return `<section class="karte breit2" id="rechner-karte">${kk("ausblick", "Was wird aus meinem Geld?", "Trag ein, was du anlegen willst. Das Tool spielt tausende mögliche Verläufe durch – aus den echten Wochen der Vergangenheit.", "Simulation", "zrechner")}
     <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}${feld("zr-jahre", "Wie lange?", e.jahre, "Jahre", 'min="1" max="30" step="1"')}</div>
     <input type="range" class="regler" id="zr-regler" min="1" max="30" step="1" value="${e.jahre}" style="--heute:0%" aria-label="Anlagedauer in Jahren">
-    <div class="zr-annahme"><span class="klein" data-e="zr_annahme" tabindex="0">Annahme für die Rendite</span><div class="segment" id="zr-drift" role="group" aria-label="Annahme für die Rendite"><button type="button" data-d="1" aria-pressed="true">wie die letzten 20 Jahre</button><button type="button" data-d="0.5" aria-pressed="false">vorsichtig (halb so viel)</button><button type="button" data-d="0" aria-pressed="false">ohne (nur Schwankung)</button></div></div>
+    <div class="zr-annahme"><span class="klein" data-e="zr_annahme" tabindex="0">Wie soll die Vergangenheit zählen?</span><div class="segment" id="zr-annahme" role="group" aria-label="Annahme für die Rendite">${Object.entries(ANNAHMEN).map(([k, a]) => `<button type="button" data-a="${k}" aria-pressed="false">${a.name}</button>`).join("")}</div></div>
     <div id="zr-aus"><div class="lade" style="height:190px;margin-top:10px"></div></div></section>`;
 }
 function zrRechnen(){
   const el = $("#zr-aus"); if (!el || !ZR) return;
-  const wo = ZR.jahre * 52; if (!ZR.sim || ZR.sim.wochen !== wo || ZR.sim.drift !== ZR.drift) { ZR.sim = simWege(ZR.reihe, wo, 3000, ZR.id + "|eur", 13, 20, 13, ZR.drift); if (ZR.sim) ZR.sim.drift = ZR.drift; }
+  const wo = ZR.jahre * 52; if (!ZR.sim || ZR.sim.wochen !== wo || ZR.sim.annahme !== ZR.annahme) ZR.sim = simWege(ZR.reihe, wo, 3000, ZR.id + "|eur", ZR.annahme);
   const sim = ZR.sim; if (!sim) { el.innerHTML = `<p class="klein">Zu wenig Kursgeschichte für eine Simulation.</p>`; return; }
   const n = wo + 1, P = sim.pfade, zahl = []; for (let m = 1; m * 52 / 12 < wo; m++) zahl.push(Math.round(m * 52 / 12));
   const ein = ZR.einmal + ZR.rate * zahl.length, end = new Float64Array(P);
@@ -2183,47 +2213,54 @@ function zrRechnen(){
   for (let p = 0; p < P; p++) { const o = p * n, LT = sim.L[o + wo]; let v = ZR.einmal * Math.exp(LT); for (const w of zahl) v += ZR.rate * Math.exp(LT - sim.L[o + w]); end[p] = v; }
   const a = Array.from(end).sort((x, y) => x - y), g = f => a[Math.min(P - 1, Math.floor(f * P))], p10 = g(.1), p50 = g(.5), p90 = g(.9), minus = Math.round(a.filter(x => x < ein).length / P * 100);
   const netto = v => v - Math.max(0, (v - ein) * (ZR.tf ? .7 : 1) - 1000) * .26375;
-  // Bild: 300 Wege in Geld, daraus die Bänder; 46 davon einzeln gezeichnet
+  // Bild: 300 Wege in Geld, daraus die Bänder; jeder siebte einzeln gezeichnet; Achsen: Betrag links, Jahre unten
   const weg = p => { const o = p * n, out = new Float32Array(n); let anteile = ZR.einmal, naechste = 52 / 12; for (let w = 0; w <= wo; w++) { if (w >= naechste && w < wo) { anteile += ZR.rate / Math.exp(sim.L[o + w]); naechste += 52 / 12; } out[w] = anteile * Math.exp(sim.L[o + w]); } return out; };
   const W = []; for (let p = 0; p < 300; p++) W.push(weg(p * 10));
   const schritt = Math.max(1, Math.round(wo / 130)), Q = []; for (let w = 0; w <= wo; w += schritt) { const s = W.map(v => v[w]).sort((x, y) => x - y); Q.push([w, s[30], s[150], s[270]]); }
-  const B = 400, H = 190, po = 12, pu = 20, mx = Math.max(...Q.map(z => z[3])) * 1.1, x = w => 6 + w / wo * (B - 12), y = v => po + (1 - Math.min(v, mx) / mx) * (H - po - pu);
-  const pkt = (i) => Q.map(z => `${x(z[0]).toFixed(1)} ${y(z[i]).toFixed(1)}`), einL = Q.map(z => `${x(z[0]).toFixed(1)} ${y(ZR.einmal + ZR.rate * Math.floor(z[0] / (52 / 12))).toFixed(1)}`);
-  const eu = ZR.eur ? " €" : "", jt = ZR.jahre === 1 ? "einem Jahr" : `${ZR.jahre} Jahren`;
-  const warn = ZR.rendite != null && ZR.rendite > SIM_GRENZE ? `<div class="fazit warn" style="margin:12px 0 0"><b>Achtung, Rechenbeispiel:</b> Dieser Wert stieg in den letzten ${fmt(sim.jahre,0)} Jahren im Schnitt um <b>${fmt(ZR.rendite,0)} % pro Jahr</b>. Die Simulation kennt nur diese Vergangenheit. Solche Zuwächse sind über viele Jahre nicht zu erwarten. Gerechnet ist gerade <b>${driftSatz(ZR.drift)}</b> – die Beträge unten zeigen vor allem, wie breit die Spanne ist.</div>` : "";
-  el.innerHTML = warn + `<svg class="zr-bild" viewBox="0 0 ${B} ${H}" role="img" aria-label="Mögliche Verläufe des Betrags über ${jt}">
-      <path d="M${pkt(3).join(" L")} L${pkt(1).reverse().join(" L")} Z" fill="var(--kegel)" opacity=".2"/>
+  const B = 400, H = 214, pl = 54, pr = 8, po = 10, pu = 24, mx = Math.max(...Q.map(z => z[3]), ein) * 1.08, x = w => pl + w / wo * (B - pl - pr);
+  // sehr große Spanne (z. B. Bitcoin): Zehner-Stufen, sonst wäre der mittlere Weg am Boden nicht zu sehen
+  const unten = Math.max(1, Math.min(...Q.map(z => z[1]).filter(v => v > 0), ein || Infinity) * .7), logY = mx / unten > 60, mnL = Math.log(unten), mxL = Math.log(mx);
+  const y = v => logY ? po + (mxL - Math.log(Math.max(v, unten))) / (mxL - mnL) * (H - po - pu) : po + (1 - v / mx) * (H - po - pu);
+  const pkt = i => Q.map(z => `${x(z[0]).toFixed(1)} ${y(z[i]).toFixed(1)}`), einL = Q.map(z => `${x(z[0]).toFixed(1)} ${y(ZR.einmal + ZR.rate * Math.floor(z[0] / (52 / 12))).toFixed(1)}`);
+  const eu = ZR.eur ? " €" : "", jt = ZR.jahre === 1 ? "einem Jahr" : `${ZR.jahre} Jahren`, name = esc(kurzname(INFO || {name:""})), rend = annahmeRendite(ZR.reihe, ZR.annahme), achse = [];
+  for (const v of (logY ? logSchritte(unten, mx / 1.08) : achsenSchritte(0, mx / 1.08, 4))) achse.push(`<path d="M${pl} ${y(v).toFixed(1)}H${B - pr}" stroke="var(--line2)" stroke-width="1" opacity=".55"/><text x="${pl - 5}" y="${(y(v) + 3.5).toFixed(1)}" font-size="10" fill="var(--muted)" text-anchor="end">${kurzZahl(v)}</text>`);
+  const js = Math.max(1, Math.ceil(ZR.jahre / 6)); for (let j = js; j < ZR.jahre; j += js) achse.push(`<path d="M${x(j * 52).toFixed(1)} ${H - pu}v4" stroke="var(--muted)" stroke-width="1"/><text x="${x(j * 52).toFixed(1)}" y="${H - 7}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${j} J.</text>`);
+  const warn = rend != null && rend > SIM_GRENZE && ZR.annahme !== "vorsicht" ? `<div class="fazit warn" style="margin:12px 0 0"><b>Achtung, das ist ein Rechenbeispiel:</b> Mit <b>+${fmt(rend,0)} % pro Jahr</b> zu rechnen ist kaum realistisch. So schnell wachsen Werte meist nur, solange sie klein sind. Für eine nüchternere Annahme wähle oben „vorsichtig“.</div>` : "";
+  el.innerHTML = `<p class="zr-annahme-satz">${annahmeText(name, ZR.reihe, ZR.annahme)} Dazu kommen die echten Schwankungen.</p>${warn}
+    <svg class="zr-bild" viewBox="0 0 ${B} ${H}" role="img" aria-label="Mögliche Verläufe des Betrags über ${jt}">
+      <defs><clipPath id="zr-ausschnitt"><rect x="${pl}" y="${po}" width="${B - pl - pr}" height="${H - po - pu}"/></clipPath></defs>
+      ${achse.join("")}<text x="${pl - 5}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">Heute</text><text x="${B - pr}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">${ZR.jahre} J.</text>
+      <g clip-path="url(#zr-ausschnitt)"><path d="M${pkt(3).join(" L")} L${pkt(1).reverse().join(" L")} Z" fill="var(--kegel)" opacity=".2"/>
       ${W.filter((_, i) => i % 7 === 0).map((v, p) => { let d = ""; for (let w = 0; w <= wo; w += schritt) d += `${w ? " L" : "M"}${x(w).toFixed(1)} ${y(v[w]).toFixed(1)}`; return `<path d="${d}" fill="none" stroke="${p % 3 ? "var(--kegel)" : "var(--guenstig)"}" stroke-width=".8" opacity=".4"/>`; }).join("")}
-      <path d="M${pkt(2).join(" L")}" fill="none" stroke="var(--text)" stroke-width="2.2"/><path d="M${einL.join(" L")}" fill="none" stroke="var(--gelb)" stroke-width="1.3" stroke-dasharray="4 4"/>
-      <text x="6" y="${H - 5}" font-size="10.5" fill="var(--muted)">Heute</text><text x="${B - 6}" y="${H - 5}" font-size="10.5" fill="var(--muted)" text-anchor="end">in ${jt}</text></svg>
-    <div class="klein" style="margin-top:4px"><i class="leg" style="background:var(--text)"></i>mittlerer Weg &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>8 von 10 Wegen &nbsp; <i class="leg" style="background:var(--gelb)"></i>eingezahlt</div>
+      <path d="M${pkt(2).join(" L")}" fill="none" stroke="var(--text)" stroke-width="2.2"/><path d="M${einL.join(" L")}" fill="none" stroke="var(--gelb)" stroke-width="1.3" stroke-dasharray="4 4"/></g></svg>
+    <div class="klein" style="margin-top:4px">Links: Betrag${ZR.eur ? " in Euro" : ""}${logY ? " (in Zehner-Stufen, weil die Spanne so groß ist)" : ""}. Unten: Jahre ab heute. &nbsp; <i class="leg" style="background:var(--text)"></i>mittlerer Weg &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>8 von 10 Wegen &nbsp; <i class="leg" style="background:var(--gelb)"></i>eingezahlt &nbsp; dünne Linien: einzelne mögliche Wege</div>
     <div class="za-gross" style="margin-top:14px">${fmt(p10,0)}${eu} <small>bis</small> ${fmt(p90,0)}${eu}</div>
-    <p class="za-satz">Das wurde in <b>8 von 10</b> simulierten Wegen nach ${jt} aus <b>${fmt(ein,0)}${eu}</b> eingezahltem Geld.</p>
+    <p class="za-satz">Das wurde in <b>8 von 10</b> simulierten Wegen nach ${jt} aus <b>${fmt(ein,0)}${eu}</b> eingezahltem Geld. In je einem von zehn Wegen war es weniger oder mehr.</p>
     <div class="zr-kacheln"><div class="kpi"><div class="k-l">Mittlerer Fall</div><div class="k-w">${fmt(p50,0)}${eu}</div><div class="k-u">${vz((p50 / ein - 1) * 100, 0, " %")} zum Eingezahlten</div></div>
       <div class="kpi" data-e="zr_steuer" tabindex="0"><div class="k-l">Mittlerer Fall nach Steuern</div><div class="k-w">${fmt(netto(p50),0)}${eu}</div><div class="k-u">bei Verkauf am Ende, vereinfacht</div></div>
       <div class="kpi" data-e="zr_kaufkraft" tabindex="0"><div class="k-l">Mittlerer Fall in heutiger Kaufkraft</div><div class="k-w">${fmt(p50 / Math.pow(1.02, ZR.jahre),0)}${eu}</div><div class="k-u">bei 2 % Inflation pro Jahr angenommen</div></div>
-      <div class="kpi"><div class="k-l">Am Ende im Minus</div><div class="k-w">${minus} von 100</div><div class="k-u">weniger als eingezahlt</div></div></div>
+      <div class="kpi"><div class="k-l">Am Ende weniger als eingezahlt</div><div class="k-w">${minus} von 100</div><div class="k-u">simulierten Wegen</div></div></div>
+    <p class="klein" style="margin:12px 0 0"><b style="color:var(--text)">Jede Kugel steht für 1 von 100 simulierten Wegen.</b> Orange: am Ende weniger als eingezahlt (${minus}). Grau: am Ende mindestens so viel wie eingezahlt (${100 - minus}).</p>
     ${punkte100(minus, "var(--teuer)")}
-    <p class="klein">${fmt(P,0)} Wege aus den echten Wochen der letzten ${fmt(sim.jahre,0)} Jahre (zusammenhängende 13-Wochen-Stücke, Schwankung startet beim heutigen Niveau). ${ZR.umgerechnet ? "<b>In Euro gerechnet:</b> Der Wechselkurs Dollar/Euro jeder Woche ist eingerechnet. " : ZR.eur ? "In Euro. " : "In der Währung des Werts. "}Vor Kosten; gerechnet ${driftSatz(ZR.drift)}${ZR.drift === 1 ? " – war sie ungewöhnlich hoch, ist das Ergebnis optimistisch (Schalter „vorsichtig“)" : ""}.${ZR.jahre > 20 ? " <b>Achtung:</b> Der Zeitraum ist länger als die Geschichte, aus der die Wochen stammen – sehr unsicher." : ""} Eine Spanne, keine Vorhersage und keine Anlageberatung.</p>`;
+    <p class="klein">${fmt(P,0)} Wege, zusammengesetzt aus den echten Wochen der letzten ${fmt(sim.jahre,0)} Jahre (zusammenhängende 13-Wochen-Stücke, Schwankung startet beim heutigen Niveau). ${ZR.umgerechnet ? "<b>In Euro gerechnet:</b> Der Wechselkurs Dollar/Euro jeder Woche ist eingerechnet. " : ZR.eur ? "In Euro. " : "In der Währung des Werts. "}Vor Kosten.${ZR.jahre > 20 ? " <b>Achtung:</b> Der Zeitraum ist länger als die Geschichte, aus der die Wochen stammen – sehr unsicher." : ""} Eine Spanne, keine Vorhersage und keine Anlageberatung.</p>`;
 }
 async function rechnerInit(id, w, c){
   if (!$("#zr-aus")) { ZR = null; return; }
   const e = {...ZR_STD, ...lade("zrechner", {})}, wg = waehrungVon(w);
-  ZR = {id, ...e, drift:1, rendite:null, reihe:c.c, eur:wg === "EUR", umgerechnet:false, tf:false, sim:null};
+  ZR = {id, ...e, annahme:"alle", reihe:c.c, eur:wg === "EUR", umgerechnet:false, tf:false, sim:null};
   const lesen = () => { const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+$(sel).value || 0)));
     ZR.einmal = z("#zr-einmal", 0, 1e9); ZR.rate = z("#zr-rate", 0, 1e7); ZR.jahre = z("#zr-jahre", 1, 30); sichere("zrechner", {einmal:ZR.einmal, rate:ZR.rate, jahre:ZR.jahre}); };
   const spaeter = () => { clearTimeout(ZR_T); ZR_T = setTimeout(() => { if (ZR && ZR.id === id) zrRechnen(); }, 220); };
+  const knoepfe = () => $$("#zr-annahme button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.a === ZR.annahme)));
   ["#zr-einmal", "#zr-rate"].forEach(s => $(s).oninput = () => { lesen(); spaeter(); });
   $("#zr-jahre").oninput = () => { lesen(); $("#zr-regler").value = ZR.jahre; spaeter(); };
   $("#zr-regler").oninput = ev => { $("#zr-jahre").value = ev.target.value; lesen(); spaeter(); };
-  $$("#zr-drift button").forEach(b => b.onclick = () => { ZR.drift = +b.dataset.d; $$("#zr-drift button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); lesen(); zrRechnen(); });
+  $$("#zr-annahme button").forEach(b => b.onclick = () => { ZR.annahme = b.dataset.a; knoepfe(); zrRechnen(); });
   if (wg === "USD") { try { await fxLaden(); } catch(_) {} if (!ZR || ZR.id !== id || AKTIV !== id) return; if (FX) { const eu = inEuro(c).c; if (eu.filter(x => x > 0).length >= 110) { ZR.reihe = eu; ZR.eur = true; ZR.umgerechnet = true; } } }
-  ZR.rendite = reiheRendite(ZR.reihe); ZR.drift = simDrift(ZR.rendite);   // zu rosige Vergangenheit: von sich aus vorsichtig
-  $$("#zr-drift button").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.d === ZR.drift)));
+  ZR.annahme = annahmeStandard(ZR.reihe); knoepfe();   // stieg der Wert sehr schnell, zählen jüngere Jahre mehr oder es wird vorsichtig gerechnet
   setTimeout(() => { if (ZR && ZR.id === id && AKTIV === id) zrRechnen(); }, 140);
   apiStrategie(id).then(s => { if (ZR && ZR.id === id && s && !s.fehler && !!s.teilfrei !== ZR.tf) { ZR.tf = !!s.teilfrei; zrRechnen(); } }).catch(() => {});
 }
-
 // ------------------------------------------------------------ Deine Position (aus „Mein Depot“, bleibt im Browser) und Rendite in Euro
 function positionKarte(w){
   if (!DEPOT) depotLaden();
@@ -2532,14 +2569,14 @@ function kvKarte(w){   // Was passierte früher in ähnlicher Lage? Kaufen und V
     : kU === -1 ? `Ein Kauf in solcher Lage ging früher <b>schlechter</b> aus als ein Kauf in einer beliebigen Woche.`
     : `Ein Kauf in solcher Lage ging früher <b>etwa so aus wie in jeder anderen Woche</b> – die Lage war nichts Besonderes.`;
   const wieOft = !s ? "" : s.richtig < 35 ? "selten richtig" : s.richtig < 50 ? "meist nicht richtig" : "etwa in jedem zweiten Fall richtig";
-  const vHeisst = !s ? "" : vU === 1 ? `Verkaufen war in solcher Lage <b>öfter richtig als sonst</b> (${fmt(s.richtig,0)} statt ${fmt(s.richtig_alle,0)} von 100).`
-    : vU === -1 ? `Verkaufen war in solcher Lage <b>noch seltener richtig als sonst</b> (${fmt(s.richtig,0)} statt ${fmt(s.richtig_alle,0)} von 100).`
+  const vHeisst = !s ? "" : vU === 1 ? `Verkaufen war in solcher Lage <b>öfter richtig</b> als in einer beliebigen Woche: in ${fmt(s.richtig,0)} von 100 Fällen statt in ${fmt(s.richtig_alle,0)} von 100.`
+    : vU === -1 ? `Verkaufen war in solcher Lage <b>noch seltener richtig</b> als in einer beliebigen Woche: in ${fmt(s.richtig,0)} von 100 Fällen statt in ${fmt(s.richtig_alle,0)} von 100.`
     : `Verkaufen war hier <b>${wieOft}</b> – und damit etwa so oft wie zu jeder anderen Zeit. Die heutige Lage war früher kein besonderer Grund zu verkaufen.`;
-  const teile = [k ? (kU === 1 ? "Für <b>Käufer</b> war eine solche Lage früher etwas besser als üblich" : kU === -1 ? "Für <b>Käufer</b> war eine solche Lage früher schlechter als üblich" : "Für <b>Käufer</b> war eine solche Lage früher weder besser noch schlechter als üblich") : "",
-                 s ? (vU === 1 ? "<b>Verkaufen</b> war öfter richtig als sonst" : vU === -1 ? "<b>Verkaufen</b> war noch seltener richtig als sonst" : "ein besonderer Grund zu <b>verkaufen</b> war sie nicht") : ""].filter(Boolean).join("; ");
+  const teile = [k ? (kU === 1 ? "Für <b>Käufer</b> war eine solche Lage früher etwas besser als in einer beliebigen Woche" : kU === -1 ? "Für <b>Käufer</b> war eine solche Lage früher schlechter als in einer beliebigen Woche" : "Für <b>Käufer</b> war eine solche Lage früher weder besser noch schlechter als in einer beliebigen Woche") : "",
+                 s ? (vU === 1 ? "<b>Verkaufen</b> war öfter richtig als in einer beliebigen Woche" : vU === -1 ? "<b>Verkaufen</b> war noch seltener richtig als in einer beliebigen Woche" : "ein besonderer Grund zu <b>verkaufen</b> war sie nicht") : ""].filter(Boolean).join("; ");
   const fazit = unsicher
-    ? `<b>Kurz gesagt:</b> Aus der heutigen Lage lässt sich bei ${name} <b>nichts Verlässliches ableiten</b>. Unten steht, wie es früher weiterging – aber in der Gegenprobe lag diese Methode bei diesem Titel nur in <b>${fmt(p.richtig,0)} von 100</b> Fällen richtig. Eine geworfene Münze schafft 50.`
-    : `<b>Kurz gesagt:</b> ${teile}.${!p ? " Für eine Gegenprobe ist die Geschichte dieses Titels noch zu kurz." : knapp ? ` Die Gegenprobe lag bei diesem Titel in ${fmt(p.richtig,0)} von 100 Fällen richtig – kaum besser als eine geworfene Münze (50). Also mit Vorsicht lesen.` : ` Die Gegenprobe stützt das: Die Methode lag bei diesem Titel in ${fmt(p.richtig,0)} von 100 Fällen richtig (eine geworfene Münze schafft 50).`}`;
+    ? `<b>Kurz gesagt:</b> Aus der heutigen Lage lässt sich bei ${name} <b>nichts Verlässliches ableiten</b>. Unten steht, wie es früher weiterging – aber in der Gegenprobe lag diese Methode bei ${name} nur in <b>${fmt(p.richtig,0)} von 100</b> Fällen richtig. Eine geworfene Münze schafft 50.`
+    : `<b>Kurz gesagt:</b> ${teile}.${!p ? ` Für eine Gegenprobe ist die Geschichte von ${name} noch zu kurz.` : knapp ? ` Die Gegenprobe lag bei ${name} in ${fmt(p.richtig,0)} von 100 Fällen richtig – kaum besser als eine geworfene Münze (50). Also mit Vorsicht lesen.` : ` Die Gegenprobe stützt das: Die Methode lag bei ${name} in ${fmt(p.richtig,0)} von 100 Fällen richtig (eine geworfene Münze schafft 50).`}`;
   const zl = (txt, x, y) => `<tr><td style="text-align:left">${txt}</td><td><b>${x}</b></td><td>${y}</td></tr>`;
   const bw = (liste, art) => (liste || []).map(x => `${datumDe(x.datum)}${x.abstand != null ? ` (${vz(x.abstand,0," %")} zur Linie)` : ""}: danach ${vz(x.danach,0," %")}${art === "k" ? " pro Jahr (3 J.)" : " (1 J.)"}`).join(" · ");
   return `<section class="karte breit-voll" id="kv-karte">${kk("rueck", "Was passierte früher, als der Kurs so stand wie heute?",
@@ -2551,7 +2588,7 @@ function kvKarte(w){   // Was passierte früher in ähnlicher Lage? Kaufen und V
         <div class="kv-gross">${fmt(k.plus,0)} <small>von 100 Käufen</small></div>
         <div class="kv-was">waren 3 Jahre später <b>im Plus</b></div>
         ${vb(k.plus, k.plus_alle, "var(--guenstig)")}
-        <div class="kv"><span>Typischer Ertrag pro Jahr</span><b><span class="${klasse(k.median)}">${vz(k.median,1," %")}</span> <span class="klein">sonst ${vz(k.median_alle,1," %")}</span></b></div>
+        <div class="kv"><span>Typischer Ertrag pro Jahr</span><b><span class="${klasse(k.median)}">${vz(k.median,1," %")}</span> <span class="klein">beliebige Woche: ${vz(k.median_alle,1," %")}</span></b></div>
         <div class="kv"><span>Schlechter Fall <span class="klein">(jeder 10. Kauf lief so oder schlechter)</span></span><b><span class="${klasse(k.schlecht10)}">${vz(k.schlecht10,0," %")}</span> pro Jahr</b></div>
         <p class="kv-heisst"><b>Heißt:</b> ${kHeisst}</p></div>` : ""}
       ${s ? `<div class="kv-block"><div class="kv-bt"><i style="background:${VQ_FARBE}"></i>Wer damals <b>verkauft</b> hat <span class="klein">Blick 1 Jahr später</span></div>
@@ -2559,14 +2596,14 @@ function kvKarte(w){   // Was passierte früher in ähnlicher Lage? Kaufen und V
         <div class="kv-was">waren <b>richtig</b>: Der Kurs stand ein Jahr später tiefer</div>
         ${vb(s.richtig, s.richtig_alle, VQ_FARBE)}
         <div class="kv"><span>In den anderen Fällen</span><b>${fmt(100 - s.richtig,0)} von 100: Kurs stand höher</b></div>
-        <div class="kv"><span>Typische Kursveränderung im Jahr danach</span><b><span class="${klasse(s.median)}">${vz(s.median,1," %")}</span> <span class="klein">sonst ${vz(s.median_alle,1," %")}</span></b></div>
+        <div class="kv"><span>Typische Kursveränderung im Jahr danach</span><b><span class="${klasse(s.median)}">${vz(s.median,1," %")}</span> <span class="klein">beliebige Woche: ${vz(s.median_alle,1," %")}</span></b></div>
         <p class="kv-heisst"><b>Heißt:</b> ${vHeisst}</p></div>` : ""}
     </div>
     <div class="verl"><div class="verl-kopf">Wie verlässlich ist das bei ${name}? <button type="button" class="kk-i" data-e="kv_probe" aria-label="Erklärung zur Gegenprobe">i</button></div>
       ${p ? `<div class="meter" role="img" aria-label="${fmt(p.richtig,0)} von 100 richtig, Münzwurf 50"><i style="width:${Math.max(2, Math.min(100, p.richtig))}%;background:${p.richtig >= 60 ? "var(--guenstig)" : p.richtig < 50 ? "var(--teuer)" : "var(--neutral)"}"></i><span class="m-50"></span></div>
       <div class="meter-leg"><span>0</span><span>50 = Münzwurf</span><span>100</span></div>
-      <p class="klein" style="margin:8px 0 0">Gegenprobe: An ${p.zeitpunkte} früheren Zeitpunkten hat das Tool nur mit dem damaligen Wissen vorhergesagt, ob ein Kauf besser oder schlechter als üblich ausgeht – und später nachgesehen. Richtig waren <b style="color:var(--text)">${fmt(p.richtig,0)} von 100</b> Vorhersagen: ${p.richtig >= 60 ? "besser als eine geworfene Münze." : p.richtig < 50 ? "schlechter als eine geworfene Münze. Bei diesem Titel taugt die Karte nur als Rückblick, nicht als Signal." : "etwa wie eine geworfene Münze."}</p>`
-      : `<p class="klein" style="margin:6px 0 0">Für eine Gegenprobe ist die Geschichte dieses Titels noch zu kurz.</p>`}</div>
+      <p class="klein" style="margin:8px 0 0">Gegenprobe: An ${p.zeitpunkte} früheren Zeitpunkten hat das Tool nur mit dem damaligen Wissen vorhergesagt, ob ein Kauf besser oder schlechter ausgeht als in einer beliebigen Woche – und später nachgesehen. Richtig waren <b style="color:var(--text)">${fmt(p.richtig,0)} von 100</b> Vorhersagen: ${p.richtig >= 60 ? "besser als eine geworfene Münze." : p.richtig < 50 ? `schlechter als eine geworfene Münze. Bei ${name} taugt die Karte nur als Rückblick, nicht als Signal.` : "etwa wie eine geworfene Münze."}</p>`
+      : `<p class="klein" style="margin:6px 0 0">Für eine Gegenprobe ist die Geschichte von ${name} noch zu kurz.</p>`}</div>
     <details class="mehr"><summary>Alle Zahlen und die besten Kauf- und Verkaufswochen im Rückblick</summary>
       ${k ? `<div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Kauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
         ${zl("3 Jahre später im Plus", fmt(k.plus,0," %"), fmt(k.plus_alle,0," %"))}
@@ -2627,8 +2664,8 @@ function nachkaufKarte(w){   // Wunsch Marc 22.11.2026: je Titel klar sagen, ab 
     <p style="margin:8px 0 0">Käufe bei hoher Ampel brachten früher im Mittel <b>nicht mehr</b> als Käufe in beliebigen Wochen (${vz(nk.b_med,1," %")} pro Jahr, ${fmt(nk.b_q,0," %")} im Plus) – meist sogar weniger, weil tiefe Kurse selten kamen und der Kurs danach oft weiter fiel. Nachkaufen lohnte sich hier früher <b>zu jeder Zeit etwa gleich</b>, zum Beispiel regelmäßig Monat für Monat.</p>`;
   else kern = `<div class="nk-gross">Vorläufig: unter <b>${k(nk.preis)}</b></div>${status}
     <p style="margin:8px 0 0">Für einen echten Beleg ist die Geschichte von ${name} noch zu kurz (es gab weniger als 3 getrennte günstige Phasen mit bekanntem Ergebnis). Bis dahin gilt die Grenze „historisch sehr günstig“ (Ampel 80).</p>`;
-  const methode = `<p class="klein" style="margin:8px 0 0">Geprüft wurden die Schwellen Ampel 60, 70, 80 und 90 über die ganze Geschichte dieses Titels; gezählt wird eine Schwelle nur mit mindestens 3 getrennten Phasen, im Median mehr Ertrag und nicht deutlich seltener im Plus. Der Kurs wandert jede Woche mit der 200-Wochen-Linie. Ohne Kosten und Steuern; Rückblick, keine Garantie und keine Anlageberatung.</p>`;
-  return `<section class="karte nk-karte" id="nachkauf-karte">${kk("preis", `Ab welchem Kurs lohnt sich Nachkaufen bei ${name}?`, "Nachgerechnet an der eigenen Kursgeschichte dieses Titels – nicht geschätzt.", "Rückblick", "l_nachkauf")}
+  const methode = `<p class="klein" style="margin:8px 0 0">Geprüft wurden die Schwellen Ampel 60, 70, 80 und 90 über die ganze Geschichte von ${name}; gezählt wird eine Schwelle nur mit mindestens 3 getrennten Phasen, im Median mehr Ertrag und nicht deutlich seltener im Plus. Der Kurs wandert jede Woche mit der 200-Wochen-Linie. Ohne Kosten und Steuern; Rückblick, keine Garantie und keine Anlageberatung.</p>`;
+  return `<section class="karte nk-karte" id="nachkauf-karte">${kk("preis", `Ab welchem Kurs lohnt sich Nachkaufen bei ${name}?`, `Nachgerechnet an der eigenen Kursgeschichte von ${name} – nicht geschätzt.`, "Rückblick", "l_nachkauf")}
     ${kern}
     ${tab ? `<details class="mehr"><summary>Beleg ansehen: alle geprüften Schwellen</summary>${tab}${methode}</details>` : methode}</section>`;
 }
@@ -2774,7 +2811,7 @@ async function zeige(id, opt={}){
           geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)], P)
         + teil("s-rueck", "Rückblick", "Was passierte früher in ähnlicher Lage?", [
           kvKarte(w),
-          `<section class="karte breit2" id="check">${kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", "Was hätte bei diesem Wert mehr gebracht? Nachgerechnet mit 500 im Monat.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>`,
+          `<section class="karte breit2" id="check">${kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", `Was hätte bei ${INFO ? esc(kurzname(INFO)) : "diesem Wert"} mehr gebracht? Nachgerechnet mit 500 im Monat.`, "Lohnt-sich-Check", "check")}<div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>`,
           phasenKarte(c), schwellenKarte(c)], P)
         + teil("s-risiko", "Ausblick und Risiko", "Wie könnte es weitergehen – und was kann schiefgehen?", [
           `<section class="karte nur-profi" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
@@ -3126,43 +3163,53 @@ function mvrvKarte(c){
     <p style="margin:10px 0 4px"><b data-e="mp_pruefung" tabindex="0">Ehrlich geprüft</b> (ohne Zukunftswissen, ${p ? `${p.von}–${p.bis}` : "–"}): nach Tagen unter 0 stand Bitcoin ein Jahr später in <b>${fmt(p?.unter_null?.hoeher,0," %")}</b> der Fälle höher (${fmt(p?.unter_null?.tage,0)} Tage), nach Tagen dazwischen in ${fmt(p?.dazwischen?.hoeher,0," %")}, nach über 7 in ${fmt(p?.ueber_sieben?.hoeher,0," %")} (${fmt(p?.ueber_sieben?.tage,0)} Tage). Vorteil gegenüber der einfachen Grundquote: <b>${p?.skill == null ? "–" : vz(p.skill,1," %")}</b> – klein, und er beruht auf nur ${m.unter_null.filter(x => x.r1 != null).length} Tiefphasen.</p>
     <p class="klein" style="margin:6px 0 0">Quelle: Coin Metrics Community-Daten (CapMVRVCur), Z-Score nur mit der Vergangenheit berechnet. Keine Anlageberatung.</p></section>`;
 }
-function marktphaseKarte(w, c){
-  const m = c?.mp;
-  const kopf = kk("trend", "Steigt oder fällt der Kurs gerade?", "Die Marktphase von heute – und was früher nach einer solchen Phase kam.", "Trend heute", "mp_karte");
+function marktphaseKarte(w, c){   // Richtung der letzten Monate in Alltagssprache (Marc 23.11.2026: „muss für einen Menschen nachvollziehbar sein“)
+  const m = c?.mp, name = esc(kurzname(w));
+  const kopf = kk("trend", "Steigt oder fällt der Kurs gerade?", "Die Richtung der letzten Monate – und was früher nach einer solchen Phase kam.", "Trend heute", "mp_karte");
   if (!m) return `<section class="karte breit-voll" id="mp-karte">${kopf}<p>Noch keine Phase: Dafür braucht es mindestens ein Jahr Kursdaten.</p></section>`;
-  const r3 = m.rueckblick["3m"], r1 = m.rueckblick["1"];
+  const PH = ["Abwärtstrend", "Gemischt", "Aufwärtstrend"], IM = ["im Abwärtstrend", "ohne klare Richtung", "im Aufwärtstrend"], r3 = m.rueckblick["3m"], r1 = m.rueckblick["1"];
+  const wochen = w.datum && m.seit ? Math.max(0, Math.round((Date.parse(w.datum) - Date.parse(m.seit)) / 604800000)) : null, jahrAb = datumDe(m.ab).slice(-4);
+  const heisst = m.phase === 2 ? "Der Durchschnittskurs der letzten 20 Wochen liegt <b>über</b> dem der letzten 50 Wochen. Der Kurs ist in den letzten Monaten also unterm Strich gestiegen."
+    : m.phase === 0 ? "Der Durchschnittskurs der letzten 20 Wochen liegt <b>unter</b> dem der letzten 50 Wochen. Der Kurs ist in den letzten Monaten also unterm Strich gefallen."
+    : "Die Durchschnittskurse der letzten 20 und 50 Wochen zeigen keine klare Richtung.";
+  const v100 = x => x == null ? "–" : `${fmt(x,0)} von 100`;
   const zeile = (p, i) => { const a = r3[i], b = r1[i], jetzt = p === m.phase;
-    return `<tr${jetzt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${p == null ? "alle Wochen" : `<span style="color:${MP_FARBE[p]}">${MP_PFEIL[p]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][p]}${jetzt ? ' <span class="klein">heute</span>' : ""}`}</td>
-      <td>${b.n.toLocaleString("de-DE")}</td><td>${fmt(a.quote,0," %")}</td><td>${fmt(b.quote,0," %")}</td><td class="${klasse(b.median)}">${vz(b.median,0," %")}</td><td>${fmt(b.absturz,0," %")}</td></tr>`; };
+    return `<tr${jetzt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${p == null ? "alle Wochen zusammen" : `<span style="color:${MP_FARBE[p]}">${MP_PFEIL[p]}</span> ${IM[p]}${jetzt ? ' <span class="klein">· wie heute</span>' : ""}`}</td>
+      <td>${b.n.toLocaleString("de-DE")}</td><td>${v100(a.quote)}</td><td>${v100(b.quote)}</td><td class="${klasse(b.median)}">${vz(b.median,0," %")}</td><td>${v100(b.absturz)}</td></tr>`; };
   const pr = m.pruefung || {}, g = PRUEF?.marktphase?.[mpGruppe(w)];
-  const skillText = x => x?.skill == null ? "–" : `${vz(x.skill,1)} %`;
-  const hilft = x => x?.skill != null && x.skill > 2;
-  const auf = r1.find(x => x.phase === 2), ab = r1.find(x => x.phase === 0), alle = r1.find(x => x.phase == null);
+  const skillText = x => x?.skill == null ? "–" : `${vz(x.skill,1)} %`, hilft = x => x?.skill != null && x.skill > 2;
+  const auf = r1.find(x => x.phase === 2), ab = r1.find(x => x.phase === 0), alle = r1.find(x => x.phase == null), heute = r1.find(x => x.phase === m.phase);
+  const frueher = heute && heute.n > 0 ? `Seit ${jahrAb} war ${name} in <b>${heute.n.toLocaleString("de-DE")} Wochen</b> ${IM[m.phase]} – zusammengezählt über alle solchen Phasen, nicht am Stück. Ein Jahr später stand der Kurs in <b>${v100(heute.quote)}</b> dieser Wochen höher (typisch ${vz(heute.median,0," %")})${alle ? `. Zum Vergleich: über alle Wochen in ${v100(alle.quote)}` : ""}.` : "";
   const risiko = auf?.absturz != null && ab?.absturz != null && ab.n >= 26
-    ? `Deutlicher als bei der Richtung ist der Unterschied oft beim <b>Risiko</b>: Nach einem Abwärtstrend fiel der Kurs im folgenden Jahr in <b>${fmt(ab.absturz,0," %")}</b> der Wochen noch einmal um 20 % oder mehr, nach einem Aufwärtstrend in <b>${fmt(auf.absturz,0," %")}</b>.` : "";
-  const fazit = hilft(pr["3m"]) || hilft(pr["1"])
-    ? "Bei diesem Wert hat die Phase außerhalb der Lernzeit <b>etwas besser</b> vorhergesagt als die Grundquote – der Vorteil ist klein."
-    : "Bei diesem Wert hat die Phase die Richtung außerhalb der Lernzeit <b>nicht besser</b> vorhergesagt als die einfache Grundquote.";
+    ? `<b>Und das Risiko?</b> Nach Wochen im Abwärtstrend fiel der Kurs im Jahr danach in <b>${v100(ab.absturz)}</b> Fällen zwischendurch noch einmal um 20 % oder mehr, nach Wochen im Aufwärtstrend in <b>${v100(auf.absturz)}</b>.` : "";
+  const taugt = hilft(pr["3m"]) || hilft(pr["1"])
+    ? `Ein wenig. In der Gegenprobe – nur mit dem Wissen von damals – lag die Phase bei ${name} etwas besser als die einfache Faustregel.`
+    : `Kaum. In der Gegenprobe – nur mit dem Wissen von damals – war die Phase bei ${name} nicht besser als die einfache Faustregel.`;
   return `<section class="karte breit-voll" id="mp-karte">${kopf}
-    <div class="mp-kopf"><div class="gross-zahl" style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]} ${["Abwärtstrend","Gemischt","Aufwärtstrend"][m.phase]}</div>
-      <div class="klein">seit ${datumDe(m.seit)}</div></div>
+    <div class="mp-kopf"><div class="gross-zahl" style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]} ${PH[m.phase]}</div>
+      <div class="klein">seit ${datumDe(m.seit)}${wochen != null ? ` – also seit ${wochen} Woche${wochen === 1 ? "" : "n"}` : ""}</div></div>
+    <p style="margin:6px 0 8px"><b>Was heißt das?</b> ${heisst}</p>
     <div class="mp-kv">
-      <div class="kv"><span data-e="mp_karte">20- zur 50-Wochen-Linie</span><b class="${klasse(m.abstand ?? m.zu_linie)}">${vz(m.abstand ?? m.zu_linie,1," %")}</b></div>
-      <div class="kv"><span>Kurs zur 50-Wochen-Linie</span><b class="${klasse(m.zu_lang)}">${vz(m.zu_lang,1," %")}</b></div>
-      <div class="kv"><span>zu vor 12 Monaten</span><b class="${klasse(m.mom12)}">${vz(m.mom12,1," %")}</b></div>
-      <div class="kv"><span data-e="mp_baer">vom Hoch · klassisch</span><b>${fmt(m.dd,1," %")} · ${m.baer_seit ? `Bärenmarkt seit ${datumDe(m.baer_seit)}` : "kein Bärenmarkt"}</b></div>
+      <div class="kv"><span>Kurs gegenüber vor 12 Monaten</span><b class="${klasse(m.mom12)}">${vz(m.mom12,1," %")}</b></div>
+      <div class="kv"><span>Kurs gegenüber seinem Durchschnitt der letzten 50 Wochen</span><b class="${klasse(m.zu_lang)}">${vz(m.zu_lang,1," %")}</b></div>
+      <div class="kv"><span data-e="mp_karte">Durchschnitt 20 Wochen gegenüber Durchschnitt 50 Wochen</span><b class="${klasse(m.abstand ?? m.zu_linie)}">${vz(m.abstand ?? m.zu_linie,1," %")}</b></div>
+      <div class="kv"><span data-e="mp_baer">Abstand zum bisherigen Höchstkurs</span><b>${fmt(m.dd,1," %")}${m.baer_seit ? ` · mehr als 20 % darunter seit ${datumDe(m.baer_seit)}` : ""}</b></div>
     </div>
+    <p class="klein" style="margin:12px 0 0"><b style="color:var(--text)">So wechselten die Phasen in den letzten 10 Jahren:</b> &nbsp; <i class="leg fl" style="background:${MP_FARBE[2]};opacity:1"></i>Aufwärtstrend &nbsp; <i class="leg fl" style="background:${MP_FARBE[0]};opacity:1"></i>Abwärtstrend</p>
     ${mpStreifen(m.verlauf, c.t)}
-    <h4 style="margin:14px 0 4px" data-e="mp_tabelle" tabindex="0">Was danach kam <span class="klein">Rückblick ${datumDe(m.ab).slice(-4)}–heute</span></h4>
-    <div class="tab-scroll"><table class="wtab mp-tab"><thead><tr><th style="text-align:left">Phase</th><th>Wochen</th><th>3 Mon. höher</th><th>1 J. höher</th><th>Median 1 J.</th><th>−20 % im 1. Jahr</th></tr></thead>
+    <h4 style="margin:14px 0 4px" data-e="mp_tabelle" tabindex="0">Was kam früher danach? <span class="klein">Rückblick ${jahrAb}–heute</span></h4>
+    ${frueher ? `<p style="margin:0 0 8px">${frueher}</p>` : ""}
+    <div class="tab-scroll"><table class="wtab mp-tab"><thead><tr><th style="text-align:left">Lage damals</th><th>So viele Wochen seit ${jahrAb} insgesamt</th><th>3 Monate später stand der Kurs höher</th><th>1 Jahr später stand der Kurs höher</th><th>Typische Veränderung nach 1 Jahr</th><th>Im Jahr danach noch 20 % oder mehr gefallen</th></tr></thead>
       <tbody>${[2,1,0,null].map((p, i) => [p, i]).filter(([p, i]) => p == null || r1[i].n > 0).map(([p, i]) => zeile(p, i)).join("")}</tbody></table></div>
-    <p style="margin:10px 0 4px"><b data-e="mp_pruefung" tabindex="0">Ehrlich geprüft:</b> ${fazit} Skill 3 Monate ${skillText(pr["3m"])}, 1 Jahr ${skillText(pr["1"])}${pr["1"] ? ` (${pr["1"].jahr_von}–${pr["1"].jahr_bis})` : ""}.${g && g["3m"] ? ` Über alle ${g.name} (${g.werte.toLocaleString("de-DE")} Werte): 3 Monate ${skillText(g["3m"])}, 1 Jahr ${skillText(g["1"])}.` : ""}</p>
-    ${risiko ? `<p style="margin:4px 0">${risiko}</p>` : ""}
-    <p class="klein" style="margin:6px 0 0">Die Phase beschreibt, wo der Kurs gerade steht – sie sagt nicht voraus, wohin er geht. Grundquote: in ${fmt(alle?.quote,0," %")} aller Wochen stand der Kurs ein Jahr später höher. Keine Anlageberatung.</p>
+    ${risiko ? `<p style="margin:10px 0 4px">${risiko}</p>` : ""}
+    <p style="margin:10px 0 4px"><b>Taugt die Phase als Vorhersage?</b> ${taugt} Die Faustregel lautet: Der Kurs steht ein Jahr später in ${v100(alle?.quote)} Fällen höher – egal in welcher Phase.</p>
+    <details class="mehr"><summary>Zahlen der Gegenprobe</summary><p class="klein" style="margin:8px 0 0"><span data-e="mp_pruefung" tabindex="0">Vorteil gegenüber der Faustregel</span> bei ${name}: über 3 Monate ${skillText(pr["3m"])}, über 1 Jahr ${skillText(pr["1"])}${pr["1"] ? ` (geprüft ${pr["1"].jahr_von}–${pr["1"].jahr_bis})` : ""}.${g && g["3m"] ? ` Über alle ${g.name} (${g.werte.toLocaleString("de-DE")} Werte): 3 Monate ${skillText(g["3m"])}, 1 Jahr ${skillText(g["1"])}.` : ""} Werte um 0 % heißen: kein Vorteil.</p></details>
+    <p class="klein" style="margin:10px 0 0">Die Phase beschreibt, wohin der Kurs zuletzt gelaufen ist – sie sagt nicht voraus, wohin er geht. Keine Anlageberatung.</p>
   </section>`;
 }
 function schwellenKarte(c){   // Ab welcher Ampel hat sich ein Kauf bei DIESEM Wert gelohnt? (Rückblick über alle Wochen, im Browser gerechnet)
   if (!c?.c || !c.score) return "";
+  const nm = INFO ? esc(kurzname(INFO)) : "diesem Wert";
   const n = c.t.length, H = [52, 156, 260];
   const med = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
   const stat = pruef => {
@@ -3186,15 +3233,15 @@ function schwellenKarte(c){   // Ab welcher Ampel hat sich ein Kauf bei DIESEM W
     if (a.q >= 95 && b.q >= 95) return a.m - b.m >= 20 ? 1 : a.m - b.m <= -20 ? -1 : 0;
     return a.q - b.q >= 5 && a.m >= b.m ? 1 : a.q - b.q <= -5 ? -1 : 0; };
   const u = [urteil(52), urteil(156)], txt = h => `${hoch.name} nach ${h === 156 ? "3 Jahren" : "1 Jahr"} in ${fmt(hoch.s[h]?.q,0," %")} der Fälle höher (Median ${vz(hoch.s[h]?.m,0," %")}), an beliebigen Wochen in ${fmt(basis[h]?.q,0," %")} (${vz(basis[h]?.m,0," %")})`;
-  const fazit = u.includes(1) && !u.includes(-1) ? `Bei diesem Wert war eine hohe Ampel früher <b>besser</b>: ${txt(u[0] === 1 ? 52 : 156)}.`
-    : u.includes(-1) && !u.includes(1) ? `Bei diesem Wert war eine hohe Ampel früher <b>nicht besser</b>, eher schlechter: ${txt(u[0] === -1 ? 52 : 156)}. Hohe Ampelwerte gab es oft mitten in langen Abstürzen.`
-    : u.includes(1) ? `Bei diesem Wert ist das Bild <b>gemischt</b>: ${txt(52)}; ${txt(156)}.`
-    : `Bei diesem Wert machte die Höhe der Ampel früher <b>kaum einen Unterschied</b>: ${txt(hoch.s[156] ? 156 : 52)}.`;
-  return `<section class="karte breit2" id="schwellen-karte">${kk("rueck", "Hat eine hohe Ampel hier früher geholfen?", "Käufe bei hoher Ampel gegen Käufe in beliebigen Wochen – nur für diesen Wert gerechnet.", `${new Date(c.t[c.score.findIndex(x => x != null)] * 1000).getUTCFullYear()}–heute`, "l_schwelle")}
+  const fazit = u.includes(1) && !u.includes(-1) ? `Bei ${nm} war eine hohe Ampel früher <b>besser</b>: ${txt(u[0] === 1 ? 52 : 156)}.`
+    : u.includes(-1) && !u.includes(1) ? `Bei ${nm} war eine hohe Ampel früher <b>nicht besser</b>, eher schlechter: ${txt(u[0] === -1 ? 52 : 156)}. Hohe Ampelwerte gab es oft mitten in langen Abstürzen.`
+    : u.includes(1) ? `Bei ${nm} ist das Bild <b>gemischt</b>: ${txt(52)}; ${txt(156)}.`
+    : `Bei ${nm} machte die Höhe der Ampel früher <b>kaum einen Unterschied</b>: ${txt(hoch.s[156] ? 156 : 52)}.`;
+  return `<section class="karte breit2" id="schwellen-karte">${kk("rueck", "Hat eine hohe Ampel hier früher geholfen?", `Käufe bei hoher Ampel gegen Käufe in beliebigen Wochen – nur für ${nm} gerechnet.`, `${new Date(c.t[c.score.findIndex(x => x != null)] * 1000).getUTCFullYear()}–heute`, "l_schwelle")}
     <p style="margin:0 0 8px">${fazit}</p>
     <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Kauf bei</th><th>nach 1 Jahr höher · Median</th><th>nach 3 Jahren</th><th>nach 5 Jahren</th><th data-e="l_tief">danach noch tiefer (Median)</th><th>Phasen</th></tr></thead><tbody>${
       zeilen.map(z => `<tr><td style="text-align:left">${z.name}</td>${zelle(z.s[52])}${zelle(z.s[156])}${zelle(z.s[260])}<td class="klein">${z.s.tief == null ? "–" : vz(z.s.tief,0," %")}</td><td class="klein">${z.name === "jede Woche" ? "–" : z.s.phasen}</td></tr>`).join("")}</tbody></table></div>
-    <p class="klein" style="margin-top:8px">Je Zeile: Anteil der Wochen, nach denen der Kurs höher stand, und mittlere Veränderung (Median); Maus auf eine Zahl zeigt den schlechtesten Fall. „Phasen“ = getrennte Zeiträume mit dieser Ampel – benachbarte Wochen sind fast derselbe Fall, aussagekräftig ist eher die Zahl der Phasen. Ohne Kosten und Steuern, Rückblick über die ganze Geschichte dieses Werts – keine Garantie und keine Anlageberatung.</p></section>`;
+    <p class="klein" style="margin-top:8px">Je Zeile: Anteil der Wochen, nach denen der Kurs höher stand, und mittlere Veränderung (Median); Maus auf eine Zahl zeigt den schlechtesten Fall. „Phasen“ = getrennte Zeiträume mit dieser Ampel – benachbarte Wochen sind fast derselbe Fall, aussagekräftig ist eher die Zahl der Phasen. Ohne Kosten und Steuern, Rückblick über die ganze Geschichte von ${nm} – keine Garantie und keine Anlageberatung.</p></section>`;
 }
 function phasenKarte(c){
   if (!c?.c || !c.score) return "";
