@@ -168,6 +168,14 @@ h1,h2,h3{letter-spacing:-.015em}
 .wk-titel{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .wk-titel h1{margin:0;font-size:24px;font-weight:700}
 .wk-meta{color:var(--muted);font-size:13px;margin-top:2px}
+.wk-steck{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.st-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:999px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 72%,transparent);font:inherit;font-size:12.5px;line-height:1.55;color:var(--text2);white-space:nowrap}
+.st-chip b{color:var(--text);font-weight:680;letter-spacing:.01em}
+.st-chip.art{border-color:color-mix(in srgb,var(--akzent) 55%,transparent);background:var(--akzent-weich);color:var(--text);font-weight:660}
+.st-chip.art svg{width:14px;height:14px;color:var(--akzent);flex:none}
+button.st-chip{cursor:pointer}
+button.st-chip:hover{background:var(--hover)}
+.st-chip.kopiert::after{content:"✓ kopiert";color:var(--guenstig);font-weight:650}
 .klartext{margin:10px 0 10px;font-size:15px;line-height:1.55;color:var(--text);max-width:820px}
 .grund-chips{display:flex;flex-wrap:wrap;gap:6px}
 .grund-chips>span{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:12.5px;color:var(--text2)}
@@ -650,6 +658,27 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .ampel-marke span{font-size:10.5px;color:var(--muted);font-weight:600}
 .urteil-satz{font-size:31px;line-height:1.1;font-weight:780;letter-spacing:-.035em;background:linear-gradient(100deg,var(--text) 25%,color-mix(in srgb,var(--zf,var(--akzent)) 75%,var(--text)));-webkit-background-clip:text;background-clip:text;color:transparent}
 .verl-zeile{margin:0 0 12px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 70%,transparent);font-size:13px;line-height:1.5;color:var(--text2)}
+.vh{margin:14px 0 0;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 70%,transparent)}
+.vh-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-bottom:10px}
+.vh-kopf b{font-size:15px;font-weight:720;letter-spacing:-.01em}
+.vh-marke{padding:2px 10px;border-radius:999px;font-size:11.5px;font-weight:720;color:#0b0e14;background:var(--guenstig)}
+.vh-marke.offen{background:var(--neutral)}
+.vh-marke.duenn{background:var(--gelb)}
+.vh-zahlen{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.vh-z{padding:10px 12px;border-radius:13px;background:color-mix(in srgb,var(--panel) 82%,transparent);border:1px solid var(--line);min-width:0}
+.vh-z .l{font-size:12px;color:var(--muted);font-weight:620;line-height:1.3}
+.vh-z .w{font-size:26px;font-weight:760;letter-spacing:-.03em;line-height:1.2;margin-top:2px}
+.vh-z .w small{font-size:12.5px;font-weight:600;color:var(--text2);letter-spacing:0}
+.vh-z .b{height:6px;border-radius:3px;background:var(--line);margin:6px 0;overflow:hidden}
+.vh-z .b i{display:block;height:100%;border-radius:3px;background:var(--vf,var(--akzent))}
+.vh-z .u{font-size:12px;color:var(--text2);line-height:1.4}
+.vh-satz{font-size:13.5px;line-height:1.55;color:var(--text2);margin:11px 0 0}
+.vh-satz b{color:var(--text)}
+.vh details{margin-top:8px;font-size:13px;line-height:1.6;color:var(--text2)}
+.vh details summary{cursor:pointer;font-weight:650;color:var(--text)}
+.vh details p{margin:7px 0 0}
+.vh details .zahl{font-variant-numeric:tabular-nums;white-space:nowrap}
+@media (max-width:620px){.vh-zahlen{grid-template-columns:1fr}.vh-z{display:grid;grid-template-columns:1fr auto;gap:0 10px;align-items:baseline}.vh-z .b,.vh-z .u{grid-column:1/-1}.vh-z .w{font-size:23px;margin:0}}
 .verl-marke{display:inline-block;margin-right:8px;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:750;color:#0b0e14;background:var(--vf)}
 .urteil-unter{margin-top:6px;font-size:13.5px;color:var(--text2);line-height:1.45}
 .wk-saeule{flex:0 1 350px;min-width:290px;align-self:center}
@@ -1935,8 +1964,9 @@ async function lohntSichCheck(id){
     <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(s.eingezahlt)}</b> – 500 jeden Monat seit ${s.von.slice(0,4)} (${fmt(s.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
     <div class="wege">${L.map(zeile).join("")}</div>
     <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst. Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}. Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.</p>
+    <p class="klein" id="weg-zufall" hidden></p>
     <button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`;
-  mehrKnopf();
+  mehrKnopf(); wegEinordnung(id);
 }
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
@@ -1994,8 +2024,7 @@ const ERKLAERUNG_TITEL = {
   etf_inhalt: {titel:"ETF-Inhalt und Kosten", text:"Die zehn größten Positionen mit ihrem Gewicht, die Verteilung auf Branchen und die Anlageklassen (Aktien, Anleihen, Bargeld) laut Fondsdaten, dazu die laufenden Kosten pro Jahr. Machen die zehn größten Positionen einen großen Teil des Fonds aus, hängt das Ergebnis stark an wenigen Firmen. Die Daten werden einmal pro Woche geladen und können einige Wochen alt sein."},
   etf_kosten: {titel:"Laufende Kosten", text:"Was der Fonds pro Jahr für Verwaltung und Betrieb kostet, in Prozent des angelegten Geldes (laut letztem Jahresbericht). Das Geld wird nicht abgebucht, sondern täglich dem Fondsvermögen entnommen – es steckt also schon in der Kursentwicklung und in der Ø Jahresrendite. Kosten für Kauf und Depot bei der Bank kommen dazu."},
   dividenden: {titel:"Ausschüttungen (Dividenden)", text:"Ausschüttungsrendite: die Ausschüttungen der letzten 12 Monate geteilt durch den heutigen Kurs. Wachstum: um wie viel die Ausschüttung je Anteil über fünf volle Kalenderjahre pro Jahr gestiegen ist. Die Balken zeigen die Summe je Kalenderjahr, das laufende Jahr ist noch nicht vollständig. In der Ø Jahresrendite und im Chart sind die Ausschüttungen schon eingerechnet – sie kommen nicht obendrauf."},
-  verl: {titel:"Verlässlichkeit der Ampel bei diesem Titel", text:() => { const v = INFO?.verl; const z = x => x == null ? "–" : fmt(x, 2);
-    return "Für jede frühere Woche wird verglichen: Wie stand die Ampel – und wie viel brachte ein Kauf in den 3 Jahren danach? Daraus ergibt sich eine Zahl von −1 bis +1. Bei +1 gilt: je höher die Ampel, desto mehr Ertrag danach. Bei 0 gibt es keinen Zusammenhang, unter 0 war es eher umgekehrt. Gerechnet wird über die ganze Geschichte und noch einmal über die letzten 10 Jahre mit bekanntem Ergebnis. „Gut“ heißt: beide Zahlen mindestens 0,3. „Gemischt“: eine deutlich, die andere nicht. „Schwach“: keine der beiden erreicht 0,3 und mindestens eine liegt unter 0,1. „Noch offen“: unter 10 Jahre mit bekanntem Ergebnis." + (v ? ` Hier: ganze Geschichte ${z(v.rk)}, letzte 10 Jahre ${z(v.rk10)}, ${fmt(v.jahre,0)} Jahre mit bekanntem Ergebnis, ${v.ph80 ?? "–"} getrennte Phasen mit Ampel ab 80.` : "") + " Mit anderen Formeln für die Ampel wurde am 23.11.2026 nachgeprüft – sie waren bei den meisten Titeln nicht besser."; }},
+  vh: {titel:"Vorhersage – wie geprüft?", text:"Je Kalenderjahr wird nur aus dem gerechnet, was vor diesem Jahr schon feststand; dann wird jeder Monat des Jahres vorhergesagt und später mit dem echten Ergebnis verglichen. Gemessen wird der mittlere quadratische Abstand zwischen Wahrscheinlichkeit und Ergebnis (Brier-Wert). Ein aufwendigeres Modell wird nur angewendet, wenn es in mindestens 90 von 100 Gegenproben (ganze Jahres-Blöcke neu gezogen) genauer war. Einzelheiten und alle Zahlen: im Aufklapper darunter."},
   rendite_euro: {titel:"In Euro gerechnet", text:"Dieselbe Ø Jahresrendite, aber für einen Anleger, der in Euro rechnet: Zuwachs in Dollar mal Veränderung des Wechselkurses Dollar/Euro über denselben Zeitraum (Kurse der Europäischen Zentralbank bzw. der US-Notenbank). Ist der Dollar gegenüber dem Euro gestiegen, liegt die Euro-Rendite höher, sonst niedriger."},
   kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
 };
@@ -2058,14 +2087,69 @@ function modusSetzen(m){
   $$("#modus-wahl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m)));
   abschnittNavInit(); fragenInit();
 }
-const verlWort = x => x >= .5 ? "deutlich" : x >= .3 ? "erkennbar" : x >= .1 ? "schwach" : x > -.1 ? "kaum" : "eher umgekehrt";
-function verlBlock(w){   // Wie verlässlich war die Ampel bei genau diesem Titel? (Marc 23.11.2026: „für jeden Titel noch besser geklärt“; geprüft ohne Zukunftswissen)
-  const v = w.verl; if (!v || w.score == null) return "";
-  const name = esc(kurzname(w)), F = {gut:["gut", "var(--guenstig)"], mittel:["mittel", "var(--neutral)"], gemischt:["gemischt", "var(--gelb)"], schwach:["schwach", "var(--teuer)"], "zu wenig":["noch offen", "var(--neutral)"]}[v.stufe] || ["–", "var(--neutral)"];
-  let satz;
-  if (v.stufe === "zu wenig" || v.rk == null) satz = `Bei ${name} weiß man erst für ${fmt(v.jahre,0)} Jahre, wie es nach einer Ampel weiterging. Das ist zu wenig, um zu sagen, ob eine günstige Ampel hier wirklich die besseren Käufe anzeigt.`;
-  else satz = `Brachte ein Kauf bei günstiger Ampel bei ${name} später mehr als ein Kauf bei teurer Ampel? Über die ganze Geschichte seit ${v.seit}: <b>${verlWort(v.rk)}</b>.${v.rk10 != null ? ` In den letzten 10 Jahren: <b>${verlWort(v.rk10)}</b>.` : ""}${v.stufe === "schwach" ? ` <b style="color:var(--teuer)">Als Kaufhilfe hat die Ampel bei ${name} bisher nicht getaugt</b> – sie zeigt, wie teuer es gerade ist, mehr nicht.` : v.stufe === "gemischt" ? " Das Bild ist also nicht eindeutig." : ""}`;
-  return `<div class="verl-zeile" data-e="verl" tabindex="0"><span class="verl-marke" style="--vf:${F[1]}">Verlässlichkeit der Ampel: ${F[0]}</span>${satz}</div>`;
+// ------------------------------------------------------------ Vorhersage mit dem genauesten geprüften Modell (vorhersage.py, Studie 23.11.2026)
+// Marc: „ich will das Modell haben, das am genauesten ist, egal wie – finde es heraus und wende es an“. Ersetzt die Stufen „gut/mittel/gemischt/schwach“.
+let VH = undefined;
+async function vorhersageLaden(){ if (VH === undefined) VH = (await holeJson("daten/vorhersage.json")) || null; return VH; }
+const VH_GRUPPE = {"Index-ETF":["breiten Index-ETFs","Index-ETFs","Index-ETFs"], "ETF":["ETFs","ETFs","ETFs"], "Rohstoff":["Rohstoffen","Rohstoffe","Rohstoffen"], "Krypto":["Krypto-Werten","Krypto-Werte","Krypto-Werten"], "Aktie":["Aktien","Aktien","Aktien"]};
+const vhZahl = x => `<span class="zahl">${x}</span>`;
+async function vorhersageInit(id, w){
+  if (!$("#vh")) return;
+  const V = await vorhersageLaden(); const el = $("#vh");
+  if (AKTIV !== id || !el || !V) return;
+  const e = V.werte?.[id]; if (!e || e.a1 == null) return;
+  const g = e.g, G = VH_GRUPPE[g] || [g, g, g], name = esc(kurzname(w)), gh = V.gruppen_heute?.[g] || {}, Z = k => V.ziele?.[k]?.[g];
+  const gepr = !!(Z("a1") && Z("a3")), z1 = Z("a1"), z3 = Z("a3"), zr = Z("r1"), ZF = V.zufall?.[g];
+  const probe = (k, wert) => { const z = Z(k); if (!z?.kal?.length) return ""; const b = z.kal.reduce((p, q) => Math.abs(q[0] - wert) < Math.abs(p[0] - wert) ? q : p); return `Trefferprobe: sagte das Modell früher „${b[0]}“, traten ${b[1]} ein`; };
+  const kachel = (k, titel, farbe) => { const x = gepr ? e[k] : e["e" + k]; if (x == null) return "";
+    return `<div class="vh-z" style="--vf:${farbe}"><div class="l">${titel}</div><div class="w">${x} <small>von 100</small></div><div class="b"><i style="width:${x}%"></i></div>
+      <div class="u">${!gepr ? `so oft kam es bisher bei ${name} (${fmt(e.j,0)} Jahre)` : `${e["e" + k] != null ? `nur ${name} für sich: ${e["e" + k]}` : `eigene Geschichte zu kurz`} · alle ${G[1]}: ${fmt(gh[k],0)}${muenze(k) ? `<br><b class="neg">⚠ In der Prüfung nicht besser als ein Münzwurf</b>` : probe(k, x) ? `<br>${probe(k, x)}` : ""}`}</div></div>`; };
+  const ampelHilft = z => z && z.ampel[0] > 0 && z.ampel[3] >= 90;
+  const muenze = k => { const z = Z(k); return !!z && z.brier >= 0.25; }, schwach = gepr && (muenze("a1") || muenze("a3")), duenn = gepr && z3.titel < 30;
+  const genauer = a => `${fmt(Math.abs(a[0]),1)} % ${a[0] < 0 ? "ungenauer" : "genauer"}`;
+  let satz, mehr = "";
+  if (gepr) {
+    const hilft = ampelHilft(z1) || ampelHilft(z3);
+    satz = `Das ist der genaueste von mehr als zehn geprüften Rechenwegen: gezählt wird, wie oft es bei ${name} in ${fmt(e.j,0)} Jahren so kam – gebündelt mit ${fmt(z3.titel,0)} ${G[2]}, damit eine einzelne Geschichte nicht täuscht. ${hilft ? `Die Ampel machte diese Vorhersage in der Prüfung etwas genauer.` : `<b>Die Ampel macht diese Vorhersage nicht genauer.</b> Sie zeigt, wie teuer ${name} gemessen an der eigenen Geschichte ist – nicht, ob der Kurs steigt.`}`;
+    if (schwach) satz += ` <b class="neg">Achtung:</b> Bei ${G[0]} lag „später höher“ in der Prüfung (${z3.von}–${z3.bis}, nur ${z3.titel} Werte) nicht näher am Ergebnis als ein Münzwurf – die Jahre davor waren ein schlechter Ratgeber. Nimm die Zahlen hier nur als Beschreibung der Vergangenheit.`;
+    else if (duenn) satz += ` Bei nur ${z3.titel} ${G[2]}, die sich zudem ähnlich bewegen, ist die Prüfung dünn – die Trefferprobe schwankt stark.`;
+    const kal = z => z.kal.map(([a, b]) => `${a} → ${b}`).join(" · ");
+    mehr = `<details><summary>Wie wird das gerechnet – und wie genau ist es?</summary>
+      <p><b>Rechnung:</b> Für jeden Monat der Geschichte wird nachgesehen: Stand der Kurs 1 bzw. 3 Jahre später höher? Fiel er in den 12 Monaten danach irgendwann um 20 % oder mehr (Wochenschluss)? Die Häufigkeit bei ${name} wird mit der Häufigkeit aller ${G[1]} gebündelt – je kürzer die eigene Geschichte, desto stärker zählt die Gruppe.${e.m && zr ? ` Beim Rückschlag zählen zusätzlich Schwankung, Trend, Rückgang vom Hoch und Schwung von heute: das war in der Prüfung um ${vhZahl(fmt(zr.merk[0],1) + " %")} genauer (besser in ${fmt(zr.merk[3],0)} von 100 Gegenproben).` : ""}</p>
+      <p><b>Prüfung ohne Zukunftswissen:</b> Für jedes Jahr von ${z1.von} bis ${z1.bis} wurde nur aus dem gerechnet, was damals schon feststand, und danach mit dem verglichen, was wirklich kam – ${vhZahl(fmt(z1.n,0))} Vorhersagen für ${fmt(z1.titel,0)} ${G[1]}.</p>
+      <p><b>Trefferprobe</b> (vorhergesagt → eingetreten, je 100 Fälle, von der niedrigsten zur höchsten Vorhersage):<br>1 Jahr höher: ${vhZahl(kal(z1))}<br>3 Jahre höher: ${vhZahl(kal(z3))}${zr ? `<br>Rückschlag: ${vhZahl(kal(zr))}` : ""}</p>
+      <p><b>Geprüft und verworfen</b>, weil bei „später höher“ nicht nachweisbar genauer: die Ampel, der Abstand zur 200-Wochen-Linie, Trend, Schwankung und Schwung, der Zustand des Gesamtmarkts, die ähnlichsten früheren Wochen, ein lernendes Baum-Modell und das Nachjustieren der Wahrscheinlichkeiten. Mit allen Merkmalen zusammen: ${vhZahl(genauer(z3.merk))} bei 3 Jahren (besser nur in ${fmt(z3.merk[3],0)} von 100 Gegenproben – zu unsicher, um es anzuwenden).</p>
+      <p><b>Grenzen:</b> Grundlage sind heute gelistete Werte. Firmen, die verschwunden sind, fehlen – die Häufigkeiten sind dadurch eher zu hoch.${z3.titel < 30 ? ` Bei nur ${z3.titel} ${G[2]} ist die Prüfung dünn; die Trefferprobe schwankt stark.` : ""} Eine Wahrscheinlichkeit ist kein Versprechen. Keine Anlageberatung. Prüfung vom ${datumDe(V.pruefung_stand)}, wird jede Woche neu gerechnet.</p></details>`;
+    if (ZF) {
+      const d60 = ZF.warten60.besser - ZF.warten60.besser_zufall, sig = ZF.rk156.sig;
+      const fazit = !hilft && sig <= 10 && Math.abs(d60) < 10 ? `<b>Fazit:</b> Bei ${G[0]} ist kein Vorhersagewert der Ampel nachweisbar. Sie beschreibt den Preis, nicht die Zukunft.`
+        : sig >= 15 || d60 >= 15 ? `<b>Fazit:</b> Bei ${G[0]} gibt es Hinweise über dem Zufall – aber aus nur ${ZF.titel} Werten, die sich zudem ähnlich bewegen. Ein Indiz, kein Beweis.`
+        : `<b>Fazit:</b> Bei ${G[0]} ist ein Vorhersagewert der Ampel nicht belegt.`;
+      mehr += `<details><summary>Was kann die Ampel – nachgerechnet</summary>
+      <p><b>Als Zusatz zur Vorhersage:</b> Mit der Ampel war „in 1 Jahr höher“ bei ${G[0]} um ${vhZahl(genauer(z1.ampel))}, „in 3 Jahren höher“ um ${vhZahl(genauer(z3.ampel))}${zr ? `, der Rückschlag um ${vhZahl(genauer(zr.ampel))}` : ""}.</p>
+      <p><b>Gegenprobe mit Zufall:</b> Aus den echten Wochen jedes Werts werden Zufallsverläufe gebaut – gleiche Rendite, gleiche Schwankung, aber ohne jeden Zusammenhang zwischen Preis und späterem Ertrag. Darauf wird dieselbe Ampel gerechnet. Der Zusammenhang „hohe Ampel → mehr Ertrag in den 3 Jahren danach“ liegt in echt bei ${vhZahl(vz(ZF.rk156.echt,2))} (Skala −1 bis +1) – auf den Zufallsverläufen entsteht von selbst ${vhZahl(vz(ZF.rk156.zufall,2))}. Deutlich über dem Zufall lagen ${sig} von 100 ${G[2]}; durch Zufall allein wären es 5.</p>
+      <p><b>Warten auf günstig:</b> Bei ${ZF.warten60.besser} von 100 ${G[2]} brachte Warten, bis die Ampel günstig zeigt, mehr als jeden Monat zu kaufen. Auf den Zufallsverläufen gelingt das bei ${ZF.warten60.besser_zufall} von 100.</p>
+      <p>${fazit}</p></details>`;
+    }
+  } else {
+    satz = `Für ${G[1]} gibt es nur ${gh.titel_lang === 1 ? "einen Wert" : (gh.titel_lang ?? 0) + " Werte"} mit über 10 Jahren Geschichte. Eine Prüfung ohne Zukunftswissen ist damit nicht möglich. <b>Die Zahlen zeigen nur, wie es bisher war</b> – für die Zukunft sind sie kaum belastbar, gerade wenn die frühen Jahre außergewöhnlich waren.`;
+  }
+  const kacheln = kachel("a1", "Kurs in 1 Jahr höher", "var(--akzent)") + kachel("a3", "Kurs in 3 Jahren höher", "var(--akzent)") + kachel("r1", "Rückschlag von 20 % oder mehr in den nächsten 12 Monaten", "var(--teuer)");
+  if (!kacheln) return;
+  el.innerHTML = `<div class="vh-kopf"><b>${gepr ? "Vorhersage" : "Bisherige Häufigkeit"} für ${name}</b><span class="vh-marke${!gepr ? " offen" : schwach || duenn ? " duenn" : ""}" data-e="vh" tabindex="0">${!gepr ? "nicht prüfbar" : schwach ? `geprüft: bei ${G[0]} wenig belastbar` : duenn ? `dünn geprüft: nur ${z3.titel} Werte` : `geprüft an ${fmt(z1.n,0)} echten Fällen`}</span></div>
+    <div class="vh-zahlen">${kacheln}</div>
+    <p class="vh-satz">${satz}</p>${mehr}`;
+  el.hidden = false;
+  wegEinordnung(id);
+}
+async function wegEinordnung(id){   // Kaufweg-Karte: Wie oft gewinnt „Warten auf günstig“ auch auf reinen Zufallsverläufen?
+  const V = await vorhersageLaden(); const p = $("#weg-zufall");
+  if (AKTIV !== id || !p || !V) return;
+  const g = V.werte?.[id]?.g, ZF = V.zufall?.[g], G = VH_GRUPPE[g] || [g, g, g];
+  if (!ZF || ZF.warten60?.besser == null || ZF.warten60.besser_zufall == null || ZF.titel < 5) return;
+  const a = ZF.warten60.besser, b = ZF.warten60.besser_zufall, d = a - b;
+  p.innerHTML = `<b>Einordnung:</b> Bei ${a} von 100 ${G[2]} brachte „Warten auf günstig“ über die ganze Geschichte mehr als der Sparplan. Auf reinen Zufallsverläufen (gleiche Rendite und Schwankung, aber ohne Zusammenhang zwischen Preis und späterem Ertrag) gelingt das bei ${b} von 100. ${Math.abs(d) < 10 ? "Das ist praktisch gleich: Ein Sieg des Wartens bei einem einzelnen Wert belegt nicht, dass die Ampel den richtigen Zeitpunkt findet." : d > 0 ? `Das liegt über dem Zufall – bei nur ${ZF.titel} Werten ein Hinweis, kein Beweis.` : "Das liegt unter dem Zufall: Warten hat hier eher geschadet."}`;
+  p.hidden = false;
 }
 function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der Vergleich mit der eigenen Geschichte
   if (w.score == null) return `<div class="urteil-zeile"><div><div class="urteil-satz">${w.jung ? "Noch zu jung für eine Ampel." : "Noch keine Ampel."}</div></div></div>`;
@@ -2446,6 +2530,14 @@ function kpiLeiste(w, c){   // die wichtigsten Zahlen auf einen Blick, jede mit 
   }
   if (w.dd != null) K.push(kachel(w.jung ? "Vom Hoch seit Börsengang" : "Vom Allzeithoch", w.dd > -0.5 ? "am Hoch" : fmt(w.dd,0," %"), w.dd > -0.5 ? "höchster Kurs bisher" : "unter dem bisherigen Höchstkurs", "vom_hoch"));
   const m = c?.mp; if (m && m.phase != null) K.push(kachel("Trend", `<span style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][m.phase]}`, `seit ${datumDe(m.seit)}`, "mp_karte"));
+  const f = w.f;   // Geschäft auf einen Blick (Marc 23.11.2026: KGV, Gewinn/Verlust und Umsatz gehören nach oben)
+  if (f) { const wg = " " + ({USD:"$", EUR:"€", GBP:"£"}[f.waehrung || "USD"] || esc(f.waehrung)), mio = x => Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd." + wg) : fmt(x, 0, " Mio." + wg);
+    const dv = x => x == null ? `bis ${datumDe(f.stand)}` : Math.abs(x) > 999 ? "Vorjahr fast null" : `${vz(x,0," %")} zum Vorjahr`;
+    K.push(kachel("KGV", f.kgv != null ? fmt(f.kgv,1) : f.verlust ? `<span class="neg">Verlust</span>` : "–", f.kgv != null ? (f.kgv_rang != null ? `höher als ${fmt(f.kgv_rang,0)} % der letzten ${fmt(f.kgv_jahre,0)} Jahre` : "Kurs geteilt durch Gewinn") : f.verlust ? "kein KGV bei Verlust" : "nicht berechenbar", "f_kgv"));
+    if (f.gewinn != null) K.push(kachel(f.gewinn < 0 ? "Verlust" : "Gewinn", `<span class="${f.gewinn < 0 ? "neg" : "pos"}">${mio(f.gewinn)}</span>`, dv(f.d_gewinn), "f_trend"));
+    if (f.umsatz != null) K.push(kachel("Umsatz", mio(f.umsatz), dv(f.d_umsatz), "f_trend"));
+  }
+  if (w.div?.rendite != null) K.push(kachel("Dividende", fmt(w.div.rendite, 2, " %"), "Ausschüttung im Jahr", "dividenden"));
   return K.length ? `<div class="wk-kpis">${K.join("")}</div>` : "";
 }
 // Sprungleiste oben: zeigt die Abschnitte der Seite, markiert den gerade sichtbaren und springt per Klick dorthin
@@ -2551,6 +2643,26 @@ function rangZuZeit(t){
 }
 const rangText = r => r == null ? "" : r.guenstiger >= r.teurer ? `teurer als in ${fmt(r.guenstiger,0)} % der Zeit davor` : `günstiger als in ${fmt(r.teurer,0)} % der Zeit davor`;
 // Kennung im Kopf: ISIN (geprüft oder aus der CUSIP berechnet) und WKN statt Börsenkürzel; Kürzel nur als Hinweis beim Darüberfahren
+const ART_ZEICHEN = {
+  aktie:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 20h20M6 20v-8M12 20V5M18 20v-11"/></svg>`,
+  etf:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 13 9 5 9-5"/></svg>`,
+  rohstoff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7l9-5Z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>`,
+  krypto:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 7.5h3.8a2.2 2.2 0 0 1 0 4.5H9.5zM9.5 12h4.4a2.2 2.2 0 0 1 0 4.5H9.5zM11.5 6v1.5M11.5 16.5V18"/></svg>`};
+function steckbrief(w){   // Was ist das? Art mit Zeichen, Branche, Land, Kürzel, ISIN, WKN – nur was in den Daten steht (nichts geraten); Antippen kopiert
+  const art = w.gruppe === "ETF" ? ["etf", "ETF (Fonds)"] : w.gruppe === "Krypto" ? ["krypto", "Kryptowährung"] : w.gruppe === "Rohstoffe" ? ["rohstoff", "Rohstoff"] : ["aktie", "Aktie" + (["Nasdaq","NYSE"].includes(w.gruppe) ? " · " + w.gruppe : "")];
+  const kopie = (l, v, zusatz) => `<button class="st-chip" data-kopie="${esc(v)}" title="Antippen kopiert ${l}">${l} <b>${esc(v)}</b>${zusatz || ""}</button>`;
+  const C = [`<span class="st-chip art">${ART_ZEICHEN[art[0]]}${esc(art[1])}</span>`];
+  if (w.branche && w.branche !== art[1] && w.branche !== w.gruppe) C.push(`<span class="st-chip">${SONDERGRUPPE(w) ? "Art" : "Branche"} <b>${esc(w.branche)}</b></span>`);
+  if (w.land && !["Nasdaq","NYSE"].includes(w.gruppe)) C.push(`<span class="st-chip">Land <b>${esc(w.land)}</b></span>`);
+  if (w.symbol) C.push(kopie("Kürzel", w.symbol));
+  if (w.isin) C.push(kopie("ISIN", w.isin, w.isin_geprueft ? "" : ' <span class="klein">(berechnet)</span>'));
+  if (w.wkn) C.push(kopie("WKN", w.wkn));
+  return `<div class="wk-steck" data-e="kennung">${C.join("")}</div>`;
+}
+document.addEventListener("click", ev => {   // Kürzel, ISIN oder WKN antippen = in die Zwischenablage
+  const b = ev.target.closest?.("[data-kopie]"); if (!b || !navigator.clipboard) return;
+  navigator.clipboard.writeText(b.dataset.kopie).then(() => { b.classList.add("kopiert"); setTimeout(() => b.classList.remove("kopiert"), 1300); }).catch(() => {});
+});
 function kennung(w){
   if (!w.isin) return `<span data-e="kennung">${esc(w.symbol)}</span>`;
   return `<span data-e="kennung" title="Börsenkürzel ${esc(w.symbol)}">ISIN <b>${esc(w.isin)}</b>${w.isin_geprueft ? "" : ' <span class="klein">(berechnet)</span>'}${w.wkn ? ` · WKN <b>${esc(w.wkn)}</b>` : ""}</span>`;
@@ -2800,10 +2912,10 @@ async function zeige(id, opt={}){
       <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
-      <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}</div>
+      ${steckbrief(w)}
       ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
       <div class="wk-haupt">
-        <div class="wk-urteil">${urteilBlock(w, c)}${verlBlock(w)}</div>
+        <div class="wk-urteil">${urteilBlock(w, c)}</div>
         ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
         <div class="wk-text">
           ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
@@ -2812,6 +2924,7 @@ async function zeige(id, opt={}){
         </div>
         ${renditePanel(w, c)}
       </div>
+      ${w.kurs != null ? `<div class="vh" id="vh" hidden></div>` : ""}
       <div class="fragen" id="fragen"></div>
       ${kpiLeiste(w, c)}
     </section>
@@ -2889,7 +3002,7 @@ async function zeige(id, opt={}){
   reiter(REITER);
   $("#haupt").dataset.modus = MODUS;
   $$("#modus-wahl button").forEach(b => b.onclick = () => modusSetzen(b.dataset.m));
-  zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w);
+  zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w); vorhersageInit(id, w);
   abschnittNavInit(); fragenInit();
   risikoVergleich(id, c);
   lohntSichCheck(id);

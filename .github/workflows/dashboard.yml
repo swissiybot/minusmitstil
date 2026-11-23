@@ -52,6 +52,7 @@ jobs:
             daten/sec
             daten/nasdaq100.json
             daten/kegelpruefung.json
+            daten/vorhersage_pruefung.json
             daten/isin
             daten/beschreibung.json
             daten/welt
@@ -144,6 +145,11 @@ jobs:
         continue-on-error: true
         run: python kegelpruefung.py --wenn-alt
 
+      - name: Vorhersage je Wert (genauestes geprüftes Modell; Prüfung ohne Zukunftswissen höchstens einmal pro Woche neu)
+        continue-on-error: true   # fehlt die Datei, zeigt die Titelseite den Block einfach nicht
+        timeout-minutes: 25
+        run: python vorhersage.py
+
       - name: Kurse zwischenspeichern
         if: always() && hashFiles('daten/kurse.parquet') != ''
         uses: actions/cache/save@v4
@@ -156,6 +162,7 @@ jobs:
             daten/sec
             daten/nasdaq100.json
             daten/kegelpruefung.json
+            daten/vorhersage_pruefung.json
             daten/isin
             daten/beschreibung.json
             daten/welt

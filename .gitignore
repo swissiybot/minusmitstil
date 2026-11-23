@@ -16,6 +16,7 @@ daten/sec/
 daten/btc_alt/
 daten/nasdaq100.json
 daten/kegelpruefung.json
+daten/vorhersage_pruefung.json
 daten/*.log
 web/daten/
 site/
