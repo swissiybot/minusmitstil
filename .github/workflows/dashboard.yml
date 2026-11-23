@@ -60,6 +60,7 @@ jobs:
             daten/indexanteile_spy.json
             daten/dividenden.parquet
             daten/dividenden_lauf.json
+            daten/etf_daten.json
           key: kurse-${{ github.run_id }}
           restore-keys: kurse-
 
@@ -94,6 +95,11 @@ jobs:
         continue-on-error: true
         timeout-minutes: 25
         run: python dividenden.py
+
+      - name: ETF-Inhalt und Kosten (Yahoo/Morningstar, höchstens einmal pro Woche neu)
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python etf_daten.py
 
       - name: Zinsen (FRED)
         run: python umfeld.py   # vor dem Zwischenspeichern, damit FRED- und Shiller-Dateien im Cache landen
@@ -156,6 +162,7 @@ jobs:
             daten/indexanteile_spy.json
             daten/dividenden.parquet
             daten/dividenden_lauf.json
+            daten/etf_daten.json
           key: kurse-${{ github.run_id }}
 
       - name: Auswertung

@@ -34,3 +34,4 @@ daten/alarm_stand.json
 daten/dividenden.parquet
 daten/dividenden.tmp
 daten/dividenden_lauf.json
+daten/etf_daten.json

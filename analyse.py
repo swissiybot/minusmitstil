@@ -870,6 +870,14 @@ def zusatzdaten(z: dict, zeile: dict) -> dict:
                 out["div"] = d
         except Exception as ex:
             print(f"Dividenden-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    if z["gruppe"] == "ETF":
+        try:
+            import etf_daten
+            e = etf_daten.fuer_wert(z["symbol"])
+            if e:
+                out["etf"] = e
+        except Exception as ex:
+            print(f"ETF-Daten-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
     return out
 
 
