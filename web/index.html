@@ -896,10 +896,7 @@ const farbe = s => s==null ? "#6b7280" : AMPEL_FARBEN[stufe(s)];
 const zonen = {"historisch sehr guenstig":"historisch sehr günstig","guenstig":"günstig","neutral":"neutral","teuer":"teuer","historisch sehr teuer":"historisch sehr teuer","keine Daten":"keine Daten"};
 const zonenWort = s => s==null ? "keine Ampel" : ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"][stufe(s)];
 const umlaut = t => (t||"").replace(/ae/g,"ä").replace(/oe/g,"ö").replace(/ue/g,"ü").replace(/Standardabw\./g,"Standardabw.");
-// Namen NICHT durch umlaut() schicken: das machte aus echten Firmennamen falsche (Boeing → „Böing“, JetBlue → „JetBlü“, 105 Werte; Fund 23.11.2026).
-// Nur die handgepflegten deutschen Namen der Werteliste bekommen ihre Umlaute.
-const nameDe = n => (n||"").replace(/\bSchwellenlaender\b/g,"Schwellenländer").replace(/\bRohoel\b/g,"Rohöl");
-const kurzname = w => nameDe(w.name).replace(" (ETF)","");
+const kurzname = w => umlaut(w.name).replace(" (ETF)","");
 const p3 = w => w.p && w.p["3"] ? w.p["3"] : null;
 const wert = (w,k) => ({score:w.score, score_auf:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
   rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:kurzname(w)})[k];
@@ -1087,7 +1084,7 @@ const ERKLAERUNG = {
   cagr_max: {titel:"Ø seit Beginn", text:"Durchschnittlicher jährlicher Zuwachs über die gesamte vorhandene Historie. Bei ETFs zählt die vorgeschaltete Index-Historie mit. Sehr lange Zeiträume glätten Krisen, sehr kurze (z. B. junge Kryptowährungen) sind kaum aussagekräftig."},
   p3: {titel:"3J höher", text:"In wie viel Prozent der früheren Wochen mit ähnlicher Ampel (±7,5 Punkte) stand der Kurs 3 Jahre später höher. Gezählt werden nur Wochen, deren Ergebnis heute bekannt ist. Aufeinanderfolgende Wochen hängen zusammen, die Zahl wirklich unabhängiger Fälle ist viel kleiner. Die Prüfung ohne Zukunftswissen zeigt: diese Quote hat früher nicht besser vorhergesagt als die einfache Basis-Quote."},
   vorteil: {titel:"Vorteil", text:"Quote der ähnlichen Lagen minus Quote an allen Tagen, in Prozentpunkten. +10 heißt: ähnliche Lagen gingen 10 Punkte öfter gut aus als ein beliebiger Kauftag. Aussagekräftiger als die Ampel allein – aber nur, wenn deutlich positiv und auf vielen Phasen beruhend; bei unter 3 Phasen ist das meist Zufall. Auch dann zeigt erst der Strategie-Vergleich, ob sich das Warten gelohnt hätte."},
-  check: {titel:"Welcher Weg zu kaufen war am besten?", text:"Vier Wege werden mit demselben Geld nachgerechnet – mit deinem Betrag (jeden Monat, einmalig zu Beginn oder beides; als Startwert stehen 500 jeden Monat und 10.000 einmalig da, beides lässt sich frei ändern), mit den echten Kursen und der Ampel, wie sie damals stand: Sparplan (jeden Monat kaufen), Mischung (die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60), Warten auf günstig (Geld sammeln, kaufen ab Ampel 60) und Warten auf sehr günstig (kaufen ab Ampel 80). Gezeigt wird, was am Ende nach Kosten und Steuern übrig bliebe, wenn alles verkauft würde. Wartendes Geld wird verzinst. Ein Einmalbetrag wird im ersten Monat eingezahlt und folgt denselben Regeln: Beim Sparplan wird er sofort angelegt, beim Warten erst, wenn die Ampel passt. Wer wartet, hat oft lange Zeit Geld auf der Seite liegen – steigt der Kurs in dieser Zeit weiter, fehlt dieser Zuwachs. Das ist ein Rückblick auf einen einzigen Verlauf: Welcher Weg künftig vorn liegt, folgt daraus nicht."},
+  check: {titel:"Welcher Weg zu kaufen war am besten?", text:"Vier Wege werden mit demselben Geld nachgerechnet – 500 jeden Monat, mit den echten Kursen und der Ampel, wie sie damals stand: Sparplan (jeden Monat kaufen), Mischung (die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60), Warten auf günstig (Geld sammeln, kaufen ab Ampel 60) und Warten auf sehr günstig (kaufen ab Ampel 80). Gezeigt wird, was am Ende nach Kosten und Steuern übrig bliebe, wenn alles verkauft würde. Wartendes Geld wird verzinst. Wer wartet, hat oft lange Zeit Geld auf der Seite liegen – steigt der Kurs in dieser Zeit weiter, fehlt dieser Zuwachs. Das ist ein Rückblick auf einen einzigen Verlauf: Welcher Weg künftig vorn liegt, folgt daraus nicht."},
   rueckschlag: {titel:"Rückschlagrisiko", text:"So oft fiel der Kurs nach einer ähnlichen Lage innerhalb eines Jahres noch mindestens 10 % unter den damaligen Kaufkurs. Dazu der typische (Median-)Tiefpunkt. Zeigt, wie viel Geduld man nach einem „günstigen“ Kauf früher brauchte."},
   r3j: {titel:"Rendite der letzten 3 Jahre", text:"Wie viel der Kurs in den letzten 156 Wochen gestiegen oder gefallen ist. Nur zur Information, fließt nicht in die Ampel ein."},
   r5j: {titel:"Rendite der letzten 5 Jahre", text:"Wie viel der Kurs in den letzten 260 Wochen gestiegen oder gefallen ist. Nur zur Information, fließt nicht in die Ampel ein."},
@@ -1106,7 +1103,7 @@ const ERKLAERUNG = {
   trend_z: {titel:"Abweichung vom Langfristtrend", text:"Abstand des Kurses zur langfristigen Trendlinie (logarithmisch, nur mit Daten bis zu diesem Tag berechnet), gemessen in Standardabweichungen. −2 heißt: ungewöhnlich weit unter dem Trend. Setzt voraus, dass es überhaupt einen stabilen Trend gibt."},
   mayer: {titel:"Mayer Multiple", text:"Kurs geteilt durch den Durchschnitt der letzten 200 Tage. Unter 1: Kurs unter dem 200-Tage-Schnitt; bei Bitcoin galt unter etwa 0,8 früher als tief, über 2,4 als überhitzt. Für Kryptowährungen außer Bitcoin gibt es dafür keine erprobten Grenzen."},
   pi_bottom: {titel:"Pi Cycle Bottom", text:"Vergleicht die 150-Tage-EMA mit der 471-Tage-SMA × 0,745. Fällt die EMA unter diese Linie, beginnt die Bodenbildungszone; steigt sie wieder darüber, ist das das Boden-Signal. Der Boden lag bisher zwischen beiden Kreuzungen. Nur für Bitcoin geeicht und mit Yahoo-Daten erst zweimal aufgetreten (2018/19, 2022/23) – statistisch kaum belastbar."},
-  pi_top: {titel:"Pi Cycle Top", text:"Ein Warnsignal für ein mögliches Zyklushoch bei Bitcoin: Es löst aus, wenn die 111-Tage-Linie über das Doppelte der 350-Tage-Linie steigt. „Kein Warnsignal“ heißt: Das ist im Moment nicht der Fall – es ist ein gemessener Zustand, kein Schalter. Die beiden Linien und die früheren Auslöser („Pi Top“) sind im Bitcoin-Chart von Anfang an eingeblendet und lassen sich dort über den Knopf „Pi Cycle Top“ ausblenden. Nur für Bitcoin geeicht, sehr wenige Fälle."},
+  pi_top: {titel:"Pi Cycle Top", text:"Steigt die 111-Tage-Linie über das Doppelte der 350-Tage-Linie, galt das bei Bitcoin früher als Zeichen für ein Zyklushoch. Nur für Bitcoin geeicht, sehr wenige Fälle."},
   pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
   // --- Chart-Legende
   l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Gelbe Linie: der Durchschnitt der letzten 200 Wochenschlusskurse (knapp 4 Jahre). Sie ist die Grundlage der Ampel: Liegt der Kurs an der Linie, zeigt die Ampel 70 (günstig); darunter umso mehr, je seltener der Kurs früher so tief lag. Bei starken Werten wie dem S&P 500 oder Bitcoin war die Linie früher oft ein Boden, unter den der Kurs nur selten und kurz fiel."},
@@ -1148,9 +1145,6 @@ const ERKLAERUNG = {
   // --- Strategie
   s_spar: {titel:"Sparplan", text:"Jeden Monat wird der ganze Betrag gekauft, egal wie der Kurs steht. Einfach, keine Entscheidung nötig – und in der Prüfung schwer zu schlagen."},
   s_staffel: {titel:"Staffelkauf 60/75/90", text:"Der Monatsbetrag wartet auf dem Tagesgeld. Gekauft wird nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles. Risiko: Steigt der Kurs lange, wartet das Geld und verpasst den Anstieg."},
-  s_misch: {titel:"Mischung", text:"Die Hälfte des Betrags wird jeden Monat sofort gekauft. Die andere Hälfte wartet verzinst und wird erst angelegt, wenn die Ampel der Vorwoche 60 oder mehr zeigt (günstig)."},
-  s_warten60: {titel:"Warten auf günstig", text:"Das Geld wird gesammelt und verzinst. Sobald die Ampel der Vorwoche 60 oder mehr zeigt, wird alles Wartende auf einmal gekauft. Zeigt sie das nie, bleibt das Geld liegen."},
-  s_warten80: {titel:"Warten auf sehr günstig", text:"Wie „Warten auf günstig“, aber gekauft wird erst ab Ampel 80 (historisch sehr günstig). Das kommt selten vor – oft wartet das Geld jahrelang."},
   s_staffel_vk: {titel:"Staffelkauf + Teilverkauf", text:"Wie Staffelkauf, zusätzlich: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase). Jeder Verkauf löst Abgeltungssteuer auf den Gewinn aus; das kostet oft mehr, als das Ausweichen bringt."},
   s_brutto: {titel:"Endvermögen", text:"Wert von Depot plus wartendem Bargeld am Ende, noch ohne Steuer auf nicht verkaufte Gewinne."},
   s_netto: {titel:"Nach Steuer, alles verkauft", text:"Was übrig bliebe, wenn am Ende alles verkauft und 26,375 % Abgeltungssteuer (25 % + Soli) auf den Gewinn bezahlt würde. Die fairste Vergleichszahl zwischen den Strategien."},
@@ -1563,7 +1557,7 @@ const ALIAS = {SPY:"sp500 s&p500 s&p 500 standard poors us usa amerika", QQQ:"na
   SOJA:"soja soy sojabohnen", KAFFEE:"kaffee coffee", ZUCKER:"zucker sugar", KAKAO:"kakao cocoa", DBC:"rohstoffe korb commodities"};
 function suchIndex(){
   for (const w of ALLE) {
-    w._n = norm(nameDe(w.name) + " " + w.name); w._sym = norm(w.symbol); w._id = norm(w.id);
+    w._n = norm(umlaut(w.name) + " " + w.name); w._sym = norm(w.symbol); w._id = norm(w.id);
     w._such = (w._n + " " + w._sym + " " + w._id + " " + norm(ALIAS[w.id] || "")).trim();
     w._worte = [...new Set(w._such.split(" "))];
   }
@@ -1631,10 +1625,9 @@ function sucheRechnen(){
 }
 function trefferOeffnen(i){
   const t = TREFFER[i]; if (!t) return;
-  const ersatz = ERSATZ_FUER, vgl = VERGLEICH_WAHL, plan = PLAN_WAHL, wenn = WENN_WAHL; ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; WENN_WAHL = false; $("#suche-dlg").close();
+  const ersatz = ERSATZ_FUER, vgl = VERGLEICH_WAHL, plan = PLAN_WAHL; ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; $("#suche-dlg").close();
   if (vgl && t.art === "wert") { vergleichZeigen(t.w.id); return; }
   if (plan && t.art === "wert") { planHinzu(t.w); return; }
-  if (wenn && t.art === "wert") { WENN.id = t.w.id; sichere("wenn", WENN); risikoZeigen(); $("#d-wenn-id")?.scrollIntoView({block:"center"}); return; }
   if (ersatz != null && t.art === "wert" && DEPOT?.positionen[ersatz]) {   // Depot: gewählten Wert als Ersatz zuordnen
     Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt", ersatz:false, hinweis:""}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
   }
@@ -1651,7 +1644,7 @@ $("#suche-eingabe").addEventListener("keydown", ev => {
 });
 $("#suche-treffer").addEventListener("click", ev => { const t = ev.target.closest(".treffer"); if (t) trefferOeffnen(+t.dataset.i); });
 $("#suche-dlg").addEventListener("click", ev => { if (ev.target === $("#suche-dlg")) $("#suche-dlg").close(); });
-$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; if (typeof WENN_WAHL !== "undefined") WENN_WAHL = false; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
+$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
 $("#such-knopf").onclick = sucheOeffnen;
 document.addEventListener("keydown", ev => {
   const imFeld = ev.target.closest?.("input,textarea,select,[contenteditable]");
@@ -1981,154 +1974,46 @@ const WEGE = [["spar", "Sparplan", "jeden Monat kaufen, egal wie die Ampel steht
   ["misch", "Mischung", "die Hälfte jeden Monat kaufen, die andere Hälfte erst bei günstiger Ampel (ab 60)", "var(--kegel)"],
   ["warten60", "Warten auf günstig", "Geld sammeln und erst kaufen, wenn die Ampel günstig zeigt (ab 60)", "var(--guenstig)"],
   ["warten80", "Warten auf sehr günstig", "Geld sammeln und erst kaufen, wenn die Ampel historisch sehr günstig zeigt (ab 80)", "var(--cyan)"]];
-// Eigene Eingaben für Kaufweg-Karte und Reiter „Strategie-Vergleich“ (Wunsch Marc 23.11.2026: Betrag monatlich und einmalig frei wählbar,
-// im Strategie-Vergleich auch Dauer, Kosten und Zins – beide Stellen rechnen mit denselben, gemeinsam gemerkten Werten). Der Browser rechnet
-// alle sechs Wege mit denselben Regeln wie strategie.py nach (Depot-Klasse: Kosten je Kauf/Verkauf, Zins aufs Wartegeld, Abgeltungssteuer mit
-// Sparerpauschbetrag je Kalenderjahr, Verlusttopf, Teilfreistellung, Teilverkauf nach Reihenfolge des Kaufs, am Ende alles verkauft, interner
-// Zinsfuß). Die Entscheidungen je Monat (Kurs, Ampel-Grenzen, Zins) kommen fertig aus s.plan – geprüft: gleiche Ergebnisse wie die Python-Rechnung.
-// Einmalbetrag = zusätzliche Einzahlung im ersten Monat, für die dieselben Regeln gelten (Sparplan: sofort kaufen; Warten: bis die Ampel passt).
-const KW_STD = {betrag:500, einmal:10000, jahre:20, kfix:1, kproz:0, zins:"echt"};   // Startwerte; jede Eingabe wird im Browser gemerkt
-let KW = {...KW_STD, ...lade("kaufweg", {})};
-const kwOptionen = () => ({betrag:Math.max(0, +KW.betrag || 0), einmal:Math.max(0, +KW.einmal || 0), jahre:Math.max(2, Math.round(+KW.jahre || 20)), kfix:Math.max(0, +KW.kfix || 0), kproz:Math.max(0, +KW.kproz || 0) / 100, zins:KW.zins === "echt" || KW.zins == null ? "echt" : +KW.zins || 0});
-function strategieRechnen(s, chart, o){
-  const P = s.plan; if (!P?.t?.length) return null;
-  const ST = 0.26375, kfix = o.kfix ?? s.kfix ?? 1, kproz = o.kproz ?? s.kproz ?? 0, pausch = s.pausch || 0, teilfrei = s.teilfrei || 0, betrag = o.betrag, einmal = o.einmal || 0;
-  const voll = !!(P.g75 && P.g90 && P.l15 && P.g40), n = P.t.length, endeT = P.ende_t ?? chart?.t?.at(-1) ?? P.t[n - 1];
-  let j0 = 0;   // Zeitraum: höchstens o.jahre Kalenderjahre zurück ab dem letzten Kurs (wie start_soll in strategie.py)
-  if (o.jahre) { const d = new Date(endeT * 1000); d.setUTCFullYear(d.getUTCFullYear() - o.jahre); const ab = d.getTime() / 1000; while (j0 < n && P.t[j0] < ab) j0++; }
-  if (n - j0 < 24) return {fehler:"zu wenig Monate mit gültiger Ampel für diese Dauer"};
-  const neu = () => ({lose:[], bar:0, topf:0, steuer:0, kosten:0, kaeufe:0, verkaeufe:0, n:0, jahr:null, frei:pausch, hoch:0, dd:0, unter:0});
-  const NAMEN = ["spar", ...(voll ? ["staffel", "staffel_vk"] : []), "warten60", "warten80", "misch"], D = Object.fromEntries(NAMEN.map(k => [k, neu()]));
-  const kaufen = (d, b, kurs) => { const k = kfix + kproz * b; if (b <= k * 2) return false; const m = (b - k) / kurs; d.lose.push([m, b / m]); d.n += m; d.kosten += k; d.kaeufe++; return true; };
-  const nachFrei = (d, b) => { const ab = Math.min(b, d.frei); d.frei -= ab; return b - ab; };
-  const versteuern = (d, gewinn) => { gewinn *= 1 - teilfrei; if (gewinn < 0) { d.topf += -gewinn; return 0; } const v = Math.min(gewinn, d.topf); d.topf -= v; const st = nachFrei(d, gewinn - v) * ST; d.steuer += st; return st; };
-  const verkaufen = (d, anteil, kurs, buchen) => {   // zuerst Gekauftes zuerst; gibt den Erlös nach Kosten und Steuer zurück
-    const menge = d.n * anteil; if (menge <= 0) return 0;
-    const brutto = menge * kurs, k = kfix + kproz * brutto; let einstand = 0, rest = menge;
-    while (rest > 1e-12 && d.lose.length) { const los = d.lose[0], nimm = Math.min(rest, los[0]); einstand += nimm * los[1]; los[0] -= nimm; rest -= nimm; if (los[0] <= 1e-12) d.lose.shift(); }
-    d.n = d.lose.reduce((a, l) => a + l[0], 0);
-    const st = versteuern(d, brutto - k - einstand); d.kosten += k; if (buchen) d.verkaeufe++;
-    return brutto - k - st; };
-  const zins = (d, satz) => { let z = d.bar * satz / 100 / 12; if (z > 0) { const st = nachFrei(d, z) * ST; d.steuer += st; z -= st; } d.bar += z; };
-  const warte = [["warten60", P.g60, 0], ["warten80", P.g80, 0], ["misch", P.g60, 0.5]], t0 = P.t[j0], fluesse = [];
-  let eingezahlt = 0, frei = true, letzterSatz = 0;
-  const monat = j => {
-    const kurs = P.k[j], jahr = new Date(P.t[j] * 1000).getUTCFullYear(), ein = betrag + (j === j0 ? einmal : 0), satz = o.zins === "echt" || o.zins == null ? P.z[j] : o.zins;
-    letzterSatz = satz;
-    for (const d of Object.values(D)) if (d.jahr !== jahr) { d.jahr = jahr; d.frei = pausch; }
-    eingezahlt += ein; if (ein > 0) fluesse.push([(P.t[j] - t0) / 86400 / 365.25, -ein]);
-    if (!kaufen(D.spar, ein, kurs)) D.spar.bar += ein;   // zu klein für einen Kauf: Geld bleibt liegen
-    if (voll) {
-      if (P.g40[j]) frei = true;
-      for (const k of ["staffel", "staffel_vk"]) { const d = D[k];
-        zins(d, satz); d.bar += ein;
-        if (k === "staffel_vk" && frei && P.l15[j] && d.n > 0) d.bar += verkaufen(d, 0.25, kurs, true);
-        const anteil = P.g90[j] ? 1 : P.g75[j] ? 2 / 3 : P.g60[j] ? 1 / 3 : 0;
-        if (anteil > 0 && d.bar > 0) { const invest = d.bar * anteil; if (kaufen(d, invest, kurs)) d.bar -= invest; }
-      }
-    }
-    for (const [k, g, sofort] of warte) { const d = D[k];
-      zins(d, satz);
-      if (sofort > 0 && !kaufen(d, ein * sofort, kurs)) d.bar += ein * sofort;
-      d.bar += ein * (1 - sofort);
-      if (g[j] && d.bar > 0) { const invest = d.bar; if (kaufen(d, invest, kurs)) d.bar -= invest; }
-    }
-    if (voll && P.l15[j]) frei = false;
-  };
-  // Woche für Woche: größter Rückgang, tiefster Stand unter den Einzahlungen, Verlauf fürs Bild; Monatskäufe an ihrem Zeitpunkt
-  const ct = chart?.t, cc = chart?.c, mitVerlauf = !!(ct && cc && ct.length === cc.length), reihe = {t:[], ein:[], ...Object.fromEntries(NAMEN.map(k => [k, []]))};
-  let j = j0;
-  if (mitVerlauf) {
-    let w0 = 0; while (w0 < ct.length && ct[w0] < t0) w0++;
-    for (let w = w0; w < ct.length; w++) {
-      const vorher = j; while (j < n && P.t[j] <= ct[w]) monat(j++);
-      const letzte = w === ct.length - 1, kurs = letzte ? P.ende : cc[w]; if (!(kurs > 0)) continue;
-      for (const d of Object.values(D)) { const v = d.n * kurs + d.bar; if (v > d.hoch) d.hoch = v; if (d.hoch > 0) d.dd = Math.min(d.dd, v / d.hoch - 1); d.unter = Math.min(d.unter, v - eingezahlt); }
-      if (j > vorher || letzte) { reihe.t.push(ct[w]); reihe.ein.push(Math.round(eingezahlt)); for (const k of NAMEN) reihe[k].push(Math.round(D[k].n * kurs + D[k].bar)); }
-    }
-  }
-  while (j < n) monat(j++);
-  const jahreIst = (endeT - t0) / 86400 / 365.25, erg = {};
-  const xirr = fl => { const npv = r => fl.reduce((a, [t, b]) => a + b / (1 + r) ** t, 0); let lo = -0.99, hi = 5; if (npv(lo) * npv(hi) > 0) return null;
-    for (let i = 0; i < 200; i++) { const mid = (lo + hi) / 2; if (npv(lo) * npv(mid) <= 0) hi = mid; else lo = mid; } return (lo + hi) / 2; };
-  for (const k of NAMEN) { const d = D[k];
-    const brutto = d.n * P.ende + d.bar, barAnteil = brutto > 0 ? Math.round(d.bar / brutto * 1000) / 10 : 0, steuerVorher = d.steuer;
-    const netto = d.bar + (d.n > 0 ? verkaufen(d, 1, P.ende, false) : 0), irr = xirr([...fluesse, [jahreIst, netto]]);
-    erg[k] = {name:s.ergebnis?.[k]?.name || k, brutto:Math.round(brutto), netto:Math.round(netto), irr:irr == null ? null : Math.round(irr * 10000) / 100,
-      max_verlust:mitVerlauf ? Math.round(d.dd * 1000) / 10 : null, max_unter_einzahlung:mitVerlauf ? Math.round(d.unter) : null,
-      steuer_laufend:Math.round(steuerVorher), steuer_ende:Math.round(d.steuer - steuerVorher), kosten:Math.round(d.kosten), kaeufe:d.kaeufe, verkaeufe:d.verkaeufe, bar_anteil_ende:barAnteil};
-  }
-  const tag = t => new Date(t * 1000).toISOString().slice(0, 10);
-  return {von:tag(t0), bis:tag(Math.min(endeT, Date.now() / 1000)), jahre:Math.round(jahreIst * 10) / 10, monate:n - j0, eingezahlt:Math.round(eingezahlt), betrag, einmal, kfix, kproz, pausch:s.pausch, teilfrei:s.teilfrei,
-    zins:o.zins === "echt" || o.zins == null ? s.zins : `fest ${String(o.zins).replace(".", ",")} % p.a.`, voll, ergebnis:erg, reihe:mitVerlauf ? reihe : null, hoechstJahre:Math.floor((endeT - P.t[0]) / 86400 / 365.25 + 0.2)};
-}
 async function lohntSichCheck(id){
   const el = $("#check"); if (!el) return;
-  const [s, wd] = await Promise.all([apiStrategie(id), apiWert(id)]);
+  const s = await apiStrategie(id);
   if (AKTIV !== id || !$("#check")) return;
   const name = INFO ? esc(kurzname(INFO)) : "diesem Wert";
-  const kopfMit = unter => kk("rueck", `Welcher Weg zu kaufen war bei ${name} am besten?`, unter, "Lohnt-sich-Check", "check");
-  if (!s || s.fehler) { el.innerHTML = kopfMit("Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.") + `<p>Zu wenig Jahre mit Ampel für diesen Vergleich.</p>`; return; }
-  const steuerText = `nach Kosten und Abgeltungssteuer${s.pausch ? ` (mit Sparerpauschbetrag${s.teilfrei ? " und Teilfreistellung 30 %" : ""})` : ""}, in der Währung des Werts`;
-  const zumVergleich = () => { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
-  const mehrKnopf = () => { $("#check-mehr").onclick = zumVergleich; const e2 = $("#check-einst"); if (e2) e2.onclick = zumVergleich; };
-  if (!s.ergebnis.warten60 || !s.ergebnis.misch) {   // ältere Daten ohne die neuen Wege: Sparplan gegen gestaffeltes Warten
-    const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
-    el.innerHTML = kopfMit(`Zwei Wege mit demselben Geld (${geld(s.betrag ?? 500)} je Monat), nachgerechnet mit den echten Kursen.`) + `<div class="fazit${ja ? " gut" : ""}">Gestaffeltes Warten auf eine günstige Ampel (60/75/90) hätte bei ${name} seit ${s.von.slice(0,4)} <b>${ja ? "mehr" : "weniger"}</b> gebracht als ein Sparplan (${vz(d,0," %")}).</div>
+  const kopf = kk("rueck", `Welcher Weg zu kaufen war bei ${name} am besten?`, "Vier Wege mit demselben Geld – 500 jeden Monat – nachgerechnet mit den echten Kursen.", "Lohnt-sich-Check", "check");
+  if (!s || s.fehler) { el.innerHTML = kopf + `<p>Zu wenig Jahre mit Ampel für diesen Vergleich.</p>`; return; }
+  const e = s.ergebnis, steuerText = `nach Kosten und Abgeltungssteuer${s.pausch ? ` (mit Sparerpauschbetrag${s.teilfrei ? " und Teilfreistellung 30 %" : ""})` : ""}, in der Währung des Werts`;
+  const mehrKnopf = () => { $("#check-mehr").onclick = () => { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); }; };
+  if (!e.warten60 || !e.misch) {   // ältere Daten ohne die neuen Wege: Sparplan gegen gestaffeltes Warten
+    const d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
+    el.innerHTML = kopf + `<div class="fazit${ja ? " gut" : ""}">Gestaffeltes Warten auf eine günstige Ampel (60/75/90) hätte bei ${name} seit ${s.von.slice(0,4)} <b>${ja ? "mehr" : "weniger"}</b> gebracht als ein Sparplan (${vz(d,0," %")}).</div>
       <div class="vgl"><span data-e="s_spar">Sparplan</span><div class="balken"><i style="width:${e.spar.netto / mx * 100}%;background:var(--akzent)"></i></div><b>${geld(e.spar.netto)}</b>
         <span data-e="s_staffel">Warten</span><div class="balken"><i style="width:${e.staffel.netto / mx * 100}%;background:${ja ? "var(--guenstig)" : "var(--neutral)"}"></i></div><b>${geld(e.staffel.netto)}</b></div>
-      <p class="klein">${geld(s.betrag ?? 500)} je Monat, ${fmt(s.jahre,0)} Jahre, ${steuerText}. Der Vergleich aller vier Wege erscheint nach dem nächsten Daten-Lauf.</p>
+      <p class="klein">500 je Monat, ${fmt(s.jahre,0)} Jahre, ${steuerText}. Der Vergleich aller vier Wege erscheint nach dem nächsten Daten-Lauf.</p>
       <button class="linkknopf" id="check-mehr">Strategie-Vergleich ansehen →</button>`;
     mehrKnopf(); return; }
-  const eigen = !!s.plan?.t?.length;   // eigene Eingaben gehen, sobald die Daten den Monatsplan enthalten
-  const zeichnen = () => {
-    const o = kwOptionen(), betrag = eigen ? o.betrag : (s.betrag ?? 500), einmal = eigen ? o.einmal : 0;
-    const eingabe = eigen ? `<div class="eingabe" style="padding:2px 0 10px;align-items:flex-end">
-        <label>Jeden Monat<input id="kw-betrag" type="number" min="0" step="50" value="${betrag}" style="width:130px"></label>
-        <label>Einmalig zu Beginn<input id="kw-einmal" type="number" min="0" step="500" value="${einmal}" style="width:130px"></label>
-        <span class="klein" style="padding-bottom:9px">Trag deinen Betrag ein – alle vier Wege rechnen sofort damit. In der Währung des Werts. <button class="linkknopf" id="check-einst">Dauer, Kosten und Zins ändern →</button></span></div>` : "";
-    const geldText = [betrag > 0 ? `${geld(betrag)} jeden Monat` : "", einmal > 0 ? `${geld(einmal)} einmalig zu Beginn` : ""].filter(Boolean).join(" und ");
-    const kopf = kopfMit(`Vier Wege mit demselben Geld${geldText ? " (" + geldText + ")" : ""}, nachgerechnet mit den echten Kursen.`);
-    const binden = () => { if (!eigen) return;
-      const lies = () => { KW = {...KW, betrag:Math.max(0, +$("#kw-betrag").value || 0), einmal:Math.max(0, +$("#kw-einmal").value || 0)}; sichere("kaufweg", KW); const fokus = document.activeElement?.id; zeichnen(); if (fokus && $("#" + fokus)) $("#" + fokus).focus();
-        if (REITER === "strategie" && $("#st-betrag")) tabStrategie(INFO); };   // der offene Strategie-Vergleich rechnet mit denselben Beträgen mit
-      $("#kw-betrag").onchange = lies; $("#kw-einmal").onchange = lies; };
-    if (!(betrag > 0) && !(einmal > 0)) { el.innerHTML = kopf + eingabe + `<p>Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</p><button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`; binden(); mehrKnopf(); return; }
-    const r = eigen ? strategieRechnen(s, wd?.chart, o) : {ergebnis:s.ergebnis, eingezahlt:s.eingezahlt, von:s.von, jahre:s.jahre};
-    if (!r || r.fehler) { el.innerHTML = kopf + eingabe + `<p>Für die gewählte Dauer gibt es zu wenige Monate mit Ampel. Stell im Strategie-Vergleich eine längere Dauer ein.</p><button class="linkknopf" id="check-mehr">Zum Strategie-Vergleich →</button>`; binden(); mehrKnopf(); return; }
-    const e = r.ergebnis, nurEinmal = !(betrag > 0);   // nur ein Einmalbetrag: die Wege heißen dann anders
-    const wegText = nurEinmal ? {spar:["Sofort kaufen", "den ganzen Betrag gleich zu Beginn kaufen, egal wie die Ampel steht"],
-      misch:["Mischung", "die Hälfte sofort kaufen, die andere Hälfte erst bei günstiger Ampel (ab 60)"],
-      warten60:["Warten auf günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel günstig zeigt (ab 60)"],
-      warten80:["Warten auf sehr günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel historisch sehr günstig zeigt (ab 80)"]} : {};
-    const L = WEGE.filter(([k]) => e[k]).map(([k, n, was, f]) => ({k, n:wegText[k]?.[0] || n, was:wegText[k]?.[1] || was, f, x:e[k]})), rang = [...L].sort((p, q) => q.x.netto - p.x.netto), sieger = rang[0], zweiter = rang[1];
-    const vor = (sieger.x.netto / zweiter.x.netto - 1) * 100, knapp = vor < 3, mx = sieger.x.netto || 1;
-    const fazit = knapp ? `<b>Kein klarer Sieger:</b> ${sieger.n} und ${zweiter.n} lagen bei ${name} fast gleichauf (Unterschied ${fmt(vor,0)} %).`
-      : `<b>Am meisten brachte bei ${name}: ${sieger.n}</b> – ${sieger.was}. Vorsprung vor dem zweitbesten Weg (${zweiter.n}): <b>${fmt(vor,0)} %</b>.`;
-    const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger && !knapp, zuSpar = z.k === "spar" ? "" : ` · ${vz((z.x.netto / e.spar.netto - 1) * 100, 0, " %")} gegenüber ${nurEinmal ? "„Sofort kaufen“" : "dem Sparplan"}`;
-      const kaeufe = z.x.kaeufe === 0 ? "kam nie zum Zug – die Ampel stand nie so günstig" : `${z.x.kaeufe} ${z.x.kaeufe === 1 ? "Kauf" : "Käufe"}${z.x.bar_anteil_ende >= 1 ? `, am Ende ${fmt(z.x.bar_anteil_ende,0)} % noch nicht angelegt` : ""}`;
-      return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">am besten</span>` : ""}<span class="weg-geld">${geld(z.x.netto)}</span></div>
-        <div class="balken"><i style="width:${Math.max(1, z.x.netto / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
-        <div class="klein">${z.was.charAt(0).toUpperCase() + z.was.slice(1)}. ${kaeufe}${zuSpar}.</div></div>`; };
-    const rueck = L.every(z => z.x.max_verlust != null) ? ` Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}.` : "";
-    const abweichend = eigen && (o.kfix !== 1 || o.kproz !== 0 || o.zins !== "echt") ? ` Gerechnet mit ${fmt(o.kfix, o.kfix % 1 ? 2 : 0)} je Kauf${o.kproz ? ` plus ${fmt(o.kproz * 100, 2)} %` : ""}${o.zins === "echt" ? "" : `, Zins fest ${fmt(o.zins, o.zins % 1 ? 1 : 0)} %`} (im Strategie-Vergleich eingestellt).` : "";
-    el.innerHTML = kopf + eingabe + `<div class="fazit${knapp ? "" : " gut"}">${fazit}</div>
-      <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${r.von.slice(0,4)} (${fmt(r.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
-      <div class="wege">${L.map(zeile).join("")}</div>
-      <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck}${abweichend} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Eigene Beträge lassen sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
-      ${nurEinmal ? `<p class="klein">Für einen einzelnen Einmalbetrag gibt es keine Gegenprobe mit Zufallsverläufen: Das Ergebnis hängt hier allein vom Startzeitpunkt ab.</p>`
-        : `${einmal > 0 ? `<p class="klein">Die folgende Einordnung gilt für das monatliche Sparen mit gleichem Betrag, nicht für den Einmalbetrag.</p>` : ""}<p class="klein" id="weg-zufall" hidden></p>`}
-      <button class="linkknopf" id="check-mehr">Strategie-Vergleich mit diesen Beträgen im Einzelnen ansehen →</button>`;
-    binden(); mehrKnopf(); if (!nurEinmal) wegEinordnung(id);   // Zufalls-Gegenprobe (Warten ab 60 gegen Sparplan) gilt nur für monatliches Sparen
-  };
-  zeichnen();
+  const L = WEGE.filter(([k]) => e[k]).map(([k, n, was, f]) => ({k, n, was, f, x:e[k]})), rang = [...L].sort((p, q) => q.x.netto - p.x.netto), sieger = rang[0], zweiter = rang[1];
+  const vor = (sieger.x.netto / zweiter.x.netto - 1) * 100, knapp = vor < 3, mx = sieger.x.netto || 1;
+  const fazit = knapp ? `<b>Kein klarer Sieger:</b> ${sieger.n} und ${zweiter.n} lagen bei ${name} fast gleichauf (Unterschied ${fmt(vor,0)} %).`
+    : `<b>Am meisten brachte bei ${name}: ${sieger.n}</b> – ${sieger.was}. Vorsprung vor dem zweitbesten Weg (${zweiter.n}): <b>${fmt(vor,0)} %</b>.`;
+  const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger && !knapp, zuSpar = z.k === "spar" ? "" : ` · ${vz((z.x.netto / e.spar.netto - 1) * 100, 0, " %")} gegenüber dem Sparplan`;
+    const kaeufe = z.x.kaeufe === 0 ? "kam nie zum Zug – die Ampel stand nie so günstig" : `${z.x.kaeufe} Käufe${z.x.bar_anteil_ende >= 1 ? `, am Ende ${fmt(z.x.bar_anteil_ende,0)} % noch nicht angelegt` : ""}`;
+    return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">am besten</span>` : ""}<span class="weg-geld">${geld(z.x.netto)}</span></div>
+      <div class="balken"><i style="width:${Math.max(1, z.x.netto / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
+      <div class="klein">${z.was.charAt(0).toUpperCase() + z.was.slice(1)}. ${kaeufe}${zuSpar}.</div></div>`; };
+  el.innerHTML = kopf + `<div class="fazit${knapp ? "" : " gut"}">${fazit}</div>
+    <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(s.eingezahlt)}</b> – 500 jeden Monat seit ${s.von.slice(0,4)} (${fmt(s.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
+    <div class="wege">${L.map(zeile).join("")}</div>
+    <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst. Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}. Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.</p>
+    <p class="klein" id="weg-zufall" hidden></p>
+    <button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`;
+  mehrKnopf(); wegEinordnung(id);
 }
 // ------------------------------------------------------------ Detail eines Werts
 let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL = [], KEGEL_M = null, LIMITLINIEN = [], INFO = null, CDATA = null, REITER = "kennzahlen";
 let SERIEN = {}, ZEIT_I = new Map();
 // Startzustand bei JEDEM Aufruf (Wunsch Marc 22.11.2026): 200-Wochen-Linie, Kaufzonen, Ampel-Verlauf, Tief-/Hochpunkte und
 // Prognose-Kegel an, alles andere aus; Wochenansicht, 10 Jahre. Umschalten gilt bis zum nächsten Neuladen der Seite.
-let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, kq:true, vq:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:true, mayer:false, mvrv:false};
+let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, kq:true, vq:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:false, mayer:false, mvrv:false};
 // Kauf-/Verkaufsqualität (Rückblick): Farben der Bänder im Kurs-Chart
 const KQ_FARBEN = ["#e2583e", "#e2583e80", "transparent", "#14a08580", "#0b7a64"];   // schlecht … sehr gut gekauft
 const VQ_FARBE = "#f59e0b";
@@ -2409,7 +2294,7 @@ function zeitachseKarte(w, c){
   if (!c?.c || !c.t || c.c.filter(x => x > 0).length < 110) return "";
   return `<section class="karte breit2" id="zeitachse-karte">${kk("zeit", "Gestern, heute, mögliche Zukunft", "Schieb den Regler: links siehst du, was das Tool früher gesagt hätte und was danach kam – rechts, wohin der Kurs laufen könnte.", "Zeitachse", "zeitachse")}
     <div id="za-bild"></div>
-    <input type="range" class="regler" id="za-regler" min="0" max="1" step="1" value="0" aria-label="Zeitpunkt wählen in Monatsschritten: links Vergangenheit, rechts Zukunft">
+    <input type="range" class="regler" id="za-regler" min="0" max="1" step="1" value="0" aria-label="Zeitpunkt wählen: links Vergangenheit, rechts Zukunft">
     <div class="regler-achse"><span>◀ Vergangenheit</span><span>Heute</span><span>Zukunft ▶</span></div>
     <div class="za-info" id="za-info"></div>
     <p class="klein" style="margin:10px 0 0"><i class="leg" style="background:var(--text)"></i>Kurs &nbsp; <i class="leg" style="background:var(--gelb)"></i>200-Wochen-Linie &nbsp; <i class="leg fl" style="background:var(--kegel)"></i>simulierte Wege (hell: 9 von 10, kräftig: jeder zweite) · Rückblick und Simulation, keine Vorhersage.</p></section>`;
@@ -2448,7 +2333,7 @@ function zaBild(){
 function zaInfo(){
   const c = ZA.c, n = c.c.length, kurs = c.c[n - 1], z = ZA.z, w = ZA.w, nk = kurs >= 100 ? 0 : kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kl = x => x > 0 ? "pos" : x < 0 ? "neg" : "", name = esc(kurzname(w));
   if (z < 0) { const i = n - 1 + z, s = c.score?.[i], p = c.c[i], nach = wo => i + wo < n && c.c[i + wo] > 0 ? (c.c[i + wo] / p - 1) * 100 : null, r1 = nach(52), r3 = nach(156), bis = (kurs / p - 1) * 100;
-    return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())} · vor ${zeitText(Math.max(1, -ZA.m))}</div>
+    return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())} · vor ${-z < 52 ? fmt(-z / 4.345, 0) + " Monaten" : fmt(-z / 52, 1) + " Jahren"}</div>
       <div class="za-gross">${s == null ? "noch keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(s)]}">${zonenWort(s)}</span>`}</div>
       <p class="za-satz">${s == null ? "Damals gab es noch zu wenig Geschichte für eine Ampel." : `Das hätte das Tool damals gesagt (Ampel <b>${fmt(s,0)}</b>), nur mit dem Wissen von damals.`} Kurs damals: <b>${k(p)}</b>.</p>
       <div class="kv"><span>Ein Jahr später stand der Kurs</span><b class="${kl(r1)}">${r1 == null ? "noch offen" : vz(r1, 0, " %")}</b></div>
@@ -2458,7 +2343,7 @@ function zaInfo(){
       <p class="za-satz">${w.score == null ? "" : `Ampel <b>${fmt(w.score,0)}</b>, `}Kurs <b>${k(kurs)}</b>. Schieb den Regler nach links in die Vergangenheit oder nach rechts in die Zukunft.</p>`;
   const q = ZA.q; if (!q) return `<div class="za-auge">Mögliche Zukunft</div><p class="za-satz">Die Simulation wird gerechnet …</p>`;
   const t = c.t[n - 1] + z * 7 * 86400, lo = kurs * q.q10[z], hi = kurs * q.q90[z], d = new Date(t * 1000);
-  const wann = zeitText(Math.max(1, ZA.m));
+  const wann = z < 9 ? `${z} Woche${z === 1 ? "" : "n"}` : z < 52 ? `${fmt(z / 4.345, 0)} Monaten` : z === 52 ? "einem Jahr" : `${fmt(z / 52, z % 52 ? 1 : 0)} Jahren`;
   return `<div class="za-auge">Mögliche Zukunft · ${String(d.getUTCMonth() + 1).padStart(2, "0")}/${d.getUTCFullYear()} · in ${wann}</div>
     <div class="za-gross">${k(lo)} bis ${k(hi)}</div>
     <p class="za-satz">In <b>8 von 10</b> simulierten Wegen liegt der Kurs in ${wann} in diesem Bereich (${vz((lo / kurs - 1) * 100, 0, " %")} bis ${vz((hi / kurs - 1) * 100, 0, " %")} gegenüber heute).</p>
@@ -2469,34 +2354,29 @@ function zaInfo(){
 function zeitachseInit(id, w, c){
   const r = $("#za-regler"); if (!r) { ZA = null; return; }
   const n = c.c.length; let erste = 0; while (erste < n && !(c.c[erste] > 0)) erste++;
-  ZA = {id, w, c, verg:Math.min(520, n - 1 - erste), zuk:260, z:0, m:0, sim:null, q:null, annahme:annahmeStandard(c.c)};
-  // Regler in Monaten (ein Schritt = ein Monat); z = Wochen dazu, denn Kurse und Simulation sind wöchentlich
-  const mMin = -Math.floor(ZA.verg * 12 / 52), mMax = Math.round(ZA.zuk * 12 / 52);
-  r.min = mMin; r.max = mMax; r.step = 1; r.value = 0; r.style.setProperty("--heute", (-mMin / (mMax - mMin) * 100).toFixed(1) + "%");
+  ZA = {id, w, c, verg:Math.min(520, n - 1 - erste), zuk:260, z:0, sim:null, q:null, annahme:annahmeStandard(c.c)};
+  r.min = -ZA.verg; r.max = ZA.zuk; r.value = 0; r.style.setProperty("--heute", (ZA.verg / (ZA.verg + ZA.zuk) * 100).toFixed(1) + "%");
   const neu = () => { $("#za-bild").innerHTML = zaBild(); $("#za-info").innerHTML = zaInfo(); };
-  r.oninput = () => { ZA.m = +r.value; ZA.z = Math.max(-ZA.verg, Math.min(ZA.zuk, Math.round(ZA.m * 52 / 12))); neu(); };
+  r.oninput = () => { ZA.z = +r.value; neu(); };
   neu();
   setTimeout(() => { if (!ZA || ZA.id !== id || AKTIV !== id || !$("#za-regler")) return; ZA.sim = simWege(c.c, ZA.zuk, 4000, id, ZA.annahme); if (!ZA.sim) return; ZA.q = simQuantile(ZA.sim); neu(); }, 80);
 }
-// Dauer in Worten (Dativ: „in …“, „vor …“, „nach …“) und kurz für Achsen – beide Regler laufen in Monatsschritten (Wunsch Marc 23.11.2026)
-const zeitText = m => { const j = Math.floor(m / 12), r = m % 12, J = j === 1 ? "einem Jahr" : `${j} Jahren`, M = r === 1 ? "einem Monat" : `${r} Monaten`; return j && r ? `${J} und ${M}` : j ? J : M; };
-const zeitKurz = m => { const j = Math.floor(m / 12), r = m % 12; return j && r ? `${j} J. ${r} M.` : j ? `${j} J.` : `${r} M.`; };
 // ------------------------------------------------------------ Zukunfts-Rechner: Was wird aus meinem Geld? Freie Eingabe, in Euro gerechnet
 let ZR = null, ZR_T = 0;
 const ZR_STD = {einmal:5000, rate:0, jahre:10};
 function rechnerKarte(w, c){
   if (!c?.c || c.c.filter(x => x > 0).length < 110) return "";
-  const e = {...ZR_STD, ...lade("zrechner", {})}, mon = Math.max(1, Math.min(360, Math.round(e.monate ?? e.jahre * 12)));
+  const e = {...ZR_STD, ...lade("zrechner", {})};
   const feld = (id, titel, wert, einheit, attr) => `<label class="zr-f"><span>${titel}</span><span class="zr-feld"><input type="number" id="${id}" inputmode="numeric" value="${wert}" ${attr}><i>${einheit}</i></span></label>`;
   return `<section class="karte breit2" id="rechner-karte">${kk("ausblick", "Was wird aus meinem Geld?", "Trag ein, was du anlegen willst. Das Tool spielt tausende mögliche Verläufe durch – aus den echten Wochen der Vergangenheit.", "Simulation", "zrechner")}
-    <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}<label class="zr-f"><span>Wie lange?</span><span class="zr-feld"><input type="number" id="zr-jahre" inputmode="numeric" value="${Math.floor(mon / 12)}" min="0" max="30" step="1" aria-label="Jahre"><i>Jahre</i><input type="number" id="zr-monate" inputmode="numeric" value="${mon % 12}" min="0" max="11" step="1" aria-label="Monate" style="max-width:54px"><i>Monate</i></span></label></div>
-    <input type="range" class="regler" id="zr-regler" min="1" max="360" step="1" value="${mon}" style="--heute:0%" aria-label="Anlagedauer in Monatsschritten">
+    <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}${feld("zr-jahre", "Wie lange?", e.jahre, "Jahre", 'min="1" max="30" step="1"')}</div>
+    <input type="range" class="regler" id="zr-regler" min="1" max="30" step="1" value="${e.jahre}" style="--heute:0%" aria-label="Anlagedauer in Jahren">
     <div class="zr-annahme"><span class="klein" data-e="zr_annahme" tabindex="0">Wie soll die Vergangenheit zählen?</span><div class="segment" id="zr-annahme" role="group" aria-label="Annahme für die Rendite">${Object.entries(ANNAHMEN).map(([k, a]) => `<button type="button" data-a="${k}" aria-pressed="false">${a.name}</button>`).join("")}</div></div>
     <div id="zr-aus"><div class="lade" style="height:190px;margin-top:10px"></div></div></section>`;
 }
 function zrRechnen(){
   const el = $("#zr-aus"); if (!el || !ZR) return;
-  const wo = Math.max(1, Math.round(ZR.monate * 52 / 12)); if (!ZR.sim || ZR.sim.wochen !== wo || ZR.sim.annahme !== ZR.annahme) ZR.sim = simWege(ZR.reihe, wo, 3000, ZR.id + "|eur", ZR.annahme);
+  const wo = ZR.jahre * 52; if (!ZR.sim || ZR.sim.wochen !== wo || ZR.sim.annahme !== ZR.annahme) ZR.sim = simWege(ZR.reihe, wo, 3000, ZR.id + "|eur", ZR.annahme);
   const sim = ZR.sim; if (!sim) { el.innerHTML = `<p class="klein">Zu wenig Kursgeschichte für eine Simulation.</p>`; return; }
   const n = wo + 1, P = sim.pfade, zahl = []; for (let m = 1; m * 52 / 12 < wo; m++) zahl.push(Math.round(m * 52 / 12));
   const ein = ZR.einmal + ZR.rate * zahl.length, end = new Float64Array(P);
@@ -2513,14 +2393,14 @@ function zrRechnen(){
   const unten = Math.max(1, Math.min(...Q.map(z => z[1]).filter(v => v > 0), ein || Infinity) * .7), logY = mx / unten > 60, mnL = Math.log(unten), mxL = Math.log(mx);
   const y = v => logY ? po + (mxL - Math.log(Math.max(v, unten))) / (mxL - mnL) * (H - po - pu) : po + (1 - v / mx) * (H - po - pu);
   const pkt = i => Q.map(z => `${x(z[0]).toFixed(1)} ${y(z[i]).toFixed(1)}`), einL = Q.map(z => `${x(z[0]).toFixed(1)} ${y(ZR.einmal + ZR.rate * Math.floor(z[0] / (52 / 12))).toFixed(1)}`);
-  const eu = ZR.eur ? " €" : "", jt = zeitText(ZR.monate), name = esc(kurzname(INFO || {name:""})), rend = annahmeRendite(ZR.reihe, ZR.annahme), achse = [];
+  const eu = ZR.eur ? " €" : "", jt = ZR.jahre === 1 ? "einem Jahr" : `${ZR.jahre} Jahren`, name = esc(kurzname(INFO || {name:""})), rend = annahmeRendite(ZR.reihe, ZR.annahme), achse = [];
   for (const v of (logY ? logSchritte(unten, mx / 1.08) : achsenSchritte(0, mx / 1.08, 4))) achse.push(`<path d="M${pl} ${y(v).toFixed(1)}H${B - pr}" stroke="var(--line2)" stroke-width="1" opacity=".55"/><text x="${pl - 5}" y="${(y(v) + 3.5).toFixed(1)}" font-size="10" fill="var(--muted)" text-anchor="end">${kurzZahl(v)}</text>`);
   const js = Math.max(1, Math.ceil(ZR.jahre / 6)); for (let j = js; j < ZR.jahre; j += js) achse.push(`<path d="M${x(j * 52).toFixed(1)} ${H - pu}v4" stroke="var(--muted)" stroke-width="1"/><text x="${x(j * 52).toFixed(1)}" y="${H - 7}" font-size="10.5" fill="var(--muted)" text-anchor="middle">${j} J.</text>`);
   const warn = rend != null && rend > SIM_GRENZE && ZR.annahme !== "vorsicht" ? `<div class="fazit warn" style="margin:12px 0 0"><b>Achtung, das ist ein Rechenbeispiel:</b> Mit <b>+${fmt(rend,0)} % pro Jahr</b> zu rechnen ist kaum realistisch. So schnell wachsen Werte meist nur, solange sie klein sind. Für eine nüchternere Annahme wähle oben „vorsichtig“.</div>` : "";
   el.innerHTML = `<p class="zr-annahme-satz">${annahmeText(name, ZR.reihe, ZR.annahme)} Dazu kommen die echten Schwankungen.</p>${warn}
     <svg class="zr-bild" viewBox="0 0 ${B} ${H}" role="img" aria-label="Mögliche Verläufe des Betrags über ${jt}">
       <defs><clipPath id="zr-ausschnitt"><rect x="${pl}" y="${po}" width="${B - pl - pr}" height="${H - po - pu}"/></clipPath></defs>
-      ${achse.join("")}<text x="${pl - 5}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">Heute</text><text x="${B - pr}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">${zeitKurz(ZR.monate)}</text>
+      ${achse.join("")}<text x="${pl - 5}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">Heute</text><text x="${B - pr}" y="${H - 7}" font-size="10.5" font-weight="700" fill="var(--text)" text-anchor="end">${ZR.jahre} J.</text>
       <g clip-path="url(#zr-ausschnitt)"><path d="M${pkt(3).join(" L")} L${pkt(1).reverse().join(" L")} Z" fill="var(--kegel)" opacity=".2"/>
       ${W.filter((_, i) => i % 7 === 0).map((v, p) => { let d = ""; for (let w = 0; w <= wo; w += schritt) d += `${w ? " L" : "M"}${x(w).toFixed(1)} ${y(v[w]).toFixed(1)}`; return `<path d="${d}" fill="none" stroke="${p % 3 ? "var(--kegel)" : "var(--guenstig)"}" stroke-width=".8" opacity=".4"/>`; }).join("")}
       <path d="M${pkt(2).join(" L")}" fill="none" stroke="var(--text)" stroke-width="2.2"/><path d="M${einL.join(" L")}" fill="none" stroke="var(--gelb)" stroke-width="1.3" stroke-dasharray="4 4"/></g></svg>
@@ -2538,17 +2418,14 @@ function zrRechnen(){
 async function rechnerInit(id, w, c){
   if (!$("#zr-aus")) { ZR = null; return; }
   const e = {...ZR_STD, ...lade("zrechner", {})}, wg = waehrungVon(w);
-  e.monate = Math.max(1, Math.min(360, Math.round(e.monate ?? e.jahre * 12))); e.jahre = e.monate / 12;
   ZR = {id, ...e, annahme:"alle", reihe:c.c, eur:wg === "EUR", umgerechnet:false, tf:false, sim:null};
   const lesen = () => { const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, Math.round(+$(sel).value || 0)));
-    ZR.einmal = z("#zr-einmal", 0, 1e9); ZR.rate = z("#zr-rate", 0, 1e7);
-    ZR.monate = Math.max(1, Math.min(360, z("#zr-jahre", 0, 30) * 12 + z("#zr-monate", 0, 11))); ZR.jahre = ZR.monate / 12;
-    sichere("zrechner", {einmal:ZR.einmal, rate:ZR.rate, jahre:Math.max(1, Math.round(ZR.jahre)), monate:ZR.monate}); };
+    ZR.einmal = z("#zr-einmal", 0, 1e9); ZR.rate = z("#zr-rate", 0, 1e7); ZR.jahre = z("#zr-jahre", 1, 30); sichere("zrechner", {einmal:ZR.einmal, rate:ZR.rate, jahre:ZR.jahre}); };
   const spaeter = () => { clearTimeout(ZR_T); ZR_T = setTimeout(() => { if (ZR && ZR.id === id) zrRechnen(); }, 220); };
   const knoepfe = () => $$("#zr-annahme button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.a === ZR.annahme)));
   ["#zr-einmal", "#zr-rate"].forEach(s => $(s).oninput = () => { lesen(); spaeter(); });
-  ["#zr-jahre", "#zr-monate"].forEach(sel => $(sel).oninput = () => { lesen(); $("#zr-regler").value = ZR.monate; spaeter(); });
-  $("#zr-regler").oninput = ev => { const m = +ev.target.value; $("#zr-jahre").value = Math.floor(m / 12); $("#zr-monate").value = m % 12; lesen(); spaeter(); };
+  $("#zr-jahre").oninput = () => { lesen(); $("#zr-regler").value = ZR.jahre; spaeter(); };
+  $("#zr-regler").oninput = ev => { $("#zr-jahre").value = ev.target.value; lesen(); spaeter(); };
   $$("#zr-annahme button").forEach(b => b.onclick = () => { ZR.annahme = b.dataset.a; knoepfe(); zrRechnen(); });
   if (wg === "USD") { try { await fxLaden(); } catch(_) {} if (!ZR || ZR.id !== id || AKTIV !== id) return; if (FX) { const eu = inEuro(c).c; if (eu.filter(x => x > 0).length >= 110) { ZR.reihe = eu; ZR.eur = true; ZR.umgerechnet = true; } } }
   ZR.annahme = annahmeStandard(ZR.reihe); knoepfe();   // stieg der Wert sehr schnell, zählen jüngere Jahre mehr oder es wird vorsichtig gerechnet
@@ -3019,8 +2896,7 @@ function signalKarte(w, c){   // weitere Kennzahlen (nur der Abstand zur 200-Woc
   if (w.gruppe === "Krypto") zeilen.push([`<span data-e="mayer">Mayer Multiple</span>`, `${fmt(w.mayer,2)}${w.mayer < 0.8 ? " · tief" : w.mayer > 2.4 ? " · überhitzt" : ""}`]);
   if (w.pi) {
     zeilen.push([`<span data-e="pi_bottom">Pi Cycle Bottom</span>`, w.pi_bottom_aktiv ? `<b style="color:var(--lila)">Bodenbildungszone</b>` : `keine Zone (${vz(w.pi_abstand,1," %")})`]);
-    const ptLetzt = (w.pi_top_daten || []).slice(-1)[0];   // „aus“ las sich wie ein Schalter – gemeint ist: das Warnsignal ist gerade nicht ausgelöst
-    zeilen.push([`<span data-e="pi_top">Pi Cycle Top</span>`, w.pi_top_aktiv ? `<b class="neg">Warnsignal AKTIV</b>` : `kein Warnsignal${ptLetzt ? ` · zuletzt ${ptLetzt.slice(5, 7)}/${ptLetzt.slice(0, 4)}` : ""}`]);
+    zeilen.push([`<span data-e="pi_top">Pi Cycle Top</span>`, w.pi_top_aktiv ? `<b class="neg">AKTIV</b>` : "aus"]);
   }
   return kk("zahlen", "Weitere Kennzahlen", "Bekannte Messgrößen zur Einordnung. In die Ampel fließt davon nur der Abstand zur 200-Wochen-Linie ein.", "nur Info", "signale")
     + zeilen.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("");
@@ -3146,7 +3022,7 @@ async function zeige(id, opt={}){
       return teil("s-jung", "Seit dem Börsengang", "Was sich bei so kurzer Geschichte schon sagen lässt", [jungKarte(w)])
         + teil("s-zeit", "Zeit", "Was war – und was könnte kommen?", [zeitachseKarte(w, c), rechnerKarte(w, c)])
         + teil("s-weg", "Kaufweg", "Monatlich kaufen, auf günstige Kurse warten – oder beides?", [
-          `<section class="karte breit-voll" id="check">${kk("rueck", `Welcher Weg zu kaufen war bei ${esc(kurzname(w))} am besten?`, "Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:44px"></div><div class="lade" style="height:150px;margin-top:12px"></div></section>`])
+          `<section class="karte breit-voll" id="check">${kk("rueck", `Welcher Weg zu kaufen war bei ${esc(kurzname(w))} am besten?`, "Vier Wege mit demselben Geld – 500 jeden Monat – nachgerechnet mit den echten Kursen.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:44px"></div><div class="lade" style="height:150px;margin-top:12px"></div></section>`])
         + teil("s-inhalt", "Inhalt und Ertrag", "Was steckt drin, was kostet es, was wird ausgeschüttet?", [etfKarte(w), dividendenKarte(w)])
         + teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
           kaufzonenKarte(w),
@@ -4997,7 +4873,6 @@ async function risikoRechnen(G, summe, schl){
   if (INDEXANTEILE === undefined) INDEXANTEILE = await holeJson("daten/indexanteile.json");
   const ids = [...new Set(["SPY", "EEM", "EXS1", "SX5E", "ISF", "EWJ", ...G.map(x => x.id)])];
   const roh = Object.fromEntries(await Promise.all(ids.map(async id => [id, wertVon(id) ? await reiheHolen(id) : null])));
-  if (G.some(x => x.id === BAR_ID) && roh.SPY) roh[BAR_ID] = new Map([...roh.SPY.keys()].map(t => [t, 1]));   // Bargeld im „Was wäre, wenn“-Test: schwankt nicht
   const R = Object.fromEntries(Object.entries(roh).filter(([, m]) => m && m.size).map(([id, m]) => [id, reiheArr(m)]));
   // Gleichlauf: Wochenrenditen der letzten 5 Jahre, je Paar nur gemeinsame Wochen (mind. 52)
   const P = G.filter(x => R[x.id]).slice(0, 12), letzte = Math.max(...P.map(x => R[x.id].t.at(-1))), ab = letzte - 5 * 365.25 * 86400;
@@ -5012,11 +4887,11 @@ async function risikoRechnen(G, summe, schl){
   }));
   // Laien-Maß (Wunsch Marc 23.11.2026): In Wochen, in denen das Depot verlor – welcher Teil der Positionen verlor mit?
   const wochenAlle = new Map(); ren.forEach((m, i) => { for (const [t, x] of m) { let a = wochenAlle.get(t); if (!a) wochenAlle.set(t, a = []); a.push([i, x]); } });
-  let mfS = 0, mfN = 0, mfW = 0;   // mfW: dasselbe nach Geld gewichtet (welcher Teil des Depotwerts fiel mit?)
+  let mfS = 0, mfN = 0;
   for (const a of wochenAlle.values()) { if (a.length < Math.max(2, Math.ceil(P.length * 0.8))) continue;
     const gw = a.reduce((su, [i]) => su + P[i].wert, 0), dep = a.reduce((su, [i, x]) => su + P[i].wert * x, 0) / gw;
-    if (dep < 0) { mfS += a.filter(([, x]) => x < 0).length / a.length; mfW += a.reduce((su, [i, x]) => su + (x < 0 ? P[i].wert : 0), 0) / gw; mfN++; } }
-  const mitfall = mfN >= 26 ? mfS / mfN : null, mitfallWert = mfN >= 26 ? mfW / mfN : null;
+    if (dep < 0) { mfS += a.filter(([, x]) => x < 0).length / a.length; mfN++; } }
+  const mitfall = mfN >= 26 ? mfS / mfN : null;
   let kw = 0, ks = 0;   // durchschnittlicher Gleichlauf, nach Wert gewichtet
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (korr[i][j] != null) { const g = P[i].wert * P[j].wert; kw += g; ks += g * korr[i][j]; }
   // Stresstest: Kauf am Hoch, gehalten bis zum Tief (feste Stückzahl, kein Umschichten); danach: wann war der alte Stand wieder erreicht?
@@ -5045,7 +4920,7 @@ async function risikoRechnen(G, summe, schl){
     const ende = bisTief.at(-1).v - 1, spyR = spy.c[i1] / spy.c[i0] - 1;
     return {...S, zeilen, abgedeckt:wSum / summe * 100, ende, tief:tief.v - 1, tiefT:tief.t, zurueck:zurueck ? zurueck.t : null, euroEnde:ende * wSum, spyR, letzteT:spy.t.at(-1)};
   });
-  return {schl, P, korr, schnitt:kw ? ks / kw : null, mitfall, mitfallWert, stress, klumpen:klumpen(G, summe), ab};
+  return {schl, P, korr, schnitt:kw ? ks / kw : null, mitfall, stress, klumpen:klumpen(G, summe), ab};
 }
 const monateZwischen = (a, b) => Math.max(0, Math.round((b - a) / (30.44 * 86400)));
 const dauerWorte = m => m < 1 ? "weniger als einem Monat" : m < 24 ? `${m} Monat${m === 1 ? "" : "en"}` : `${fmt(m / 12, 1)} Jahren`;   // nach … (Dativ)
@@ -5070,55 +4945,6 @@ function rebalHtml(G, summe){
       <button class="linkknopf" id="d-rz-spar">Sparplan-Anteile als Ziel übernehmen</button><button class="linkknopf" id="d-rz-weg" style="color:var(--muted)">Ziele löschen</button></div>
     ${hinweise.length ? `<div class="merke schlecht">${hinweise.join("<br>")}<div class="klein" style="margin-top:6px">Umschichten heißt meist: verkaufen und anderes kaufen – das kann Steuern und Gebühren kosten. Oft reicht es, die nächsten Sparraten eine Zeit lang in die anderen Positionen zu lenken. Nur ein Hinweis aus deinen eigenen Zielen, keine Empfehlung.</div></div>`
       : gesetzt.length ? `<div class="merke gut">Keine Position liegt deutlich über ihrem Ziel.</div>` : ""}`;
-}
-// ------------------------------------------------------------ „Was wäre, wenn …?“ (Wunsch Marc 23.11.2026: „wie wäre mein Depot krisensicherer?“)
-// Reines Rechenbeispiel, keine Empfehlung: Alle heutigen Positionen werden anteilig verkleinert, der frei werdende Teil steckt in EINER anderen
-// Anlageart (Auswahl oder Suche; Bargeld = Reihe ohne Schwankung und ohne Zinsen). Dann läuft dieselbe Risiko-Rechnung noch einmal, und beide
-// Ergebnisse stehen nebeneinander: Mitfallen in schlechten Wochen (nach Positionen und nach Geld), die drei Krisen des Stresstests und die
-// Rendite der letzten bis zu 20 Jahre (nach Wert gewichteter Durchschnitt der Positionen mit Daten – Vergangenheit, keine Prognose).
-const BAR_ID = "__BAR", WENN_LISTE = ["SHY", "IEF", "TLT", "AGG", "BNDX", "TIP", "GOLD", "DBC", "SPY"];
-let WENN = {id:"SHY", anteil:20, ...lade("wenn", {})}, WENN_ERG = null, WENN_WAHL = false;
-const wennName = id => id === BAR_ID ? "Bargeld" : (w => w ? kurzname(w) : id)(wertVon(id));
-const wennSchl = r => `${r.schl}|${WENN.id}|${WENN.anteil}`;
-function wennGruppen(G, summe, id, anteil){
-  const a = anteil / 100, G2 = G.map(x => ({...x, wert:x.wert * (1 - a)})), da = G2.find(x => x.id === id);
-  if (da) da.wert += summe * a; else G2.push({id, wert:summe * a, namen:[wennName(id)], ersatz:false, isin:""});
-  return G2.sort((x, y) => y.wert - x.wert);
-}
-function renditeSchnitt(G){   // nach Wert gewichtete Jahresrendite der letzten bis zu 20 Jahre (nur Positionen mit Daten; Bargeld = 0)
-  let sw = 0, sr = 0;
-  for (const x of G) { const c = x.id === BAR_ID ? 0 : wertVon(x.id)?.cagr20; if (c == null) continue; sw += x.wert; sr += x.wert * c; }
-  return sw > 0 ? {r:sr / sw, anteil:sw / G.reduce((a, x) => a + x.wert, 0) * 100} : null;
-}
-function wennWaehlen(){ sucheOeffnen(); WENN_WAHL = true; $("#suche-eingabe").placeholder = "Wert für das Rechenbeispiel suchen – Name oder Kürzel …"; }
-async function wennZeigen(G, summe, r){
-  const ziel = $("#d-wenn-erg"); if (!ziel) return;
-  if (!(WENN.anteil > 0)) { ziel.innerHTML = `<p class="klein">Schieb den Regler nach rechts, um einen Anteil zu wählen.</p>`; return; }
-  const schl = wennSchl(r);
-  if (WENN_ERG?.schl !== schl) {
-    ziel.innerHTML = `<p class="klein">rechnet …</p>`;
-    let e; try { await isinListeLaden(); e = await risikoRechnen(wennGruppen(G, summe, WENN.id, WENN.anteil), summe, "wenn"); }
-    catch(ex) { const z2 = $("#d-wenn-erg"); if (z2) z2.innerHTML = `<p class="neg">Nicht berechenbar: ${esc(ex.message)}</p>`; return; }
-    if (schl !== wennSchl(r)) return;   // inzwischen etwas anderes gewählt
-    WENN_ERG = {schl, e};
-  }
-  const z2 = $("#d-wenn-erg"); if (!z2) return;
-  const e = WENN_ERG.e, name = esc(wennName(WENN.id)), mit = `mit ${fmt(WENN.anteil, 0)} % ${name}`;
-  const kugeln = n => n == null ? "–" : `<span style="display:inline-flex;gap:3px;vertical-align:-2px" aria-hidden="true">${Array.from({length:10}, (_, i) => `<span style="width:11px;height:11px;border-radius:50%;background:${i < n ? "var(--teuer)" : "var(--panel2)"};border:1px solid ${i < n ? "var(--teuer)" : "var(--line2)"}"></span>`).join("")}</span> <b>${n} von 10</b>`;
-  const v10 = x => x == null ? null : Math.round(x * 10);
-  const G2 = wennGruppen(G, summe, WENN.id, WENN.anteil), r0 = renditeSchnitt(G), r1 = renditeSchnitt(G2);
-  const krisen = r.stress.map((S, i) => ({S, T:e.stress[i]})).filter(k => !k.S.leer && !k.T.leer);
-  const zahl = x => `<b class="${x < 0 ? "neg" : ""}">${x > 0 ? "+" : x < 0 ? "−" : ""}${fmt(Math.abs(x) * 100, 0, " %")}</b>`;
-  const mehrWeniger = (d, n, was) => Math.abs(d) < 0.5 * 10 ** -n ? "kaum Unterschied" : `<span class="${(d < 0) === (was !== "Rendite") ? "pos" : "neg"}">${fmt(Math.abs(d), n)} Punkte ${d < 0 ? "weniger" : "mehr"}${was ? " " + was : ""}</span>`;
-  const groesste = krisen.slice().sort((a, b) => a.S.ende - b.S.ende)[0];
-  z2.innerHTML = `<div class="tab-scroll"><table class="wtab" style="width:auto;margin:0"><thead><tr><th></th><th>dein Depot heute</th><th>${mit}</th><th>Unterschied</th></tr></thead><tbody>
-      <tr><td style="text-align:left">Positionen, die in schlechten Wochen mitfielen</td><td>${kugeln(v10(r.mitfall))}</td><td>${kugeln(v10(e.mitfall))}</td><td></td></tr>
-      <tr><td style="text-align:left">Teil deines Geldes, der in schlechten Wochen mitfiel</td><td><b>${fmt(r.mitfallWert * 100, 0, " %")}</b></td><td><b>${fmt(e.mitfallWert * 100, 0, " %")}</b></td><td>${mehrWeniger((e.mitfallWert - r.mitfallWert) * 100, 0, "")}</td></tr>
-      ${krisen.map(({S, T}) => `<tr><td style="text-align:left">${esc(S.titel)} <span class="klein">(Hoch bis Tief der Krise)</span></td><td>${zahl(S.ende)} <span class="klein">${S.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(S.euroEnde))} €</span></td><td>${zahl(T.ende)} <span class="klein">${T.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(T.euroEnde))} €</span></td><td>${mehrWeniger((S.ende - T.ende) * 100, 0, "Verlust")}${Math.abs(T.euroEnde - S.euroEnde) >= 1 ? ` · ${geld(Math.abs(T.euroEnde - S.euroEnde))} €` : ""}</td></tr>`).join("")}
-      ${r0 && r1 ? `<tr><td style="text-align:left">Rendite pro Jahr, letzte bis zu 20 Jahre <span class="klein">(keine Prognose)</span></td><td><b>${fmt(r0.r, 1, " %")}</b></td><td><b>${fmt(r1.r, 1, " %")}</b></td><td>${mehrWeniger(r1.r - r0.r, 1, "Rendite")}</td></tr>` : ""}
-    </tbody></table></div>
-    ${groesste ? `<p class="text" style="margin:10px 0 0">In Worten: Mit ${fmt(WENN.anteil, 0)} % ${name} wäre dein Depot in der ${esc(groesste.S.titel.replace(/ \d{4}$/, ""))} um <b>${fmt(Math.abs(groesste.T.ende) * 100, 0)} %</b> statt ${fmt(Math.abs(groesste.S.ende) * 100, 0)} % gefallen${Math.abs(groesste.T.euroEnde - groesste.S.euroEnde) >= 1 ? ` – etwa ${geld(Math.abs(groesste.T.euroEnde - groesste.S.euroEnde))} € ${groesste.T.euroEnde > groesste.S.euroEnde ? "weniger" : "mehr"} Verlust` : ""}.${r0 && r1 ? ` Die Rendite der letzten Jahre hätte bei ${fmt(r1.r, 1)} % statt ${fmt(r0.r, 1)} % pro Jahr gelegen.` : ""}</p>` : ""}
-    <p class="klein" style="margin:8px 0 0">Gerechnet mit echten Kursen der Vergangenheit, in der Währung der Werte (meist Dollar), ohne Kosten und Steuern. ${WENN.id === BAR_ID ? "Bargeld ist ohne Zinsen und ohne Schwankung gerechnet. " : ""}${r0 && r0.anteil < 99.5 ? `Die Rendite gilt für ${fmt(r0.anteil, 0)} % des Depots (Positionen mit genug Kursgeschichte). ` : ""}Was in der nächsten Krise passiert, kann anders aussehen – 2022 fielen zum Beispiel Aktien und Anleihen gemeinsam. Kein Rat, was du kaufen oder verkaufen sollst.</p>`;
 }
 function risikoZeigen(){
   const el = $("#d-risiko"); if (!el) return;
@@ -5164,7 +4990,7 @@ function risikoZeigen(){
           <div class="klein" style="display:flex;justify-content:space-between;margin-top:4px"><span>gehen eigene Wege</span><span>bewegen sich wie eine</span></div></div>`;
       html += `<div class="text" style="padding:0 14px">
         <p style="margin:0 0 4px">„Gleichlauf“ heißt: Steigen und fallen zwei Positionen meist zur selben Zeit? Dann bringt es wenig, beide zu haben – sie verlieren auch zusammen.</p>
-        ${von10 == null ? "" : `<p style="margin:8px 0 0;font-size:15px;color:var(--text)">Wenn dein Depot eine schlechte Woche hatte, fielen im Schnitt <b>${von10} von 10</b> deiner Positionen gleichzeitig.</p>${kugeln}<div class="klein">farbig = fällt mit · gerechnet aus den Wochen der letzten 5 Jahre${r.mitfallWert != null ? ` · nach Geld gerechnet fielen <b>${fmt(r.mitfallWert * 100, 0)} %</b> deines Depotwerts mit` : ""}</div>`}
+        ${von10 == null ? "" : `<p style="margin:8px 0 0;font-size:15px;color:var(--text)">Wenn dein Depot eine schlechte Woche hatte, fielen im Schnitt <b>${von10} von 10</b> deiner Positionen gleichzeitig.</p>${kugeln}<div class="klein">farbig = fällt mit · gerechnet aus den Wochen der letzten 5 Jahre</div>`}
         ${skala}
         <p style="margin:10px 0 0">${urteil}</p>
         ${eng.length ? `<p style="margin:8px 0 0"><b>Bewegen sich fast gleich:</b> ${eng.slice(0, 5).map(p => `${nm(p[0])} und ${nm(p[1])}`).join(" · ")}${eng.length > 5 ? ` · und ${eng.length - 5} weitere Paare` : ""}. Zwei solche Positionen zählen für die Streuung fast wie eine.</p>` : ""}
@@ -5189,17 +5015,6 @@ function risikoZeigen(){
         <details class="klein"><summary>je Position</summary>${S.zeilen.map(z => `<div class="kv"><span>${esc(z.x.namen[0] || z.x.id)}${z.ers ? ` <i>(Ersatz: ${esc(z.ers.name)})</i>` : ""}</span><b style="white-space:nowrap" class="${!z.fehlt && z.r < 0 ? "neg" : ""}">${z.fehlt ? "keine Kurse" : fmt(z.r * 100, 0, " %")}</b></div>`).join("")}</details>
       </section>`).join("")}</div>
       <div class="klein" style="padding:8px 14px 4px">Feste Stückzahl, kein Nachkaufen. Gibt es für eine Position aus dieser Zeit keine Kurse (z. B. ein ETF, der erst später aufgelegt wurde), steht dafür ein grober Ersatz (Markt ihres Landes bzw. S&P 500, markiert unter „je Position“). Kryptowährungen und Rohstoffe ohne Kurse aus dieser Zeit fehlen – dann gilt das Ergebnis nur für den genannten Teil des Depots. Renditen in der Währung der Werte, ohne Wechselkurs und ohne Dividenden bei reinen Indexreihen. Frühere Krisen wiederholen sich nie genau gleich.</div>`;
-    // 4) Was wäre, wenn
-    const auswahl = [BAR_ID, ...WENN_LISTE.filter(id => wertVon(id))]; if (!auswahl.includes(WENN.id) && wertVon(WENN.id)) auswahl.push(WENN.id);
-    if (!auswahl.includes(WENN.id)) WENN.id = auswahl[1] || BAR_ID;
-    html += `<h3 style="margin:18px 14px 4px">${ek("d_wenn", "Was wäre, wenn …? Ein Rechenbeispiel")}</h3>
-      <p class="text" style="padding:0 14px">Wie hätte sich dein Depot in schlechten Wochen und in den Krisen verhalten, wenn ein Teil davon in etwas anderem steckte? Wähle eine Anlageart und einen Anteil – alle heutigen Positionen werden dafür im selben Verhältnis kleiner gerechnet. Es wird nichts an deinem Depot geändert.</p>
-      <div class="eingabe" style="padding:6px 14px 4px;align-items:flex-end">
-        <label>statt dessen in<select id="d-wenn-id">${auswahl.map(id => `<option value="${esc(id)}" ${id === WENN.id ? "selected" : ""}>${esc(id === BAR_ID ? "Bargeld (schwankt nicht)" : wennName(id))}</option>`).join("")}</select></label>
-        <label style="min-width:220px">Anteil am Depot: <b id="d-wenn-proz">${fmt(WENN.anteil, 0)} %</b><input type="range" id="d-wenn-anteil" min="0" max="60" step="5" value="${WENN.anteil}"></label>
-        <button class="knopf leise" id="d-wenn-suche">anderen Wert suchen</button>
-      </div>
-      <div id="d-wenn-erg" style="padding:6px 14px 4px"></div>`;
   }
   html += rebalHtml(G, summe);
   el.innerHTML = html;
@@ -5207,14 +5022,6 @@ function risikoZeigen(){
     if (v > 0) DEPOT.e.ziele[inp.dataset.rz] = Math.min(100, v); else delete DEPOT.e.ziele[inp.dataset.rz]; depotSichern(); risikoZeigen(); });
   const sp = $("#d-rz-spar"); if (sp) sp.onclick = () => { const z = {}; for (const x of G) { const s = DEPOT.positionen.filter(p => p.id === x.id).reduce((a, p) => a + (p.spar || 0), 0); if (s > 0) z[x.id] = Math.round(s * 10) / 10; } DEPOT.e.ziele = z; depotSichern(); risikoZeigen(); };
   const wg = $("#d-rz-weg"); if (wg) wg.onclick = () => { DEPOT.e.ziele = {}; depotSichern(); risikoZeigen(); };
-  if (r && $("#d-wenn-id")) {
-    $("#d-wenn-id").onchange = ev => { WENN.id = ev.target.value; sichere("wenn", WENN); wennZeigen(G, summe, r); };
-    const reg = $("#d-wenn-anteil");
-    reg.oninput = () => { $("#d-wenn-proz").textContent = fmt(+reg.value, 0) + " %"; };
-    reg.onchange = () => { WENN.anteil = +reg.value; sichere("wenn", WENN); wennZeigen(G, summe, r); };
-    $("#d-wenn-suche").onclick = wennWaehlen;
-    wennZeigen(G, summe, r);
-  }
 }
 const ERKLAERUNG_DEPOT = {
   d_alarm: {titel:"Alarme aufs Handy", text:"Einmal einrichten: die kostenlose App „ntfy“ installieren und das geheime Thema abonnieren (den Namen hast du von Claude bekommen; er steht nirgends öffentlich). Danach prüft jeder Online-Lauf (mehrmals täglich), ob ein Wert neu ab 80 (historisch sehr günstig) oder neu bis 15 (historisch sehr teuer) steht – jeden Wechsel nur einmal, mit Puffer gegen Hin-und-her (sehr günstig endet erst unter 75, sehr teuer erst über 20). ETFs, Krypto und Rohstoffe kommen einzeln, die über 4.000 Aktien gesammelt einmal am Tag (die bekanntesten zuerst). Optional nur bestimmte Werte: diese Liste als geheime Einstellung ALARM_WERTE speichern. Beschreibt die Lage, ist keine Kaufempfehlung."},
@@ -5226,7 +5033,6 @@ const ERKLAERUNG_DEPOT = {
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
   d_wert: {titel:"Wert € – läuft mit dem Kurs mit", text:"Der Euro-Wert jeder Position wird ab dem Eintrag mit dem Kurs des zugeordneten Werts fortgeschrieben: Wert heute = eingetragener Wert × Kurs heute ÷ Kurs beim Eintrag. Bei Dollar-Werten wird die Änderung des Wechselkurses EUR/USD eingerechnet, andere Fremdwährungen laufen ohne Wechselkurs. Die kleine Zeile darunter zeigt die Veränderung seit dem Eintrag. So aktuell wie der Datenstand oben rechts (werktags etwa alle 2 Stunden, keine Echtzeit). Genau ist das nur, wenn der zugeordnete Wert dasselbe Papier ist – bei „gleicher Index“, „ähnlicher Index“ oder einem Ersatz ist es eine Näherung, Käufe und Verkäufe kennt das Tool nicht. Trägst du einen Wert von Hand ein oder lädst dein Depot neu, zählt ab dann diese Zahl. Alles bleibt in diesem Browser."},
-  d_wenn: {titel:"Was wäre, wenn …?", text:"Ein Rechenbeispiel, keine Empfehlung. Du wählst eine Anlageart und einen Anteil; das Tool rechnet alle deine heutigen Positionen im selben Verhältnis kleiner und legt den frei werdenden Teil in die gewählte Anlageart. Dann vergleicht es beide Depots: Wie viele Positionen fielen in schlechten Wochen mit? Welcher Teil des Geldes fiel mit (eine große Position zählt hier mehr als eine kleine)? Wie tief wäre es in den drei Krisen des Stresstests gefallen? Und wie hoch war die Rendite der letzten bis zu 20 Jahre (Durchschnitt deiner Positionen, nach Wert gewichtet)? So siehst du den Tausch: Dinge, die in Krisen weniger fallen, brachten in der Vergangenheit meist auch weniger Ertrag. Bargeld ist ohne Zinsen gerechnet. Alles aus echten Kursen der Vergangenheit – die nächste Krise kann anders verlaufen (2022 fielen Aktien und Anleihen zusammen)."},
   d_nachkauf: {titel:"Wann nachkaufen?", text:"Die Frage dahinter: Gab es bei diesem Wert früher einen Kurs, unter dem sich Kaufen besonders gelohnt hat? Dafür wurde die ganze Kursgeschichte des Werts durchgerechnet. „Günstig unter 80 $“ heißt: Wer unter diesem Kurs kaufte, hatte in den drei Jahren danach deutlich mehr Ertrag als jemand, der an irgendeinem Tag kaufte – und dieser Vorteil hielt auch einer Gegenprobe mit zufällig gewürfelten Kursen stand. Grüner Punkt: Der Kurs liegt heute schon darunter. Gelber Punkt: noch nicht. „Kein besonderer Kaufkurs“ heißt: Bei diesem Wert war es egal, wann man kaufte – auf tiefe Kurse warten brachte nichts Belegbares, regelmäßig kaufen (z. B. jeden Monat) war genauso gut. Das ist bei den meisten Werten so. „Richtwert“ heißt: Der Wert ist noch zu kurz an der Börse für einen Beleg; genannt wird der Kurs, bei dem die Ampel „historisch sehr günstig“ zeigt. Der Kurs steht in der Währung des Werts und verändert sich jede Woche ein wenig. Bei einem automatischen Ersatz gilt er für den Ersatz, nicht für dein Papier. Mit der Maus über dem Text siehst du die Zahlen dazu. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_phasen: {titel:"Einzahl-Phasen", text:"Die Sparrate muss nicht die ganze Laufzeit gleich bleiben. Jede Zeile heißt: ab diesem Jahr gilt eine neue Rate. „ab Jahr 6: 0 €“ bedeutet 5 Jahre einzahlen, danach nichts mehr – das Depot läuft bis zum Ende der Laufzeit weiter. Mehrere Zeilen sind möglich (z. B. Jahr 1–5: 500 €, ab Jahr 6: 200 €, ab Jahr 16: 0 €). Die neue Rate wird im selben Verhältnis auf deine Werte verteilt wie die Beträge in der Spalte „Sparplan € / Monat“. Die jährliche Erhöhung in Prozent zählt, falls eingestellt, ab dem ersten Jahr und läuft in allen Phasen weiter."},
@@ -5279,9 +5085,7 @@ function tabKennzahlen(w){
     ? "<b>Rohstoff (Endlos-Future):</b> Der Kurs ist der jeweils vorderste Terminkontrakt. Beim Wechsel auf den nächsten Kontrakt springt die Reihe, und wer einen Rohstoff über Futures oder ETCs hält, zahlt Rollkosten (z. B. hat der Öl-ETF USO deutlich schlechter abgeschnitten als der Ölpreis). Die Ø Rendite hier ist also die Preisentwicklung, nicht die Rendite eines Anlegers. Außer Gold haben Rohstoffe langfristig kaum einen echten Aufwärtstrend; Trendkanal, Ø Rendite und „Kurs höher“-Quoten sind deshalb weniger aussagekräftig als bei Aktienindizes."
     : w.branche === "Rohstoff-ETC" ? "<b>Rohstoff-ETC:</b> ein Wertpapier, das Rohstoff-Futures nachbildet (hier Nickel, Börse London, in US-Dollar). Es enthält Rollkosten und Gebühren und liegt damit näher an der Anlegerrendite als ein reiner Future-Kurs. Rohstoffe haben langfristig kaum einen echten Aufwärtstrend; Trendkanal und Ø Rendite sind weniger aussagekräftig."
     : "<b>Rohstoff-Korb (ETF):</b> enthält Rollkosten und Gebühren, ist also näher an der Anlegerrendite als die Einzel-Futures. Rohstoffe haben (außer Gold) langfristig kaum einen echten Aufwärtstrend; Trendkanal und Ø Rendite sind weniger aussagekräftig.");
-  if (w.score == null) hinweise.push(w.jung
-    ? `<b>Noch keine Ampel:</b> erst ${w.neu ? `${w.handelstage ?? "wenige"} Handelstage` : `${w.wochen} Wochen`} an der Börse – dafür ist die Kursgeschichte noch zu kurz. Deshalb keine Einstufung und keine Vergleichsfälle.`
-    : `<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
+  if (w.score == null) hinweise.push(`<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
   else if ((w.jahre_daten||0) < 10) hinweise.push(`<b>Kurze Historie:</b> nur ${fmt(w.jahre_daten,1)} Jahre Daten. Ampel und Vergleichsfälle beruhen auf sehr wenigen Phasen und sind entsprechend unsicher.`);
   if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");
   $("#hinweise").innerHTML = hinweise.length ? `<div class="merke" style="margin:0 0 14px">${hinweise.join("<br>")}</div>` : "";
@@ -5435,90 +5239,60 @@ async function tabPruefung(w, h="3"){
 
 // ------------------------------------------------------------ Strategie
 function tabStrategie(w){
-  const o0 = kwOptionen();
   $("#tab").innerHTML = `
     <div class="eingabe">
-      <label>Betrag je Monat<input id="st-betrag" type="number" value="${o0.betrag}" min="0" step="50"></label>
-      <label>Einmalig zu Beginn<input id="st-einmal" type="number" value="${o0.einmal}" min="0" step="500"></label>
-      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="${o0.jahre}" min="2" max="60"></label>
-      <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="${o0.kfix}" min="0"></label>
-      <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="${+(o0.kproz * 100).toFixed(4)}" min="0"></label>
-      <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins">${[["echt", "echt (US-Geldmarkt)"], ["0", "0 %"], ["2", "fest 2 %"], ["3", "fest 3 %"]].map(([v, t]) => `<option value="${v}" ${String(o0.zins) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label>Betrag je Monat<input id="st-betrag" type="number" value="500" min="10"></label>
+      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="20" min="3" max="60"></label>
+      <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="1" min="0"></label>
+      <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="0" min="0"></label>
+      <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins"><option value="echt">echt (US-Geldmarkt)</option><option value="0">0 %</option><option value="2">fest 2 %</option><option value="3">fest 3 %</option></select></label>
       <button id="st-los">Berechnen</button>
-    </div>
-    <p class="klein" id="st-hinweis" style="margin:-4px 0 10px">Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit. <button class="linkknopf" id="st-zur-karte">↑ Zur Kaufweg-Karte</button></p>
-    <div id="st-erg"><div class="text">rechnet …</div></div>`;
-  const zeigen = (d, alle) => {   // d wie aus strategie.vergleich(); alle = auch die drei Warte-Wege der Kaufweg-Karte
-    const e = d.ergebnis, kurz = {spar:"Sparplan", staffel:"Staffelkauf 60/75/90", staffel_vk:"Staffelkauf + Teilverkauf ≤ 15", misch:"Mischung", warten60:"Warten auf günstig", warten80:"Warten auf sehr günstig"};
-    const ks = ["spar", "staffel", "staffel_vk", ...(alle ? ["misch", "warten60", "warten80"] : [])].filter(k => e[k]);
-    const best = ks.reduce((a, b) => (e[b].netto > e[a].netto ? b : a), "spar");
-    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td>${f(e[k])}</td>`).join("")}</tr>`;
-    const farben = {ein:"#868993", spar:"#2962ff", staffel:F().guenstig, staffel_vk:"#ff9800", misch:F().kegel, warten60:"#14b8a6", warten80:F().cyan};
+    </div><div id="st-erg"><div class="text">rechnet …</div></div>`;
+  const los = async () => {
+    const id = AKTIV;
+    const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
+    const d = await apiStrategie(id, q);
+    if (AKTIV !== id || REITER !== "strategie") return;
+    if (!d) { $("#st-erg").innerHTML = '<div class="text">Kein Vergleich möglich (zu wenig Daten).</div>'; return; }
+    if (d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d.fehler}</div>`; return; }
+    const ks = ["spar","staffel","staffel_vk"], e = d.ergebnis;
+    const best = ks.reduce((a,b) => (e[b].netto > e[a].netto ? b : a), "spar");
+    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td class="${k===best?"":""}">${f(e[k])}</td>`).join("")}</tr>`;
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     $("#st-erg").innerHTML = `
-      <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}${d.einmal > 0 ? `, davon ${geld(d.einmal)} einmalig zu Beginn` : ""}).
-        Am meisten nach Steuer: <b>${kurz[best] || e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
-      <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${kurz[k] || e[k].name}</th>`).join("")}</tr></thead><tbody>
+      <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}).
+        Am meisten nach Steuer: <b>${e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
+      <table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${e[k].name}</th>`).join("")}</tr></thead><tbody>
         ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto), "s_brutto")}
         ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")}
         ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "s_irr")}
-        ${zeile("Größter Rückgang des Vermögens", x => x.max_verlust == null ? "–" : `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
-        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung == null ? "–" : x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
+        ${zeile("Größter Rückgang des Vermögens", x => `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
+        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
         ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "s_steuer")}
         ${zeile("Kosten gesamt", x => geld(x.kosten), "s_kosten")}
         ${zeile("Käufe / Verkäufe", x => `${x.kaeufe} / ${x.verkaeufe}`)}
         ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "s_bar")}
-      </tbody></table></div>
+      </tbody></table>
       <div id="chart3"></div>
-      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:${farben.ein}"></i>eingezahlt</span>${ks.map(k => `<span><i style="background:${farben[k]}"></i>${kurz[k]}</span>`).join("")}</div>
+      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:#868993"></i>eingezahlt</span><span><i style="background:#2962ff"></i>Sparplan</span><span><i style="background:#26a69a"></i>Staffelkauf</span><span><i style="background:#ff9800"></i>Staffel + Teilverkauf</span></div>
       <div class="text">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
       <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
-      ${alle ? `<b>Mischung</b>: die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60. <b>Warten auf günstig / sehr günstig</b>: Geld sammeln und alles kaufen, sobald die Ampel 60 bzw. 80 erreicht. Ein <b>Einmalbetrag</b> wird im ersten Monat eingezahlt und folgt denselben Regeln.` : ""}
       Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
-      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."}
+      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."} Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
       Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
-    if (!d.reihe) return;
     const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:F().line}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
-    ["ein", ...ks].forEach(k => { if (!d.reihe[k]) return;
-      const s = ch.addLineSeries({color:farben[k], lineWidth:k==="ein"?1:2, lineStyle:k==="ein"?2:0, priceLineVisible:false, lastValueVisible:false});
+    [["ein","#868993",2],["spar","#2962ff",0],["staffel",F().guenstig,0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {
+      const s = ch.addLineSeries({color:f,lineWidth:k==="ein"?1:2,lineStyle:st,priceLineVisible:false,lastValueVisible:false});
       s.setData(d.reihe.t.map((t,i) => ({time:t,value:d.reihe[k][i]})));
     });
     setTimeout(() => ch.timeScale().fitContent(), 50);
     tabCharts.push(ch);
   };
-  const los = async () => {
-    const id = AKTIV;
-    const [s, wd] = await Promise.all([apiStrategie(id), apiWert(id)]);
-    if (AKTIV !== id || REITER !== "strategie" || !$("#st-erg")) return;
-    if (!s) { $("#st-erg").innerHTML = '<div class="text">Kein Vergleich möglich (zu wenig Daten).</div>'; return; }
-    if (s.fehler) { $("#st-erg").innerHTML = `<div class="text">${s.fehler}</div>`; return; }
-    const P = s.plan, voll = !!(P?.t?.length && P.g75 && P.g90 && P.l15 && P.g40);
-    if (voll) {   // eigene Eingaben: im Browser gerechnet (online wie lokal), gemeinsam mit der Kaufweg-Karte gemerkt
-      const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, +$(sel).value || 0)), hoechst = Math.max(2, Math.floor((P.ende_t - P.t[0]) / 86400 / 365.25 + 0.2));
-      const jahre = Math.round(z("#st-jahre", 2, 60)), zinsWahl = $("#st-zins").value;
-      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre:Math.min(jahre, hoechst), kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl};
-      sichere("kaufweg", KW); if (jahre > hoechst) $("#st-jahre").value = hoechst;
-      const o = kwOptionen();
-      if (!(o.betrag > 0) && !(o.einmal > 0)) { $("#st-erg").innerHTML = '<div class="text">Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</div>'; return; }
-      const d = strategieRechnen(s, wd?.chart, o);
-      if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich."} Für diesen Wert reichen die Daten für höchstens ${hoechst} Jahre.</div>`; return; }
-      zeigen(d, true);
-      $("#st-hinweis").firstChild.textContent = `Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit.${jahre > hoechst ? ` Für diesen Wert gehen höchstens ${hoechst} Jahre.` : ""} `;
-      if ($("#check")) lohntSichCheck(id);   // Kaufweg-Karte rechnet mit denselben Werten mit
-      return;
-    }
-    // ältere Daten ohne Monatsplan: lokal rechnet der Server, online gibt es nur die vorab gerechneten Standardwerte
-    const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
-    const d = STATISCH ? s : await apiStrategie(id, q);
-    if (AKTIV !== id || REITER !== "strategie" || !$("#st-erg")) return;
-    if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich (zu wenig Daten)."}</div>`; return; }
-    if (STATISCH) { document.querySelectorAll("#tab .eingabe input, #tab .eingabe select, #st-los").forEach(e => e.disabled = true);
-      $("#st-hinweis").textContent = "Eigene Eingaben gehen hier nach dem nächsten Daten-Lauf. Bis dahin: 500 je Monat, bis 20 Jahre, 1 je Order, echter Zins."; }
-    zeigen(d, false);
-  };
   $("#st-los").onclick = los;
-  document.querySelectorAll("#tab .eingabe input, #tab .eingabe select").forEach(e => e.onchange = los);
-  $("#st-zur-karte").onclick = () => $("#check")?.scrollIntoView({behavior:"smooth", block:"start"});
+  if (STATISCH) {   // online: nur die Standardwerte (vorab gerechnet)
+    document.querySelectorAll("#tab .eingabe input, #tab .eingabe select, #st-los").forEach(e => e.disabled = true);
+    $("#tab .eingabe").insertAdjacentHTML("beforeend", '<span class="klein" style="align-self:center">Online feste Werte: 500 je Monat, bis 20 Jahre, 1 je Order, echter Zins. Eigene Eingaben gehen in der lokalen Fassung.</span>');
+  }
   los();
 }
 
@@ -5731,7 +5505,7 @@ function zeigePruefungGesamt(gruppe="etf", h="3"){
     <table class="wtab"><thead><tr><th style="text-align:left">Gruppe</th><th>Werte</th><th data-e="s_spar">Sparplan p.a.</th><th data-e="s_staffel">Staffel besser</th><th data-e="s_staffel">Staffel ±</th><th data-e="s_staffel_vk">+ Teilverkauf besser</th><th data-e="s_staffel_vk">+ Teilverkauf ±</th></tr></thead><tbody>
       ${zus("ETFs / Indizes", s.zusammen.etf)}${zus("Rohstoffe", s.zusammen.rohstoffe)}${zus("Aktien (alle)", s.zusammen.aktien)}${zus("Aktien mit 20 Jahren Vergleich", s.zusammen.aktien_20j)}${zus("Aktien stabiler Trend*", s.zusammen.aktien_stabil)}</tbody></table>
     <table class="wtab"><thead><tr><th style="text-align:left">ETF / Krypto / Rohstoff</th><th>ab</th><th data-e="s_irr">Sparplan</th><th data-e="s_staffel">Staffel</th><th data-e="s_staffel_vk">+ Teilverkauf</th><th data-e="s_rueckgang">größter Rückgang (Spar / Staffel)</th></tr></thead><tbody>${
-      s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${nameDe(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
+      s.einzeln.map(r => `<tr style="cursor:pointer" data-id="${r.id}"><td style="text-align:left">${umlaut(r.name).replace(" (ETF)","")}</td><td>${r.von.slice(0,4)}</td><td>${fmt(r.spar_irr,1,"%")}</td><td class="${klasse(r.staffel_irr-r.spar_irr)}">${fmt(r.staffel_irr,1,"%")}</td><td class="${klasse(r.staffel_vk_irr-r.spar_irr)}">${fmt(r.staffel_vk_irr,1,"%")}</td><td>${fmt(r.spar_max_verlust,0,"%")} / ${fmt(r.staffel_max_verlust,0,"%")}</td></tr>`).join("")}</tbody></table>
     <div class="text">Interner Zinsfuß nach Kosten und Steuern (alles am Ende verkauft). Grün = besser als der Sparplan. Zeile anklicken öffnet den Wert.</div>
     <h3>3. ${ek("tagebuch","Signal-Tagebuch")}</h3>${tbHtml}${fallenHtml(PRUEF.fallen)}
     ${mpPruefHtml(PRUEF.marktphase)}
