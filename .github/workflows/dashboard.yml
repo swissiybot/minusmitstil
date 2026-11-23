@@ -91,15 +91,15 @@ jobs:
         continue-on-error: true
         run: python kurse.py
 
-      - name: Dividenden (Yahoo, höchstens einmal pro Woche neu)
-        continue-on-error: true
-        timeout-minutes: 25
-        run: python dividenden.py
-
-      - name: ETF-Inhalt und Kosten (Yahoo/Morningstar, höchstens einmal pro Woche neu)
+      - name: ETF-Inhalt und Kosten (Yahoo/Morningstar, höchstens einmal pro Woche neu; vor den Dividenden, weil die vielen Dividenden-Abrufe Yahoo drosseln)
         continue-on-error: true
         timeout-minutes: 10
         run: python etf_daten.py
+
+      - name: Dividenden (Yahoo, höchstens einmal pro Woche neu)
+        continue-on-error: true
+        timeout-minutes: 20
+        run: python dividenden.py
 
       - name: Zinsen (FRED)
         run: python umfeld.py   # vor dem Zwischenspeichern, damit FRED- und Shiller-Dateien im Cache landen

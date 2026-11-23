@@ -106,7 +106,7 @@ def main(argv):
     if not faellig:
         print(f"ETF-Daten: alle {len(alle)} ETFs in den letzten {ALTER_TAGE} Tagen geladen – nichts zu tun")
         return
-    ohne, zeit_um = [], False
+    ohne, zeit_um, leer_folge = [], False, 0
     for s in faellig:
         if time.time() - t0 > minuten * 60:
             zeit_um = True
@@ -118,18 +118,23 @@ def main(argv):
             d = None
         if d:
             alt[s] = d | {"abruf": heute.isoformat()}
+            leer_folge = 0
         else:
-            ohne.append(s)
-            if s in alt:
-                alt[s]["abruf"] = heute.isoformat()   # letzter guter Stand bleibt (mit seinem alten „stand“)
-        tmp = DATEI.with_suffix(".tmp")
-        tmp.write_text(json.dumps(alt, ensure_ascii=False, indent=0))
-        tmp.replace(DATEI)
+            ohne.append(s)   # nicht als erledigt markieren: im nächsten Lauf neu versuchen (alter Stand bleibt stehen)
+            leer_folge += 1
+            if leer_folge >= 3:
+                print("  ETF-Daten: 3 ETFs in Folge ohne Antwort – Yahoo drosselt vermutlich (HTTP 429); Rest im nächsten Lauf", flush=True)
+                zeit_um = True
+                break
+        if d:
+            tmp = DATEI.with_suffix(".tmp")
+            tmp.write_text(json.dumps(alt, ensure_ascii=False, indent=0))
+            tmp.replace(DATEI)
         time.sleep(1.0)
     ohne_ter = [s for s, d in alt.items() if "ter" not in d]
-    offen = [s for s in alle if s not in alt or alt[s].get("abruf") != heute.isoformat()] if zeit_um else []
-    print(f"ETF-Daten: {len(alt)} von {len(alle)} ETFs mit Daten; diesmal ohne Daten: {', '.join(ohne) or '–'}; "
-          f"ohne Kosten: {', '.join(ohne_ter) or '–'}" + (f"; Zeitgrenze erreicht, {len(offen)} folgen im nächsten Lauf" if zeit_um else ""))
+    offen = [s for s in alle if s not in alt or alt[s].get("abruf") != heute.isoformat()]
+    print(f"ETF-Daten: {len(alt)} von {len(alle)} ETFs mit Daten; diesmal ohne Antwort: {', '.join(ohne) or '–'}; "
+          f"ohne Kosten: {', '.join(ohne_ter) or '–'}" + (f"; {len(offen)} folgen im nächsten Lauf" if offen else ""))
 
 
 def fuer_wert(symbol: str) -> dict | None:
