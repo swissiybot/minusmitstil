@@ -703,6 +703,20 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 @container haupt (max-width:1060px){.wk-haupt{grid-template-columns:minmax(0,1fr) 330px;grid-template-areas:"u s" "f s" "r r"} .wk-rendite{margin-top:8px}}
 @container haupt (max-width:760px){.wk-haupt{grid-template-columns:minmax(0,1fr);grid-template-areas:"u" "s" "f" "r"} .wk-saeule{justify-self:center;width:100%;max-width:400px}}
 @media (max-width:900px){.wk-haupt{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"u" "s" "f" "r";gap:12px} .wk-saeule{justify-self:center}}
+
+/* Inhalt und Ertrag: Balkenlisten und Ausschüttungs-Balken */
+.bl-t{margin:14px 0 6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.bl{display:grid;gap:6px}
+.bl-z{display:grid;grid-template-columns:minmax(0,42%) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.bl-z span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.bl-z b{min-width:52px;text-align:right;font-weight:650}
+.anteil-b{display:flex;height:10px;border-radius:6px;overflow:hidden;margin:9px 0 6px;background:var(--panel3);box-shadow:inset 0 2px 3px var(--boden)}
+.anteil-b i{display:block;height:100%}
+.dv-bild{display:flex;align-items:flex-end;gap:5px;height:118px;margin:14px 0 4px;padding-bottom:18px}
+.dv-s{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+.dv-s i{display:block;width:100%;border-radius:5px 5px 2px 2px;background:linear-gradient(180deg,color-mix(in srgb,#fff 30%,var(--guenstig)),var(--guenstig) 40%,color-mix(in srgb,var(--guenstig) 60%,#000));box-shadow:0 0 10px color-mix(in srgb,var(--guenstig) 35%,transparent)}
+.dv-s.lauf i{opacity:.45}
+.dv-s span{position:absolute;bottom:-18px;font-size:10.5px;color:var(--muted)}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1917,7 +1931,7 @@ function alleChartsWeg(){ KZ_LINIEN = []; charts.concat(tabCharts).forEach(ch =>
 // Jede Karte beginnt gleich: farbige Kategorie, Titel als Frage in normaler Schrift, ein Satz „was zeigt die Karte“, rechts der Stand;
 // die ausführliche Erklärung steht hinter dem kleinen „i“ (Maus: darüberfahren, Handy: antippen).
 const KAT = {ueber:["Überblick","var(--akzent)"], preis:["Preis","var(--guenstig)"], rueck:["Rückblick","var(--akzent)"], ausblick:["Ausblick","var(--kegel)"],
-  risiko:["Risiko","var(--teuer)"], zeit:["Zeit","var(--kegel)"], ich:["Deine Position","var(--gelb)"], trend:["Trend","var(--cyan)"], geschaeft:["Geschäft","var(--gelb)"], zahlen:["Kennzahlen","var(--neutral)"]};
+  risiko:["Risiko","var(--teuer)"], zeit:["Zeit","var(--kegel)"], inhalt:["Inhalt","var(--cyan)"], ertrag:["Ertrag","var(--guenstig)"], ich:["Deine Position","var(--gelb)"], trend:["Trend","var(--cyan)"], geschaeft:["Geschäft","var(--gelb)"], zahlen:["Kennzahlen","var(--neutral)"]};
 function kk(kat, titel, unter, rechts, e){
   const [name, farbe] = KAT[kat] || KAT.zahlen;
   return `<header class="kk"><div class="kk-zeile"><span class="kk-kat" style="--kf:${farbe}">${name}</span>${rechts ? `<span class="kk-rechts">${rechts}</span>` : ""}</div>
@@ -1939,6 +1953,11 @@ const ERKLAERUNG_TITEL = {
   zr_steuer: {titel:"Steuer (vereinfacht)", text:"Gedachter Verkauf: 26,375 % Abgeltungssteuer (25 % plus Soli) auf den Gewinn, davor 1.000 € Sparerpauschbetrag abgezogen; bei Aktien-ETFs sind 30 % des Gewinns steuerfrei (Teilfreistellung). Ohne Kirchensteuer, ohne Vorabpauschale und ohne andere Gewinne oder Verluste desselben Jahres. Eine grobe Orientierung, keine Steuerberatung."},
   position: {titel:"Deine Position", text:"Erscheint nur, wenn dieser Titel in „Mein Depot“ liegt. Der Wert stammt aus deinem Depot-Import (Stand des Imports, nicht der heutige Kurs). Den Einstand – was du insgesamt bezahlt hast – trägst du selbst ein. Alles bleibt in diesem Browser gespeichert und wird nirgendwohin übertragen."},
   vergleich: {titel:"Vergleichen", text:"Wähle einen zweiten Titel: Dann stehen Ampel, Abstand zur 200-Wochen-Linie, Günstig-Grenze, Ø Jahresrendite, größter Rückgang, Schwankung und Trend nebeneinander, dazu der Kursverlauf beider Titel ab demselben Start (beide bei 100). Jede Ampel misst an der eigenen Geschichte des Titels – eine höhere Ampel heißt nicht, dass der Titel der bessere ist."},
+  rendite_real: {titel:"Nach Inflation (Kaufkraft)", text:"Die Ø Jahresrendite in Euro, bereinigt um die Teuerung in Deutschland über denselben Zeitraum (harmonisierter Verbraucherpreisindex von Eurostat, Monatswerte; der neueste Monat hinkt etwa einen Monat hinterher). Sie zeigt, um wie viel die Kaufkraft pro Jahr gewachsen ist – das, was man sich vom Geld wirklich mehr leisten konnte. Vor Steuern und Kosten."},
+  zr_kaufkraft: {titel:"In heutiger Kaufkraft", text:"Der mittlere Fall, umgerechnet auf heutige Preise: Was man sich von dem Betrag nach heutigen Maßstäben leisten könnte, wenn die Preise jedes Jahr um 2 % steigen. Die 2 % sind eine Annahme (das Ziel der Europäischen Zentralbank), keine Messung – die echte Teuerung kann höher oder niedriger ausfallen."},
+  etf_inhalt: {titel:"ETF-Inhalt und Kosten", text:"Die zehn größten Positionen mit ihrem Gewicht, die Verteilung auf Branchen und die Anlageklassen (Aktien, Anleihen, Bargeld) laut Fondsdaten, dazu die laufenden Kosten pro Jahr. Machen die zehn größten Positionen einen großen Teil des Fonds aus, hängt das Ergebnis stark an wenigen Firmen. Die Daten werden einmal pro Woche geladen und können einige Wochen alt sein."},
+  etf_kosten: {titel:"Laufende Kosten", text:"Was der Fonds pro Jahr für Verwaltung und Betrieb kostet, in Prozent des angelegten Geldes (laut letztem Jahresbericht). Das Geld wird nicht abgebucht, sondern täglich dem Fondsvermögen entnommen – es steckt also schon in der Kursentwicklung und in der Ø Jahresrendite. Kosten für Kauf und Depot bei der Bank kommen dazu."},
+  dividenden: {titel:"Ausschüttungen (Dividenden)", text:"Ausschüttungsrendite: die Ausschüttungen der letzten 12 Monate geteilt durch den heutigen Kurs. Wachstum: um wie viel die Ausschüttung je Anteil über fünf volle Kalenderjahre pro Jahr gestiegen ist. Die Balken zeigen die Summe je Kalenderjahr, das laufende Jahr ist noch nicht vollständig. In der Ø Jahresrendite und im Chart sind die Ausschüttungen schon eingerechnet – sie kommen nicht obendrauf."},
   rendite_euro: {titel:"In Euro gerechnet", text:"Dieselbe Ø Jahresrendite, aber für einen Anleger, der in Euro rechnet: Zuwachs in Dollar mal Veränderung des Wechselkurses Dollar/Euro über denselben Zeitraum (Kurse der Europäischen Zentralbank bzw. der US-Notenbank). Ist der Dollar gegenüber dem Euro gestiegen, liegt die Euro-Rendite höher, sonst niedriger."},
   kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
 };
@@ -2036,7 +2055,7 @@ function saeule(w){
 function fragenInit(){
   const el = $("#fragen"); if (!el) return;
   const da = id => { const e = document.getElementById(id); return e && e.offsetParent !== null; };
-  const F = [["nachkauf-karte", "Soll ich mit dem Kauf warten?"], ["zeitachse-karte", "War das früher ein guter Zeitpunkt?"], ["rechner-karte", "Was wird aus meinem Geld?"], ["risiko-karte", "Wie tief kann es fallen?"], ["position-karte", "Wie steht meine Position?"]].filter(([id]) => da(id));
+  const F = [["nachkauf-karte", "Soll ich mit dem Kauf warten?"], ["zeitachse-karte", "War das früher ein guter Zeitpunkt?"], ["rechner-karte", "Was wird aus meinem Geld?"], ["risiko-karte", "Wie tief kann es fallen?"], ["etf-karte", "Was steckt drin und was kostet es?"], ["dividenden-karte", "Was wird ausgeschüttet?"], ["position-karte", "Wie steht meine Position?"]].filter(([id]) => da(id));
   el.innerHTML = F.map(([id, t]) => `<button type="button" class="frage" data-ziel="${id}"><i></i>${t}</button>`).join("") + `<button type="button" class="frage" id="vgl-knopf" data-e="vergleich"><i></i>Mit einem anderen Titel vergleichen</button>`;
   el.onclick = ev => { const b = ev.target.closest("button"); if (!b) return; if (b.id === "vgl-knopf") vergleichWaehlen(); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
 }
@@ -2181,6 +2200,7 @@ function zrRechnen(){
     <p class="za-satz">Das wurde in <b>8 von 10</b> simulierten Wegen nach ${jt} aus <b>${fmt(ein,0)}${eu}</b> eingezahltem Geld.</p>
     <div class="zr-kacheln"><div class="kpi"><div class="k-l">Mittlerer Fall</div><div class="k-w">${fmt(p50,0)}${eu}</div><div class="k-u">${vz((p50 / ein - 1) * 100, 0, " %")} zum Eingezahlten</div></div>
       <div class="kpi" data-e="zr_steuer" tabindex="0"><div class="k-l">Mittlerer Fall nach Steuern</div><div class="k-w">${fmt(netto(p50),0)}${eu}</div><div class="k-u">bei Verkauf am Ende, vereinfacht</div></div>
+      <div class="kpi" data-e="zr_kaufkraft" tabindex="0"><div class="k-l">Mittlerer Fall in heutiger Kaufkraft</div><div class="k-w">${fmt(p50 / Math.pow(1.02, ZR.jahre),0)}${eu}</div><div class="k-u">bei 2 % Inflation pro Jahr angenommen</div></div>
       <div class="kpi"><div class="k-l">Am Ende im Minus</div><div class="k-w">${minus} von 100</div><div class="k-u">weniger als eingezahlt</div></div></div>
     ${punkte100(minus, "var(--teuer)")}
     <p class="klein">${fmt(P,0)} Wege aus den echten Wochen der letzten ${fmt(sim.jahre,0)} Jahre (zusammenhängende 13-Wochen-Stücke, Schwankung startet beim heutigen Niveau). ${ZR.umgerechnet ? "<b>In Euro gerechnet:</b> Der Wechselkurs Dollar/Euro jeder Woche ist eingerechnet. " : ZR.eur ? "In Euro. " : "In der Währung des Werts. "}Vor Kosten; gerechnet ${driftSatz(ZR.drift)}${ZR.drift === 1 ? " – war sie ungewöhnlich hoch, ist das Ergebnis optimistisch (Schalter „vorsichtig“)" : ""}.${ZR.jahre > 20 ? " <b>Achtung:</b> Der Zeitraum ist länger als die Geschichte, aus der die Wochen stammen – sehr unsicher." : ""} Eine Spanne, keine Vorhersage und keine Anlageberatung.</p>`;
@@ -2226,13 +2246,56 @@ function positionInit(id, w){
   $("#pos-einstand").oninput = neu; neu();
   apiStrategie(id).then(s => { if (AKTIV === id && $("#pos-aus") && s && !s.fehler && s.teilfrei) { tf = true; neu(); } }).catch(() => {});
 }
-async function renditeEuroInit(id, w){   // dieselbe Ø Jahresrendite in Euro: Dollar-Zuwachs mal Veränderung des Wechselkurses über denselben Zeitraum
-  const el = $("#rendite-euro"); if (!el || waehrungVon(w) !== "USD" || w.cagr20 == null || !w.cagr_jahre || !w.datum) return;
-  try { await fxLaden(); } catch(_) { return; }
-  if (AKTIV !== id || !FX || !$("#rendite-euro")) return;
-  const t1 = Date.parse(w.datum) / 1000, k0 = dollarJeEuro(t1 - w.cagr_jahre * 31557600), k1 = dollarJeEuro(t1); if (!k0 || !k1) return;
-  const eur = ((1 + w.cagr20 / 100) * Math.pow(k0 / k1, 1 / w.cagr_jahre) - 1) * 100;
-  $("#rendite-euro").innerHTML = `<div class="kv"><span data-e="rendite_euro">In Euro gerechnet</span><b class="${klasse(eur)}">${fmt(eur,1," %")}</b></div>`;
+// ------------------------------------------------------------ Inhalt und Ertrag: ETF-Inhalt und Kosten, Dividenden (Daten: etf_daten.py, dividenden.py)
+const balkenListe = (liste, farbe, max) => `<div class="bl">${liste.map(([n, p]) => `<div class="bl-z"><span title="${esc(n)}">${esc(n)}</span><div class="balken"><i style="width:${Math.max(1.5, Math.min(100, p / max * 100)).toFixed(1)}%;background:${farbe}"></i></div><b>${fmt(p,1," %")}</b></div>`).join("")}</div>`;
+function etfKarte(w){
+  const e = w.etf; if (!e || (!e.top?.length && e.ter == null && !e.branchen?.length)) return "";
+  const a = e.anteile, top = (e.top || []).slice(0, 10), br = (e.branchen || []).filter(x => x[1] >= 1).slice(0, 7);
+  const teile = a ? [["Aktien", a.aktien, "var(--guenstig)"], ["Anleihen", a.anleihen, "var(--akzent)"], ["Bargeld", a.bargeld, "var(--neutral)"]].filter(x => x[1] >= .5) : [];
+  return `<section class="karte breit2" id="etf-karte">${kk("inhalt", "Was steckt drin – und was kostet es?", `${e.anbieter ? `Fonds von ${esc(e.anbieter)}. ` : ""}Inhalt und Kosten laut Fondsdaten.`, e.stand ? `Stand ${datumDe(e.stand)}` : "", "etf_inhalt")}
+    <div class="zr-kacheln" style="margin-top:0">
+      <div class="kpi" data-e="etf_kosten" tabindex="0"><div class="k-l">Laufende Kosten pro Jahr</div><div class="k-w">${e.ter != null ? fmt(e.ter, 2, " %") : "keine Angabe"}</div><div class="k-u">${e.ter != null ? `bei 10.000 angelegt: ${fmt(e.ter * 100, 0)} im Jahr` : "in der Quelle nicht enthalten"}</div></div>
+      ${e.top_summe != null ? `<div class="kpi"><div class="k-l">Die 10 größten Positionen</div><div class="k-w">${fmt(e.top_summe, 0, " %")}</div><div class="k-u">des Fonds${e.top_summe >= 40 ? " – stark gebündelt" : e.top_summe <= 20 ? " – breit verteilt" : ""}</div></div>` : ""}
+      ${teile.length ? `<div class="kpi"><div class="k-l">Anlageklassen</div><div class="anteil-b">${teile.map(([n, p, f]) => `<i style="width:${p}%;background:${f}" title="${n} ${fmt(p,1)} %"></i>`).join("")}</div><div class="k-u">${teile.map(([n, p]) => `${n} ${fmt(p, 0, " %")}`).join(" · ")}</div></div>` : ""}
+    </div>
+    ${top.length ? `<h4 class="bl-t">Größte Positionen</h4>${balkenListe(top, "var(--akzent)", Math.max(...top.map(x => x[1])))}` : ""}
+    ${br.length ? `<h4 class="bl-t">Branchen</h4>${balkenListe(br, "var(--cyan)", Math.max(...br.map(x => x[1])))}` : ""}
+    <p class="klein" style="margin:10px 0 0">Quelle: ${esc(e.quelle || "Fondsdaten")}${e.ter != null && e.ter_quelle ? `; Kosten: ${esc(e.ter_quelle)}` : ""}. Länderanteile liefert die Quelle nicht. Die Kosten sind in der Kursentwicklung schon enthalten.</p></section>`;
+}
+function dividendenKarte(w){
+  const d = w.div; if (!d || !d.jahre?.length) return "";
+  const J = d.jahre.slice(-14), mx = Math.max(...J.map(x => x[1])) || 1, nk = x => fmt(x, x >= 10 ? 1 : x >= 1 ? 2 : 3);
+  const balken = J.map(([j, v]) => `<div class="dv-s${j === d.laufend ? " lauf" : ""}" title="${j}${j === d.laufend ? " (läuft noch)" : ""}: ${nk(v)} je Anteil"><i style="height:${Math.max(v > 0 ? 3 : 0, v / mx * 100).toFixed(1)}%"></i><span>${String(j).slice(2)}</span></div>`).join("");
+  const mal = d.monate ? (d.monate === 1 ? "einmal im Jahr" : d.monate === 2 ? "zweimal im Jahr" : d.monate === 4 ? "viermal im Jahr" : d.monate === 12 ? "jeden Monat" : `${d.monate}-mal im Jahr`) : null;
+  return `<section class="karte breit2" id="dividenden-karte">${kk("ertrag", "Was wird ausgeschüttet?", "Dividenden je Anteil. In der Ø Jahresrendite sind sie schon enthalten – hier stehen sie einzeln.", d.stand ? `Stand ${datumDe(d.stand)}` : "", "dividenden")}
+    <div class="zr-kacheln" style="margin-top:0">
+      <div class="kpi"><div class="k-l">Ausschüttungsrendite</div><div class="k-w">${d.rendite != null ? fmt(d.rendite, 2, " %") : "nicht ausgewiesen"}</div><div class="k-u">${d.rendite != null ? `bei 10.000 angelegt: rund ${fmt(d.rendite * 100, 0)} im Jahr` : "siehe Hinweis unten"}</div></div>
+      <div class="kpi"><div class="k-l">Letzte 12 Monate</div><div class="k-w">${nk(d.summe12)}</div><div class="k-u">je Anteil${mal ? `, ${mal}` : ""}</div></div>
+      ${d.wachstum5 != null ? `<div class="kpi"><div class="k-l">Wachstum in 5 Jahren</div><div class="k-w ${klasse(d.wachstum5)}">${vz(d.wachstum5, 1, " %")}</div><div class="k-u">pro Jahr</div></div>` : ""}
+    </div>
+    <div class="dv-bild" role="img" aria-label="Ausschüttung je Anteil pro Kalenderjahr, ${J[0][0]} bis ${J[J.length - 1][0]}">${balken}</div>
+    <div class="klein">Ausschüttung je Anteil und Kalenderjahr${d.laufend ? ` · ${d.laufend} läuft noch (heller)` : ""}</div>
+    <div class="kv" style="margin-top:8px"><span>Schüttet aus seit</span><b>${d.seit ?? "–"}${d.ohne_luecke_seit && d.ohne_luecke_seit !== d.seit ? ` · ohne Lücke seit ${d.ohne_luecke_seit}` : ""}</b></div>
+    ${d.letzte ? `<div class="kv"><span>Letzte Ausschüttung</span><b>${d.letzte[0].split("-").reverse().join("/")} · ${nk(d.letzte[1])} je Anteil</b></div>` : ""}
+    <p class="klein" style="margin:10px 0 0">${d.hinweis ? esc(d.hinweis) + " " : ""}Beträge in der Währung der Ausschüttung, vor Steuern. Quelle: ${esc(d.quelle || "Yahoo Finance")}. Eine hohe Rendite ist kein Qualitätsmerkmal – sie steigt auch, wenn der Kurs fällt.</p></section>`;
+}
+let INFL = undefined;
+async function inflationLaden(){ if (INFL === undefined) INFL = (await holeJson("daten/inflation.json")) || null; return INFL; }
+function inflWert(I, land, t){   // Indexstand des Monats von t (bzw. letzter bekannter Monat davor); null vor Beginn der Reihe
+  const m = I?.reihen?.[land]?.m; if (!m?.length) return null; const mon = new Date(t * 1000).toISOString().slice(0, 7);
+  if (mon < m[0][0]) return null; for (let i = m.length - 1; i >= 0; i--) if (m[i][0] <= mon) return m[i][1]; return null;
+}
+async function renditeEuroInit(id, w){   // dieselbe Ø Jahresrendite in Euro (Dollar-Zuwachs mal Wechselkurs-Veränderung) und nach Inflation (deutsche Verbraucherpreise)
+  const da = () => AKTIV === id && $("#rendite-euro");
+  if (!da() || w.cagr20 == null || !w.cagr_jahre || !w.datum) return;
+  const wg = waehrungVon(w), t1 = Date.parse(w.datum) / 1000, t0 = t1 - w.cagr_jahre * 31557600; let eur = null, html = "";
+  if (wg === "USD") { try { await fxLaden(); } catch(_) {} if (!da()) return;
+    const k0 = FX ? dollarJeEuro(t0) : null, k1 = FX ? dollarJeEuro(t1) : null;
+    if (k0 && k1) { eur = ((1 + w.cagr20 / 100) * Math.pow(k0 / k1, 1 / w.cagr_jahre) - 1) * 100; html += `<div class="kv"><span data-e="rendite_euro">In Euro gerechnet</span><b class="${klasse(eur)}">${fmt(eur,1," %")}</b></div>`; } }
+  else if (wg === "EUR") eur = w.cagr20;
+  if (eur != null) { const I = await inflationLaden(); if (!da()) return; const i0 = inflWert(I, "de", t0), i1 = inflWert(I, "de", t1);
+    if (i0 && i1) { const real = ((1 + eur / 100) / Math.pow(i1 / i0, 1 / w.cagr_jahre) - 1) * 100; html += `<div class="kv"><span data-e="rendite_real">Nach Inflation (Kaufkraft)</span><b class="${klasse(real)}">${fmt(real,1," %")}</b></div>`; } }
+  $("#rendite-euro").innerHTML = html;
 }
 
 // ------------------------------------------------------------ Vergleich: zwei Titel nebeneinander
@@ -2313,7 +2376,7 @@ function abschnittNavSpur(){
 }
 function abschnittNavInit(){
   const nav = $("#abschnitt-nav"); if (!nav) return;
-  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["chart-karte","Chart"],["s-zeit","Zeitachse"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
+  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["chart-karte","Chart"],["s-zeit","Zeitachse"],["s-inhalt","Inhalt"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
     .filter(([id]) => { const e = document.getElementById(id); return e && e.offsetParent !== null; });   // nur, was in der gewählten Ansicht (Einfach/Profi) sichtbar ist
   nav.innerHTML = Z.map(([id, t], i) => `<button type="button" data-ziel="${id}" aria-current="${i === 0}">${t}</button>`).join("");
   nav.onclick = ev => { const b = ev.target.closest("button[data-ziel]"); if (!b) return;
@@ -2700,9 +2763,12 @@ async function zeige(id, opt={}){
     ${(() => {
       const teil = (sid, titel, unter, karten, kl = "") => { const k = karten.filter(Boolean); return k.length ? `<div class="sekt${kl}" id="${sid}"><span class="nr"></span><h2>${titel}</h2><p>${unter}</p></div><div class="raster${kl}">${k.join("")}</div>` : ""; };
       const P = " nur-profi";
-      return teil("s-zeit", "Zeit", "Was war – und was könnte kommen?", [zeitachseKarte(w, c), rechnerKarte(w, c)])
+      const rk = risikoKarte(w, c);
+      return teil("s-jung", "Seit dem Börsengang", "Was sich bei so kurzer Geschichte schon sagen lässt", [jungKarte(w)])
+        + teil("s-zeit", "Zeit", "Was war – und was könnte kommen?", [zeitachseKarte(w, c), rechnerKarte(w, c)])
+        + teil("s-inhalt", "Inhalt und Ertrag", "Was steckt drin, was kostet es, was wird ausgeschüttet?", [etfKarte(w), dividendenKarte(w)])
         + teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
-          jungKarte(w), kaufzonenKarte(w),
+          kaufzonenKarte(w),
           `<section class="karte" id="signale">${signalKarte(w, c)}</section>`,
           geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)], P)
         + teil("s-rueck", "Rückblick", "Was passierte früher in ähnlicher Lage?", [
@@ -2712,7 +2778,7 @@ async function zeige(id, opt={}){
         + teil("s-risiko", "Ausblick und Risiko", "Wie könnte es weitergehen – und was kann schiefgehen?", [
           `<section class="karte nur-profi" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
           `<section class="karte nur-profi" id="wahr">${wahrKarte(w)}</section>`,
-          risikoKarte(w, c), marktphaseKarte(w, c).replace('class="karte breit-voll"', 'class="karte breit-voll nur-profi"')]);
+          rk, marktphaseKarte(w, c).replace('class="karte breit-voll"', 'class="karte breit-voll nur-profi"')], rk ? "" : P);
     })()}
     <div class="abstand nur-profi"></div>
     <section class="karte vertiefung nur-profi" id="vertiefung">
