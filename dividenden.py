@@ -97,6 +97,8 @@ def main(argv):
         liste = nur
     else:
         alle = symbole()
+        if "geprueft_am" not in stand and stand.get("stand") and not stand.get("abgebrochen") and DATEI.exists():
+            am = {s: stand["stand"] for s in alle}   # Stand der früheren Fassung (alles auf einmal geladen) übernehmen
         faellig = [s for s in alle if neu or not am.get(s) or (heute - dt.date.fromisoformat(am[s])).days >= ALTER_TAGE]
         liste = sorted(faellig, key=lambda s: am.get(s, ""))
         if not liste:
