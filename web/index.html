@@ -435,6 +435,102 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .fk{left:6px;top:4px;padding:3px 7px;font-size:10.5px;line-height:1.4;max-width:calc(100% - 64px)}
   .fk .r:nth-child(2){display:none}
 }
+
+/* ------------------------------------------------------------ Titelseite (Umbau 23.11.2026): Sprungleiste, Abschnitte, Karten-Köpfe, Kopf mit Kennzahlen */
+:root{--r:16px}
+.abschnitt-nav{position:sticky;top:0;z-index:15;display:flex;gap:4px;margin:-18px -20px 16px;padding:8px 20px;overflow-x:auto;scrollbar-width:none;
+  background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.abschnitt-nav::-webkit-scrollbar{display:none}
+.abschnitt-nav:empty{display:none}
+.abschnitt-nav button{flex-shrink:0;background:none;border:0;padding:6px 13px;border-radius:999px;color:var(--muted);font-size:13px;font-weight:600;white-space:nowrap}
+.abschnitt-nav button:hover{color:var(--text);background:var(--hover)}
+.abschnitt-nav button[aria-current="true"]{color:var(--auf-akzent);background:var(--akzent)}
+.sekt{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin:34px 2px 14px}
+.sekt .nr{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--akzent-weich);color:var(--akzent);font-size:14px;font-weight:750;flex:none}
+.sekt h2{margin:0;font-size:20px;font-weight:720;letter-spacing:-.02em}
+.sekt p{margin:0;color:var(--muted);font-size:14px}
+.sekt,#wert-kopf,#chart-karte,#vertiefung,#nachkauf-karte{scroll-margin-top:60px}
+
+/* Kopf: Titelzeile, dann Lage-Text | Ø Jahresrendite | Ampel, darunter die Kennzahlen-Leiste */
+.wert-kopf{display:block;padding:20px 22px 18px;
+  background:radial-gradient(560px 260px at 100% 0,color-mix(in srgb,var(--zf,var(--akzent)) 13%,transparent),transparent 72%),var(--panel)}
+.wk-titel h1{font-size:28px;font-weight:740;letter-spacing:-.025em}
+.wk-haupt{display:flex;flex-wrap:wrap;gap:18px 24px;align-items:center;margin-top:14px}
+.wk-text{flex:1 1 380px;min-width:0}
+.wk-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.wk-text .klartext{margin:0 0 8px}
+.wk-rendite{flex:0 1 240px;min-width:212px;align-self:stretch;padding:14px 16px;border-radius:14px;background:color-mix(in srgb,var(--panel2) 72%,transparent);border:1px solid var(--line)}
+.wk-rendite .gross-zahl{font-size:34px;margin:2px 0}
+.wk-rendite .kv{font-size:12.5px;padding:5px 0}
+.wk-aus{margin:8px 0 6px;padding:7px 10px;border-radius:9px;background:var(--akzent-weich);font-size:12.5px;line-height:1.45;color:var(--text)}
+.wert-kopf .gauge{flex:none;width:230px}
+.wk-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:16px}
+.kpi{padding:10px 13px;border-radius:12px;background:color-mix(in srgb,var(--panel2) 72%,transparent);border:1px solid var(--line);min-width:0}
+.kpi .k-l{font-size:11.5px;color:var(--muted);font-weight:600}
+.kpi .k-w{font-size:19px;font-weight:720;letter-spacing:-.02em;line-height:1.3;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi .k-u{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Karten-Kopf: Kategorie · Frage als Titel · ein Satz, was die Karte zeigt · „i“ für die Erklärung */
+.raster{grid-auto-flow:dense}
+.raster .karte{padding:18px}
+.raster .breit-voll{grid-column:1/-1}
+.kk{margin:0 0 12px}
+.kk-zeile{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.kk-kat{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--kf);text-decoration:none!important}
+.kk-kat::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--kf)}
+.kk-rechts{font-size:12px;color:var(--muted);white-space:nowrap}
+.kk-titel{margin:0;font-size:17px;font-weight:700;line-height:1.3;color:var(--text);letter-spacing:-.012em}
+.kk-unter{margin:4px 0 0!important;font-size:13px;color:var(--text2)!important;line-height:1.45}
+.kk-i{display:inline-grid;place-items:center;width:19px;height:19px;padding:0;margin-left:3px;border-radius:50%;border:1px solid var(--line2);background:var(--panel2);color:var(--muted);
+  font:italic 700 11.5px/1 Georgia,"Times New Roman",serif;vertical-align:2px;cursor:help}
+.kk-i:hover{color:var(--text);border-color:var(--akzent)}
+
+/* Kurz gesagt, zwei Blöcke (kaufen | verkaufen), Verlässlichkeit, aufklappbare Details */
+.fazit{padding:11px 14px;border-radius:12px;background:var(--akzent-weich);border:1px solid color-mix(in srgb,var(--akzent) 30%,transparent);color:var(--text);font-size:14px;line-height:1.55;margin:0 0 12px}
+.fazit.warn{background:color-mix(in srgb,var(--teuer) 12%,transparent);border-color:color-mix(in srgb,var(--teuer) 40%,transparent)}
+.fazit.gut{background:color-mix(in srgb,var(--guenstig) 12%,transparent);border-color:color-mix(in srgb,var(--guenstig) 40%,transparent)}
+.kv-zwei{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.kv-block{padding:13px 15px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);min-width:0}
+.kv-bt{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px;font-size:13.5px;color:var(--text)}
+.kv-bt i{width:9px;height:9px;border-radius:3px;flex:none}
+.kv-gross{font-size:32px;font-weight:750;letter-spacing:-.025em;line-height:1.15;margin-top:8px}
+.kv-gross small{font-size:15px;font-weight:600;color:var(--text2);letter-spacing:0}
+.kv-was{font-size:13.5px;color:var(--text2)}
+.vb{display:grid;grid-template-columns:auto 1fr auto;gap:5px 9px;align-items:center;font-size:12px;color:var(--text2);margin:10px 0 6px}
+.vb b{text-align:right;color:var(--text);white-space:nowrap}
+.kv-heisst{margin:10px 0 0!important;font-size:13.5px;line-height:1.5;color:var(--text)!important}
+.verl{margin-top:12px;padding:13px 15px;border-radius:12px;border:1px solid var(--line);background:var(--panel2)}
+.verl-kopf{font-size:13.5px;font-weight:650}
+.meter{position:relative;height:10px;border-radius:6px;background:var(--panel3);margin:10px 0 3px}
+.meter i{display:block;height:100%;border-radius:6px}
+.meter .m-50{position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--text2)}
+.meter-leg{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.mehr{margin-top:12px;padding-top:9px;border-top:1px solid var(--line)}
+.mehr>summary{display:inline-flex;align-items:center;gap:7px;cursor:pointer;list-style:none;font-size:13px;font-weight:600;color:var(--akzent)}
+.mehr>summary::-webkit-details-marker{display:none}
+.mehr>summary::before{content:"▸";display:inline-block;transition:transform .15s}
+.mehr[open]>summary::before{transform:rotate(90deg)}
+.mehr>summary:hover{text-decoration:underline}
+.mehr .wtab{margin:8px 0 0;width:100%}
+.nk-karte{padding:18px 20px}
+.nk-karte .nk-gross{font-size:22px;font-weight:650;letter-spacing:-.015em}
+.kz-weg{color:var(--text2);font-size:12.5px}
+@media (max-width:900px){
+  .abschnitt-nav{margin:-12px -12px 12px;padding:6px 12px}
+  .wert-kopf{padding:14px}
+  .wk-titel h1{font-size:23px}
+  .wk-haupt{flex-direction:column;align-items:stretch;gap:12px}
+  .wk-text{flex:none}
+  .wk-rendite{flex:none;width:100%}
+  .wert-kopf .gauge{align-self:center}
+  .wk-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wk-kpis .kpi:last-child:nth-child(odd){grid-column:1/-1}
+  .kpi .k-w{font-size:17px}
+  .sekt{margin:26px 2px 10px}
+  .sekt h2{font-size:18px}
+  .raster .karte{padding:14px}
+  .kv-gross{font-size:28px}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -518,7 +614,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
       <h4>Wie du das Tool liest</h4>
       <ul>
         <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (blaugrün = günstig, orange = teuer).</li>
-        <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Kurs höher nach …“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
+        <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Wie oft stand der Kurs später höher?“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
         <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
         <li><b>Fallen-Warnung ⚠</b> bei Nasdaq-Aktien: Ampel günstig, aber Verlust oder deutlich sinkender Gewinn bzw. Umsatz (Zahlen der US-Börsenaufsicht SEC). Ein gefallener Kurs ist dann oft kein Schnäppchen. Im Screener lässt sie sich ausblenden.</li>
         <li><b>Bewertung (CAPE)</b> unter „Marktumfeld“ und beim S&amp;P 500: zeigt, wie teuer der US-Markt gemessen an seinen <b>Gewinnen</b> ist – die Ampel schaut nur auf den Kurs. Steht bewusst getrennt; auch das CAPE hat als Zeitpunkt zum Kaufen nicht getaugt (siehe Prüfung dort).</li>
@@ -1009,8 +1105,6 @@ const ERKLAERUNG_NEU = {
   jung: {titel:"Junger Wert (noch keine Ampel)", text:"Dieser Wert ist erst seit wenigen Monaten an der Börse. Die Ampel richtet sich nach der 200-Wochen-Linie, dem Durchschnitt der letzten knapp 4 Jahre – die gibt es hier noch nicht. Eine vorläufige Ampel rechnet das Tool ab 2 Jahren Kursen. Bis dahin stehen hier nur Fakten seit dem Börsengang: erster Kurs, Hoch, Tief, Durchschnitt und wo der Kurs heute steht. Ob das günstig oder teuer ist, lässt sich bei so kurzer Geschichte nicht seriös sagen."},
   kq: {titel:"Kaufqualität (Rückblick, unteres Band)", text:"Das schmale Band ganz unten im Kurs-Chart zeigt für jede vergangene Woche, wie gut ein Kauf genau dann war – gemessen an der Rendite der folgenden 3 Jahre und verglichen mit allen Wochen dieses Titels. Dunkelgrün: einer der besten 20 % Kaufzeitpunkte. Hellgrün: besser als 60 %. Hellrot: schlechter als 60 %. Rot: einer der schlechtesten 20 %. Ohne Farbe: Durchschnitt. Das weiß man immer erst hinterher; die letzten 3 Jahre haben noch keine Farbe, weil ihr Ergebnis offen ist. Im Fadenkreuz steht für jede Woche „Kauf hier: besser als X % der Kaufwochen“."},
   vq: {titel:"Verkaufsqualität (Rückblick, oberes Band)", text:"Das schmale Band ganz oben im Kurs-Chart zeigt, wann ein Verkauf im Rückblick gut war: Orange heißt, der Kurs stand ein Jahr später deutlich tiefer – kräftig orange gehört zu den besten 20 % Verkaufszeitpunkten dieses Titels, hell orange zu den besten 40 %. Ohne Farbe: Verkaufen war dort nicht besonders gut, meist stieg der Kurs weiter. Das letzte Jahr hat noch keine Farbe."},
-  kv_heute: {titel:"Heute im Vergleich", text:"Das Tool sucht die früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt, wie es danach ausging: Wie oft stand der Kurs 3 Jahre später höher, wie viel brachte das pro Jahr, wie oft gehörte so ein Kauf zu den besten 30 % aller Kaufwochen – und wie oft war Verkaufen richtig, weil der Kurs ein Jahr später tiefer stand. Zum Vergleich steht daneben der Wert über alle Wochen. Ist die ähnliche Lage deutlich besser als „alle Wochen“, war das früher eher ein guter Kaufzeitpunkt. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der Phasen."},
-  kv_probe: {titel:"Wie verlässlich bei diesem Titel?", text:"Die Probe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode „besser oder schlechter als üblich“ voraus, und es wird nachgeschaut, ob das stimmte. 50 % richtig wäre Zufall. Liegt der Wert darunter oder nur knapp darüber, sollte man der Karte „Heute im Vergleich“ bei diesem Titel wenig Gewicht geben."},
   kennung: {titel:"ISIN und WKN", text:"Die ISIN ist die internationale Wertpapierkennnummer (12 Zeichen) – damit findest du den Wert bei jeder Bank und jedem Broker. Sie stammt aus Wikidata oder wird aus der amtlichen US-Kennnummer (CUSIP) berechnet; „berechnet“ heißt, sie konnte nicht mit einer zweiten Quelle abgeglichen werden – bitte vor dem Kauf bei der Bank prüfen. Die WKN (6 Zeichen, nur in Deutschland üblich) steht nur da, wo sie sicher bekannt ist: bei deutschen Wertpapieren steckt sie in der ISIN, für US-Aktien gibt es keine freie Quelle. Rohstoff-Futures und Kryptowährungen haben keine ISIN; dort steht das Kürzel. Das Börsenkürzel siehst du beim Darüberfahren."},
   beschreibung: {titel:"Kurzbeschreibung", text:"Worum es sich handelt, in 1–2 Sätzen. Bei ETFs, Rohstoffen und Kryptowährungen selbst geschrieben, bei Aktien aus Wikidata (frei nutzbar): die deutsche Kurzbeschreibung oder – wenn es keine gibt – Branche, Land und Gründungsjahr. Für viele kleine Firmen gibt es noch keine Beschreibung."},
   l_fib: {titel:"Fibonacci-Zonen", text:"Linien bei 23,6 / 38,2 / 50 / 61,8 / 78,6 % zwischen dem höchsten und dem tiefsten Kurs des gerade sichtbaren Ausschnitts. Die Richtung ergibt sich daraus, was im Ausschnitt zuerst kam: erst Tief, dann Hoch (Aufwärtsbewegung) → 0 % am Hoch, die Linien zeigen mögliche Rücksetzer nach unten. Erst Hoch, dann Tief (Abwärtsbewegung) → 0 % am Tief, die Linien zeigen mögliche Erholungen nach oben. Das ist keine Aussage, ob gerade Bullen- oder Bärenmarkt ist – es misst nur die größte Bewegung im Bild. Verschieben oder zoomen rechnet sie neu. Viele Händler achten auf diese Marken, deshalb reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben sie nicht."},
@@ -1333,7 +1427,7 @@ async function start(){
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH, BEWERTUNG] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
   ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; suchIndex(); datenstand(d.stand);
-  Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT);
+  Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT, ERKLAERUNG_TITEL);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
   route();
   addEventListener("hashchange", () => { if (location.hash !== _eigenerHash) route(); });
@@ -1606,7 +1700,7 @@ async function lohntSichCheck(id){
   const el = $("#check"); if (!el) return;
   const s = await apiStrategie(id);
   if (AKTIV !== id || !$("#check")) return;
-  const kopf = `<div class="karte-kopf"><span data-e="check" tabindex="0">Lohnt-sich-Check</span><span>Warten oder Sparplan?</span></div>`;
+  const kopf = kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", "Was hätte bei diesem Wert mehr gebracht? Nachgerechnet mit 500 im Monat.", "Lohnt-sich-Check", "check");
   if (!s || s.fehler) { el.innerHTML = kopf + `<p>Zu wenig Jahre mit Ampel für einen Vergleich mit dem Sparplan.</p>`; return; }
   const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
   el.innerHTML = kopf + `
@@ -1646,6 +1740,131 @@ const chartBasis = () => { const f = F(); return {autoSize:true, layout:{backgro
   localization:{locale:"de-DE", dateFormat:"dd.MM.yyyy", priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}}; };
 function alleChartsWeg(){ KZ_LINIEN = []; charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; KEGEL_D = null; CD = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
 
+// ------------------------------------------------------------ Titelseite: Karten-Köpfe, Abschnitte, Kopf-Kennzahlen, Risiko-Profil (Umbau 23.11.2026)
+// Jede Karte beginnt gleich: farbige Kategorie, Titel als Frage in normaler Schrift, ein Satz „was zeigt die Karte“, rechts der Stand;
+// die ausführliche Erklärung steht hinter dem kleinen „i“ (Maus: darüberfahren, Handy: antippen).
+const KAT = {ueber:["Überblick","var(--akzent)"], preis:["Preis","var(--guenstig)"], rueck:["Rückblick","var(--akzent)"], ausblick:["Ausblick","var(--kegel)"],
+  risiko:["Risiko","var(--teuer)"], trend:["Trend","var(--cyan)"], geschaeft:["Geschäft","var(--gelb)"], zahlen:["Kennzahlen","var(--neutral)"]};
+function kk(kat, titel, unter, rechts, e){
+  const [name, farbe] = KAT[kat] || KAT.zahlen;
+  return `<header class="kk"><div class="kk-zeile"><span class="kk-kat" style="--kf:${farbe}">${name}</span>${rechts ? `<span class="kk-rechts">${rechts}</span>` : ""}</div>
+    <h3 class="kk-titel">${titel}${e ? ` <button type="button" class="kk-i" data-e="${e}" aria-label="Erklärung zu dieser Karte">i</button>` : ""}</h3>
+    ${unter ? `<p class="kk-unter">${unter}</p>` : ""}</header>`;
+}
+const sekt = (id, nr, titel, unter) => `<div class="sekt" id="${id}"><span class="nr">${nr}</span><h2>${titel}</h2><p>${unter}</p></div>`;
+const ERKLAERUNG_TITEL = {
+  kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
+  kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf „besser oder schlechter als üblich“ ausgeht, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
+  cagr_aus: {titel:"Aus 10.000 wurden …", text:"Die Ø Jahresrendite als Betrag: Was aus einer einmaligen Anlage von 10.000 über den genannten Zeitraum geworden wäre (mit Zinseszins, vor Steuern und Kosten, in der Währung des Werts). Reine Umrechnung der Jahresrendite – kein Versprechen für die Zukunft."},
+  r_profil: {titel:"Risiko-Profil", text:"Alle Zahlen stammen aus den Wochenschlusskursen dieses Werts über seine ganze Geschichte. Größter Rückgang: der tiefste Fall von einem Hoch bis zum folgenden Tief. Schwankung pro Jahr: wie stark die Wochenrenditen streuen, auf ein Jahr hochgerechnet. Längste Zeit unter altem Hoch: so lange musste man warten, bis ein früherer Höchstkurs wieder erreicht war. Kalenderjahre: Veränderung von Jahresende zu Jahresende, das laufende Jahr zählt nicht mit. Die Vergangenheit ist keine Obergrenze – der nächste Rückgang kann größer ausfallen."},
+  r_vola: {titel:"Schwankung pro Jahr (Volatilität)", text:"Das gängigste Risikomaß: Standardabweichung der Wochenrenditen, auf ein Jahr hochgerechnet (× Wurzel aus 52). Grobe Faustregel: In etwa zwei von drei Jahren lag das Jahresergebnis innerhalb dieser Spanne um den Durchschnitt, in jedem dritten Jahr außerhalb. Je höher die Zahl, desto unruhiger der Wert. Zum Einordnen steht darunter der Vergleich mit dem S&P 500."},
+  r_markt: {titel:"Vergleich mit dem S&P 500", text:"Aus den gemeinsamen Wochen der letzten 10 Jahre, verglichen mit dem S&P 500 (500 große US-Firmen). Schwankung: 1,5-fach heißt, die Ausschläge waren im Schnitt anderthalbmal so groß. Gleichlauf (Korrelation, von −1 bis +1): Bei +1 bewegen sich beide immer in dieselbe Richtung, bei 0 unabhängig voneinander, bei −1 entgegengesetzt. Werte mit niedrigem Gleichlauf können ein Depot ruhiger machen. Bewegung je 1 % (Beta): Um wie viel sich dieser Wert im Schnitt bewegte, wenn der S&P 500 in einer Woche um 1 % stieg oder fiel."},
+  kpi_guenstig: {titel:"Günstig ab …", text:"Der Kurs, unter dem die Ampel heute „günstig“ (60) bzw. „historisch sehr günstig“ (80) zeigen würde, und wie weit der Kurs bis dahin noch fallen müsste. Die Grenze kommt aus der eigenen Geschichte des Werts und wandert jede Woche mit der 200-Wochen-Linie. Alle Stufen stehen in der Karte „Ab welchem Kurs ist es günstig, ab wann teuer?“."},
+};
+function grundRest(w){   // Begründungs-Marken, die nicht schon in der Kennzahlen-Leiste stehen (z. B. Pi Cycle, MVRV)
+  const g = umlaut(w.grund || "").split(" · ").filter(x => x && !/200-Wochen-Linie|Allzeithoch|Hoch seit Börsengang/.test(x));
+  return g.length ? `<div class="grund-chips">${g.map(x => `<span>${grundMitErklaerung(x)}</span>`).join("")}</div>` : "";
+}
+function renditePanel(w){   // Ø Jahresrendite direkt neben der Ampel (Wunsch Marc 23.11.2026)
+  if (w.cagr20 == null) return "";
+  const j = w.cagr_jahre, aus = j ? 10000 * Math.pow(1 + w.cagr20 / 100, j) : null, glatt = x => x >= 20000 ? Math.round(x / 1000) * 1000 : Math.round(x / 100) * 100;
+  return `<div class="wk-rendite" id="wk-rendite"><div class="kk-zeile"><span class="kk-kat" style="--kf:var(--akzent)" data-e="cagr20" tabindex="0">Ø Jahresrendite</span><span class="kk-rechts">${fmt(j,0)} J.</span></div>
+    <div class="gross-zahl ${klasse(w.cagr20)}">${fmt(w.cagr20,1," %")}</div>
+    <div class="klein">${w.cagr20_div ? "mit Dividenden" : "ohne Dividenden"}, vor Steuern und Kosten</div>
+    ${aus ? `<div class="wk-aus" data-e="cagr_aus" tabindex="0">Aus 10.000 wurden so in ${fmt(j,0)} Jahren rund <b>${geld(glatt(aus))}</b>.</div>` : ""}
+    <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
+    <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
+    <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></div>`;
+}
+function kpiLeiste(w, c){   // die wichtigsten Zahlen auf einen Blick, jede mit einer Zeile Einordnung
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kz = w.kz, K = [];
+  const weg = x => vz((x / w.kurs - 1) * 100, 0, " %");
+  const kachel = (l, wert, u, e) => `<div class="kpi"${e ? ` data-e="${e}" tabindex="0"` : ""}><div class="k-l">${l}</div><div class="k-w">${wert}</div><div class="k-u">${u || "&nbsp;"}</div></div>`;
+  if (w.kurs != null) K.push(kachel("Kurs", fmt(w.kurs, w.kurs >= 100 ? 2 : 4), `Stand ${datumDe(w.datum)}`));
+  if (w.linie200 != null && w.zu200w != null) K.push(kachel("200-Wochen-Linie", k(w.linie200), `Kurs ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % darüber" : fmt(-w.zu200w,0) + " % darunter"}`, "zu200w"));
+  if (kz && w.score != null && w.kurs > 0) {
+    if (w.score >= 80) K.push(kachel("Günstig-Grenze", `<span class="pos">✓ erreicht</span>`, kz["80"] != null ? `sehr günstig unter ${k(kz["80"])}` : "historisch sehr günstig", "kpi_guenstig"));
+    else if (w.score >= 60 && kz["80"] != null) K.push(kachel("Sehr günstig ab", `unter ${k(kz["80"])}`, `${weg(kz["80"])} von heute · günstig ist es schon`, "kpi_guenstig"));
+    else if (kz["60"] != null) K.push(kachel("Günstig ab", `unter ${k(kz["60"])}`, `${weg(kz["60"])} von heute`, "kpi_guenstig"));
+  }
+  if (w.dd != null) K.push(kachel(w.jung ? "Vom Hoch seit Börsengang" : "Vom Allzeithoch", w.dd > -0.5 ? "am Hoch" : fmt(w.dd,0," %"), w.dd > -0.5 ? "höchster Kurs bisher" : "unter dem bisherigen Höchstkurs", "vom_hoch"));
+  const m = c?.mp; if (m && m.phase != null) K.push(kachel("Trend", `<span style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][m.phase]}`, `seit ${datumDe(m.seit)}`, "mp_karte"));
+  return K.length ? `<div class="wk-kpis">${K.join("")}</div>` : "";
+}
+// Sprungleiste oben: zeigt die Abschnitte der Seite, markiert den gerade sichtbaren und springt per Klick dorthin
+let NAV_SPUR_AN = false;
+function abschnittNavSpur(){
+  const nav = $("#abschnitt-nav"); if (!nav || !nav.children.length) return;
+  const h = $("#haupt"), oben = h.getBoundingClientRect().top + 96; let aktiv = nav.firstElementChild;
+  for (const b of nav.children) { const z = document.getElementById(b.dataset.ziel); if (z && z.getBoundingClientRect().top <= oben) aktiv = b; }
+  if (h.scrollTop > 0 && h.scrollTop + h.clientHeight >= h.scrollHeight - 4) aktiv = nav.lastElementChild;   // ganz unten: letzter Abschnitt
+  for (const b of nav.children) { const an = String(b === aktiv); if (b.getAttribute("aria-current") !== an) b.setAttribute("aria-current", an); }
+}
+function abschnittNavInit(){
+  const nav = $("#abschnitt-nav"); if (!nav) return;
+  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["chart-karte","Chart"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Ausblick und Risiko"],["vertiefung","Details"]].filter(([id]) => document.getElementById(id));
+  nav.innerHTML = Z.map(([id, t], i) => `<button type="button" data-ziel="${id}" aria-current="${i === 0}">${t}</button>`).join("");
+  nav.onclick = ev => { const b = ev.target.closest("button[data-ziel]"); if (!b) return;
+    if (b.dataset.ziel === "wert-kopf") $("#haupt").scrollTo({top:0, behavior:"smooth"}); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
+  if (!NAV_SPUR_AN) { NAV_SPUR_AN = true; $("#haupt").addEventListener("scroll", abschnittNavSpur, {passive:true}); }
+  abschnittNavSpur();
+}
+// Risiko-Profil (Standard bei Profis, fehlte bisher): alles im Browser aus den Wochenschlusskursen des Werts gerechnet, nichts geschätzt
+function risikoProfil(c){
+  const k = c?.c, t = c?.t; if (!k || !t || k.length < 104) return null;
+  const n = k.length, r = [];
+  for (let i = 1; i < n; i++) if (k[i] > 0 && k[i - 1] > 0) r.push(Math.log(k[i] / k[i - 1]));
+  if (r.length < 100) return null;
+  const mw = r.reduce((a, b) => a + b, 0) / r.length, sd = Math.sqrt(r.reduce((a, b) => a + (b - mw) ** 2, 0) / (r.length - 1));
+  const J = 365.25 * 86400;
+  let hoch = 0, iHoch = -1, mdd = 0, a = 0, b = 0, lang = 0, lVon = 0, lBis = 0;
+  for (let i = 0; i < n; i++) { if (!(k[i] > 0)) continue;
+    if (k[i] >= hoch) { if (iHoch >= 0 && t[i] - t[iHoch] > lang) { lang = t[i] - t[iHoch]; lVon = iHoch; lBis = i; } hoch = k[i]; iHoch = i; }
+    else { const d = k[i] / hoch - 1; if (d < mdd) { mdd = d; a = iHoch; b = i; } } }
+  const offen = iHoch >= 0 && t[n - 1] - t[iHoch] > lang; if (offen) { lang = t[n - 1] - t[iHoch]; lVon = iHoch; lBis = n - 1; }
+  let erholt = null; for (let j = b + 1; j < n; j++) if (k[j] >= k[a]) { erholt = j; break; }
+  const jahr = i => new Date(t[i] * 1000).getUTCFullYear(), ende = new Map();
+  for (let i = 0; i < n; i++) if (k[i] > 0) ende.set(jahr(i), k[i]);   // letzter Kurs je Kalenderjahr
+  const laufend = jahr(n - 1), jr = [];
+  for (const [j, v] of ende) { if (j === laufend) continue; const vor = ende.get(j - 1); if (vor) jr.push([j, (v / vor - 1) * 100]); }
+  if (jr.length < 2) return null;
+  const best = jr.reduce((x, y) => y[1] > x[1] ? y : x), schlecht = jr.reduce((x, y) => y[1] < x[1] ? y : x);
+  return {vola:sd * Math.sqrt(52) * 100, mdd:mdd * 100, a, b, erholtJ:erholt == null ? null : (t[erholt] - t[a]) / J, langJ:lang / J, lVon, lBis, offen,
+          best, schlecht, plus:jr.filter(x => x[1] > 0).length, jahre:jr.length, von:jahr(0)};
+}
+function risikoKarte(w, c){
+  const r = risikoProfil(c); if (!r) return "";
+  const name = esc(kurzname(w)), tM = i => { const d = new Date(c.t[i] * 1000); return String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + d.getUTCFullYear(); };
+  const dauer = x => x < 1 ? `${fmt(x * 12,0)} Monate` : `${fmt(x,1)} Jahre`;
+  return `<section class="karte breit2" id="risiko-karte">${kk("risiko", `Wie stark schwankt ${name}?`, `Was man früher aushalten musste – aus allen Wochenkursen seit ${r.von}.`, "", "r_profil")}
+    <div class="gross-zahl neg">${fmt(r.mdd,0," %")}</div>
+    <p>größter Rückgang: von ${tM(r.a)} bis ${tM(r.b)}${r.erholtJ != null ? `, erst ${dauer(r.erholtJ)} nach dem Hoch wieder aufgeholt` : `, <b>bis heute nicht aufgeholt</b>`}</p>
+    <div class="kv"><span data-e="r_vola">Schwankung pro Jahr</span><b>${fmt(r.vola,0," %")}</b></div>
+    <div id="risiko-vgl"></div>
+    <div class="kv"><span data-e="r_profil">Längste Zeit unter altem Hoch</span><b>${dauer(r.langJ)}${r.offen ? " · läuft noch" : ` · ${tM(r.lVon)}–${tM(r.lBis)}`}</b></div>
+    <div class="kv"><span>Schlechtestes Kalenderjahr</span><b><span class="${klasse(r.schlecht[1])}">${vz(r.schlecht[1],0," %")}</span> · ${r.schlecht[0]}</b></div>
+    <div class="kv"><span>Bestes Kalenderjahr</span><b><span class="${klasse(r.best[1])}">${vz(r.best[1],0," %")}</span> · ${r.best[0]}</b></div>
+    <div class="kv"><span>Kalenderjahre im Plus</span><b>${r.plus} von ${r.jahre}</b></div>
+    <p class="klein" style="margin-top:8px">Rückblick. Der nächste Rückgang kann größer ausfallen als der bisher größte.</p></section>`;
+}
+async function risikoVergleich(id, c){   // Schwankung, Gleichlauf und Beta gegenüber dem S&P 500 (gemeinsame Wochen der letzten 10 Jahre)
+  if (id === "SPY" || !c?.c || !$("#risiko-vgl")) return;
+  let spy = null; try { spy = await reiheHolen("SPY"); } catch(e) {}
+  const el = $("#risiko-vgl"); if (AKTIV !== id || !el || !spy) return;
+  const wk = t => Math.floor(t / 604800), sm = new Map(); let vt = null, vc = null;
+  for (const [t, x] of spy) { if (vc && t - vt < 15 * 86400) sm.set(wk(t), Math.log(x / vc)); vt = t; vc = x; }
+  const k = c.c, t = c.t, X = [], Y = [];
+  for (let i = Math.max(1, k.length - 520); i < k.length; i++) { if (!(k[i] > 0 && k[i - 1] > 0) || t[i] - t[i - 1] > 15 * 86400) continue; const y = sm.get(wk(t[i])); if (y == null) continue; X.push(Math.log(k[i] / k[i - 1])); Y.push(y); }
+  if (X.length < 104) return;
+  const mx = X.reduce((a, b) => a + b, 0) / X.length, my = Y.reduce((a, b) => a + b, 0) / Y.length;
+  let sxx = 0, syy = 0, sxy = 0; for (let i = 0; i < X.length; i++) { sxx += (X[i] - mx) ** 2; syy += (Y[i] - my) ** 2; sxy += (X[i] - mx) * (Y[i] - my); }
+  if (!(sxx > 0 && syy > 0)) return;
+  const kor = sxy / Math.sqrt(sxx * syy), fach = Math.sqrt(sxx / syy), beta = sxy / syy;
+  const wort = kor >= 0.8 ? "läuft fast immer mit" : kor >= 0.5 ? "läuft oft mit" : kor >= 0.2 ? "läuft nur teilweise mit" : kor > -0.2 ? "weitgehend unabhängig" : "läuft oft entgegengesetzt";
+  el.innerHTML = `<div class="kv"><span data-e="r_markt">Schwankung gegenüber dem S&amp;P 500</span><b>${fmt(fach,1)}-fach</b></div>
+    <div class="kv"><span data-e="r_markt">Gleichlauf mit dem S&amp;P 500</span><b>${fmt(kor,2)} · ${wort}</b></div>
+    <div class="kv"><span data-e="r_markt">Bewegung je 1 % im S&amp;P 500</span><b>${fmt(beta,2)} %</b></div>`;
+}
 function gaugeSvg(s){
   const cx = 115, cy = 112, r = 92, w = 16;
   const pt = (v, rr) => { const a = Math.PI * (1 - v / 100); return [cx + rr * Math.cos(a), cy - rr * Math.sin(a)]; };
@@ -1716,9 +1935,11 @@ function wahrKarte(w){
       <div class="bb"><div class="balken" title="ähnliche Lage"><i style="width:${p.quote}%"></i></div><b>${fmt(p.quote,0," %")}</b>
       <div class="balken" title="beliebiger Tag"><i class="grau" style="width:${p.basis}%"></i></div><b style="color:var(--text2);font-weight:500">${fmt(p.basis,0," %")}</b>
       <span class="klein" style="grid-column:1/-1">Vorteil <b class="${d > 0 ? "pos" : d < 0 ? "neg" : ""}" style="font-weight:650">${vz(d,0)} Punkte</b>${wenig ? " – kaum aussagekräftig" : ""}</span></div></div>`; };
-  return `<div class="karte-kopf"><span data-e="t_hoeher" tabindex="0">Kurs höher nach …</span><span>${w.p?.["1"] ? "Ampel ±7,5" : ""}</span></div>
+  return kk("rueck", "Wie oft stand der Kurs später höher – und wie tief ging es zwischendurch?", "Nach einer ähnlichen Ampel wie heute (±7,5 Punkte), verglichen mit einem beliebigen Tag.", "", "t_hoeher") + `
     <div class="klein" style="margin:-4px 0 4px"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--akzent);vertical-align:-1px"></i> <span data-e="t_aehnlich">ähnliche Lage früher</span> &nbsp; <i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--neutral);vertical-align:-1px"></i> <span data-e="t_alle">beliebiger Tag</span></div>
     ${zeile("1","1 Jahr")}${zeile("3","3 Jahren")}${zeile("5","5 Jahren")}
+    ${w.p?.rueckschlag10 != null ? `<div class="kv" style="margin-top:6px;border-top:1px solid var(--line)"><span data-e="rueckschlag">Im 1. Jahr zwischendurch 10 % oder mehr im Minus</span><b>${fmt(w.p.rueckschlag10,0," %")} der Fälle</b></div>
+    <div class="kv"><span data-e="rueckschlag">Typischer Tiefpunkt im 1. Jahr</span><b>${fmt(w.p.median_tiefer,0," %")}</b></div>` : ""}
     <p class="klein" style="margin-top:8px">Häufigkeiten aus der Vergangenheit. In der Prüfung ohne Zukunftswissen waren sie nicht treffsicherer als „beliebiger Tag“.</p>`;
 }
 function jungKarte(w){   // junge Werte (z. B. SpaceX): Lage seit Börsengang statt Ampel
@@ -1728,47 +1949,102 @@ function jungKarte(w){   // junge Werte (z. B. SpaceX): Lage seit Börsengang st
              ["Durchschnitt seit Börsengang", fmt(w.mittel_seit, nk)], ["Heute", `<b>${fmt(w.kurs, nk)}</b>`],
              ["seit dem ersten Kurs", `<span class="${klasse(w.seit_start)}">${vz(w.seit_start,0," %")}</span>`], ["vom Hoch", `<span class="${klasse(w.dd)}">${vz(w.dd,0," %")}</span>`],
              ["zum Durchschnitt", `${vz(w.zu_mittel,0," %")}`]];
-  return `<section class="karte breit2" id="jung-karte"><div class="karte-kopf"><span data-e="jung" tabindex="0">Seit dem Börsengang · noch keine Ampel</span><span>${w.wochen} Wochen</span></div>
+  return `<section class="karte breit2" id="jung-karte">${kk("ueber", "Wie lief es seit dem Börsengang?", "Für eine Ampel ist die Geschichte noch zu kurz – hier steht, was sich schon sagen lässt.", `${w.wochen} Wochen`, "jung")}
     ${z.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")}
     <p class="klein" style="margin:8px 0 0">Die Ampel braucht die 200-Wochen-Linie (knapp 4 Jahre Kurse), eine vorläufige Ampel gibt es ab 2 Jahren. Ab dann erscheint sie hier automatisch. Junge Börsengänge schwanken oft besonders stark. Keine Anlageberatung.</p></section>`;
 }
-function kvKarte(w){   // Heute im Vergleich: wie ging es früher in ähnlicher Lage aus (kaufen und verkaufen), dazu beste Zeitpunkte im Rückblick
+function kvKarte(w){   // Was passierte früher in ähnlicher Lage? Kaufen und Verkaufen getrennt, in „x von 100“, mit Gegenprobe (Wunsch Marc 23.11.2026: konkret und für jeden verständlich)
   const v = w.kv; if (!v || (!v.kauf && !v.verkauf)) return "";
-  const k = v.kauf, s = v.verkauf, p = v.probe;
-  const satzK = k ? (k.top30 >= 40 && k.median > k.median_alle ? "eher ein guter Kaufzeitpunkt" : k.top30 <= 20 || k.median < k.median_alle ? "eher ein mittelmäßiger Kaufzeitpunkt" : "ein durchschnittlicher Kaufzeitpunkt") : "";
-  const satzV = s ? (s.richtig >= s.richtig_alle + 10 ? "Verkaufen war hier öfter richtig als sonst" : s.richtig <= s.richtig_alle - 10 ? "Verkaufen war hier seltener richtig als sonst" : "Verkaufen war hier etwa so oft richtig wie sonst") : "";
-  const zl = (txt, a, b, e) => `<tr><td style="text-align:left">${txt}</td><td><b>${a}</b></td><td>${b}</td>${e != null ? `<td>${e}</td>` : ""}</tr>`;
+  const k = v.kauf, s = v.verkauf, p = v.probe, name = esc(kurzname(w)), b = k || s;
+  const lage = v.heute_abstand == null ? "" : v.heute_abstand >= 0 ? `${fmt(v.heute_abstand,0)} % über` : `${fmt(-v.heute_abstand,0)} % unter`;
+  // Urteil nur aus den Zahlen, die in der Karte stehen: typischer Ertrag (±2 Punkte pro Jahr) und Anteil im Plus; Verkauf ±10 von 100
+  const kU = !k ? null : (k.median - k.median_alle >= 2 && k.plus - k.plus_alle >= -5) ? 1 : (k.median - k.median_alle <= -2 || k.plus - k.plus_alle <= -10) ? -1 : 0;
+  const vU = !s ? null : s.richtig - s.richtig_alle >= 10 ? 1 : s.richtig - s.richtig_alle <= -10 ? -1 : 0;
+  const unsicher = p && p.richtig < 50, knapp = p && p.richtig >= 50 && p.richtig < 60;
+  const vb = (x, y, farbe) => `<div class="vb"><span>ähnliche Lage</span><div class="balken"><i style="width:${Math.max(0, Math.min(100, x))}%;background:${farbe}"></i></div><b>${fmt(x,0)} von 100</b>
+      <span>jede beliebige Woche</span><div class="balken"><i class="grau" style="width:${Math.max(0, Math.min(100, y))}%"></i></div><b style="font-weight:500;color:var(--text2)">${fmt(y,0)} von 100</b></div>`;
+  const kHeisst = !k ? "" : kU === 1 ? `Ein Kauf in solcher Lage ging früher <b>etwas besser</b> aus als ein Kauf in einer beliebigen Woche.`
+    : kU === -1 ? `Ein Kauf in solcher Lage ging früher <b>schlechter</b> aus als ein Kauf in einer beliebigen Woche.`
+    : `Ein Kauf in solcher Lage ging früher <b>etwa so aus wie in jeder anderen Woche</b> – die Lage war nichts Besonderes.`;
+  const wieOft = !s ? "" : s.richtig < 35 ? "selten richtig" : s.richtig < 50 ? "meist nicht richtig" : "etwa in jedem zweiten Fall richtig";
+  const vHeisst = !s ? "" : vU === 1 ? `Verkaufen war in solcher Lage <b>öfter richtig als sonst</b> (${fmt(s.richtig,0)} statt ${fmt(s.richtig_alle,0)} von 100).`
+    : vU === -1 ? `Verkaufen war in solcher Lage <b>noch seltener richtig als sonst</b> (${fmt(s.richtig,0)} statt ${fmt(s.richtig_alle,0)} von 100).`
+    : `Verkaufen war hier <b>${wieOft}</b> – und damit etwa so oft wie zu jeder anderen Zeit. Die heutige Lage war früher kein besonderer Grund zu verkaufen.`;
+  const teile = [k ? (kU === 1 ? "Für <b>Käufer</b> war eine solche Lage früher etwas besser als üblich" : kU === -1 ? "Für <b>Käufer</b> war eine solche Lage früher schlechter als üblich" : "Für <b>Käufer</b> war eine solche Lage früher weder besser noch schlechter als üblich") : "",
+                 s ? (vU === 1 ? "<b>Verkaufen</b> war öfter richtig als sonst" : vU === -1 ? "<b>Verkaufen</b> war noch seltener richtig als sonst" : "ein besonderer Grund zu <b>verkaufen</b> war sie nicht") : ""].filter(Boolean).join("; ");
+  const fazit = unsicher
+    ? `<b>Kurz gesagt:</b> Aus der heutigen Lage lässt sich bei ${name} <b>nichts Verlässliches ableiten</b>. Unten steht, wie es früher weiterging – aber in der Gegenprobe lag diese Methode bei diesem Titel nur in <b>${fmt(p.richtig,0)} von 100</b> Fällen richtig. Eine geworfene Münze schafft 50.`
+    : `<b>Kurz gesagt:</b> ${teile}.${!p ? " Für eine Gegenprobe ist die Geschichte dieses Titels noch zu kurz." : knapp ? ` Die Gegenprobe lag bei diesem Titel in ${fmt(p.richtig,0)} von 100 Fällen richtig – kaum besser als eine geworfene Münze (50). Also mit Vorsicht lesen.` : ` Die Gegenprobe stützt das: Die Methode lag bei diesem Titel in ${fmt(p.richtig,0)} von 100 Fällen richtig (eine geworfene Münze schafft 50).`}`;
+  const zl = (txt, x, y) => `<tr><td style="text-align:left">${txt}</td><td><b>${x}</b></td><td>${y}</td></tr>`;
   const bw = (liste, art) => (liste || []).map(x => `${datumDe(x.datum)}${x.abstand != null ? ` (${vz(x.abstand,0," %")} zur Linie)` : ""}: danach ${vz(x.danach,0," %")}${art === "k" ? " pro Jahr (3 J.)" : " (1 J.)"}`).join(" · ");
-  return `<section class="karte breit2" id="kv-karte"><div class="karte-kopf"><span data-e="kv_heute" tabindex="0">Heute im Vergleich · kaufen oder verkaufen?</span><span>${v.heute_abstand != null ? `heute ${vz(v.heute_abstand,0," %")} zur 200-Wochen-Linie` : ""}</span></div>
-    ${k ? `<p style="margin:0 0 6px">In früheren Wochen von ${esc(kurzname(w))} mit ähnlichem Abstand zur 200-Wochen-Linie (${vz(k.von,0," %")} bis ${vz(k.bis,0," %")}, ${k.wochen} Wochen in ${k.phasen} Phasen) war das <b>${satzK}</b>${s ? `; ${satzV}` : ""}.${p && p.richtig < 50 ? ` <b style="color:var(--teuer)">Achtung: Bei diesem Titel lag diese Methode früher öfter falsch als richtig (siehe unten).</b>` : ""}</p>
-    <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Kauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
-      ${zl("3 Jahre später im Plus", fmt(k.plus,0," %"), fmt(k.plus_alle,0," %"))}
-      ${zl("Rendite pro Jahr danach (Median)", vz(k.median,1," %"), vz(k.median_alle,1," %"))}
-      ${zl("davon unter den besten 30 % der Kaufwochen", fmt(k.top30,0," %"), "30 %")}
-      ${zl("schlechteste 10 % (pro Jahr)", vz(k.schlecht10,0," %"), "–")}
-    </tbody></table></div>` : ""}
-    ${s ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th style="text-align:left">Verkauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
-      ${zl("1 Jahr später tiefer (Verkauf war richtig)", fmt(s.richtig,0," %"), fmt(s.richtig_alle,0," %"))}
-      ${zl("Kursveränderung im Jahr danach (Median)", vz(s.median,1," %"), vz(s.median_alle,1," %"))}
-    </tbody></table></div>` : ""}
-    ${v.beste_kauf?.length ? `<p class="klein" style="margin:8px 0 2px"><b style="color:var(--guenstig)">Beste Kaufwochen im Rückblick:</b> ${bw(v.beste_kauf, "k")}</p>` : ""}
-    ${v.beste_verkauf?.length ? `<p class="klein" style="margin:2px 0"><b style="color:${VQ_FARBE}">Beste Verkaufswochen im Rückblick:</b> ${bw(v.beste_verkauf, "v")}</p>` : ""}
-    <p class="klein" style="margin:8px 0 0"><b data-e="kv_probe" tabindex="0">Wie verlässlich bei diesem Titel?</b> ${p ? `In einer Probe ohne Zukunftswissen (${p.zeitpunkte} Zeitpunkte, nur mit den damals bekannten Ergebnissen) lag diese Methode in <b>${fmt(p.richtig,0," %")}</b> der Fälle richtig – ${p.richtig >= 60 ? "besser als Zufall (50 %)" : p.richtig <= 45 ? "<b>nicht besser als Zufall (50 %)</b>, hier also kaum verlässlich" : "etwa wie Zufall (50 %)"}.` : "Zu wenig Geschichte für eine Probe."} Häufigkeiten aus der Vergangenheit, keine Garantie und keine Anlageberatung.</p></section>`;
+  return `<section class="karte breit-voll" id="kv-karte">${kk("rueck", "Was passierte früher, als der Kurs so stand wie heute?",
+      `Heute steht der Kurs <b>${lage}</b> seiner 200-Wochen-Linie. So ähnlich stand er früher schon in <b>${b.wochen} Wochen</b> (${b.phasen} getrennte Phase${b.phasen === 1 ? "" : "n"}${k ? `, Abstand ${vz(k.von,0," %")} bis ${vz(k.bis,0," %")}` : ""}). So ging es danach weiter:`,
+      "ähnliche Lage", "kv_heute")}
+    <div class="fazit${unsicher ? " warn" : kU === 1 && !knapp && p ? " gut" : ""}">${fazit}</div>
+    <div class="kv-zwei">
+      ${k ? `<div class="kv-block"><div class="kv-bt"><i style="background:var(--guenstig)"></i>Wer damals <b>gekauft</b> hat <span class="klein">und 3 Jahre hielt</span></div>
+        <div class="kv-gross">${fmt(k.plus,0)} <small>von 100 Käufen</small></div>
+        <div class="kv-was">waren 3 Jahre später <b>im Plus</b></div>
+        ${vb(k.plus, k.plus_alle, "var(--guenstig)")}
+        <div class="kv"><span>Typischer Ertrag pro Jahr</span><b><span class="${klasse(k.median)}">${vz(k.median,1," %")}</span> <span class="klein">sonst ${vz(k.median_alle,1," %")}</span></b></div>
+        <div class="kv"><span>Schlechter Fall <span class="klein">(jeder 10. Kauf lief so oder schlechter)</span></span><b><span class="${klasse(k.schlecht10)}">${vz(k.schlecht10,0," %")}</span> pro Jahr</b></div>
+        <p class="kv-heisst"><b>Heißt:</b> ${kHeisst}</p></div>` : ""}
+      ${s ? `<div class="kv-block"><div class="kv-bt"><i style="background:${VQ_FARBE}"></i>Wer damals <b>verkauft</b> hat <span class="klein">Blick 1 Jahr später</span></div>
+        <div class="kv-gross">${fmt(s.richtig,0)} <small>von 100 Verkäufen</small></div>
+        <div class="kv-was">waren <b>richtig</b>: Der Kurs stand ein Jahr später tiefer</div>
+        ${vb(s.richtig, s.richtig_alle, VQ_FARBE)}
+        <div class="kv"><span>In den anderen Fällen</span><b>${fmt(100 - s.richtig,0)} von 100: Kurs stand höher</b></div>
+        <div class="kv"><span>Typische Kursveränderung im Jahr danach</span><b><span class="${klasse(s.median)}">${vz(s.median,1," %")}</span> <span class="klein">sonst ${vz(s.median_alle,1," %")}</span></b></div>
+        <p class="kv-heisst"><b>Heißt:</b> ${vHeisst}</p></div>` : ""}
+    </div>
+    <div class="verl"><div class="verl-kopf">Wie verlässlich ist das bei ${name}? <button type="button" class="kk-i" data-e="kv_probe" aria-label="Erklärung zur Gegenprobe">i</button></div>
+      ${p ? `<div class="meter" role="img" aria-label="${fmt(p.richtig,0)} von 100 richtig, Münzwurf 50"><i style="width:${Math.max(2, Math.min(100, p.richtig))}%;background:${p.richtig >= 60 ? "var(--guenstig)" : p.richtig < 50 ? "var(--teuer)" : "var(--neutral)"}"></i><span class="m-50"></span></div>
+      <div class="meter-leg"><span>0</span><span>50 = Münzwurf</span><span>100</span></div>
+      <p class="klein" style="margin:8px 0 0">Gegenprobe: An ${p.zeitpunkte} früheren Zeitpunkten hat das Tool nur mit dem damaligen Wissen vorhergesagt, ob ein Kauf besser oder schlechter als üblich ausgeht – und später nachgesehen. Richtig waren <b style="color:var(--text)">${fmt(p.richtig,0)} von 100</b> Vorhersagen: ${p.richtig >= 60 ? "besser als eine geworfene Münze." : p.richtig < 50 ? "schlechter als eine geworfene Münze. Bei diesem Titel taugt die Karte nur als Rückblick, nicht als Signal." : "etwa wie eine geworfene Münze."}</p>`
+      : `<p class="klein" style="margin:6px 0 0">Für eine Gegenprobe ist die Geschichte dieses Titels noch zu kurz.</p>`}</div>
+    <details class="mehr"><summary>Alle Zahlen und die besten Kauf- und Verkaufswochen im Rückblick</summary>
+      ${k ? `<div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Kauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
+        ${zl("3 Jahre später im Plus", fmt(k.plus,0," %"), fmt(k.plus_alle,0," %"))}
+        ${zl("Rendite pro Jahr danach (Median)", vz(k.median,1," %"), vz(k.median_alle,1," %"))}
+        ${zl("davon unter den besten 30 % der Kaufwochen", fmt(k.top30,0," %"), "30 %")}
+        ${zl("schlechteste 10 % (pro Jahr)", vz(k.schlecht10,0," %"), "–")}
+      </tbody></table></div>` : ""}
+      ${s ? `<div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left">Verkauf in ähnlicher Lage</th><th>ähnliche Lage</th><th>alle Wochen</th></tr></thead><tbody>
+        ${zl("1 Jahr später tiefer (Verkauf war richtig)", fmt(s.richtig,0," %"), fmt(s.richtig_alle,0," %"))}
+        ${zl("Kursveränderung im Jahr danach (Median)", vz(s.median,1," %"), vz(s.median_alle,1," %"))}
+      </tbody></table></div>` : ""}
+      ${v.beste_kauf?.length ? `<p class="klein" style="margin:10px 0 2px"><b style="color:var(--guenstig)">Beste Kaufwochen im Rückblick:</b> ${bw(v.beste_kauf, "k")}</p>` : ""}
+      ${v.beste_verkauf?.length ? `<p class="klein" style="margin:2px 0"><b style="color:${VQ_FARBE}">Beste Verkaufswochen im Rückblick:</b> ${bw(v.beste_verkauf, "v")}</p>` : ""}
+      <p class="klein" style="margin:8px 0 0">„Typisch“ ist der Median: die Hälfte der Fälle lief besser, die Hälfte schlechter. Ohne Kosten und Steuern.</p></details>
+    <p class="klein" style="margin:10px 0 0">Häufigkeiten aus der Vergangenheit – keine Garantie und keine Anlageberatung.</p></section>`;
 }
-function kaufzonenKarte(w){   // Kaufzonen heute als Tabelle: Kursbereiche je Ampel-Stufe (aus der 200-Wochen-Linie, wie die Ampel)
+function kaufzonenKarte(w){   // Kursgrenzen der Ampel von heute als Preisleiter: oben teuer, unten günstig (wie im Chart), mit Abstand von heute
   const kz = w.kz; if (!kz || w.kurs == null) return "";
-  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => x == null ? "–" : fmt(x, nk);
-  const stufen = [[4, "historisch sehr günstig", "ab 80", null, kz["80"]], [3, "günstig", "60–80", kz["80"], kz["60"]],
-                  [2, "neutral", "40–60", kz["60"], kz["40"]], [1, "teuer", "15–40", kz["40"], kz["15"]], [0, "historisch sehr teuer", "bis 15", kz["15"], null]];
-  const s = w.score, heute = s == null ? -1 : s >= 80 ? 4 : s >= 60 ? 3 : s > 40 ? 2 : s > 15 ? 1 : 0;
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => x == null ? "–" : fmt(x, nk), name = esc(kurzname(w));
+  const weg = x => x == null || !(w.kurs > 0) ? "" : vz((x / w.kurs - 1) * 100, 0, " %");
+  // je Stufe: [Nr., Name, Ampel, untere Kursgrenze, obere Kursgrenze]
+  const stufen = [[0, "historisch sehr teuer", "bis 15", kz["15"], null], [1, "teuer", "15–40", kz["40"], kz["15"]], [2, "neutral", "40–60", kz["60"], kz["40"]],
+                  [3, "günstig", "60–80", kz["80"], kz["60"]], [4, "historisch sehr günstig", "ab 80", null, kz["80"]]];
+  const s = w.score, heute = stufe(s);
   const bereich = (lo, hi) => lo == null ? (hi == null ? "wird nie erreicht" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
-  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<tr class="${i === heute ? "kz-heute" : ""}"><td style="text-align:left"><i class="kz-farbe" style="background:${AMPEL_FARBEN[i]}"></i>${wort}</td><td>${amp}</td><td>${bereich(lo, hi)}</td><td style="text-align:left">${i === heute ? `◀ heute: ${k(w.kurs)}` : ""}</td></tr>`).join("");
-  return `<section class="karte breit2" id="kaufzonen-karte"><div class="karte-kopf"><span data-e="l_kaufzonen" tabindex="0">Kaufzonen heute · ab welchem Kurs günstig oder teuer?</span><span>${datumDe(w.datum)}</span></div>
-    <p style="margin:0 0 8px">Die <b>200-Wochen-Linie</b> liegt heute bei <b>${k(w.linie200)}</b>${w.zu200w != null ? `, der Kurs ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % darüber" : fmt(-w.zu200w,0) + " % darunter"}` : ""}. An der Linie zeigt die Ampel 70. Die Grenzen kommen aus der Geschichte von ${esc(kurzname(w))}${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""}: wie tief der Kurs früher unter und wie weit über der Linie lag.</p>
-    <div class="tab-scroll"><table class="wtab kz-tab"><thead><tr><th style="text-align:left">Stufe</th><th>Ampel</th><th>Kurs</th><th></th></tr></thead><tbody>${zeilen}</tbody></table></div>
-    <p class="klein" style="margin:8px 0 0">So gelesen: Fällt der Kurs unter ${k(kz["60"])}, zeigt die Ampel „günstig“${kz["80"] != null ? `, unter ${k(kz["80"])} „historisch sehr günstig“` : ""}. Steigt er über ${k(kz["40"])}, zeigt sie „teuer“. Die Grenzen verschieben sich jede Woche ein wenig, weil die 200-Wochen-Linie mitwandert; im Chart stehen sie als mitwandernde Linien (Schalter „Kaufzonen“). Liegt eine Grenze weit weg, müsste sich der Kurs stark bewegen, bis die Ampel dort steht. Beschreibung, keine Kaufempfehlung.</p></section>`;
+  const abstand = (i, lo, hi) => i === heute ? `<b>◀ heute: ${k(w.kurs)}</b>` : i < heute ? (lo != null ? `ab ${weg(lo)}` : "") : (hi != null ? `ab ${weg(hi)}` : "");
+  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<tr class="${i === heute ? "kz-heute" : ""}"><td style="text-align:left"><i class="kz-farbe" style="background:${AMPEL_FARBEN[i]}"></i>${wort}</td><td>${bereich(lo, hi)}</td><td class="kz-weg" style="text-align:left">${abstand(i, lo, hi)}</td><td class="klein">${amp}</td></tr>`).join("");
+  const saetze = [];
+  if (heute <= 2 && kz["60"] != null) saetze.push(`Günstig wird es <b>unter ${k(kz["60"])}</b> (${weg(kz["60"])} von heute)${kz["80"] != null ? `, historisch sehr günstig <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])})` : ""}.`);
+  else if (heute === 3 && kz["80"] != null) saetze.push(`Historisch sehr günstig wird es <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])} von heute).`);
+  if (heute === 2 && kz["40"] != null) saetze.push(`Teuer wird es <b>über ${k(kz["40"])}</b> (${weg(kz["40"])}).`);
+  else if (heute === 3 && kz["60"] != null) saetze.push(`Über ${k(kz["60"])} (${weg(kz["60"])}) wäre es wieder neutral.`);
+  else if (heute === 4 && kz["80"] != null) saetze.push(`Über ${k(kz["80"])} (${weg(kz["80"])}) wäre es nur noch günstig.`);
+  else if (heute >= 0 && heute <= 1 && kz["40"] != null) saetze.push(`Neutral wäre es unter ${k(kz["40"])} (${weg(kz["40"])}).`);
+  return `<section class="karte breit2" id="kaufzonen-karte">${kk("preis", `Ab welchem Kurs ist ${name} günstig, ab wann teuer?`, "Die Kursgrenzen der Ampel von heute – oben teuer, unten günstig, wie im Chart.", `Stand ${datumDe(w.datum)}`, "l_kaufzonen")}
+    <div class="fazit">Heute steht der Kurs bei <b>${k(w.kurs)}</b> – das ist <b>${zonenWort(s)}</b>. ${saetze.join(" ")}</div>
+    <div class="tab-scroll"><table class="wtab kz-tab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Stufe</th><th>Kurs</th><th style="text-align:left">von heute aus</th><th>Ampel</th></tr></thead><tbody>${zeilen}</tbody></table></div>
+    <details class="mehr"><summary>Woher kommen diese Grenzen?</summary>
+      <p style="margin:8px 0 0">Die <b>200-Wochen-Linie</b> – der Durchschnittskurs der letzten knapp 4 Jahre – liegt heute bei <b>${k(w.linie200)}</b>${w.zu200w != null ? `, der Kurs ${w.zu200w >= 0 ? fmt(w.zu200w,0) + " % darüber" : fmt(-w.zu200w,0) + " % darunter"}` : ""}. An der Linie zeigt die Ampel 70. Die Grenzen kommen aus der Geschichte von ${name}${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""}: wie tief der Kurs früher unter und wie weit er über der Linie lag.</p>
+      <p class="klein" style="margin:6px 0 0">Die Grenzen verschieben sich jede Woche ein wenig, weil die 200-Wochen-Linie mitwandert; im Chart stehen sie als mitwandernde Linien und Flächen (Schalter „Kaufzonen“). Liegt eine Grenze weit weg, müsste sich der Kurs stark bewegen, bis die Ampel dort steht.</p></details>
+    <p class="klein" style="margin:10px 0 0">Beschreibung der Lage – keine Kaufempfehlung.</p></section>`;
 }
-function nachkaufKarte(w){   // Wunsch Marc 22.11.2026: je Titel klar sagen, ab welchem Kurs sich Nachkaufen früher lohnte – mit Beleg
+function nachkaufKarte(w){   // Wunsch Marc 22.11.2026: je Titel klar sagen, ab welchem Kurs sich Nachkaufen früher lohnte – mit Beleg (Beleg-Tabelle aufklappbar)
   const nk = w.nk; if (!nk || w.kurs == null) return "";
   const nk_ = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => x == null ? "–" : fmt(x, nk_), name = esc(kurzname(w));
   const jahre = nk.h === 1 ? "1 Jahr" : `${nk.h} Jahren`;
@@ -1786,14 +2062,15 @@ function nachkaufKarte(w){   // Wunsch Marc 22.11.2026: je Titel klar sagen, ab 
     <p style="margin:8px 0 0">Käufe bei hoher Ampel brachten früher im Mittel <b>nicht mehr</b> als Käufe in beliebigen Wochen (${vz(nk.b_med,1," %")} pro Jahr, ${fmt(nk.b_q,0," %")} im Plus) – meist sogar weniger, weil tiefe Kurse selten kamen und der Kurs danach oft weiter fiel. Nachkaufen lohnte sich hier früher <b>zu jeder Zeit etwa gleich</b>, zum Beispiel regelmäßig Monat für Monat.</p>`;
   else kern = `<div class="nk-gross">Vorläufig: unter <b>${k(nk.preis)}</b></div>${status}
     <p style="margin:8px 0 0">Für einen echten Beleg ist die Geschichte von ${name} noch zu kurz (es gab weniger als 3 getrennte günstige Phasen mit bekanntem Ergebnis). Bis dahin gilt die Grenze „historisch sehr günstig“ (Ampel 80).</p>`;
-  return `<section class="karte nk-karte" id="nachkauf-karte"><div class="karte-kopf"><span data-e="l_nachkauf" tabindex="0">Nachkaufen · ab welchem Kurs lohnt es sich bei ${name}?</span><span>Rückblick</span></div>
-    ${kern}${tab}
-    <p class="klein" style="margin:8px 0 0">Geprüft wurden die Schwellen Ampel 60, 70, 80 und 90 über die ganze Geschichte dieses Titels; gezählt wird eine Schwelle nur mit mindestens 3 getrennten Phasen, im Median mehr Ertrag und nicht deutlich seltener im Plus. Der Kurs wandert jede Woche mit der 200-Wochen-Linie. Ohne Kosten und Steuern; Rückblick, keine Garantie und keine Anlageberatung.</p></section>`;
+  const methode = `<p class="klein" style="margin:8px 0 0">Geprüft wurden die Schwellen Ampel 60, 70, 80 und 90 über die ganze Geschichte dieses Titels; gezählt wird eine Schwelle nur mit mindestens 3 getrennten Phasen, im Median mehr Ertrag und nicht deutlich seltener im Plus. Der Kurs wandert jede Woche mit der 200-Wochen-Linie. Ohne Kosten und Steuern; Rückblick, keine Garantie und keine Anlageberatung.</p>`;
+  return `<section class="karte nk-karte" id="nachkauf-karte">${kk("preis", `Ab welchem Kurs lohnt sich Nachkaufen bei ${name}?`, "Nachgerechnet an der eigenen Kursgeschichte dieses Titels – nicht geschätzt.", "Rückblick", "l_nachkauf")}
+    ${kern}
+    ${tab ? `<details class="mehr"><summary>Beleg ansehen: alle geprüften Schwellen</summary>${tab}${methode}</details>` : methode}</section>`;
 }
 function signalKarte(w, c){   // weitere Kennzahlen (nur der Abstand zur 200-Wochen-Linie fließt in die Ampel ein)
   const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4;
   const zeilen = [
-    [`<span data-e="zu200w">zur 200-Wochen-Linie</span>`, `<span class="${w.zu200w < 0 ? "pos" : ""}">${vz(w.zu200w,0," %")}</span>${w.linie200 ? ` · Linie ${fmt(w.linie200, nk)}` : ""}`],
+    [`<span data-e="zu200w">zur 200-Wochen-Linie</span>`, `<span class="${w.zu200w < 0 ? "pos" : ""}">${vz(w.zu200w,0," %")}</span>`],
     [`<span data-e="vom_hoch">vom Allzeithoch</span>`, `${fmt(w.dd,0," %")}`],
     [`<span data-e="rsi">Wochen-RSI</span>`, `${fmt(w.rsi,0)}${w.rsi < 30 ? " · überverkauft" : w.rsi > 70 ? " · überkauft" : ""}`],
     [`<span data-e="trend_z">zum Langfristtrend</span>`, `${vz(w.trend_z,1)} Standardabw.`],
@@ -1803,12 +2080,12 @@ function signalKarte(w, c){   // weitere Kennzahlen (nur der Abstand zur 200-Woc
     zeilen.push([`<span data-e="pi_bottom">Pi Cycle Bottom</span>`, w.pi_bottom_aktiv ? `<b style="color:var(--lila)">Bodenbildungszone</b>` : `keine Zone (${vz(w.pi_abstand,1," %")})`]);
     zeilen.push([`<span data-e="pi_top">Pi Cycle Top</span>`, w.pi_top_aktiv ? `<b class="neg">AKTIV</b>` : "aus"]);
   }
-  return `<div class="karte-kopf"><span data-e="signale" tabindex="0">Weitere Kennzahlen</span><span>nur Info</span></div>`
+  return kk("zahlen", "Weitere Kennzahlen", "Bekannte Messgrößen zur Einordnung. In die Ampel fließt davon nur der Abstand zur 200-Wochen-Linie ein.", "nur Info", "signale")
     + zeilen.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("");
 }
 function prognoseKarte(m){
   const el = $("#prognose"); if (!el) return;
-  const kopf = `<div class="karte-kopf"><span data-e="prognose" tabindex="0">Prognose · 12 Monate</span><span>Simulation</span></div>`;
+  const kopf = kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose");
   if (!m) { el.innerHTML = kopf + `<p class="klein">Keine Simulation möglich.</p>`; return; }
   if (m.fehler) { el.innerHTML = kopf + `<p class="klein">${esc(m.fehler)}</p>`; return; }
   const k0 = m.kurs, n = Math.min(m.wochen ?? m.t.length - 1, m.t.length - 1), q = k => (m.kegel[k][n] / k0 - 1) * 100;   // Karte: 12 Monate, auch wenn der Kegel länger ist
@@ -1835,7 +2112,7 @@ async function zeige(id, opt={}){
   const vorher = ALLE.find(w => w.id === id);
   if (!opt.ohneScroll || !$("#wert-kopf")) {   // Ladezustand
     alleChartsWeg();
-    $("#haupt").innerHTML = `<div class="karte wert-kopf"><div><div class="lade" style="height:28px;width:45%"></div><div class="lade" style="height:14px;width:30%;margin-top:10px"></div><div class="lade" style="height:44px;margin-top:14px"></div></div><div class="lade" style="width:230px;height:128px;border-radius:14px"></div></div>
+    $("#haupt").innerHTML = `<div class="karte wert-kopf"><div class="wk-haupt" style="margin:0"><div style="flex:1 1 300px"><div class="lade" style="height:28px;width:45%"></div><div class="lade" style="height:14px;width:30%;margin-top:10px"></div><div class="lade" style="height:44px;margin-top:14px"></div></div><div class="lade" style="width:230px;height:128px;border-radius:14px"></div></div></div>
       <div class="abstand"></div><div class="karte lade" style="height:var(--g-chart,540px)"></div>`;
     if (!opt.ohneScroll) $("#haupt").scrollTop = 0;
   }
@@ -1871,20 +2148,26 @@ async function zeige(id, opt={}){
   ].filter(x => x[4]).sort((a, b) => (CHIPS_WICHTIG.includes(a[0]) ? CHIPS_WICHTIG.indexOf(a[0]) : 99) - (CHIPS_WICHTIG.includes(b[0]) ? CHIPS_WICHTIG.indexOf(b[0]) : 99));
   const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
-    <section class="karte wert-kopf" id="wert-kopf">
-      <div style="min-width:0">
-        <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
-          <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
-        <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}${w.kurs != null ? ` · Kurs ${fmt(w.kurs, w.kurs >= 100 ? 2 : 4)}` : ""} · Stand ${datumDe(w.datum)}</div>
-        ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
-        <p class="klartext" data-e="klartext">${klartext(w, c)}</p>
-        ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
-        <div class="grund-chips">${umlaut(w.grund).split(" · ").map(g => `<span>${grundMitErklaerung(g)}</span>`).join("")}</div>
+    <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
+    <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AMPEL_FARBEN[stufe(w.score)]}"` : ""}>
+      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
+        <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button></div>
+      <div class="wk-meta">${kennung(w)} · ${["Nasdaq","NYSE"].includes(w.gruppe) ? "Aktie (" + w.gruppe + ")" + (w.branche ? " · " + esc(w.branche) : "") : esc(w.gruppe)}</div>
+      ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}</p>` : ""}
+      <div class="wk-haupt">
+        <div class="wk-text">
+          <div class="wk-label">Die Lage in wenigen Sätzen</div>
+          <p class="klartext" data-e="klartext">${klartext(w, c)}</p>
+          ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
+          ${grundRest(w)}
+        </div>
+        ${renditePanel(w)}
+        <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
+          <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
+          ${c?.score && ampelRang(c.score, c.score.length - 1) ? `<div class="g-rang" data-e="ampel_rang">${rangText(ampelRang(c.score, c.score.length - 1))}</div>` : ""}
+          <div class="g-vor">${de == null ? "&nbsp;" : `vor 4 Wochen ${fmt(w.score_vor4w,0)} (${w4Html(de)})`}</div></div>
       </div>
-      <div class="gauge" data-e="gauge" tabindex="0">${gaugeSvg(w.score)}<div class="g-zahl">${w.score == null ? "–" : fmt(w.score,0)}</div>
-        <div class="g-wort zonenwort" style="color:${w.score == null ? "var(--muted)" : "var(--text)"}">${zonenWort(w.score)}</div>
-        ${c?.score && ampelRang(c.score, c.score.length - 1) ? `<div class="g-rang" data-e="ampel_rang">${rangText(ampelRang(c.score, c.score.length - 1))}</div>` : ""}
-        <div class="g-vor">${de == null ? "&nbsp;" : `vor 4 Wochen ${fmt(w.score_vor4w,0)} (${w4Html(de)})`}</div></div>
+      ${kpiLeiste(w, c)}
     </section>
     ${nachkaufKarte(w) ? `<div class="abstand"></div>${nachkaufKarte(w)}` : ""}
     <div class="abstand"></div>
@@ -1912,31 +2195,22 @@ async function zeige(id, opt={}){
     <div class="abstand"></div>
     ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
-    <div class="raster">
-      ${jungKarte(w)}
-      ${kaufzonenKarte(w)}
-      ${kvKarte(w)}
-      <section class="karte breit2" id="check"><div class="karte-kopf"><span>Lohnt-sich-Check</span></div><div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>
-      ${phasenKarte(c)}
-      ${schwellenKarte(c)}
-      <section class="karte" id="wahr">${wahrKarte(w)}</section>
-      <section class="karte" id="prognose"><div class="karte-kopf"><span>Prognose · 12 Monate</span></div><div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>
-      <section class="karte"><div class="karte-kopf"><span data-e="rueckschlag" tabindex="0">Rückschlagrisiko</span><span>1 Jahr</span></div>
-        <div class="gross-zahl">${fmt(w.p?.rueckschlag10,0," %")}</div>
-        <p>So oft fiel der Kurs nach ähnlicher Lage innerhalb eines Jahres noch um 10 % oder mehr. Typischer Tiefpunkt: <b>${fmt(w.p?.median_tiefer,0," %")}</b>.</p>
-        <div class="kv"><span data-e="vom_hoch">vom Allzeithoch</span><b>${fmt(w.dd,1," %")}</b></div></section>
-      <section class="karte"><div class="karte-kopf"><span data-e="cagr20" tabindex="0">Ø Jahresrendite</span><span>${fmt(w.cagr_jahre,0)} J.</span></div>
-        <div class="gross-zahl ${w.cagr20 > 0 ? "pos" : w.cagr20 < 0 ? "neg" : ""}">${fmt(w.cagr20,1," %")}</div>
-        <p>${w.cagr20_div ? "mit Dividenden" : "ohne Dividenden"}, vor Steuern und Kosten</p>
-        <div class="kv"><span data-e="cagr_max">Ø seit Beginn</span><b>${fmt(w.cagr_max,1," %")} · ${fmt(w.jahre_daten,0)} J.</b></div>
-        <div class="kv"><span data-e="r2">Trendgüte R²</span><b>${fmt(w.trend_r2,2)}</b></div>
-        <div class="kv"><span data-e="stabil">Trend</span><b>${w.qualitaet ? "stabil aufwärts" : "nicht stabil"}</b></div></section>
-      ${marktphaseKarte(w, c)}
-      ${mvrvKarte(c)}
-      <section class="karte" id="signale">${signalKarte(w, c)}</section>
-      ${id === "SPY" ? bewKarte() : ""}
-      ${geschaeftKarte(w)}
-    </div>
+    ${(() => {
+      let nr = 0;
+      const teil = (sid, titel, unter, karten) => { const k = karten.filter(Boolean); return k.length ? sekt(sid, ++nr, titel, unter) + `<div class="raster">${k.join("")}</div>` : ""; };
+      return teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
+          jungKarte(w), kaufzonenKarte(w),
+          `<section class="karte" id="signale">${signalKarte(w, c)}</section>`,
+          geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)])
+        + teil("s-rueck", "Rückblick", "Was passierte früher in ähnlicher Lage?", [
+          kvKarte(w),
+          `<section class="karte breit2" id="check">${kk("rueck", "Warten auf günstige Kurse – oder einfach Sparplan?", "Was hätte bei diesem Wert mehr gebracht? Nachgerechnet mit 500 im Monat.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:30px;width:90px"></div><div class="lade" style="height:60px;margin-top:12px"></div></section>`,
+          phasenKarte(c), schwellenKarte(c)])
+        + teil("s-risiko", "Ausblick und Risiko", "Wie könnte es weitergehen – und was kann schiefgehen?", [
+          `<section class="karte" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
+          `<section class="karte" id="wahr">${wahrKarte(w)}</section>`,
+          risikoKarte(w, c), marktphaseKarte(w, c)]);
+    })()}
     <div class="abstand"></div>
     <section class="karte vertiefung" id="vertiefung">
       <div class="reiter" role="tablist">
@@ -1960,6 +2234,8 @@ async function zeige(id, opt={}){
   if (eigen) eigenNeu(); else zeichneOnline(w, c);
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
   reiter(REITER);
+  abschnittNavInit();
+  risikoVergleich(id, c);
   lohntSichCheck(id);
   if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
   if (eigen) ladeKegel(52, 20, [], true, KEGEL_WOCHEN).then(m => { if (AKTIV === id) prognoseKarte(m); });
@@ -2269,7 +2545,7 @@ function mvrvKarte(c){
   const p = m.pruefung, q = m.quote;
   const zeilen = [...m.unter_null].reverse().map(x => `<tr><td style="text-align:left">${datumDe(x.von)} – ${datumDe(x.bis)}</td><td>${fmt(x.z_extrem,2)}</td><td>${fmt(x.kurs, x.kurs >= 100 ? 0 : 2)}</td><td class="${klasse(x.r1)}">${x.r1 == null ? "noch offen" : vz(x.r1,0," %")}</td></tr>`).join("");
   const farbeZ = m.z < 0 ? "var(--guenstig)" : m.z > 7 ? "var(--teuer)" : "inherit";
-  return `<section class="karte breit2" id="mvrv-karte"><div class="karte-kopf"><span data-e="l_mvrv" tabindex="0">MVRV-Z-Score · Bewertung auf der Blockchain</span><span>${datumDe(m.datum)}</span></div>
+  return `<section class="karte breit2" id="mvrv-karte">${kk("preis", "Was haben die Besitzer im Schnitt bezahlt? (MVRV-Z)", "Vergleicht den heutigen Kurs mit dem Durchschnittseinstand aller Bitcoin-Besitzer – direkt aus der Blockchain.", datumDe(m.datum), "l_mvrv")}
     <div class="mp-kopf"><div class="gross-zahl" style="color:${farbeZ}">${fmt(m.z,2)}</div><div class="klein">${m.z < 0 ? "Kurs unter dem Durchschnittseinstand aller Besitzer – historisch günstig" : m.z > 7 ? "überhitzt – historisch teuer" : "zwischen 0 (günstig) und 7 (überhitzt)"}</div></div>
     <div class="mp-kv"><div class="kv"><span>Ø-Einstand aller Besitzer</span><b>${fmt(m.realisiert_kurs,0)} $</b></div><div class="kv"><span>MVRV (Marktwert / Einstand)</span><b>${fmt(m.mvrv,2)}</b></div></div>
     <h4 style="margin:12px 0 4px">Phasen unter 0 (Kurs unter dem Ø-Einstand) und was 1 Jahr später kam</h4>
@@ -2279,8 +2555,8 @@ function mvrvKarte(c){
 }
 function marktphaseKarte(w, c){
   const m = c?.mp;
-  const kopf = `<div class="karte-kopf"><span data-e="mp_karte" tabindex="0">Marktphase · steigt oder fällt es?</span><span>Trend heute</span></div>`;
-  if (!m) return `<section class="karte breit2" id="mp-karte">${kopf}<p>Noch keine Phase: Dafür braucht es mindestens ein Jahr Kursdaten.</p></section>`;
+  const kopf = kk("trend", "Steigt oder fällt der Kurs gerade?", "Die Marktphase von heute – und was früher nach einer solchen Phase kam.", "Trend heute", "mp_karte");
+  if (!m) return `<section class="karte breit-voll" id="mp-karte">${kopf}<p>Noch keine Phase: Dafür braucht es mindestens ein Jahr Kursdaten.</p></section>`;
   const r3 = m.rueckblick["3m"], r1 = m.rueckblick["1"];
   const zeile = (p, i) => { const a = r3[i], b = r1[i], jetzt = p === m.phase;
     return `<tr${jetzt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${p == null ? "alle Wochen" : `<span style="color:${MP_FARBE[p]}">${MP_PFEIL[p]}</span> ${["Abwärtstrend","Gemischt","Aufwärtstrend"][p]}${jetzt ? ' <span class="klein">heute</span>' : ""}`}</td>
@@ -2294,7 +2570,7 @@ function marktphaseKarte(w, c){
   const fazit = hilft(pr["3m"]) || hilft(pr["1"])
     ? "Bei diesem Wert hat die Phase außerhalb der Lernzeit <b>etwas besser</b> vorhergesagt als die Grundquote – der Vorteil ist klein."
     : "Bei diesem Wert hat die Phase die Richtung außerhalb der Lernzeit <b>nicht besser</b> vorhergesagt als die einfache Grundquote.";
-  return `<section class="karte breit2" id="mp-karte">${kopf}
+  return `<section class="karte breit-voll" id="mp-karte">${kopf}
     <div class="mp-kopf"><div class="gross-zahl" style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]} ${["Abwärtstrend","Gemischt","Aufwärtstrend"][m.phase]}</div>
       <div class="klein">seit ${datumDe(m.seit)}</div></div>
     <div class="mp-kv">
@@ -2341,7 +2617,7 @@ function schwellenKarte(c){   // Ab welcher Ampel hat sich ein Kauf bei DIESEM W
     : u.includes(-1) && !u.includes(1) ? `Bei diesem Wert war eine hohe Ampel früher <b>nicht besser</b>, eher schlechter: ${txt(u[0] === -1 ? 52 : 156)}. Hohe Ampelwerte gab es oft mitten in langen Abstürzen.`
     : u.includes(1) ? `Bei diesem Wert ist das Bild <b>gemischt</b>: ${txt(52)}; ${txt(156)}.`
     : `Bei diesem Wert machte die Höhe der Ampel früher <b>kaum einen Unterschied</b>: ${txt(hoch.s[156] ? 156 : 52)}.`;
-  return `<section class="karte breit2" id="schwellen-karte"><div class="karte-kopf"><span data-e="l_schwelle" tabindex="0">Ab welcher Ampel hat es sich gelohnt?</span><span>Rückblick ${new Date(c.t[c.score.findIndex(x => x != null)] * 1000).getUTCFullYear()}–heute</span></div>
+  return `<section class="karte breit2" id="schwellen-karte">${kk("rueck", "Hat eine hohe Ampel hier früher geholfen?", "Käufe bei hoher Ampel gegen Käufe in beliebigen Wochen – nur für diesen Wert gerechnet.", `${new Date(c.t[c.score.findIndex(x => x != null)] * 1000).getUTCFullYear()}–heute`, "l_schwelle")}
     <p style="margin:0 0 8px">${fazit}</p>
     <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Kauf bei</th><th>nach 1 Jahr höher · Median</th><th>nach 3 Jahren</th><th>nach 5 Jahren</th><th data-e="l_tief">danach noch tiefer (Median)</th><th>Phasen</th></tr></thead><tbody>${
       zeilen.map(z => `<tr><td style="text-align:left">${z.name}</td>${zelle(z.s[52])}${zelle(z.s[156])}${zelle(z.s[260])}<td class="klein">${z.s.tief == null ? "–" : vz(z.s.tief,0," %")}</td><td class="klein">${z.name === "jede Woche" ? "–" : z.s.phasen}</td></tr>`).join("")}</tbody></table></div>
@@ -2350,14 +2626,14 @@ function schwellenKarte(c){   // Ab welcher Ampel hat sich ein Kauf bei DIESEM W
 function phasenKarte(c){
   if (!c?.c || !c.score) return "";
   const {phasen, zus, alle} = kaufPhasen(c);
-  const kopf = `<div class="karte-kopf"><span data-e="l_ergebnis" tabindex="0">Wann hat sich Kaufen gelohnt?</span><span>günstige Phasen (Ampel ab ${PHASE_AB})</span></div>`;
-  if (!phasen.length) return `<section class="karte breit2" id="phasen-karte">${kopf}<p>Die Ampel stand bisher nie bei ${PHASE_AB} oder höher – es gab keine günstige Phase.</p></section>`;
+  const kopf = kk("rueck", "Wie ging es nach günstigen Phasen weiter?", `Jede frühere Phase mit Ampel ab ${PHASE_AB} – und wo der Kurs 1, 3 und 5 Jahre später stand.`, "günstige Phasen", "l_ergebnis");
+  if (!phasen.length) return `<section class="karte breit-voll" id="phasen-karte">${kopf}<p>Die Ampel stand bisher nie bei ${PHASE_AB} oder höher – es gab keine günstige Phase.</p></section>`;
   const tM = t => { const d = new Date(t * 1000); return String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + d.getUTCFullYear(); };
   const zelle = x => x == null ? `<td class="klein">noch offen</td>` : `<td class="${klasse(x)}"><b>${vz(x,0," %")}</b></td>`;
   const satz = (k, txt) => { const z = zus[k], a = alle[k]; return z ? `${txt}: in <b>${z.hoeher} von ${z.n}</b> Phasen höher (Median ${vz(z.median,0," %")})${a ? `; an beliebigen Wochen ${fmt(a.hoeher,0)} % höher, Median ${vz(a.median,0," %")}` : ""}.` : ""; };
   const zeilen = [...phasen].reverse().slice(0, 15).map(p => `<tr><td style="text-align:left">${p.laeuft ? `seit ${tM(p.t0)} <span class="klein">läuft</span>` : tM(p.t0) + (tM(p.t1) !== tM(p.t0) ? "–" + tM(p.t1) : "")} <span class="klein">${p.wochen} Wo.</span></td>
     <td>${pille(p.hoch)}</td>${zelle(p.r1)}${zelle(p.r3)}${zelle(p.r5)}<td class="klein">${p.tief < -0.5 ? `${vz(p.tief,0," %")} (${tM(p.tTief)})` : "–"}</td></tr>`).join("");
-  return `<section class="karte breit2" id="phasen-karte">${kopf}
+  return `<section class="karte breit-voll" id="phasen-karte">${kopf}
     <p style="margin:0 0 8px">Wer zu <b>Beginn</b> einer günstigen Phase gekauft hätte – so stand der Kurs danach:</p>
     <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th style="text-align:left">Günstige Phase</th><th>höchste Ampel</th><th>nach 1 Jahr</th><th>nach 3 Jahren</th><th>nach 5 Jahren</th><th data-e="l_tief">noch tiefer in der Phase</th></tr></thead><tbody>${zeilen}</tbody></table></div>
     ${phasen.length > 15 ? `<p class="klein">Die neuesten 15 von ${phasen.length} Phasen; die Zusammenfassung zählt alle.</p>` : ""}
@@ -3973,7 +4249,7 @@ function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SE
 function geschaeftKarte(w){
   if (SONDERGRUPPE(w) || !/Nasdaq|NYSE/.test(String(w.gruppe))) return "";
   const f = w.f;
-  const kopf = `<div class="karte-kopf"><span data-e="f_sec" tabindex="0">Geschäft (SEC)</span><span>${f ? `${f.art} bis ${datumDe(f.stand)}` : ""}</span></div>`;
+  const kopf = kk("geschaeft", "Wie läuft das Geschäft?", "Gewinn, Umsatz und KGV aus den Pflichtberichten an die US-Börsenaufsicht (SEC).", f ? `${f.art} bis ${datumDe(f.stand)}` : "", "f_sec");
   if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen der US-Börsenaufsicht – meist ausländische Firmen (Bilanz nach IFRS) oder sehr junge Börsengänge." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
   const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd. $") : fmt(x, 0, " Mio. $");
   const d = x => x == null ? "" : ` <span class="${klasse(x)}">(${vz(x,0," %")})</span>`;
@@ -3999,7 +4275,7 @@ function bewKachel(){
 function bewKarte(){
   const b = BEWERTUNG; if (!b) return "";
   const a = b.aehnlich, n = a.phasen.length;
-  return `<section class="karte" id="bewertung-karte"><div class="karte-kopf"><span data-e="b_cape" tabindex="0">Bewertung (CAPE)</span><span>${monatDe(b.datum)}</span></div>
+  return `<section class="karte" id="bewertung-karte">${kk("preis", "Wie teuer ist der US-Markt gemessen an den Gewinnen?", "Shiller-CAPE: Kurs des S&amp;P 500 geteilt durch den Durchschnittsgewinn von 10 Jahren.", monatDe(b.datum), "b_cape")}
     <div class="gross-zahl" style="color:${b.score < 40 ? "var(--teuer)" : b.score >= 60 ? "var(--guenstig)" : "inherit"}">${fmt(b.cape,1)}</div>
     <p><b>${b.stufe}</b> gemessen an den Gewinnen: teurer als in ${fmt(b.perzentil,0)} % der Monate seit 1881 (seit 1990: ${fmt(b.perzentil_ab1990,0)} %).</p>
     <div class="kv"><span data-e="b_score">Bewertung 0–100</span><b>${fmt(b.score,0)}</b></div>
