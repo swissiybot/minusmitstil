@@ -224,58 +224,22 @@ def _phasen(maske: np.ndarray, luecke: int = NK_LUECKE) -> int:
     return 0 if not len(i) else 1 + int(np.sum(np.diff(i) > luecke))
 
 
-VERL_H = 156            # Verlässlichkeit: Rendite der folgenden 3 Jahre
-VERL_MIN_JAHRE = 10     # mindestens so viele Jahre mit bekanntem Ergebnis (gut 3 unabhängige Abschnitte), sonst „zu wenig“
+NK_SIMS = 39          # Zufallsvergleich: so viele Zufallsverläufe je Titel (höchstens)
+NK_SIM_MAX_BESSER = 1 # „lohnt“ nur, wenn höchstens so viele Zufallsverläufe mindestens denselben Vorteil zeigen (p ≤ 0,05)
+NK_BLOCK = 26         # Zufallsverläufe: echte Wochenrenditen in neu gereihten 26-Wochen-Blöcken
+NK_SPRUNG = 4.5       # Wochensprung über Faktor 4,5 (oder unter 1/4,5) = vermutlich Datenfehler, kein Beleg möglich
 
 
-def verlaesslichkeit(idx: pd.DatetimeIndex, c: np.ndarray, score: np.ndarray) -> dict | None:
-    """Wunsch Marc 23.11.2026 („für jeden Titel noch besser geklärt“): Wie gut lag die Ampel bei DIESEM Titel bisher?
-    Rangkorrelation (Spearman) zwischen der Ampel einer Woche (ohne Zukunftswissen gerechnet) und der tatsächlichen
-    Rendite der 3 Jahre danach, über alle Wochen mit bekanntem Ergebnis; dazu dieselbe Zahl für die letzten 10 Jahre
-    bekannter Ergebnisse und die Zahl getrennter Phasen mit Ampel ≥ 80 (Lücke über 13 Wochen).
-    stufe: gut (gesamt und letzte 10 Jahre ≥ 0,3), gemischt (eine ≥ 0,3, die andere unter 0,1), schwach (eine unter 0,1,
-    keine ≥ 0,3; negativ = bisher eher daneben), sonst mittel (beide ab 0,1); zu wenig unter 10 Jahren bekannter Ergebnisse.
-    Benachbarte Wochen überlappen stark (3-Jahres-Fenster) – 10 Jahre sind nur gut 3 unabhängige Abschnitte."""
-    n = len(c)
-    if n <= VERL_H:
-        return {"stufe": "zu wenig", "jahre": 0}
-    f = np.full(n, np.nan); f[:n - VERL_H] = np.log(c[VERL_H:] / c[:n - VERL_H])
-    ok = ~np.isnan(score) & ~np.isnan(f)
-    jahre = float(ok.sum()) / 52
-    aus = {"jahre": r(jahre, 1), "ph80": _phasen(ok & (score >= 80))}
-    if jahre < VERL_MIN_JAHRE:
-        return {"stufe": "zu wenig", **aus}
-    rk = lambda m: float(pd.Series(score[m]).rank().corr(pd.Series(f[m]).rank()))
-    gesamt = rk(ok)
-    i = np.flatnonzero(ok)
-    zehn = ok & (np.arange(n) > i[-1] - 520)
-    aus["rk"] = r(gesamt, 2)
-    aus["rk10"] = r(rk(zehn), 2) if jahre > 10 and zehn.sum() >= 260 else None
-    aus["seit"] = idx[i[0]].strftime("%Y")
-    werte = [gesamt] + ([aus["rk10"]] if aus["rk10"] is not None else [])
-    aus["stufe"] = ("gut" if min(werte) >= 0.3 else "gemischt" if max(werte) >= 0.3 and min(werte) < 0.1
-                    else "schwach" if min(werte) < 0.1 else "mittel")
-    return aus
-
-
-def nachkauf(c: np.ndarray, score: np.ndarray, kzv: dict, kurs: float) -> dict | None:
-    """Wunsch Marc 22.11.2026: „pro Titel wissen, wann es sich lohnt nachzukaufen“.
-    Rückblick über die Geschichte DIESES Titels: Für jede Schwelle (Ampel ≥ 60/70/80/90) die Jahresrendite der folgenden
-    3 Jahre (zu wenig Geschichte: 1 Jahr) nach allen Wochen mit dieser Ampel, verglichen mit Käufen in beliebigen Wochen.
-    Eine Schwelle zählt, wenn sie mindestens NK_MIN_PHASEN getrennte Phasen hat, im Median mehr brachte und nicht deutlich
-    seltener im Plus endete (höchstens NK_TOL_QUOTE Punkte). Unter den zählenden gilt die mit dem höchsten Median.
-    Nachkauf-Preis = Kurs, bei dem die Ampel heute diese Schwelle erreicht (gleiche Formel wie die Kaufzonen).
-    art: "lohnt" (Schwelle gefunden), "egal" (Warten brachte früher nichts), "unklar" (zu wenig Geschichte; Ersatz Ampel 80)."""
+def _nk_statistik(c: np.ndarray, score: np.ndarray, H: int | None = None):
+    """Je Schwelle (Ampel ≥ 60/70/80/90): Median der Jahresrendite der H Wochen danach, Anteil im Plus, Phasen, Wochen –
+    und dieselben Zahlen für alle Wochen. H = 156 (3 Jahre), bei zu kurzer Geschichte 52. Rückgabe None oder
+    (H, b_med, b_q, b_n, stufen, vorteil); vorteil = Median der besten zählenden Schwelle minus Median aller Wochen (sonst 0)."""
     n = len(c); ok = ~np.isnan(score)
-    def heute(g):
-        a = kzv.get(g)
-        return None if a is None or math.isnan(a[-1]) else float(a[-1])
-    erg = None
-    for H in (156, 52):
-        if n <= H:
+    for h in ((H,) if H else (156, 52)):
+        if n <= h:
             continue
         f = np.full(n, np.nan)
-        f[:n - H] = ((c[H:] / c[:n - H]) ** (52 / H) - 1) * 100
+        f[:n - h] = ((c[h:] / c[:n - h]) ** (52 / h) - 1) * 100
         basis = ok & ~np.isnan(f)
         if basis.sum() < 52:
             continue
@@ -285,27 +249,74 @@ def nachkauf(c: np.ndarray, score: np.ndarray, kzv: dict, kurs: float) -> dict |
             ph = _phasen(m)
             if m.sum() >= NK_MIN_WOCHEN and ph >= NK_MIN_PHASEN:
                 stufen.append([g, float(np.median(f[m])), float(np.mean(f[m] > 0) * 100), ph, int(m.sum())])
-        if stufen or H == 52:
-            erg = (H, float(np.median(f[basis])), float(np.mean(f[basis] > 0) * 100), int(basis.sum()), stufen)
-            break
-    if erg is None:
-        p = heute(80)
-        return {"art": "unklar", "ab": 80, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
-                "jetzt": bool(ok[-1] and score[-1] >= 80)}
-    H, b_med, b_q, b_n, stufen = erg
+        if stufen or h == 52 or H:
+            b_med, b_q = float(np.median(f[basis])), float(np.mean(f[basis] > 0) * 100)
+            gut = [s_ for s_ in stufen if s_[1] > b_med and s_[2] >= b_q - NK_TOL_QUOTE]
+            vorteil = max((s_[1] for s_ in gut), default=b_med) - b_med
+            return h, b_med, b_q, int(basis.sum()), stufen, vorteil
+    return None
+
+
+def _zufallsverlauf(c: np.ndarray, rng) -> np.ndarray:
+    """Gleicher Titel, gleiche Wochenrenditen (Trend und Schwankung bleiben), aber in neu gereihten 26-Wochen-Blöcken:
+    ein Zusammenhang zwischen Lage zur Linie und späterem Ertrag ist darin zerstört."""
+    lr = np.diff(np.log(c)); n = len(lr)
+    st = rng.integers(0, n - NK_BLOCK, math.ceil(n / NK_BLOCK))
+    z = np.concatenate([lr[s_:s_ + NK_BLOCK] for s_ in st])[:n]
+    return c[0] * np.exp(np.concatenate([[0.0], np.cumsum(z)]))
+
+
+def nachkauf(c: np.ndarray, score: np.ndarray, kzv: dict, kurs: float, kennung: str = "") -> dict | None:
+    """Wunsch Marc 22.11.2026: „pro Titel wissen, wann es sich lohnt nachzukaufen“; 23.11.2026: mit Zufallsvergleich genauer.
+    Rückblick über die Geschichte DIESES Titels: Für jede Schwelle (Ampel ≥ 60/70/80/90) die Jahresrendite der folgenden
+    3 Jahre (zu wenig Geschichte: 1 Jahr) nach allen Wochen mit dieser Ampel, verglichen mit Käufen in beliebigen Wochen.
+    Eine Schwelle zählt, wenn sie mindestens NK_MIN_PHASEN getrennte Phasen hat, im Median mehr brachte und nicht deutlich
+    seltener im Plus endete (höchstens NK_TOL_QUOTE Punkte). Unter den zählenden gilt die mit dem höchsten Median.
+    ZUFALLSVERGLEICH: Dieselbe Rechnung (Ampel und Schwellenwahl) auf bis zu NK_SIMS Zufallsverläufen desselben Titels.
+    „lohnt“ nur, wenn höchstens NK_SIM_MAX_BESSER davon denselben Vorteil oder mehr zeigen (p ≤ 0,05); sonst „zufall“.
+    Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht (gleiche Formel wie die Kaufzonen).
+    art: "lohnt" (belegt), "zufall" (Vorteil nicht vom Zufall zu unterscheiden), "egal" (Warten brachte früher nichts),
+    "unklar" (zu wenig Geschichte), "daten" (unplausible Kurssprünge, vermutlich Datenfehler)."""
+    ok = ~np.isnan(score)
+    def heute(g):
+        a = kzv.get(g)
+        return None if a is None or math.isnan(a[-1]) else float(a[-1])
+    def mit_preis(g):
+        p = heute(g)
+        return {"ab": g, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None, "jetzt": bool(ok[-1] and score[-1] >= g)}
+    q = c[1:] / c[:-1]
+    if np.any((q > NK_SPRUNG) | (q < 1 / NK_SPRUNG)):
+        return {"art": "daten", **mit_preis(80)}
+    st = _nk_statistik(c, score)
+    if st is None or not st[4]:
+        aus = {} if st is None else {"h": st[0] // 52, "b_med": r(st[1], 1), "b_q": r(st[2], 0), "b_wo": st[3]}
+        return {"art": "unklar", **mit_preis(80), **aus}
+    H, b_med, b_q, b_n, stufen, vorteil = st
     gut = [s_ for s_ in stufen if s_[1] > b_med and s_[2] >= b_q - NK_TOL_QUOTE]
     aus = {"h": H // 52, "b_med": r(b_med, 1), "b_q": r(b_q, 0), "b_wo": b_n,
-           "stufen": [[g, r(m, 1), r(q, 0), ph, wo] for g, m, q, ph, wo in stufen]}
-    if not stufen:
-        p = heute(80)
-        return {"art": "unklar", "ab": 80, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
-                "jetzt": bool(ok[-1] and score[-1] >= 80), **aus}
+           "stufen": [[g, r(m, 1), r(qq, 0), ph, wo] for g, m, qq, ph, wo in stufen]}
     if not gut:
         return {"art": "egal", "ab": None, "preis": None, **aus}
-    g, m, q, ph, wo = max(gut, key=lambda s_: s_[1])
-    p = heute(g)
-    return {"art": "lohnt", "ab": g, "preis": r(p, 4), "abstand": r((p / kurs - 1) * 100, 1) if p else None,
-            "jetzt": bool(ok[-1] and score[-1] >= g), "med": r(m, 1), "q": r(q, 0), "ph": ph, "wo": wo, **aus}
+    g, m, qq, ph, wo = max(gut, key=lambda s_: s_[1])
+    # Zufallsvergleich (fester Startwert je Titel, damit jeder Lauf und die Prüfung dasselbe ergeben)
+    import zlib
+    rng = np.random.default_rng(zlib.crc32(f"{kennung}|{len(c)}".encode()))
+    start = int(np.flatnonzero(ok)[0])
+    besser = gerechnet = 0
+    for _ in range(NK_SIMS):
+        cs = _zufallsverlauf(c, rng)
+        ss = anker_ampel(cs, start)[0]
+        sz = _nk_statistik(cs, ss, H)
+        gerechnet += 1
+        if sz is not None and sz[5] >= vorteil:
+            besser += 1
+            if besser > NK_SIM_MAX_BESSER:
+                break
+    zufall = {"vorteil": r(vorteil, 1), "z_besser": besser, "z_gerechnet": gerechnet}
+    kern = {"med": r(m, 1), "q": r(qq, 0), "ph": ph, "wo": wo}
+    if besser > NK_SIM_MAX_BESSER:
+        return {"art": "zufall", **mit_preis(80), "beste": g, **kern, **zufall, **aus}
+    return {"art": "lohnt", **mit_preis(g), **kern, **zufall, **aus}
 
 
 KQ_H, VQ_H = 156, 52   # Kaufqualität: Rendite der folgenden 3 Jahre; Verkaufsqualität: Kurs 1 Jahr später
@@ -682,15 +693,9 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
     nk = None
     try:   # Nachkauf-Preis je Titel mit Beleg aus der eigenen Geschichte
         if not math.isnan(s_jetzt):
-            nk = nachkauf(c, score, kzv, float(tag_c.iloc[-1]))
+            nk = nachkauf(c, score, kzv, float(tag_c.iloc[-1]), zeile["id"])
     except Exception as ex:
         print(f"Nachkauf nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
-    verl = None
-    try:   # Verlässlichkeit der Ampel bei diesem Titel (Rückblick)
-        if not math.isnan(s_jetzt):
-            verl = verlaesslichkeit(w.index, c, score)
-    except Exception as ex:
-        print(f"Verlässlichkeit nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     r2 = trendguete(w["Close"])
     qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
@@ -746,7 +751,6 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
         "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
-        "verl": verl,                        # Verlässlichkeit: wie gut lag die Ampel bei diesem Titel bisher (Rangkorrelation mit der 3-Jahres-Rendite)
         "nk": nk,                            # Nachkauf: ab welcher Ampel sich Kaufen bei diesem Titel früher lohnte, Kurs dafür heute
         "linie200": r(sma200[-1], 4),        # 200-Wochen-Linie heute
         "ampel_wochen": int(np.sum(~np.isnan(score))),   # Wochen mit Ampel

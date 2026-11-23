@@ -12,9 +12,8 @@ Geprueft wird mit echten Daten an einer festen Stichprobe (alle ETFs, Krypto, Ro
   5. Die letzte Woche der Kaufzonen im Chart = Kaufzonen in der Kopfzeile (info.kz) und in der Rangliste.
   6. Kauf- und Verkaufsqualitaet liegen zwischen 0 und 100.
   7. Die ausgegebene Ampel ist genau die der Formel (nachgerechnet mit ampel_rechnen).
-  8. Nachkauf je Titel: Art lohnt/egal/unklar; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht;
+  8. Nachkauf je Titel: Art lohnt/zufall/egal/unklar/daten, nachgerechnet; „lohnt“ nur mit bestandener Zufallsprobe; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht;
      „heute erfüllt“ passt zur Ampel; Kurse für Ampel 90 <= 80 <= 70; Kurs unter dem Kurs für Ampel 90 => Ampel >= 90.
-  9b. Verlässlichkeit je Titel: Stufe gut/mittel/gemischt/schwach/zu wenig, Rangkorrelation −1…1 und nachgerechnet.
   9. Dividenden: nicht negativ, Jahre lückenlos bis zum laufenden Jahr, Rendite 0–25 % = Summe 12 Monate / Kurs,
      Rangliste = Kopfzeile.  10. ETF-Inhalt: Kosten 0–5 %, Gewichte der Top-Positionen zusammen höchstens 100 %,
      Branchen zusammen etwa 100 %.
@@ -106,16 +105,14 @@ def ein_wert(z: dict, rl: dict):
         if rz.get(k) is not None:
             pruef(math.isclose(rz[k], zk[k], rel_tol=1e-3, abs_tol=0.011), f"{wid}: Kaufzone {k} in der Rangliste ({rz[k]}) ≠ Kopfzeile ({zk[k]})")
     pruef(stufe_passt(zeile.get("zone"), zeile["score"]), f"{wid}: Stufe {zeile.get('zone')} passt nicht zur Ampel {zeile['score']}")
-    # Verlässlichkeit: Stufe bekannt und passend zur Rangkorrelation (nachgerechnet)
-    v = zeile.get("verl")
-    pruef(isinstance(v, dict) and v.get("stufe") in ("gut", "mittel", "gemischt", "schwach", "zu wenig"), f"{wid}: Verlässlichkeit fehlt oder unbekannte Stufe ({v})")
-    if isinstance(v, dict) and v.get("rk") is not None:
-        v2 = A.verlaesslichkeit(roh["w"].index, c, score)
-        pruef(abs(v2["rk"] - v["rk"]) < 0.006 and v2["stufe"] == v["stufe"], f"{wid}: Verlässlichkeit {v} ≠ nachgerechnet {v2}")
-        pruef(-1 <= v["rk"] <= 1, f"{wid}: Rangkorrelation {v['rk']} außerhalb −1…1")
     # Nachkauf: Art bekannt; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht; „heute erfüllt“ passt zur Ampel
     nk = zeile.get("nk")
-    pruef(isinstance(nk, dict) and nk.get("art") in ("lohnt", "egal", "unklar"), f"{wid}: Nachkauf fehlt oder unbekannte Art ({nk})")
+    pruef(isinstance(nk, dict) and nk.get("art") in ("lohnt", "zufall", "egal", "unklar", "daten"), f"{wid}: Nachkauf fehlt oder unbekannte Art ({nk})")
+    if isinstance(nk, dict):   # nachgerechnet (Zufallsvergleich mit festem Startwert je Titel)
+        nk2 = A.nachkauf(c, score, kz, zeile["kurs"], wid)
+        pruef(nk2.get("art") == nk.get("art") and nk2.get("ab") == nk.get("ab"), f"{wid}: Nachkauf {nk.get('art')}/{nk.get('ab')} ≠ nachgerechnet {nk2.get('art')}/{nk2.get('ab')}")
+        if nk.get("art") == "lohnt":
+            pruef(nk.get("z_besser", 99) <= A.NK_SIM_MAX_BESSER, f"{wid}: „lohnt“ ohne bestandene Zufallsprobe ({nk.get('z_besser')})")
     if isinstance(nk, dict) and nk.get("ab") is not None:
         g = nk["ab"]
         soll = kz[g][-1]
