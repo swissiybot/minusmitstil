@@ -4798,9 +4798,9 @@ const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
 const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
 function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SEC-Daten, nur US-Firmen)
   const f = w.f; if (!f || SONDERGRUPPE(w)) return "";
-  const wg = f.waehrung && f.waehrung !== "USD" ? " " + esc(f.waehrung) : " $";   // ausländische Firmen: Beträge in der Berichtswährung
+  const wg = " " + ({USD:"$", EUR:"€", GBP:"£"}[f.waehrung || "USD"] || esc(f.waehrung));   // ausländische Firmen: Beträge in der Berichtswährung
   const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd." + wg) : fmt(x, 0, " Mio." + wg);
-  const zum = x => x == null ? "" : ` (${vz(x, 0, " %")} zum Vorjahr)`;
+  const zum = x => x == null ? "" : Math.abs(x) > 999 ? " (das Vorjahr lag fast bei null, ein Vergleich in Prozent sagt hier nichts)" : ` (${vz(x, 0, " %")} zum Vorjahr)`;
   let t = "";
   if (f.kgv != null) {
     const k = f.kgv >= 100 ? fmt(f.kgv, 0) : fmt(f.kgv, f.kgv < 10 ? 1 : 0);
@@ -4812,7 +4812,6 @@ function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SE
       t += ` (in dieser Zeit lag es zwischen ${fmt(f.kgv_min, 0)} und ${fmt(f.kgv_max, 0)}, in der Mitte bei ${fmt(f.kgv_median, 0)}${f.kgv_verlust_anteil ? `; in ${fmt(f.kgv_verlust_anteil, 0)} % der Wochen machte die Firma Verlust` : ""}). `;
     }
   } else if (f.verlust) t += `Die Firma macht gerade <b>Verlust</b> (${mio(f.gewinn)} in ${f.art === "12 Monate" ? "12 Monaten" : "einem Geschäftsjahr"}) – ein KGV gibt es dann nicht. `;
-  else if (f.kgv_fehlt) t += `${esc(f.kgv_fehlt)} `;
   if (!f.verlust && f.gewinn != null) t += `Sie verdiente ${f.art === "12 Monate" ? "in den letzten 12 Monaten" : "im letzten Geschäftsjahr"} <b>${mio(f.gewinn)}</b>${zum(f.d_gewinn)}`;
   if (f.umsatz != null) t += !f.verlust && f.gewinn != null ? ` bei <b>${mio(f.umsatz)}</b> Umsatz${zum(f.d_umsatz)}` : `Der Umsatz lag bei <b>${mio(f.umsatz)}</b>${zum(f.d_umsatz)}`;
   if (f.umsatz_pa != null) t += `; über ${f.umsatz_pa_jahre} Jahre ${f.umsatz_pa >= 0 ? "wuchs" : "schrumpfte"} der Umsatz im Schnitt um ${fmt(Math.abs(f.umsatz_pa), 0)} % pro Jahr`;
@@ -4826,9 +4825,9 @@ function geschaeftKarte(w){
   const f = w.f;
   const kopf = kk("geschaeft", "Wie läuft das Geschäft?", "Gewinn, Umsatz und KGV aus den Pflichtberichten an die US-Börsenaufsicht (SEC).", f ? `${f.art} bis ${datumDe(f.stand)}` : "", "f_sec");
   if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen bei der US-Börsenaufsicht gefunden – meist sehr junge Börsengänge oder ausländische Firmen ohne maschinenlesbare Berichte." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
-  const wg = f.waehrung && f.waehrung !== "USD" ? " " + esc(f.waehrung) : " $";   // ausländische Firmen: Beträge in der Berichtswährung
+  const wg = " " + ({USD:"$", EUR:"€", GBP:"£"}[f.waehrung || "USD"] || esc(f.waehrung));   // ausländische Firmen: Beträge in der Berichtswährung
   const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd." + wg) : fmt(x, 0, " Mio." + wg);
-  const d = x => x == null ? "" : ` <span class="${klasse(x)}">(${vz(x,0," %")})</span>`;
+  const d = x => x == null ? "" : Math.abs(x) > 999 ? ` <span class="klein">(Vorjahr fast null)</span>` : ` <span class="${klasse(x)}">(${vz(x,0," %")})</span>`;
   return `<section class="karte" id="geschaeft-karte">${kopf}
     ${f.falle ? `<div class="falle-box">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Ampel günstig, aber ${esc(f.gruende.join(", "))}.</div>` : f.schwach ? `<p class="klein neg" style="margin:0 0 6px">Geschäft schwach: ${esc(f.gruende.join(", "))}</p>` : ""}
     <div class="gross-zahl">${f.kgv != null ? fmt(f.kgv,1) : f.verlust ? "Verlust" : f.kgv_fehlt ? "ohne KGV" : "–"}</div>
