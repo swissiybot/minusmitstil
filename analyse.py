@@ -25,6 +25,7 @@ import pandas as pd
 import warnings
 import einstellungen as E
 from kurse import lade_lokal, alle_laden
+import dividenden
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -852,9 +853,24 @@ def werte_eines(z: dict):
         erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
     if erg is not None:
         erg[0].update(beschreibung_fuer(z["id"]))   # ISIN, WKN, Kurzbeschreibung
+        erg[0].update(zusatzdaten(z, erg[0]))      # Dividenden, ETF-Inhalt und Kosten (nur echte Quellen)
     if erg is not None and mc_ab is not None:
         erg[2]["mc_ab"] = mc_ab
     return erg
+
+
+def zusatzdaten(z: dict, zeile: dict) -> dict:
+    """Felder fuer die Titelseite aus eigenen Dateien (Wunsch Marc 23.11.2026); fehlt eine Quelle, fehlt das Feld."""
+    out = {}
+    if z["gruppe"] not in ("Krypto", "Rohstoffe"):
+        try:
+            import dividenden
+            d = dividenden.fuer_wert(z["symbol"], zeile.get("kurs"), zeile.get("datum"))
+            if d:
+                out["div"] = d
+        except Exception as ex:
+            print(f"Dividenden-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    return out
 
 
 def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
@@ -1087,7 +1103,7 @@ def main(argv):
                             s2.fallen.add(z["symbol"], f, erg[2]["w"], erg[2]["score"])
                     except Exception as ex:
                         print(f"Geschäftszahlen-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
-                zeilen.append(erg[0])
+                zeilen.append(erg[0] | ({"div": dividenden.kurz(erg[0]["div"])} if erg[0].get("div") else {}))   # Rangliste ohne Jahresliste
                 if s2 is not None and not erg[0].get("jung"):
                     try:
                         s2.add(z, erg[0], erg[2])
