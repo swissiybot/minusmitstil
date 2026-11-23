@@ -75,6 +75,7 @@ kbd{font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:4px 6px;
 .kopf-rechts{display:flex;align-items:center;gap:8px;margin-left:auto}
 .plakette{display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 11px;border-radius:999px;background:var(--panel);border:1px solid var(--line2);font-size:12px;color:var(--text2);white-space:nowrap;cursor:help}
 .plakette i{width:8px;height:8px;border-radius:50%;background:var(--guenstig);box-shadow:0 0 0 3px color-mix(in srgb,var(--guenstig) 25%,transparent)}
+.plakette.neu{border-color:var(--guenstig);color:var(--text)}
 .plakette.alt i{background:var(--gelb);box-shadow:0 0 0 3px color-mix(in srgb,var(--gelb) 25%,transparent)}
 .knopf-ikon{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 12px;border-radius:10px;background:transparent;border:1px solid var(--line2);color:var(--text2);white-space:nowrap}
 .knopf-ikon:hover{background:var(--hover);color:var(--text)}
@@ -1659,11 +1660,49 @@ async function start(){
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH, BEWERTUNG] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
-  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; suchIndex(); datenstand(d.stand);
+  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; suchIndex(); datenstand(d.stand); STAND_ROH = d.stand;
   Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT, ERKLAERUNG_TITEL);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
   route();
   addEventListener("hashchange", () => { if (location.hash !== _eigenerHash) route(); });
+  depotAktuell();
+  setInterval(neuerStandPruefen, NACHLADEN_ALLE_MS);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) neuerStandPruefen(); });
+  ["pointerdown", "keydown", "wheel", "touchstart"].forEach(e => addEventListener(e, () => { ZULETZT_BEDIENT = Date.now(); }, {passive:true, capture:true}));
+}
+// ------------------------------------------------------------ Neuer Datenstand: die offene Seite lädt ihn selbst nach (Wunsch Marc 23.11.2026)
+// Alle paar Minuten (und wenn der Tab wieder sichtbar wird) fragt die Seite, ob ein neuerer Stand da ist: online über die kleine Datei
+// daten/statisch.json, lokal über die Rangliste selbst. Ist er da, werden die Daten neu geladen und die aktuelle Ansicht neu gezeichnet –
+// aber erst, wenn gerade niemand tippt oder schiebt (sonst wartet die Seite einen ruhigen Moment ab). Die Blätterposition bleibt.
+const NACHLADEN_ALLE_MS = 5 * 60 * 1000, RUHE_MS = 15 * 1000;
+let STAND_ROH = "", NACHLADEN_LAEUFT = false, ZULETZT_BEDIENT = 0, NEU_WARTET = null;
+const seiteRuhig = () => Date.now() - ZULETZT_BEDIENT > RUHE_MS && !document.activeElement?.closest?.("input,textarea,select,[contenteditable]") && !document.querySelector("dialog[open]");
+async function neuerStandPruefen(){
+  if (NACHLADEN_LAEUFT || document.hidden) return;
+  NACHLADEN_LAEUFT = true;
+  try {
+    let info = null;
+    if (STATISCH) { info = await holeJson("daten/statisch.json"); if (!info || info.erstellt === STAT_INFO?.erstellt) return; }
+    const d = await holeJson("daten/rangliste.json");
+    if (!d?.werte?.length || d.stand === STAND_ROH) return;
+    const [umfeld, pruef, tagebuch, bewertung] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
+    NEU_WARTET = {d, info, umfeld, pruef, tagebuch, bewertung};
+    neuenStandZeigen();
+  } finally { NACHLADEN_LAEUFT = false; }
+}
+function neuenStandZeigen(){
+  if (!NEU_WARTET) return;
+  if (!seiteRuhig()) { setTimeout(neuenStandZeigen, 5000); return; }
+  const {d, info, umfeld, pruef, tagebuch, bewertung} = NEU_WARTET; NEU_WARTET = null;
+  if (info) STAT_INFO = info;
+  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; STAND_ROH = d.stand;
+  UMFELD = umfeld || UMFELD; PRUEF = pruef || PRUEF; TAGEBUCH = tagebuch || TAGEBUCH; BEWERTUNG = bewertung || BEWERTUNG;
+  WERT_CACHE.clear(); TAG_CACHE.clear(); FX = undefined; ISIN_SEC_LAEDT = null; VH = undefined; INFL = undefined;   // Einzelseiten, Tageskerzen, Wechselkurs, junge Werte, Vorhersage und Inflation beim nächsten Zugriff frisch holen
+  suchIndex(); datenstand(d.stand); reiterZahlen(); listeNeu(); leseKern();
+  const haupt = $("#haupt"), oben = haupt.scrollTop, zurueck = () => { haupt.scrollTop = oben; };
+  route(); zurueck(); setTimeout(zurueck, 400); setTimeout(zurueck, 1500);
+  depotAktuell();
+  const pl = $("#stand"); pl.classList.add("neu"); setTimeout(() => pl.classList.remove("neu"), 6000);
 }
 let _eigenerHash = "";
 const hashSetzen = h => { _eigenerHash = "#" + h; if (location.hash !== _eigenerHash) location.hash = h; };
@@ -3842,6 +3881,59 @@ function depotLaden(){
   DEPOT = d && Array.isArray(d.positionen) ? {...d, e:{...DEPOT_STD, ...(d.e || {}), ...(d.e?.rendite === "markt" ? {rendite:"deckel"} : {})}, zuordnungen:d.zuordnungen || {}, merken:true} : {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false};
 }
 function depotSichern(){ if (DEPOT.merken) sichere(DEPOT_SCHLUESSEL, {positionen:DEPOT.positionen, e:DEPOT.e, zuordnungen:DEPOT.zuordnungen}); }
+// ------------------------------------------------------------ Depotwerte laufen mit dem Kurs mit (Wunsch Marc 23.11.2026: „tagesaktueller Stand“)
+// Jede Position merkt sich in p.basis, welcher Euro-Wert eingetragen wurde und bei welchem Kurs des zugeordneten Werts (und welchem
+// Dollar-Wechselkurs). Danach gilt: Wert heute = eingetragener Wert × Kurs heute / Kurs damals × Änderung des Wechselkurses (nur bei
+// Dollar-Werten; andere Fremdwährungen ohne Wechselkurs). Eine Handeingabe oder ein Import setzt die Basis neu, ein Wechsel der Zuordnung
+// führt mit dem neuen Wert ab dem heutigen Stand weiter. Alles bleibt im Browser. Genau ist das nur, wenn der zugeordnete Wert dasselbe
+// Papier ist – bei „gleicher Index“ oder Ersatz ist es eine Näherung. So aktuell wie der letzte Datenstand, keine Echtzeit.
+// Alte Depots: Bis 23.11.2026 konnte eine Aktie dieselbe Kennung wie ein Rohstoff tragen (z. B. „GOLD“ = Barrick und Gold). Steht bei einer
+// Position mit Aktien-ISIN ein Rohstoff/Krypto-Wert, den nicht du gewählt hast, und gibt es eine Aktie mit diesem Börsenkürzel, bleibt der Wert fest.
+const kennungZweifelhaft = (p, w) => !!p.isin && p.quelle !== "von dir gewählt" && ["Rohstoffe", "Krypto"].includes(w.gruppe) && ALLE.some(x => x.id !== w.id && x.symbol === p.id);
+const naeherung = p => !!p.ersatz || /index|thema|ersatz|ähnlich/i.test(p.quelle || "");   // zugeordneter Wert ist nicht dasselbe Papier
+const euroJeDollar = () => FX?.k?.length ? 1 / FX.k[FX.k.length - 1] : null;
+function basisSetzen(p, w){
+  p.basis = {wert:p.wert, id:p.id, kurs:+w.kurs, tag:w.datum || "", fx:waehrungVon(w) === "USD" ? euroJeDollar() : null};
+}
+function depotFortschreiben(){   // true, wenn sich ein Wert oder eine Basis geändert hat
+  if (!DEPOT) return false;
+  const vorher = depotSumme(); let geaendert = false;
+  for (const p of DEPOT.positionen) {
+    const w = wertVon(p.id);
+    if (!w || !(+w.kurs > 0) || !(p.wert > 0)) continue;   // ohne Zuordnung oder ohne Kurs: fester Wert
+    if (kennungZweifelhaft(p, w)) { if (p.basis) { delete p.basis; geaendert = true; } continue; }
+    if (!p.basis || p.basis.id !== p.id || !(p.basis.kurs > 0) || !(p.basis.wert > 0)) {
+      if (waehrungVon(w) === "USD" && !euroJeDollar()) { if (p.basis) { delete p.basis; geaendert = true; } continue; }   // Dollar-Wert: erst mit Wechselkurs
+      basisSetzen(p, w); geaendert = true; continue;
+    }
+    let f = +w.kurs / p.basis.kurs;
+    if (p.basis.fx) { const fx = euroJeDollar(); if (!fx) continue; f *= fx / p.basis.fx; }   // Wechselkurs gerade nicht ladbar: Wert so lassen
+    const neu = Math.round(p.basis.wert * f * 100) / 100;
+    if (isFinite(neu) && neu > 0 && Math.abs(neu - p.wert) >= 0.005) { p.wert = neu; geaendert = true; }
+  }
+  if (geaendert) {
+    if (DEPOT.e.verteilung === "depot") sparAnteileSetzen();
+    depotSichern();
+    const s = depotSumme(); if (vorher > 0 && Math.abs(s / vorher - 1) > 0.01) DEPOT_ERG = null;   // Simulation erst bei mehr als 1 % Abweichung verwerfen
+  }
+  return geaendert;
+}
+async function depotAktuell(){   // nach dem Laden und nach jedem neuen Datenstand
+  if (!DEPOT) depotLaden();
+  if (!DEPOT.positionen.length) return;
+  await Promise.all([fxLaden(), isinListeLaden()]);
+  if (!depotFortschreiben()) return;
+  if (SEITE === "depot") { if (seiteRuhig() || !$("#haupt [data-pw]")) zeigeDepot(); else setTimeout(() => { if (SEITE === "depot" && seiteRuhig()) zeigeDepot(); }, RUHE_MS + 1000); }
+  else if (AKTIV && $("#position-karte")) { const w = wertVon(AKTIV), html = w && positionKarte(w); if (html) { $("#position-karte").outerHTML = html; positionInit(AKTIV, w); } }
+}
+function mitlaufText(p){   // kleine Zeile unter dem Wert in der Positionsliste
+  const b = p.basis, w = wertVon(p.id);
+  if (!b || !w || b.id !== p.id) return `<div class="klein" title="Ohne zugeordneten Wert mit Kurs (oder bei unsicherer Zuordnung) bleibt der eingetragene Betrag stehen.">fester Wert</div>`;
+  const ca = naeherung(p);
+  const tag = b.tag ? b.tag.split("-").reverse().join(".").slice(0, 6) : "", d = b.wert > 0 ? (p.wert / b.wert - 1) * 100 : 0;
+  const hinweis = `Eingetragen: ${geld(b.wert)} € (Kursstand ${b.tag ? b.tag.split("-").reverse().join(".") : "unbekannt"}). Seitdem mit dem Kurs von ${kurzname(w)} fortgeschrieben${b.fx ? ", Dollar in Euro umgerechnet" : waehrungVon(w) === "EUR" ? "" : ", ohne Wechselkurs"}.${ca ? " Näherung: Der zugeordnete Wert ist nicht dasselbe Papier." : ""}`;
+  return `<div class="klein" title="${esc(hinweis)}">${Math.abs(d) < 0.05 ? `läuft mit seit ${tag}` : `<span class="${d > 0 ? "pos" : "neg"}">${ca ? "ca. " : ""}${d > 0 ? "+" : "−"}${fmt(Math.abs(d), 1)} %</span> seit ${tag}`}${ca ? " · Näherung" : ""}</div>`;
+}
 function depotVergessen(){
   try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(e) {}
   DEPOT = {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false}; DEPOT_ERG = null; CSV_WARTESCHLANGE = []; PDF_WARTESCHLANGE = []; zeigeDepot();
@@ -4012,6 +4104,7 @@ function nachkaufZelle(w, p){   // Depot-Spalte „Nachkauf unter“ aus dem Fel
 function zeigeDepot(){
   if (!DEPOT) depotLaden();
   isinListeLaden();   // einmalig; ordnet danach offene Positionen neu zu
+  depotFortschreiben(); if (FX === undefined && DEPOT.positionen.length) depotAktuell();   // Werte laufen mit dem Kurs mit; Wechselkurs einmal holen
   seiteAnfang("depot"); hashSetzen("seite=depot");
   const P = DEPOT.positionen, summe = depotSumme(), offen = P.filter(p => !p.id), offenWert = offen.reduce((a, p) => a + p.wert, 0);
   const e = DEPOT.e;
@@ -4036,15 +4129,15 @@ function zeigeDepot(){
     <section class="karte seite-karte">
       <div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;padding:12px 14px 0">
         <h2 style="margin:0;font-size:16px">Positionen</h2>
-        <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
+        <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${P.some(p => p.basis) ? ` · Werte mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : ""}${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
-      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>Wert €</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_nachkauf","Nachkauf unter")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
+      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_nachkauf","Nachkauf unter")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
           return `<tr class="depot-zeile"><td colspan="7" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
           teil.map(([p, i]) => { const w = wertVon(p.id);
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
-            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro"></td>
+            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro">${mitlaufText(p)}</td>
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
             <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} J. Daten`}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
@@ -4107,7 +4200,7 @@ function zeigeDepot(){
   $$("#d-import-reiter button").forEach(b => b.onclick = () => { $$("#d-import-reiter button").forEach(x => x.classList.toggle("an", x === b)); depotImport(b.dataset.imp); });
   $("#d-merken").onchange = ev => { DEPOT.merken = ev.target.checked; if (DEPOT.merken) depotSichern(); else { try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(x) {} } };
   $("#d-vergessen").onclick = () => { if (confirm("Depot und Einstellungen in diesem Browser löschen?")) depotVergessen(); };
-  $$("#haupt [data-pw]").forEach(inp => inp.onchange = () => { const v = zahlDe(inp.value); if (v > 0) { DEPOT.positionen[+inp.dataset.pw].wert = v; if (DEPOT.e.verteilung === "depot") sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); } });
+  $$("#haupt [data-pw]").forEach(inp => inp.onchange = () => { const v = zahlDe(inp.value); if (v > 0) { DEPOT.positionen[+inp.dataset.pw].wert = v; delete DEPOT.positionen[+inp.dataset.pw].basis; if (DEPOT.e.verteilung === "depot") sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); } });
   $$("#haupt [data-ps]").forEach(inp => inp.onchange = () => { DEPOT.positionen[+inp.dataset.ps].spar = Math.max(0, zahlDe(inp.value) || 0); DEPOT.e.verteilung = "eigen"; depotSichern(); zeigeDepot(); });
   $$("#haupt [data-pl]").forEach(b => b.onclick = () => { DEPOT.positionen.splice(+b.dataset.pl, 1); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
   $$("#haupt [data-pz]").forEach(b => b.onclick = () => ersatzWaehlen(+b.dataset.pz));
@@ -4721,6 +4814,7 @@ const ERKLAERUNG_DEPOT = {
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
+  d_wert: {titel:"Wert € – läuft mit dem Kurs mit", text:"Der Euro-Wert jeder Position wird ab dem Eintrag mit dem Kurs des zugeordneten Werts fortgeschrieben: Wert heute = eingetragener Wert × Kurs heute ÷ Kurs beim Eintrag. Bei Dollar-Werten wird die Änderung des Wechselkurses EUR/USD eingerechnet, andere Fremdwährungen laufen ohne Wechselkurs. Die kleine Zeile darunter zeigt die Veränderung seit dem Eintrag. So aktuell wie der Datenstand oben rechts (werktags etwa alle 2 Stunden, keine Echtzeit). Genau ist das nur, wenn der zugeordnete Wert dasselbe Papier ist – bei „gleicher Index“, „ähnlicher Index“ oder einem Ersatz ist es eine Näherung, Käufe und Verkäufe kennt das Tool nicht. Trägst du einen Wert von Hand ein oder lädst dein Depot neu, zählt ab dann diese Zahl. Alles bleibt in diesem Browser."},
   d_nachkauf: {titel:"Nachkauf unter", text:"Ab welchem Kurs sich Nachkaufen bei dieser Position früher gelohnt hat – dieselbe Rechnung wie auf der Titelseite des Werts (Karte „Nachkaufen“). Ein Preis heißt: Käufe bei dieser Ampel-Schwelle (60, 70, 80 oder 90) brachten in der Geschichte des Werts im Mittel mehr als Käufe in beliebigen Wochen, über mindestens 3 getrennte Phasen; ✓ heißt, der Kurs liegt heute schon darunter. „jederzeit gleich“ heißt: Warten auf tiefe Kurse brachte hier nichts, regelmäßiges Nachkaufen war genauso gut. „vorläufig“ heißt: zu wenig Geschichte für einen Beleg, bis dahin gilt die Grenze Ampel 80. Der Preis steht in der Währung des Werts und wandert jede Woche mit der 200-Wochen-Linie. Bei einem automatischen Ersatz gilt er für den Ersatz, nicht für deine Position. Fahre mit der Maus über den Preis, um den Beleg zu sehen. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
