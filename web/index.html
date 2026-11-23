@@ -1148,6 +1148,9 @@ const ERKLAERUNG = {
   // --- Strategie
   s_spar: {titel:"Sparplan", text:"Jeden Monat wird der ganze Betrag gekauft, egal wie der Kurs steht. Einfach, keine Entscheidung nötig – und in der Prüfung schwer zu schlagen."},
   s_staffel: {titel:"Staffelkauf 60/75/90", text:"Der Monatsbetrag wartet auf dem Tagesgeld. Gekauft wird nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles. Risiko: Steigt der Kurs lange, wartet das Geld und verpasst den Anstieg."},
+  s_misch: {titel:"Mischung", text:"Die Hälfte des Betrags wird jeden Monat sofort gekauft. Die andere Hälfte wartet verzinst und wird erst angelegt, wenn die Ampel der Vorwoche 60 oder mehr zeigt (günstig)."},
+  s_warten60: {titel:"Warten auf günstig", text:"Das Geld wird gesammelt und verzinst. Sobald die Ampel der Vorwoche 60 oder mehr zeigt, wird alles Wartende auf einmal gekauft. Zeigt sie das nie, bleibt das Geld liegen."},
+  s_warten80: {titel:"Warten auf sehr günstig", text:"Wie „Warten auf günstig“, aber gekauft wird erst ab Ampel 80 (historisch sehr günstig). Das kommt selten vor – oft wartet das Geld jahrelang."},
   s_staffel_vk: {titel:"Staffelkauf + Teilverkauf", text:"Wie Staffelkauf, zusätzlich: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase). Jeder Verkauf löst Abgeltungssteuer auf den Gewinn aus; das kostet oft mehr, als das Ausweichen bringt."},
   s_brutto: {titel:"Endvermögen", text:"Wert von Depot plus wartendem Bargeld am Ende, noch ohne Steuer auf nicht verkaufte Gewinne."},
   s_netto: {titel:"Nach Steuer, alles verkauft", text:"Was übrig bliebe, wenn am Ende alles verkauft und 26,375 % Abgeltungssteuer (25 % + Soli) auf den Gewinn bezahlt würde. Die fairste Vergleichszahl zwischen den Strategien."},
@@ -1978,57 +1981,86 @@ const WEGE = [["spar", "Sparplan", "jeden Monat kaufen, egal wie die Ampel steht
   ["misch", "Mischung", "die Hälfte jeden Monat kaufen, die andere Hälfte erst bei günstiger Ampel (ab 60)", "var(--kegel)"],
   ["warten60", "Warten auf günstig", "Geld sammeln und erst kaufen, wenn die Ampel günstig zeigt (ab 60)", "var(--guenstig)"],
   ["warten80", "Warten auf sehr günstig", "Geld sammeln und erst kaufen, wenn die Ampel historisch sehr günstig zeigt (ab 80)", "var(--cyan)"]];
-// Eigener Betrag in der Kaufweg-Karte (Wunsch Marc 23.11.2026: monatlich oder einmalig, Startwerte 500 je Monat und 10.000 einmalig): Der Browser rechnet die vier Wege
-// mit denselben Regeln wie strategie.py nach (Depot-Klasse: Kosten je Kauf, Zins aufs Wartegeld, Abgeltungssteuer mit Sparerpauschbetrag je
-// Kalenderjahr, Verlusttopf, Teilfreistellung, am Ende alles verkauft). Die Entscheidungen je Monat (Kurs, Ampel ≥ 60 / ≥ 80, Zins) kommen
-// fertig aus s.plan – so stimmt das Ergebnis bei 500 je Monat auf den Euro mit der Python-Rechnung überein (geprüft).
+// Eigene Eingaben für Kaufweg-Karte und Reiter „Strategie-Vergleich“ (Wunsch Marc 23.11.2026: Betrag monatlich und einmalig frei wählbar,
+// im Strategie-Vergleich auch Dauer, Kosten und Zins – beide Stellen rechnen mit denselben, gemeinsam gemerkten Werten). Der Browser rechnet
+// alle sechs Wege mit denselben Regeln wie strategie.py nach (Depot-Klasse: Kosten je Kauf/Verkauf, Zins aufs Wartegeld, Abgeltungssteuer mit
+// Sparerpauschbetrag je Kalenderjahr, Verlusttopf, Teilfreistellung, Teilverkauf nach Reihenfolge des Kaufs, am Ende alles verkauft, interner
+// Zinsfuß). Die Entscheidungen je Monat (Kurs, Ampel-Grenzen, Zins) kommen fertig aus s.plan – geprüft: gleiche Ergebnisse wie die Python-Rechnung.
 // Einmalbetrag = zusätzliche Einzahlung im ersten Monat, für die dieselben Regeln gelten (Sparplan: sofort kaufen; Warten: bis die Ampel passt).
-let KW = {betrag:500, einmal:10000, ...lade("kaufweg", {})};   // Startwerte; jede Eingabe wird im Browser gemerkt
-function kaufwegRechnen(s, chart, betrag, einmal){
-  const P = s.plan, n = P.t.length, ST = 0.26375, kfix = s.kfix ?? 1, kproz = s.kproz ?? 0, pausch = s.pausch || 0, teilfrei = s.teilfrei || 0;
-  const neu = () => ({lose:[], bar:0, topf:0, steuer:0, kosten:0, kaeufe:0, n:0, jahr:null, frei:pausch, hoch:0, dd:0});
-  const D = {spar:neu(), warten60:neu(), warten80:neu(), misch:neu()};
+const KW_STD = {betrag:500, einmal:10000, jahre:20, kfix:1, kproz:0, zins:"echt"};   // Startwerte; jede Eingabe wird im Browser gemerkt
+let KW = {...KW_STD, ...lade("kaufweg", {})};
+const kwOptionen = () => ({betrag:Math.max(0, +KW.betrag || 0), einmal:Math.max(0, +KW.einmal || 0), jahre:Math.max(2, Math.round(+KW.jahre || 20)), kfix:Math.max(0, +KW.kfix || 0), kproz:Math.max(0, +KW.kproz || 0) / 100, zins:KW.zins === "echt" || KW.zins == null ? "echt" : +KW.zins || 0});
+function strategieRechnen(s, chart, o){
+  const P = s.plan; if (!P?.t?.length) return null;
+  const ST = 0.26375, kfix = o.kfix ?? s.kfix ?? 1, kproz = o.kproz ?? s.kproz ?? 0, pausch = s.pausch || 0, teilfrei = s.teilfrei || 0, betrag = o.betrag, einmal = o.einmal || 0;
+  const voll = !!(P.g75 && P.g90 && P.l15 && P.g40), n = P.t.length, endeT = P.ende_t ?? chart?.t?.at(-1) ?? P.t[n - 1];
+  let j0 = 0;   // Zeitraum: höchstens o.jahre Kalenderjahre zurück ab dem letzten Kurs (wie start_soll in strategie.py)
+  if (o.jahre) { const d = new Date(endeT * 1000); d.setUTCFullYear(d.getUTCFullYear() - o.jahre); const ab = d.getTime() / 1000; while (j0 < n && P.t[j0] < ab) j0++; }
+  if (n - j0 < 24) return {fehler:"zu wenig Monate mit gültiger Ampel für diese Dauer"};
+  const neu = () => ({lose:[], bar:0, topf:0, steuer:0, kosten:0, kaeufe:0, verkaeufe:0, n:0, jahr:null, frei:pausch, hoch:0, dd:0, unter:0});
+  const NAMEN = ["spar", ...(voll ? ["staffel", "staffel_vk"] : []), "warten60", "warten80", "misch"], D = Object.fromEntries(NAMEN.map(k => [k, neu()]));
   const kaufen = (d, b, kurs) => { const k = kfix + kproz * b; if (b <= k * 2) return false; const m = (b - k) / kurs; d.lose.push([m, b / m]); d.n += m; d.kosten += k; d.kaeufe++; return true; };
   const nachFrei = (d, b) => { const ab = Math.min(b, d.frei); d.frei -= ab; return b - ab; };
+  const versteuern = (d, gewinn) => { gewinn *= 1 - teilfrei; if (gewinn < 0) { d.topf += -gewinn; return 0; } const v = Math.min(gewinn, d.topf); d.topf -= v; const st = nachFrei(d, gewinn - v) * ST; d.steuer += st; return st; };
+  const verkaufen = (d, anteil, kurs, buchen) => {   // zuerst Gekauftes zuerst; gibt den Erlös nach Kosten und Steuer zurück
+    const menge = d.n * anteil; if (menge <= 0) return 0;
+    const brutto = menge * kurs, k = kfix + kproz * brutto; let einstand = 0, rest = menge;
+    while (rest > 1e-12 && d.lose.length) { const los = d.lose[0], nimm = Math.min(rest, los[0]); einstand += nimm * los[1]; los[0] -= nimm; rest -= nimm; if (los[0] <= 1e-12) d.lose.shift(); }
+    d.n = d.lose.reduce((a, l) => a + l[0], 0);
+    const st = versteuern(d, brutto - k - einstand); d.kosten += k; if (buchen) d.verkaeufe++;
+    return brutto - k - st; };
   const zins = (d, satz) => { let z = d.bar * satz / 100 / 12; if (z > 0) { const st = nachFrei(d, z) * ST; d.steuer += st; z -= st; } d.bar += z; };
-  const wege = [["warten60", P.g60, 0], ["warten80", P.g80, 0], ["misch", P.g60, 0.5]];
-  let eingezahlt = 0;
+  const warte = [["warten60", P.g60, 0], ["warten80", P.g80, 0], ["misch", P.g60, 0.5]], t0 = P.t[j0], fluesse = [];
+  let eingezahlt = 0, frei = true, letzterSatz = 0;
   const monat = j => {
-    const kurs = P.k[j], jahr = new Date(P.t[j] * 1000).getUTCFullYear(), ein = betrag + (j === 0 ? einmal : 0);
+    const kurs = P.k[j], jahr = new Date(P.t[j] * 1000).getUTCFullYear(), ein = betrag + (j === j0 ? einmal : 0), satz = o.zins === "echt" || o.zins == null ? P.z[j] : o.zins;
+    letzterSatz = satz;
     for (const d of Object.values(D)) if (d.jahr !== jahr) { d.jahr = jahr; d.frei = pausch; }
-    eingezahlt += ein;
+    eingezahlt += ein; if (ein > 0) fluesse.push([(P.t[j] - t0) / 86400 / 365.25, -ein]);
     if (!kaufen(D.spar, ein, kurs)) D.spar.bar += ein;   // zu klein für einen Kauf: Geld bleibt liegen
-    for (const [k, g, sofort] of wege) { const d = D[k];
-      zins(d, P.z[j]);
+    if (voll) {
+      if (P.g40[j]) frei = true;
+      for (const k of ["staffel", "staffel_vk"]) { const d = D[k];
+        zins(d, satz); d.bar += ein;
+        if (k === "staffel_vk" && frei && P.l15[j] && d.n > 0) d.bar += verkaufen(d, 0.25, kurs, true);
+        const anteil = P.g90[j] ? 1 : P.g75[j] ? 2 / 3 : P.g60[j] ? 1 / 3 : 0;
+        if (anteil > 0 && d.bar > 0) { const invest = d.bar * anteil; if (kaufen(d, invest, kurs)) d.bar -= invest; }
+      }
+    }
+    for (const [k, g, sofort] of warte) { const d = D[k];
+      zins(d, satz);
       if (sofort > 0 && !kaufen(d, ein * sofort, kurs)) d.bar += ein * sofort;
       d.bar += ein * (1 - sofort);
       if (g[j] && d.bar > 0) { const invest = d.bar; if (kaufen(d, invest, kurs)) d.bar -= invest; }
     }
+    if (voll && P.l15[j]) frei = false;
   };
-  // Woche für Woche (für den größten zwischenzeitlichen Rückgang); Monatskäufe an ihrem Zeitpunkt
-  const ct = chart?.t, cc = chart?.c; let j = 0; const mitVerlauf = !!(ct && cc && ct.length === cc.length);
+  // Woche für Woche: größter Rückgang, tiefster Stand unter den Einzahlungen, Verlauf fürs Bild; Monatskäufe an ihrem Zeitpunkt
+  const ct = chart?.t, cc = chart?.c, mitVerlauf = !!(ct && cc && ct.length === cc.length), reihe = {t:[], ein:[], ...Object.fromEntries(NAMEN.map(k => [k, []]))};
+  let j = j0;
   if (mitVerlauf) {
-    let w0 = 0; while (w0 < ct.length && ct[w0] < P.t[0]) w0++;
+    let w0 = 0; while (w0 < ct.length && ct[w0] < t0) w0++;
     for (let w = w0; w < ct.length; w++) {
-      while (j < n && P.t[j] <= ct[w]) monat(j++);
-      const kurs = cc[w]; if (!(kurs > 0)) continue;
-      for (const d of Object.values(D)) { const v = d.n * kurs + d.bar; if (v > d.hoch) d.hoch = v; if (d.hoch > 0) d.dd = Math.min(d.dd, v / d.hoch - 1); }
+      const vorher = j; while (j < n && P.t[j] <= ct[w]) monat(j++);
+      const letzte = w === ct.length - 1, kurs = letzte ? P.ende : cc[w]; if (!(kurs > 0)) continue;
+      for (const d of Object.values(D)) { const v = d.n * kurs + d.bar; if (v > d.hoch) d.hoch = v; if (d.hoch > 0) d.dd = Math.min(d.dd, v / d.hoch - 1); d.unter = Math.min(d.unter, v - eingezahlt); }
+      if (j > vorher || letzte) { reihe.t.push(ct[w]); reihe.ein.push(Math.round(eingezahlt)); for (const k of NAMEN) reihe[k].push(Math.round(D[k].n * kurs + D[k].bar)); }
     }
   }
   while (j < n) monat(j++);
-  const erg = {};
-  for (const [k, d] of Object.entries(D)) {
-    const brutto = d.n * P.ende + d.bar, barAnteil = brutto > 0 ? d.bar / brutto * 100 : 0;
-    let netto = d.bar;
-    if (d.n > 0) {   // am Ende alles verkaufen: Kosten, Gewinn nach Teilfreistellung, Verlusttopf, Pauschbetrag
-      const erloes = d.n * P.ende, kost = kfix + kproz * erloes, einstand = d.lose.reduce((a, l) => a + l[0] * l[1], 0);
-      const gewinn = (erloes - kost - einstand) * (1 - teilfrei); let st = 0;
-      if (gewinn < 0) d.topf += -gewinn; else { const v = Math.min(gewinn, d.topf); d.topf -= v; st = nachFrei(d, gewinn - v) * ST; }
-      netto += erloes - kost - st;
-    }
-    erg[k] = {netto:Math.round(netto), brutto:Math.round(brutto), kaeufe:d.kaeufe, bar_anteil_ende:Math.round(barAnteil * 10) / 10, max_verlust:mitVerlauf ? Math.round(d.dd * 1000) / 10 : null};
+  const jahreIst = (endeT - t0) / 86400 / 365.25, erg = {};
+  const xirr = fl => { const npv = r => fl.reduce((a, [t, b]) => a + b / (1 + r) ** t, 0); let lo = -0.99, hi = 5; if (npv(lo) * npv(hi) > 0) return null;
+    for (let i = 0; i < 200; i++) { const mid = (lo + hi) / 2; if (npv(lo) * npv(mid) <= 0) hi = mid; else lo = mid; } return (lo + hi) / 2; };
+  for (const k of NAMEN) { const d = D[k];
+    const brutto = d.n * P.ende + d.bar, barAnteil = brutto > 0 ? Math.round(d.bar / brutto * 1000) / 10 : 0, steuerVorher = d.steuer;
+    const netto = d.bar + (d.n > 0 ? verkaufen(d, 1, P.ende, false) : 0), irr = xirr([...fluesse, [jahreIst, netto]]);
+    erg[k] = {name:s.ergebnis?.[k]?.name || k, brutto:Math.round(brutto), netto:Math.round(netto), irr:irr == null ? null : Math.round(irr * 10000) / 100,
+      max_verlust:mitVerlauf ? Math.round(d.dd * 1000) / 10 : null, max_unter_einzahlung:mitVerlauf ? Math.round(d.unter) : null,
+      steuer_laufend:Math.round(steuerVorher), steuer_ende:Math.round(d.steuer - steuerVorher), kosten:Math.round(d.kosten), kaeufe:d.kaeufe, verkaeufe:d.verkaeufe, bar_anteil_ende:barAnteil};
   }
-  return {ergebnis:erg, eingezahlt:Math.round(eingezahlt)};
+  const tag = t => new Date(t * 1000).toISOString().slice(0, 10);
+  return {von:tag(t0), bis:tag(Math.min(endeT, Date.now() / 1000)), jahre:Math.round(jahreIst * 10) / 10, monate:n - j0, eingezahlt:Math.round(eingezahlt), betrag, einmal, kfix, kproz, pausch:s.pausch, teilfrei:s.teilfrei,
+    zins:o.zins === "echt" || o.zins == null ? s.zins : `fest ${String(o.zins).replace(".", ",")} % p.a.`, voll, ergebnis:erg, reihe:mitVerlauf ? reihe : null, hoechstJahre:Math.floor((endeT - P.t[0]) / 86400 / 365.25 + 0.2)};
 }
 async function lohntSichCheck(id){
   const el = $("#check"); if (!el) return;
@@ -2038,7 +2070,8 @@ async function lohntSichCheck(id){
   const kopfMit = unter => kk("rueck", `Welcher Weg zu kaufen war bei ${name} am besten?`, unter, "Lohnt-sich-Check", "check");
   if (!s || s.fehler) { el.innerHTML = kopfMit("Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.") + `<p>Zu wenig Jahre mit Ampel für diesen Vergleich.</p>`; return; }
   const steuerText = `nach Kosten und Abgeltungssteuer${s.pausch ? ` (mit Sparerpauschbetrag${s.teilfrei ? " und Teilfreistellung 30 %" : ""})` : ""}, in der Währung des Werts`;
-  const mehrKnopf = () => { $("#check-mehr").onclick = () => { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); }; };
+  const zumVergleich = () => { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
+  const mehrKnopf = () => { $("#check-mehr").onclick = zumVergleich; const e2 = $("#check-einst"); if (e2) e2.onclick = zumVergleich; };
   if (!s.ergebnis.warten60 || !s.ergebnis.misch) {   // ältere Daten ohne die neuen Wege: Sparplan gegen gestaffeltes Warten
     const e = s.ergebnis, d = (e.staffel.netto / e.spar.netto - 1) * 100, ja = d > 0, mx = Math.max(e.staffel.netto, e.spar.netto);
     el.innerHTML = kopfMit(`Zwei Wege mit demselben Geld (${geld(s.betrag ?? 500)} je Monat), nachgerechnet mit den echten Kursen.`) + `<div class="fazit${ja ? " gut" : ""}">Gestaffeltes Warten auf eine günstige Ampel (60/75/90) hätte bei ${name} seit ${s.von.slice(0,4)} <b>${ja ? "mehr" : "weniger"}</b> gebracht als ein Sparplan (${vz(d,0," %")}).</div>
@@ -2047,21 +2080,23 @@ async function lohntSichCheck(id){
       <p class="klein">${geld(s.betrag ?? 500)} je Monat, ${fmt(s.jahre,0)} Jahre, ${steuerText}. Der Vergleich aller vier Wege erscheint nach dem nächsten Daten-Lauf.</p>
       <button class="linkknopf" id="check-mehr">Strategie-Vergleich ansehen →</button>`;
     mehrKnopf(); return; }
-  const eigen = !!s.plan?.t?.length;   // eigener Betrag geht, sobald die Daten den Monatsplan enthalten
+  const eigen = !!s.plan?.t?.length;   // eigene Eingaben gehen, sobald die Daten den Monatsplan enthalten
   const zeichnen = () => {
-    const betrag = eigen ? Math.max(0, +KW.betrag || 0) : (s.betrag ?? 500), einmal = eigen ? Math.max(0, +KW.einmal || 0) : 0;
+    const o = kwOptionen(), betrag = eigen ? o.betrag : (s.betrag ?? 500), einmal = eigen ? o.einmal : 0;
     const eingabe = eigen ? `<div class="eingabe" style="padding:2px 0 10px;align-items:flex-end">
         <label>Jeden Monat<input id="kw-betrag" type="number" min="0" step="50" value="${betrag}" style="width:130px"></label>
         <label>Einmalig zu Beginn<input id="kw-einmal" type="number" min="0" step="500" value="${einmal}" style="width:130px"></label>
-        <span class="klein" style="padding-bottom:9px">Trag deinen Betrag ein – alle vier Wege rechnen sofort damit. In der Währung des Werts.</span></div>` : "";
+        <span class="klein" style="padding-bottom:9px">Trag deinen Betrag ein – alle vier Wege rechnen sofort damit. In der Währung des Werts. <button class="linkknopf" id="check-einst">Dauer, Kosten und Zins ändern →</button></span></div>` : "";
     const geldText = [betrag > 0 ? `${geld(betrag)} jeden Monat` : "", einmal > 0 ? `${geld(einmal)} einmalig zu Beginn` : ""].filter(Boolean).join(" und ");
     const kopf = kopfMit(`Vier Wege mit demselben Geld${geldText ? " (" + geldText + ")" : ""}, nachgerechnet mit den echten Kursen.`);
     const binden = () => { if (!eigen) return;
-      const lies = () => { KW = {betrag:Math.max(0, +$("#kw-betrag").value || 0), einmal:Math.max(0, +$("#kw-einmal").value || 0)}; sichere("kaufweg", KW); const fokus = document.activeElement?.id; zeichnen(); if (fokus && $("#" + fokus)) $("#" + fokus).focus(); };
+      const lies = () => { KW = {...KW, betrag:Math.max(0, +$("#kw-betrag").value || 0), einmal:Math.max(0, +$("#kw-einmal").value || 0)}; sichere("kaufweg", KW); const fokus = document.activeElement?.id; zeichnen(); if (fokus && $("#" + fokus)) $("#" + fokus).focus();
+        if (REITER === "strategie" && $("#st-betrag")) tabStrategie(INFO); };   // der offene Strategie-Vergleich rechnet mit denselben Beträgen mit
       $("#kw-betrag").onchange = lies; $("#kw-einmal").onchange = lies; };
-    if (!(betrag > 0) && !(einmal > 0)) { el.innerHTML = kopf + eingabe + `<p>Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</p>`; binden(); return; }
-    const r = eigen ? kaufwegRechnen(s, wd?.chart, betrag, einmal) : {ergebnis:s.ergebnis, eingezahlt:s.eingezahlt}, e = r.ergebnis;
-    const nurEinmal = !(betrag > 0);   // nur ein Einmalbetrag: die Wege heißen dann anders
+    if (!(betrag > 0) && !(einmal > 0)) { el.innerHTML = kopf + eingabe + `<p>Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</p><button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`; binden(); mehrKnopf(); return; }
+    const r = eigen ? strategieRechnen(s, wd?.chart, o) : {ergebnis:s.ergebnis, eingezahlt:s.eingezahlt, von:s.von, jahre:s.jahre};
+    if (!r || r.fehler) { el.innerHTML = kopf + eingabe + `<p>Für die gewählte Dauer gibt es zu wenige Monate mit Ampel. Stell im Strategie-Vergleich eine längere Dauer ein.</p><button class="linkknopf" id="check-mehr">Zum Strategie-Vergleich →</button>`; binden(); mehrKnopf(); return; }
+    const e = r.ergebnis, nurEinmal = !(betrag > 0);   // nur ein Einmalbetrag: die Wege heißen dann anders
     const wegText = nurEinmal ? {spar:["Sofort kaufen", "den ganzen Betrag gleich zu Beginn kaufen, egal wie die Ampel steht"],
       misch:["Mischung", "die Hälfte sofort kaufen, die andere Hälfte erst bei günstiger Ampel (ab 60)"],
       warten60:["Warten auf günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel günstig zeigt (ab 60)"],
@@ -2076,13 +2111,14 @@ async function lohntSichCheck(id){
         <div class="balken"><i style="width:${Math.max(1, z.x.netto / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
         <div class="klein">${z.was.charAt(0).toUpperCase() + z.was.slice(1)}. ${kaeufe}${zuSpar}.</div></div>`; };
     const rueck = L.every(z => z.x.max_verlust != null) ? ` Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}.` : "";
+    const abweichend = eigen && (o.kfix !== 1 || o.kproz !== 0 || o.zins !== "echt") ? ` Gerechnet mit ${fmt(o.kfix, o.kfix % 1 ? 2 : 0)} je Kauf${o.kproz ? ` plus ${fmt(o.kproz * 100, 2)} %` : ""}${o.zins === "echt" ? "" : `, Zins fest ${fmt(o.zins, o.zins % 1 ? 1 : 0)} %`} (im Strategie-Vergleich eingestellt).` : "";
     el.innerHTML = kopf + eingabe + `<div class="fazit${knapp ? "" : " gut"}">${fazit}</div>
-      <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${s.von.slice(0,4)} (${fmt(s.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
+      <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${r.von.slice(0,4)} (${fmt(r.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
       <div class="wege">${L.map(zeile).join("")}</div>
-      <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Ein eigener Betrag lässt sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
+      <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck}${abweichend} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Eigene Beträge lassen sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
       ${nurEinmal ? `<p class="klein">Für einen einzelnen Einmalbetrag gibt es keine Gegenprobe mit Zufallsverläufen: Das Ergebnis hängt hier allein vom Startzeitpunkt ab.</p>`
         : `${einmal > 0 ? `<p class="klein">Die folgende Einordnung gilt für das monatliche Sparen mit gleichem Betrag, nicht für den Einmalbetrag.</p>` : ""}<p class="klein" id="weg-zufall" hidden></p>`}
-      <button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`;
+      <button class="linkknopf" id="check-mehr">Strategie-Vergleich mit diesen Beträgen im Einzelnen ansehen →</button>`;
     binden(); mehrKnopf(); if (!nurEinmal) wegEinordnung(id);   // Zufalls-Gegenprobe (Warten ab 60 gegen Sparplan) gilt nur für monatliches Sparen
   };
   zeichnen();
@@ -5399,60 +5435,90 @@ async function tabPruefung(w, h="3"){
 
 // ------------------------------------------------------------ Strategie
 function tabStrategie(w){
+  const o0 = kwOptionen();
   $("#tab").innerHTML = `
     <div class="eingabe">
-      <label>Betrag je Monat<input id="st-betrag" type="number" value="500" min="10"></label>
-      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="20" min="3" max="60"></label>
-      <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="1" min="0"></label>
-      <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="0" min="0"></label>
-      <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins"><option value="echt">echt (US-Geldmarkt)</option><option value="0">0 %</option><option value="2">fest 2 %</option><option value="3">fest 3 %</option></select></label>
+      <label>Betrag je Monat<input id="st-betrag" type="number" value="${o0.betrag}" min="0" step="50"></label>
+      <label>Einmalig zu Beginn<input id="st-einmal" type="number" value="${o0.einmal}" min="0" step="500"></label>
+      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="${o0.jahre}" min="2" max="60"></label>
+      <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="${o0.kfix}" min="0"></label>
+      <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="${+(o0.kproz * 100).toFixed(4)}" min="0"></label>
+      <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins">${[["echt", "echt (US-Geldmarkt)"], ["0", "0 %"], ["2", "fest 2 %"], ["3", "fest 3 %"]].map(([v, t]) => `<option value="${v}" ${String(o0.zins) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
       <button id="st-los">Berechnen</button>
-    </div><div id="st-erg"><div class="text">rechnet …</div></div>`;
-  const los = async () => {
-    const id = AKTIV;
-    const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
-    const d = await apiStrategie(id, q);
-    if (AKTIV !== id || REITER !== "strategie") return;
-    if (!d) { $("#st-erg").innerHTML = '<div class="text">Kein Vergleich möglich (zu wenig Daten).</div>'; return; }
-    if (d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d.fehler}</div>`; return; }
-    const ks = ["spar","staffel","staffel_vk"], e = d.ergebnis;
-    const best = ks.reduce((a,b) => (e[b].netto > e[a].netto ? b : a), "spar");
-    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td class="${k===best?"":""}">${f(e[k])}</td>`).join("")}</tr>`;
+    </div>
+    <p class="klein" id="st-hinweis" style="margin:-4px 0 10px">Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit. <button class="linkknopf" id="st-zur-karte">↑ Zur Kaufweg-Karte</button></p>
+    <div id="st-erg"><div class="text">rechnet …</div></div>`;
+  const zeigen = (d, alle) => {   // d wie aus strategie.vergleich(); alle = auch die drei Warte-Wege der Kaufweg-Karte
+    const e = d.ergebnis, kurz = {spar:"Sparplan", staffel:"Staffelkauf 60/75/90", staffel_vk:"Staffelkauf + Teilverkauf ≤ 15", misch:"Mischung", warten60:"Warten auf günstig", warten80:"Warten auf sehr günstig"};
+    const ks = ["spar", "staffel", "staffel_vk", ...(alle ? ["misch", "warten60", "warten80"] : [])].filter(k => e[k]);
+    const best = ks.reduce((a, b) => (e[b].netto > e[a].netto ? b : a), "spar");
+    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td>${f(e[k])}</td>`).join("")}</tr>`;
+    const farben = {ein:"#868993", spar:"#2962ff", staffel:F().guenstig, staffel_vk:"#ff9800", misch:F().kegel, warten60:"#14b8a6", warten80:F().cyan};
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     $("#st-erg").innerHTML = `
-      <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}).
-        Am meisten nach Steuer: <b>${e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
-      <table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${e[k].name}</th>`).join("")}</tr></thead><tbody>
+      <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}${d.einmal > 0 ? `, davon ${geld(d.einmal)} einmalig zu Beginn` : ""}).
+        Am meisten nach Steuer: <b>${kurz[best] || e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
+      <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${kurz[k] || e[k].name}</th>`).join("")}</tr></thead><tbody>
         ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto), "s_brutto")}
         ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")}
         ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "s_irr")}
-        ${zeile("Größter Rückgang des Vermögens", x => `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
-        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
+        ${zeile("Größter Rückgang des Vermögens", x => x.max_verlust == null ? "–" : `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
+        ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung == null ? "–" : x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
         ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "s_steuer")}
         ${zeile("Kosten gesamt", x => geld(x.kosten), "s_kosten")}
         ${zeile("Käufe / Verkäufe", x => `${x.kaeufe} / ${x.verkaeufe}`)}
         ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "s_bar")}
-      </tbody></table>
+      </tbody></table></div>
       <div id="chart3"></div>
-      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:#868993"></i>eingezahlt</span><span><i style="background:#2962ff"></i>Sparplan</span><span><i style="background:#26a69a"></i>Staffelkauf</span><span><i style="background:#ff9800"></i>Staffel + Teilverkauf</span></div>
+      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:${farben.ein}"></i>eingezahlt</span>${ks.map(k => `<span><i style="background:${farben[k]}"></i>${kurz[k]}</span>`).join("")}</div>
       <div class="text">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
       <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
+      ${alle ? `<b>Mischung</b>: die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60. <b>Warten auf günstig / sehr günstig</b>: Geld sammeln und alles kaufen, sobald die Ampel 60 bzw. 80 erreicht. Ein <b>Einmalbetrag</b> wird im ersten Monat eingezahlt und folgt denselben Regeln.` : ""}
       Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
-      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."} Dividenden stecken steuerfrei im bereinigten Kurs (für alle drei gleich).
+      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."}
       Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
+    if (!d.reihe) return;
     const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:F().line}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
-    [["ein","#868993",2],["spar","#2962ff",0],["staffel",F().guenstig,0],["staffel_vk","#ff9800",0]].forEach(([k,f,st]) => {
-      const s = ch.addLineSeries({color:f,lineWidth:k==="ein"?1:2,lineStyle:st,priceLineVisible:false,lastValueVisible:false});
+    ["ein", ...ks].forEach(k => { if (!d.reihe[k]) return;
+      const s = ch.addLineSeries({color:farben[k], lineWidth:k==="ein"?1:2, lineStyle:k==="ein"?2:0, priceLineVisible:false, lastValueVisible:false});
       s.setData(d.reihe.t.map((t,i) => ({time:t,value:d.reihe[k][i]})));
     });
     setTimeout(() => ch.timeScale().fitContent(), 50);
     tabCharts.push(ch);
   };
+  const los = async () => {
+    const id = AKTIV;
+    const [s, wd] = await Promise.all([apiStrategie(id), apiWert(id)]);
+    if (AKTIV !== id || REITER !== "strategie" || !$("#st-erg")) return;
+    if (!s) { $("#st-erg").innerHTML = '<div class="text">Kein Vergleich möglich (zu wenig Daten).</div>'; return; }
+    if (s.fehler) { $("#st-erg").innerHTML = `<div class="text">${s.fehler}</div>`; return; }
+    const P = s.plan, voll = !!(P?.t?.length && P.g75 && P.g90 && P.l15 && P.g40);
+    if (voll) {   // eigene Eingaben: im Browser gerechnet (online wie lokal), gemeinsam mit der Kaufweg-Karte gemerkt
+      const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, +$(sel).value || 0)), hoechst = Math.max(2, Math.floor((P.ende_t - P.t[0]) / 86400 / 365.25 + 0.2));
+      const jahre = Math.round(z("#st-jahre", 2, 60)), zinsWahl = $("#st-zins").value;
+      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre:Math.min(jahre, hoechst), kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl};
+      sichere("kaufweg", KW); if (jahre > hoechst) $("#st-jahre").value = hoechst;
+      const o = kwOptionen();
+      if (!(o.betrag > 0) && !(o.einmal > 0)) { $("#st-erg").innerHTML = '<div class="text">Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</div>'; return; }
+      const d = strategieRechnen(s, wd?.chart, o);
+      if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich."} Für diesen Wert reichen die Daten für höchstens ${hoechst} Jahre.</div>`; return; }
+      zeigen(d, true);
+      $("#st-hinweis").firstChild.textContent = `Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit.${jahre > hoechst ? ` Für diesen Wert gehen höchstens ${hoechst} Jahre.` : ""} `;
+      if ($("#check")) lohntSichCheck(id);   // Kaufweg-Karte rechnet mit denselben Werten mit
+      return;
+    }
+    // ältere Daten ohne Monatsplan: lokal rechnet der Server, online gibt es nur die vorab gerechneten Standardwerte
+    const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
+    const d = STATISCH ? s : await apiStrategie(id, q);
+    if (AKTIV !== id || REITER !== "strategie" || !$("#st-erg")) return;
+    if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich (zu wenig Daten)."}</div>`; return; }
+    if (STATISCH) { document.querySelectorAll("#tab .eingabe input, #tab .eingabe select, #st-los").forEach(e => e.disabled = true);
+      $("#st-hinweis").textContent = "Eigene Eingaben gehen hier nach dem nächsten Daten-Lauf. Bis dahin: 500 je Monat, bis 20 Jahre, 1 je Order, echter Zins."; }
+    zeigen(d, false);
+  };
   $("#st-los").onclick = los;
-  if (STATISCH) {   // online: nur die Standardwerte (vorab gerechnet)
-    document.querySelectorAll("#tab .eingabe input, #tab .eingabe select, #st-los").forEach(e => e.disabled = true);
-    $("#tab .eingabe").insertAdjacentHTML("beforeend", '<span class="klein" style="align-self:center">Online feste Werte: 500 je Monat, bis 20 Jahre, 1 je Order, echter Zins. Eigene Eingaben gehen in der lokalen Fassung.</span>');
-  }
+  document.querySelectorAll("#tab .eingabe input, #tab .eingabe select").forEach(e => e.onchange = los);
+  $("#st-zur-karte").onclick = () => $("#check")?.scrollIntoView({behavior:"smooth", block:"start"});
   los();
 }
 

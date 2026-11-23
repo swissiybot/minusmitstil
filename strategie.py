@@ -174,10 +174,11 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
     max_unter = {k: 0.0 for k in NAMEN}
     tage_set = set(tage)
     letzter_satz = 0.0
-    # Plan je Monat für den Rechner mit eigenem Betrag in der Kaufweg-Karte (Wunsch Marc 23.11.2026): Zeitpunkt, Ausführungskurs,
-    # Ampel der Vorwoche ≥ 60 / ≥ 80 (als fertige Entscheidung, damit Rundung der Ampel nichts verschiebt) und Zinssatz. Der Browser
-    # rechnet damit die Wege Sparplan, Mischung, Warten auf günstig / sehr günstig mit denselben Regeln für jeden Betrag nach.
-    plan = {"t": [], "k": [], "g60": [], "g80": [], "z": []}
+    # Plan je Monat für die Rechner mit eigenen Eingaben (Kaufweg-Karte und Reiter „Strategie-Vergleich“, Wunsch Marc 23.11.2026):
+    # Zeitpunkt, Ausführungskurs, die Ampel-Entscheidungen der Vorwoche als fertige Ja/Nein-Werte (damit Rundung nichts verschiebt)
+    # und der Zinssatz. Der Browser rechnet damit alle sechs Wege mit denselben Regeln für jeden Betrag, jede Dauer bis zur
+    # exportierten Länge, eigene Kosten und einen festen Zins nach (strategieRechnen in web/index.html).
+    plan = {"t": [], "k": [], "g60": [], "g75": [], "g80": [], "g90": [], "l15": [], "g40": [], "z": []}   # g = Ampel ≥ Grenze, l15 = ≤ 15, g40 = > 40 (wieder frei)
     for i in range(tage[0], n):
         if i in tage_set:
             kurs = o[i] if not math.isnan(o[i]) and o[i] > 0 else c[i - 1]
@@ -185,7 +186,9 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
             letzter_satz = satz(idx[i])
             if reihe:   # nur für die Einzelseite (export.py, server.py); die Massenprüfungen mit reihe=False brauchen den Plan nicht
                 plan["t"].append(int((idx[i] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)))
-                plan["k"].append(float(f"{kurs:.9g}")); plan["g60"].append(int(s >= 60)); plan["g80"].append(int(s >= 80)); plan["z"].append(round(float(letzter_satz), 4))
+                plan["k"].append(float(f"{kurs:.9g}")); plan["z"].append(round(float(letzter_satz), 4))
+                for name, wahr in (("g60", s >= 60), ("g75", s >= 75), ("g80", s >= 80), ("g90", s >= 90), ("l15", s <= VERKAUF_AB), ("g40", s > WIEDER_FREI_AB)):
+                    plan[name].append(int(wahr))
             for d in depots.values():
                 d.jahr_setzen(idx[i].year)
             eingezahlt += betrag
@@ -257,6 +260,6 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
         "pausch": pausch, "teilfrei": teilfrei,
         "zins": "fest " + f"{fester_zins:g}".replace(".", ",") + " % p.a." if fester_zins is not None else (("US-Geldmarkt 3 Monate (FRED TB3MS), zuletzt %.2f %%" % letzter_satz).replace(".", ",") if zins is not None else "kein Zins (FRED-Daten fehlen)"),
         "ergebnis": erg,
-        "plan": {**plan, "ende": float(f"{c[-1]:.9g}")} if reihe else None,
+        "plan": {**plan, "ende": float(f"{c[-1]:.9g}"), "ende_t": int((idx[-1] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1))} if reihe else None,
         "reihe": {"t": verlauf_t, "ein": verlauf_ein, **verlauf} if reihe else None,
     }
