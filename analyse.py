@@ -224,6 +224,40 @@ def _phasen(maske: np.ndarray, luecke: int = NK_LUECKE) -> int:
     return 0 if not len(i) else 1 + int(np.sum(np.diff(i) > luecke))
 
 
+VERL_H = 156            # Verlässlichkeit: Rendite der folgenden 3 Jahre
+VERL_MIN_JAHRE = 10     # mindestens so viele Jahre mit bekanntem Ergebnis (gut 3 unabhängige Abschnitte), sonst „zu wenig“
+
+
+def verlaesslichkeit(idx: pd.DatetimeIndex, c: np.ndarray, score: np.ndarray) -> dict | None:
+    """Wunsch Marc 23.11.2026 („für jeden Titel noch besser geklärt“): Wie gut lag die Ampel bei DIESEM Titel bisher?
+    Rangkorrelation (Spearman) zwischen der Ampel einer Woche (ohne Zukunftswissen gerechnet) und der tatsächlichen
+    Rendite der 3 Jahre danach, über alle Wochen mit bekanntem Ergebnis; dazu dieselbe Zahl für die letzten 10 Jahre
+    bekannter Ergebnisse und die Zahl getrennter Phasen mit Ampel ≥ 80 (Lücke über 13 Wochen).
+    stufe: gut (gesamt und letzte 10 Jahre ≥ 0,3), gemischt (eine ≥ 0,3, die andere unter 0,1), schwach (eine unter 0,1,
+    keine ≥ 0,3; negativ = bisher eher daneben), sonst mittel (beide ab 0,1); zu wenig unter 10 Jahren bekannter Ergebnisse.
+    Benachbarte Wochen überlappen stark (3-Jahres-Fenster) – 10 Jahre sind nur gut 3 unabhängige Abschnitte."""
+    n = len(c)
+    if n <= VERL_H:
+        return {"stufe": "zu wenig", "jahre": 0}
+    f = np.full(n, np.nan); f[:n - VERL_H] = np.log(c[VERL_H:] / c[:n - VERL_H])
+    ok = ~np.isnan(score) & ~np.isnan(f)
+    jahre = float(ok.sum()) / 52
+    aus = {"jahre": r(jahre, 1), "ph80": _phasen(ok & (score >= 80))}
+    if jahre < VERL_MIN_JAHRE:
+        return {"stufe": "zu wenig", **aus}
+    rk = lambda m: float(pd.Series(score[m]).rank().corr(pd.Series(f[m]).rank()))
+    gesamt = rk(ok)
+    i = np.flatnonzero(ok)
+    zehn = ok & (np.arange(n) > i[-1] - 520)
+    aus["rk"] = r(gesamt, 2)
+    aus["rk10"] = r(rk(zehn), 2) if jahre > 10 and zehn.sum() >= 260 else None
+    aus["seit"] = idx[i[0]].strftime("%Y")
+    werte = [gesamt] + ([aus["rk10"]] if aus["rk10"] is not None else [])
+    aus["stufe"] = ("gut" if min(werte) >= 0.3 else "gemischt" if max(werte) >= 0.3 and min(werte) < 0.1
+                    else "schwach" if min(werte) < 0.1 else "mittel")
+    return aus
+
+
 def nachkauf(c: np.ndarray, score: np.ndarray, kzv: dict, kurs: float) -> dict | None:
     """Wunsch Marc 22.11.2026: „pro Titel wissen, wann es sich lohnt nachzukaufen“.
     Rückblick über die Geschichte DIESES Titels: Für jede Schwelle (Ampel ≥ 60/70/80/90) die Jahresrendite der folgenden
@@ -651,6 +685,12 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
             nk = nachkauf(c, score, kzv, float(tag_c.iloc[-1]))
     except Exception as ex:
         print(f"Nachkauf nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    verl = None
+    try:   # Verlässlichkeit der Ampel bei diesem Titel (Rückblick)
+        if not math.isnan(s_jetzt):
+            verl = verlaesslichkeit(w.index, c, score)
+    except Exception as ex:
+        print(f"Verlässlichkeit nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     r2 = trendguete(w["Close"])
     qualitaet = bool(cagr20 is not None and cagr20 > 0.03 and r2 >= 0.6 and jahre_daten >= E.MIN_JAHRE_RANGLISTE)
     umsatz = float((tag["Close"] * tag["Volume"]).tail(63).mean()) if "Volume" in tag else 0.0
@@ -706,6 +746,7 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         "mp": mp["phase"] if mp else None,   # Marktphase heute: 2 aufwaerts, 1 gemischt, 0 abwaerts
         "perf": perf,                        # Kursveraenderung in %: [Tag, Woche, Monat, Jahr]
         "kz": kz,                            # Kaufzonen: Kurs, bei dem die Ampel heute 80/60/40/15 waere
+        "verl": verl,                        # Verlässlichkeit: wie gut lag die Ampel bei diesem Titel bisher (Rangkorrelation mit der 3-Jahres-Rendite)
         "nk": nk,                            # Nachkauf: ab welcher Ampel sich Kaufen bei diesem Titel früher lohnte, Kurs dafür heute
         "linie200": r(sma200[-1], 4),        # 200-Wochen-Linie heute
         "ampel_wochen": int(np.sum(~np.isnan(score))),   # Wochen mit Ampel
