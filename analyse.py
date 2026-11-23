@@ -228,6 +228,7 @@ NK_SIMS = 39          # Zufallsvergleich: so viele Zufallsverläufe je Titel (h�
 NK_SIM_MAX_BESSER = 1 # „lohnt“ nur, wenn höchstens so viele Zufallsverläufe mindestens denselben Vorteil zeigen (p ≤ 0,05)
 NK_BLOCK = 26         # Zufallsverläufe: echte Wochenrenditen in neu gereihten 26-Wochen-Blöcken
 NK_SPRUNG = 4.5       # Wochensprung über Faktor 4,5 (oder unter 1/4,5) = vermutlich Datenfehler, kein Beleg möglich
+JUNG_MIN_WOCHEN = 13  # junge Werte: ab so vielen Wochen eigene Schwankung in der Depot-Prognose; darunter "neu" (nur Kurs, Ersatz in der Prognose)
 NK_FERTIG: dict = {}  # id -> fertiger Nachkauf aus rangliste.json; export.py füllt das, damit die Zufallsproben nicht ein zweites Mal laufen
 
 
@@ -896,7 +897,11 @@ def werte_eines(z: dict):
     tag = tag[tag["Close"] > 0]
     erg = analysiere(z, tag, seg)
     if erg is None and z["gruppe"] not in ("Krypto", "Rohstoffe"):
-        erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
+        try:
+            erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
+        except Exception as ex:            # brandneue Werte mit lückenhaften Kursen dürfen den Lauf (und die Regelprüfung) nicht stoppen
+            print(f"Junger Wert nicht darstellbar ({z['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+            erg = None
     if erg is not None:
         erg[0].update(beschreibung_fuer(z["id"]))   # ISIN, WKN, Kurzbeschreibung
         erg[0].update(zusatzdaten(z, erg[0]))      # Dividenden, ETF-Inhalt und Kosten (nur echte Quellen)
@@ -928,15 +933,17 @@ def zusatzdaten(z: dict, zeile: dict) -> dict:
 
 
 def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
-    """Junger Wert (mindestens 13, unter 156 Wochen Kurse, aktuell gehandelt, z. B. SpaceX seit 06/2026): eigene Seite mit
+    """Junger Wert (unter 156 Wochen Kurse, aktuell gehandelt, z. B. SpaceX seit 06/2026; seit 23.11.2026 schon ab 2 Handelstagen,
+    damit brandneue Börsengänge wie Anthropic in der Suche stehen – Kennzeichen "neu" bei unter 13 Wochen): eigene Seite mit
     Chart, aber OHNE Ampel (dafür fehlt die 200-Wochen-Linie). Statt der Ampel: Lage seit Börsengang (erster Kurs,
     Hoch, Tief, Durchschnitt). Rückgabe wie analysiere(): (Zeile, Chart, Rohdaten)."""
     c_tag = tag["Close"][tag["Close"] > 0]
     if len(c_tag) < 2 or (pd.Timestamp(dt.date.today()) - c_tag.index[-1]).days > 14:
         return None
     w = wochen(tag)
-    if not (13 <= len(w) < 156):
+    if not (1 <= len(w) < 156):
         return None
+    neu = len(w) < JUNG_MIN_WOCHEN   # brandneu: Kurs und Verlauf ja, aber keine eigene Rechnung (Depot-Prognose nimmt einen Ersatz)
     c = w["Close"].values.astype(float)
     hoch, tief = float(np.nanmax(w["High"].values)), float(np.nanmin(w["Low"].values))
     mittel = float(np.mean(c))
@@ -947,7 +954,7 @@ def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
     zeile = {
         **{k: z.get(k) for k in ("id", "symbol", "name", "gruppe", "land", "branche")},
         "datum": c_tag.index[-1].strftime("%Y-%m-%d"), "kurs": r(jetzt, 4),
-        "score": None, "score_vor4w": None, "zone": "keine Daten", "jung": True,
+        "score": None, "score_vor4w": None, "zone": "keine Daten", "jung": True, "neu": neu, "handelstage": int(len(c_tag)),
         "seit": c_tag.index[0].strftime("%Y-%m-%d"), "wochen": int(len(w)),
         "erster_kurs": r(float(c_tag.iloc[0]), 4), "hoch_seit": r(hoch, 4), "tief_seit": r(tief, 4), "mittel_seit": r(mittel, 4),
         "dd": r((jetzt / hoch - 1) * 100, 1), "zu_mittel": r((jetzt / mittel - 1) * 100, 1),
@@ -956,7 +963,8 @@ def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
         "cagr20": None, "cagr_jahre": None, "cagr_max": None, "qualitaet": False, "p": {}, "kz": None, "sv": [],
         "perf": [r((jetzt / float(c_tag.iloc[-2]) - 1) * 100, 2), seit(pd.Timedelta(days=7)), seit(pd.DateOffset(months=1)), seit(pd.DateOffset(years=1))],
         "umsatz_usd": r(float((tag["Close"] * tag["Volume"]).tail(63).mean()), 0) if "Volume" in tag else 0.0,
-        "grund": f"erst {len(w)} Wochen an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')}) · {abs((jetzt / hoch - 1) * 100):.0f} % unter dem Hoch seit Börsengang",
+        "grund": (f"brandneu: erst {len(c_tag)} Handelstage an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')})" if neu else
+                  f"erst {len(w)} Wochen an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')}) · {abs((jetzt / hoch - 1) * 100):.0f} % unter dem Hoch seit Börsengang"),
         "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
     }
     t_unix = [int(x) for x in (w.index - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)]
@@ -994,17 +1002,18 @@ def heatmap_zeile(z: dict, tag: pd.DataFrame, n100: dict, f: dict | None) -> dic
 
 
 def jung_zeile(z: dict, tag: pd.DataFrame | None) -> dict | None:
-    """Junge Aktien (unter 3 Jahren Kurse, mindestens 13 Wochen, aktuell gehandelt, z. B. SpaceX seit 06/2026):
-    keine Ampel, aber Wochenkurse fuer die Depot-Prognose (eigene Schwankung statt Ersatz)."""
+    """Junge Aktien (unter 3 Jahren Kurse, aktuell gehandelt, z. B. SpaceX seit 06/2026): keine Ampel, aber Wochenkurse fuer die
+    Depot-Prognose (eigene Schwankung statt Ersatz). Unter 13 Wochen ("neu", z. B. Anthropic kurz nach dem Boersengang) reicht es nur fuer
+    Kurs und Zuordnung – die Prognose rechnet solche Werte mit einem gekennzeichneten Ersatz."""
     if tag is None or tag.empty or z["gruppe"] in ("Krypto", "Rohstoffe"):
         return None
     c = tag["Close"][tag["Close"] > 0]
     w = c.resample("W-FRI").last().dropna()
-    if len(w) < 13 or (pd.Timestamp(dt.date.today()) - c.index[-1]).days > 14:
+    if len(c) < 2 or len(w) < 1 or (pd.Timestamp(dt.date.today()) - c.index[-1]).days > 14:
         return None
     t = [int((d - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)) for d in w.index]
     return {"id": z["id"], "symbol": z["symbol"], "name": z["name"], "gruppe": z["gruppe"], "datum": c.index[-1].strftime("%Y-%m-%d"),
-            "kurs": r(c.iloc[-1], 4), "seit": c.index[0].strftime("%Y-%m-%d"), "wochen": len(w),
+            "kurs": r(c.iloc[-1], 4), "seit": c.index[0].strftime("%Y-%m-%d"), "wochen": len(w), "neu": len(w) < JUNG_MIN_WOCHEN,
             "t": t, "c": [float(f"{x:.6g}") for x in w.values]}
 
 

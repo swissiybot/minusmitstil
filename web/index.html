@@ -1625,8 +1625,9 @@ function sucheRechnen(){
 }
 function trefferOeffnen(i){
   const t = TREFFER[i]; if (!t) return;
-  const ersatz = ERSATZ_FUER, vgl = VERGLEICH_WAHL; ERSATZ_FUER = null; VERGLEICH_WAHL = false; $("#suche-dlg").close();
+  const ersatz = ERSATZ_FUER, vgl = VERGLEICH_WAHL, plan = PLAN_WAHL; ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; $("#suche-dlg").close();
   if (vgl && t.art === "wert") { vergleichZeigen(t.w.id); return; }
+  if (plan && t.art === "wert") { planHinzu(t.w); return; }
   if (ersatz != null && t.art === "wert" && DEPOT?.positionen[ersatz]) {   // Depot: gewählten Wert als Ersatz zuordnen
     Object.assign(DEPOT.positionen[ersatz], {id:t.w.id, quelle:"von dir gewählt", ersatz:false, hinweis:""}); depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
   }
@@ -1643,7 +1644,7 @@ $("#suche-eingabe").addEventListener("keydown", ev => {
 });
 $("#suche-treffer").addEventListener("click", ev => { const t = ev.target.closest(".treffer"); if (t) trefferOeffnen(+t.dataset.i); });
 $("#suche-dlg").addEventListener("click", ev => { if (ev.target === $("#suche-dlg")) $("#suche-dlg").close(); });
-$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; VERGLEICH_WAHL = false; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
+$("#suche-dlg").addEventListener("close", () => { ERSATZ_FUER = null; VERGLEICH_WAHL = false; PLAN_WAHL = false; $("#suche-eingabe").placeholder = "Name oder Kürzel, z. B. „gold“, „sp500“, „bitcon“ …"; });
 $("#such-knopf").onclick = sucheOeffnen;
 document.addEventListener("keydown", ev => {
   const imFeld = ev.target.closest?.("input,textarea,select,[contenteditable]");
@@ -2507,7 +2508,16 @@ async function renditeEuroInit(id, w){   // dieselbe Ø Jahresrendite in Euro (D
 }
 
 // ------------------------------------------------------------ Vergleich: zwei Titel nebeneinander
-let VERGLEICH_WAHL = false;
+let VERGLEICH_WAHL = false, PLAN_WAHL = false;
+function planWaehlen(){ sucheOeffnen(); PLAN_WAHL = true; $("#suche-eingabe").placeholder = "Wert für künftige Käufe suchen – Name oder Kürzel …"; }
+function planHinzu(w){   // Wert ohne Bestand in die Positionsliste: nur für den Sparplan
+  if (!DEPOT) depotLaden();
+  const P = DEPOT.positionen, da = P.findIndex(p => p.id === w.id);
+  if (da < 0) P.push({name:kurzname(w), isin:w.isin || "", kuerzel:w.symbol || w.id, wert:0, id:w.id, quelle:"von dir gewählt", spar:0, plan:true, depot:P.length ? depotName(P[P.length - 1]) : DEPOT_NAME_STD});
+  if (DEPOT.e.verteilung === "depot" && da < 0) DEPOT.e.verteilung = "eigen";   // sonst bekäme der neue Wert (0 € Bestand) nie einen Anteil
+  depotSichern(); zeigeDepot();
+  const i = da < 0 ? P.length - 1 : da, f = $(`#haupt [data-ps="${i}"]`); if (f) { f.scrollIntoView({block:"center"}); f.focus(); f.select(); }
+}
 function vergleichWaehlen(){ sucheOeffnen(); VERGLEICH_WAHL = true; $("#suche-eingabe").placeholder = "Zweiten Titel zum Vergleichen wählen …"; }
 async function vergleichZeigen(id2){
   const el = $("#vergleich"), id = AKTIV; if (!el || !INFO || id2 === id) return;
@@ -2712,7 +2722,7 @@ function kennung(w){
 }
 function klartext(w, c){
   if (w.jung) { const nk = w.kurs >= 100 ? 2 : 4;
-    return `${esc(kurzname(w))} ist erst seit <b>${datumDe(w.seit)}</b> an der Börse (${w.wochen} Wochen). Für die Ampel braucht es die 200-Wochen-Linie, also knapp 4 Jahre Kurse – eine vorläufige Ampel gibt es ab 2 Jahren. Bis dahin zeigt das Tool die Lage seit dem Börsengang: erster Kurs ${fmt(w.erster_kurs, nk)}, Hoch ${fmt(w.hoch_seit, nk)}, Tief ${fmt(w.tief_seit, nk)}, heute <b>${fmt(w.kurs, nk)}</b> – ${fmt(Math.abs(w.dd),0)} % unter dem Hoch und ${w.zu_mittel >= 0 ? fmt(w.zu_mittel,0) + " % über" : fmt(-w.zu_mittel,0) + " % unter"} dem Durchschnittskurs seit Börsengang (${fmt(w.mittel_seit, nk)}). Bei so kurzer Geschichte lässt sich nicht sagen, was günstig oder teuer ist.`; }
+    return `${esc(kurzname(w))} ist erst seit <b>${datumDe(w.seit)}</b> an der Börse (${w.neu ? `${w.handelstage ?? "wenige"} Handelstage` : `${w.wochen} Wochen`}). Für die Ampel braucht es die 200-Wochen-Linie, also knapp 4 Jahre Kurse – eine vorläufige Ampel gibt es ab 2 Jahren. Bis dahin zeigt das Tool die Lage seit dem Börsengang: erster Kurs ${fmt(w.erster_kurs, nk)}, Hoch ${fmt(w.hoch_seit, nk)}, Tief ${fmt(w.tief_seit, nk)}, heute <b>${fmt(w.kurs, nk)}</b> – ${fmt(Math.abs(w.dd),0)} % unter dem Hoch und ${w.zu_mittel >= 0 ? fmt(w.zu_mittel,0) + " % über" : fmt(-w.zu_mittel,0) + " % unter"} dem Durchschnittskurs seit Börsengang (${fmt(w.mittel_seit, nk)}). Bei so kurzer Geschichte lässt sich nicht sagen, was günstig oder teuer ist.`; }
   if (w.score == null) return `Für ${esc(kurzname(w))} gibt es noch keine Ampel. Sie braucht gut 5 Jahre Kursdaten: knapp 4 Jahre für die 200-Wochen-Linie und danach genug Wochen, um zu sehen, wie weit der Kurs sonst über der Linie lag. Hier sind es ${fmt(w.jahre_daten,1)} Jahre.`;
   const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, seit = w.ampel_seit ? ` seit ${w.ampel_seit}` : "";
   let t = "";
@@ -2752,7 +2762,7 @@ function jungKarte(w){   // junge Werte (z. B. SpaceX): Lage seit Börsengang st
              ["Durchschnitt seit Börsengang", fmt(w.mittel_seit, nk)], ["Heute", `<b>${fmt(w.kurs, nk)}</b>`],
              ["seit dem ersten Kurs", `<span class="${klasse(w.seit_start)}">${vz(w.seit_start,0," %")}</span>`], ["vom Hoch", `<span class="${klasse(w.dd)}">${vz(w.dd,0," %")}</span>`],
              ["zum Durchschnitt", `${vz(w.zu_mittel,0," %")}`]];
-  return `<section class="karte breit2" id="jung-karte">${kk("ueber", "Wie lief es seit dem Börsengang?", "Für eine Ampel ist die Geschichte noch zu kurz – hier steht, was sich schon sagen lässt.", `${w.wochen} Wochen`, "jung")}
+  return `<section class="karte breit2" id="jung-karte">${kk("ueber", "Wie lief es seit dem Börsengang?", "Für eine Ampel ist die Geschichte noch zu kurz – hier steht, was sich schon sagen lässt.", w.neu ? "brandneu" : `${w.wochen} Wochen`, "jung")}
     ${z.map(([k, v]) => `<div class="kv"><span>${k}</span><b>${v}</b></div>`).join("")}
     <p class="klein" style="margin:8px 0 0">Die Ampel braucht die 200-Wochen-Linie (knapp 4 Jahre Kurse), eine vorläufige Ampel gibt es ab 2 Jahren. Ab dann erscheint sie hier automatisch. Junge Börsengänge schwanken oft besonders stark. Keine Anlageberatung.</p></section>`;
 }
@@ -3871,7 +3881,7 @@ function isinListeLaden(){
 }
 const NAME_REST = /\b(inc|corp|corporation|co|company|ltd|limited|plc|ag|se|sa|nv|holdings?|group|the|registered|reg|shares?|shs|cl|class|[abch]|yc|o\.?n|dl|adrs?|sp|ord|ordinary|common|stock|cap|stk)\b\.?/gi;
 const nameKern = s => String(s || "").toLowerCase().replace(/\s+-\s+.*$/, "").replace(/\(.*?\)/g, " ").replace(/\b([a-z])\.(?=[a-z]\.)/g, "$1").replace(/\b([a-z]{2,4})\.(\s|$)/g, "$1 ").replace(/[-,.]*\d[\d,.]*/g, " ").replace(NAME_REST, " ").replace(/[^a-z0-9äöüß&]+/g, " ").replace(/\s+/g, " ").trim();
-const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:""};
+const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], phasen:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:""};
 let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar, depot}], e:{…Einstellungen}, zuordnungen:{Spaltenköpfe → Spalten}, merken:bool}
 const DEPOT_NAME_STD = "Depot 1";
 const depotName = p => p.depot || DEPOT_NAME_STD;
@@ -3926,7 +3936,20 @@ async function depotAktuell(){   // nach dem Laden und nach jedem neuen Datensta
   if (SEITE === "depot") { if (seiteRuhig() || !$("#haupt [data-pw]")) zeigeDepot(); else setTimeout(() => { if (SEITE === "depot" && seiteRuhig()) zeigeDepot(); }, RUHE_MS + 1000); }
   else if (AKTIV && $("#position-karte")) { const w = wertVon(AKTIV), html = w && positionKarte(w); if (html) { $("#position-karte").outerHTML = html; positionInit(AKTIV, w); } }
 }
+function quelleKlar(p){   // wie die Position zu ihrem Wert im Tool kam – ohne Fachwörter
+  const q = p.quelle || "von dir gewählt";
+  if (q === "ISIN") return "✓ genau dein Papier";
+  if (q === "ISIN (gleicher Index)") return "≈ anderer ETF auf denselben Index";
+  if (q === "Kürzel" || q === "Name") return "✓ am Kürzel erkannt";
+  return q;
+}
+function einstandText(p){   // aus dem Transaktionsexport: bezahlt und Gewinn/Verlust seit Kauf
+  if (!(p.einstand > 0) || !(p.wert > 0)) return "";
+  const g = p.wert - p.einstand;
+  return `<div class="klein" title="Einstand = was du für den heutigen Bestand bezahlt hast (Durchschnittskosten mit Gebühren, aus dem Transaktionsexport). Vor Steuern.">bezahlt ${geld(p.einstand)} € · <span class="${g >= 0 ? "pos" : "neg"}">${g >= 0 ? "+" : "−"}${geld(Math.abs(g))} € (${vz(g / p.einstand * 100, 0, " %")})</span></div>`;
+}
 function mitlaufText(p){   // kleine Zeile unter dem Wert in der Positionsliste
+  if (!(p.wert > 0)) return `<div class="klein" title="Dieser Wert steht nur für den Sparplan in der Liste. Trägst du einen Betrag ein, zählt er als Bestand.">noch kein Bestand – nur Sparplan</div>`;
   const b = p.basis, w = wertVon(p.id);
   if (!b || !w || b.id !== p.id) return `<div class="klein" title="Ohne zugeordneten Wert mit Kurs (oder bei unsicherer Zuordnung) bleibt der eingetragene Betrag stehen.">fester Wert</div>`;
   const ca = naeherung(p);
@@ -3956,7 +3979,7 @@ function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürze
   if (isin && ISIN_SEC?.[isin] && gibt(ISIN_SEC[isin])) return {id:ISIN_SEC[isin], quelle:"ISIN"};
   // erkannt, aber ohne Ampel (unter 10 Jahre Kursgeschichte, z. B. junge Börsengänge) → offen mit Grund
   if (isin && ISIN_SEC?.[isin] && JUNG?.[ISIN_SEC[isin]]) {   // junge Aktie: eigene Kurse (Wochen), keine Ampel
-    const j = JUNG[ISIN_SEC[isin]]; return {id:j.id, quelle:`ISIN · junge Aktie, eigene Kurse seit ${datumDe(j.seit)} (${j.wochen} Wochen), noch keine Ampel`, jung:true, ersatz:false};
+    const j = JUNG[ISIN_SEC[isin]]; return {id:j.id, quelle:j.neu ? `ISIN · brandneu an der Börse (seit ${datumDe(j.seit)}), noch keine Ampel` : `ISIN · junge Aktie, eigene Kurse seit ${datumDe(j.seit)} (${j.wochen} Wochen), noch keine Ampel`, jung:true, ersatz:false};
   }
   const junger = isin && ISIN_SEC?.[isin] ? ISIN_SEC[isin] : null;   // erkannt, aber unter 10 Jahren Kurse (z. B. junger Börsengang) → unten Ersatz
   if (k) { const w = ALLE.find(w => w.symbol.toUpperCase() === k) || ALLE.find(w => w.id.toUpperCase() === k);   // zuerst das Börsenkürzel: „GOLD“ im Depot ist die Aktie (Kennung GOLD_NYSE), nicht der Rohstoff mit der Kennung GOLD
@@ -4019,8 +4042,146 @@ function naechsteDatei(){   // mehrere Dateien: eine nach der anderen zuordnen
   if (d) csvVorschau(d.text, d.name);
 }
 function neuerDepotName(){ const n = depotNamen(); let i = n.length + 1; while (n.includes("Depot " + i)) i++; return "Depot " + i; }
+// ------------------------------------------------------------ Transaktionsexport von Trade Republic (CSV mit allen Käufen und Verkäufen)
+// Wunsch Marc 23.11.2026: „es müssen die gleichen Werte wie bei der Vermögensübersicht herauskommen“. Die Datei enthält jede Buchung einzeln
+// (Spalten datetime, date, category, type, asset_class, name, symbol = ISIN, shares, price, amount, fee …), aber keine heutigen Kurse.
+// Bestand je ISIN = Summe der Stücke aus TRADING (Kauf +, Verkauf −) und CORPORATE_ACTION (Split, Gratisaktien); geprüft an einer echten
+// Vermögensübersicht: 16 von 18 Positionen auf die sechste Nachkommastelle gleich, der Rest waren Käufe/Verkäufe nach dem letzten Tag der CSV.
+// Einstand = Durchschnittskosten (Käufe mit Gebühr; Verkauf nimmt den Anteil heraus). Wert heute:
+//   a) dasselbe Papier im Tool (ISIN-Treffer): Stück × aktueller Kurs × Wechselkurs,
+//   b) sonst (z. B. ETF, der mit einem ETF auf denselben Index gerechnet wird): Wert beim letzten Handel × Entwicklung des zugeordneten Werts seither,
+//   c) ohne Kurs: Wert beim letzten Handel. Probe am 23.11.2026: Summe 0,1–0,2 % neben der Vermögensübersicht, Einzelwerte meist unter 1 %.
+// Auf den Cent gleich ist nur die Vermögensübersicht selbst – deshalb bleiben ihre Werte stehen, wenn sie schon geladen ist („ergänzen“).
+const HKD_JE_USD = 7.8;   // Hongkong-Dollar ist an den US-Dollar gebunden (Band 7,75–7,85)
+const istTrExport = csv => { const k = csv.kopf.map(x => String(x).trim().toLowerCase()); return ["date", "category", "type", "symbol", "shares", "price", "amount"].every(x => k.includes(x)); };
+function trBestand(csv){
+  const k = Object.fromEntries(csv.kopf.map((x, i) => [String(x).trim().toLowerCase(), i])), z = x => { const v = parseFloat(x); return isFinite(v) ? v : 0; };
+  const zeit = r => r[k.datetime] || r[k.date] || "", daten = [...csv.daten].sort((a, b) => zeit(a) < zeit(b) ? -1 : zeit(a) > zeit(b) ? 1 : 0);
+  const P = new Map(), sonst = new Map(); let von = "", bis = "";
+  for (const r of daten) {
+    const tag = (r[k.date] || "").slice(0, 10); if (tag) { if (!von || tag < von) von = tag; if (tag > bis) bis = tag; }
+    const kat = r[k.category], typ = r[k.type], isin = String(r[k.symbol] || "").trim().toUpperCase();
+    // CASH-Zeilen (Dividende, Zinsen …) nennen bei „shares“ nur den Bestand, sie ändern ihn nicht. Alles andere mit ISIN und Stückzahl zählt als Zu-/Abgang;
+    // unbekannte Arten (z. B. Depotübertrag) werden gezählt und in der Vorschau genannt.
+    if (!istIsin(isin) || kat === "CASH" || !kat) continue;
+    if (kat !== "TRADING" && kat !== "CORPORATE_ACTION") { if (!z(r[k.shares])) continue; sonst.set(`${kat}/${typ}`, (sonst.get(`${kat}/${typ}`) || 0) + 1); }
+    let q = P.get(isin); if (!q) P.set(isin, q = {isin, name:r[k.name] || isin, anzahl:0, einstand:0, letzter:null});
+    if (r[k.name]) q.name = r[k.name];
+    let stk = z(r[k.shares]);
+    if (kat === "TRADING") {
+      if (typ === "SELL") stk = -Math.abs(stk); else if (typ === "BUY") stk = Math.abs(stk);   // Vorzeichen sicher über die Art der Buchung
+      if (stk > 0) q.einstand += Math.abs(z(r[k.amount])) + Math.abs(z(r[k.fee]));          // Kauf: Betrag plus Gebühr
+      else if (stk < 0 && q.anzahl > 0) q.einstand *= Math.max(0, 1 + stk / q.anzahl);       // Verkauf: Durchschnittskosten anteilig heraus
+      q.anzahl += stk;
+      if (z(r[k.price]) > 0 && q.anzahl > 1e-7) q.letzter = {tag, kurs:z(r[k.price]), stk:q.anzahl};
+      if (Math.abs(q.anzahl) < 1e-7) { q.anzahl = 0; q.einstand = 0; q.letzter = null; }   // ganz verkauft
+    } else q.anzahl += stk;   // Split, Gratisaktien: Stückzahl ändert sich (oft als „alte Stücke raus, neue rein“ gebucht), Einstand nicht
+  }
+  return {positionen:[...P.values()].filter(q => q.anzahl > 1e-7).map(q => ({...q, anzahl:Math.round(q.anzahl * 1e6) / 1e6, einstand:Math.round(q.einstand * 100) / 100})), von, bis, zeilen:csv.daten.length, sonst:[...sonst].map(([a, n]) => `${n}× ${a}`)};
+}
+async function tagReihe(id){   // Tageskurse (ETFs, Krypto, Rohstoffe) als {t, c}; sonst null
+  const w = wertVon(id); if (!w || !["ETF", "Krypto", "Rohstoffe"].includes(w.gruppe)) return null;
+  const d = await (STATISCH ? holeJson("daten/tage/" + encodeURIComponent(dateiId(id)) + ".json") : holeJson("api/tag?id=" + encodeURIComponent(id)));
+  return d && !d.fehler && d.t?.length && d.c?.length === d.t.length ? {t:d.t, c:d.c} : null;
+}
+async function trBewerten(q){   // setzt q.zu (Zuordnung), q.wert, q.basis, q.wertArt, q.ca
+  q.zu = zuordnen({name:q.name, isin:q.isin, kuerzel:""});
+  const w = wertVon(q.zu.id), L = q.letzter, wertL = L ? L.stk * L.kurs : 0, eJ = euroJeDollar();
+  q.wert = Math.round(wertL * 100) / 100; q.basis = null; q.ca = false;
+  q.wertArt = L ? `Stand ${datumDe(L.tag)}: Stück × Kurs beim letzten Handel (kein aktueller Kurs im Tool)` : "kein Kurs in der Datei";
+  if (!w || !(+w.kurs > 0)) return;
+  const wg = waehrungVon(w), hk = /\.HK$/i.test(w.symbol || ""), genau = (q.zu.quelle === "ISIN" || q.zu.jung) && !q.zu.ersatz;
+  if (genau && (wg === "EUR" || ((wg === "USD" || hk) && eJ))) {   // a) dasselbe Papier
+    const fx = wg === "EUR" ? 1 : hk ? eJ / HKD_JE_USD : eJ;
+    q.wert = Math.round(q.anzahl * w.kurs * fx * 100) / 100; q.ca = hk;
+    q.basis = {wert:q.wert, id:w.id, kurs:+w.kurs, tag:w.datum || "", fx:wg === "USD" ? eJ : null};
+    q.wertArt = `Stück × Kurs vom ${datumDe(w.datum)}${wg === "EUR" ? "" : hk ? ", Hongkong-Dollar grob in Euro umgerechnet" : ", in Euro umgerechnet"}`; return;
+  }
+  if (!L) return;
+  const t = Date.parse(L.tag + "T23:59:00Z") / 1000;   // b) Wert beim letzten Handel × Entwicklung des zugeordneten Werts
+  let r = await tagReihe(w.id); if (!r) { const m = await reiheHolen(w.id); if (m) r = {t:[...m.keys()], c:[...m.values()]}; }
+  const kD = r && kursAm(r, t); if (!kD || !(kD.c > 0)) return;
+  const dje = wg === "USD" && FX ? dollarJeEuro(t) : null, fxD = dje ? 1 / dje : null;
+  if (wg === "USD" && !(fxD && eJ)) return;
+  q.basis = {wert:q.wert, id:w.id, kurs:kD.c, tag:L.tag, fx:fxD};
+  q.wert = Math.round(wertL * (+w.kurs / kD.c) * (fxD ? eJ / fxD : 1) * 100) / 100; q.ca = true;
+  q.wertArt = `geschätzt: Wert beim letzten Handel am ${datumDe(L.tag)}, seitdem mit ${kurzname(w)} fortgeschrieben`;
+}
+const depotStand = n => DEPOT.positionen.filter(p => depotName(p) === n && p.stand).map(p => p.stand).sort().pop() || "";
+const stk = x => x == null ? "–" : fmt(x, x % 1 ? (x < 10 ? 4 : 2) : 0);
+let TR = null;
+async function trVorschau(csv, vorschlag){
+  const ziel = $("#csv-zuordnung");
+  const nr = CSV_GESAMT > 1 ? `<b>Datei ${CSV_GESAMT - CSV_WARTESCHLANGE.length} von ${CSV_GESAMT}${vorschlag ? ` („${esc(vorschlag)}“)` : ""}:</b> ` : "";
+  ziel.innerHTML = `<p class="klein">${nr}Transaktionsexport erkannt – der Bestand wird aus allen Käufen und Verkäufen berechnet …</p>`;
+  await Promise.all([fxLaden(), isinListeLaden()]);
+  TR = trBestand(csv);
+  for (const q of TR.positionen) { try { await trBewerten(q); } catch(e) {} }
+  if (!$("#csv-zuordnung")) return;
+  const namen = depotNamen().filter(() => DEPOT.positionen.length);
+  const vorName = namen.length === 1 ? namen[0] : (vorschlag || "").replace(/\.(csv|txt)$/i, "").trim() || neuerDepotName();
+  ziel.innerHTML = `
+    <p class="klein">${nr}<b>Transaktionsexport erkannt</b> (${TR.zeilen.toLocaleString("de-DE")} Buchungen vom ${datumDe(TR.von)} bis ${datumDe(TR.bis)}). Daraus gerechnet: dein Bestand je Wertpapier – Käufe minus Verkäufe, Splits und Gratisaktien eingerechnet – und was du dafür bezahlt hast (Einstand).</p>
+    <div class="eingabe" style="padding:4px 0 6px">
+      <label>${ek("d_depotname","Depot-Name")}<input id="tr-depot" list="tr-depots" value="${esc(vorName)}" style="width:200px"><datalist id="tr-depots">${namen.map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
+      <label id="tr-modus-l">Wenn das Depot schon Positionen hat<select id="tr-modus"><option value="ergaenzen">ergänzen: Werte im Depot bleiben, Stück und Einstand kommen dazu</option><option value="ersetzen">ersetzen: Depot neu aus dieser Datei aufbauen</option></select></label>
+    </div>
+    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Wertpapier</th><th>Stück</th><th>Einstand €</th><th>Wert heute €</th><th style="text-align:left">Hinweis</th></tr></thead><tbody id="tr-zeilen"></tbody></table></div>
+    <p class="klein" id="tr-summe"></p>
+    ${TR.sonst.length ? `<p class="klein"><span class="neg">Bitte Stückzahlen prüfen:</span> Die Datei enthält besondere Buchungen mit Stücken (${esc(TR.sonst.join(", "))}). Sie wurden als Zu- oder Abgang gezählt.</p>` : ""}
+    <p class="klein">Die Datei enthält keine heutigen Kurse. „Wert heute“ rechnet das Tool deshalb selbst: Stück × aktueller Kurs, wo es genau dieses Papier kennt, sonst als Schätzung (mit „ca.“ markiert). Auf den Cent genau sind nur die Werte aus der Vermögensübersicht (PDF) – ist sie geladen, bleiben ihre Werte stehen.</p>
+    <button class="knopf" id="tr-uebernehmen">Übernehmen</button> ${CSV_WARTESCHLANGE.length ? `<button class="knopf leise" id="csv-weiter">Diese Datei überspringen</button>` : ""} <span class="klein" id="tr-info"></span>`;
+  const zeichnen = neu => {
+    const n = $("#tr-depot").value.trim() || DEPOT_NAME_STD, alt = DEPOT.positionen.filter(p => depotName(p) === n), stand = depotStand(n), ergaenzen = alt.length && $("#tr-modus").value === "ergaenzen";
+    $("#tr-modus-l").style.visibility = alt.length ? "visible" : "hidden";
+    for (const q of TR.positionen) {
+      const a = alt.find(x => x.isin === q.isin); q.vorh = a || null;
+      q.abw = !!(a && a.anzahl != null && Math.abs(a.anzahl - q.anzahl) > 1e-4 * Math.max(1, q.anzahl));
+      q.fehlt = !a && alt.length > 0 && stand > TR.bis;   // im neueren Depotstand nicht mehr enthalten
+      if (neu) q.an = !(ergaenzen && q.fehlt) && (q.wert > 0 || !!a);
+    }
+    $("#tr-zeilen").innerHTML = TR.positionen.map((q, i) => { const a = q.vorh, bleibt = ergaenzen && a && a.wert > 0, wert = bleibt ? a.wert : q.wert;
+      const hinweis = q.abw ? `<span class="neg">Stückzahl weicht ab</span>: im Depot ${stk(a.anzahl)}, laut Datei ${stk(q.anzahl)} – die Datei endet am ${datumDe(TR.bis)}, spätere Käufe oder Verkäufe fehlen darin`
+        : q.fehlt ? `nicht in deinem Depot vom ${datumDe(stand)} – seither verkauft? Häkchen setzen, falls doch vorhanden`
+        : bleibt ? `Wert aus deinem Depot bleibt${a.anzahl != null ? ` · Stückzahl stimmt <span class="pos">✓</span>` : ""}`
+        : esc(q.wertArt);
+      return `<tr><td><input type="checkbox" data-ta="${i}" ${q.an ? "checked" : ""} aria-label="übernehmen"></td>
+        <td style="text-align:left;white-space:normal;min-width:170px"><b>${esc(q.name)}</b><div class="klein">${esc(q.isin)}${q.zu?.id ? ` · gerechnet mit ${esc(kurzname(wertVon(q.zu.id) || {name:q.zu.id}))}` : " · noch ohne Zuordnung"}</div></td>
+        <td>${stk(q.anzahl)}</td><td>${geld(q.einstand)}</td>
+        <td>${wert > 0 ? `${!bleibt && q.ca ? "ca. " : ""}${fmt(wert, 2)}` : '<span class="neg">fehlt</span>'}</td>
+        <td style="text-align:left;white-space:normal;min-width:220px" class="klein">${hinweis}</td></tr>`; }).join("");
+    $$("#tr-zeilen [data-ta]").forEach(c => c.onchange = () => { TR.positionen[+c.dataset.ta].an = c.checked; summe(); });
+    summe();
+  };
+  const summe = () => {
+    const n = $("#tr-depot").value.trim() || DEPOT_NAME_STD, alt = DEPOT.positionen.filter(p => depotName(p) === n), ergaenzen = alt.length && $("#tr-modus").value === "ergaenzen";
+    const an = TR.positionen.filter(q => q.an), sW = an.reduce((a, q) => a + (ergaenzen && q.vorh?.wert > 0 ? q.vorh.wert : q.wert || 0), 0), sE = an.reduce((a, q) => a + q.einstand, 0);
+    $("#tr-summe").innerHTML = `${an.length} Position${an.length === 1 ? "" : "en"} · Wert zusammen <b>${geld(sW)} €</b> · Einstand ${geld(sE)} € · ${sE > 0 ? `<span class="${sW >= sE ? "pos" : "neg"}">${vz((sW / sE - 1) * 100, 1, " %")}</span> seit Kauf` : ""}${ergaenzen && alt.some(a => !TR.positionen.some(q => q.isin === a.isin)) ? ` · ${alt.filter(a => !TR.positionen.some(q => q.isin === a.isin)).length} Position(en) im Depot kommen in der Datei nicht vor und bleiben unverändert` : ""}`;
+  };
+  $("#tr-depot").oninput = () => zeichnen(true); $("#tr-modus").onchange = () => zeichnen(true); zeichnen(true);
+  if ($("#csv-weiter")) $("#csv-weiter").onclick = naechsteDatei;
+  $("#tr-uebernehmen").onclick = () => {
+    const depot = $("#tr-depot").value.trim() || DEPOT_NAME_STD, alt = DEPOT.positionen.filter(p => depotName(p) === depot), ergaenzen = alt.length && $("#tr-modus").value === "ergaenzen";
+    const an = TR.positionen.filter(q => q.an && (q.wert > 0 || q.vorh));
+    if (!an.length) { $("#tr-info").textContent = "Keine Position ausgewählt."; return; }
+    const neuPos = q => { const pos = {name:q.name, isin:q.isin, kuerzel:"", wert:q.wert, depot, anzahl:q.anzahl, einstand:q.einstand, stand:TR.bis, ...q.zu}; if (q.basis && q.basis.id === pos.id) pos.basis = q.basis; return pos; };
+    if (ergaenzen) {
+      for (const q of an) { const a = q.vorh;
+        if (!a) { DEPOT.positionen.push(neuPos(q)); continue; }
+        if (a.wert > 0) { if (a.anzahl == null) a.anzahl = q.anzahl; if (!q.abw) a.einstand = q.einstand; else delete a.einstand; }   // Wert bleibt; Einstand nur bei gleicher Stückzahl (sonst unvollständig)
+        else Object.assign(a, {wert:q.wert, anzahl:q.anzahl, einstand:q.einstand, stand:TR.bis}, q.basis && q.basis.id === a.id ? {basis:q.basis} : {});
+      }
+    } else {
+      const neu = an.map(neuPos);
+      neu.forEach(x => { if (!x.id || x.ersatz) { const a = alt.find(y => y.id && y.quelle === "von dir gewählt" && y.isin === x.isin); if (a) { x.id = a.id; x.quelle = a.quelle; x.ersatz = false; delete x.basis; } } });   // deine eigene Wahl geht vor
+      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot || (p.plan && !(p.wert > 0))); DEPOT.positionen.push(...neu);
+    }
+    sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); depotAktuell();
+  };
+}
 function csvVorschau(text, vorschlag){
   CSV = csvLesen(text);
+  if (CSV && CSV.daten.length && istTrExport(CSV)) return trVorschau(CSV, vorschlag);
   const ziel = $("#csv-zuordnung");
   const nr = CSV_GESAMT > 1 ? `<b>Datei ${CSV_GESAMT - CSV_WARTESCHLANGE.length} von ${CSV_GESAMT}${vorschlag ? ` („${esc(vorschlag)}“)` : ""}:</b> ` : "";
   if (!CSV || !CSV.daten.length) { ziel.innerHTML = `<p class="neg">${nr}Keine Datenzeilen erkannt. Erste Zeile muss die Spaltenköpfe enthalten.</p>${CSV_WARTESCHLANGE.length ? `<button class="knopf leise" id="csv-weiter">Nächste Datei</button>` : ""}`; if ($("#csv-weiter")) $("#csv-weiter").onclick = naechsteDatei; return; }
@@ -4064,7 +4225,7 @@ function csvVorschau(text, vorschlag){
     if ($("#csv-ersetzen").checked) {   // gleichnamiges Depot ersetzen: bisherige Zuordnungen (Ersatzwerte) wiederverwenden
       const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
       neu.forEach(n => { if (!n.id || n.ersatz) { const a = alt.find(x => x.id && x.quelle === "von dir gewählt" && ((n.isin && x.isin === n.isin) || x.name === n.name)); if (a) { n.id = a.id; n.quelle = a.quelle; n.ersatz = false; } } });   // deine eigene Wahl geht vor dem automatischen Ersatz
-      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
+      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot || (p.plan && !(p.wert > 0)));   // reine Sparplan-Zeilen bleiben
     }
     DEPOT.zuordnungen = {...(DEPOT.zuordnungen || {}), [sig]:sp};
     DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
@@ -4080,25 +4241,33 @@ function sparAnteileSetzen(art){
   if (art === "depot") P.forEach(p => p.spar = s > 0 ? Math.round(p.wert / s * 1000) / 10 : 0);
   if (art === "gleich") P.forEach(p => p.spar = P.length ? Math.round(1000 / P.length) / 10 : 0);
 }
+function phasenText(e){   // Einzahl-Phasen als Klartext mit Entfernen-Knopf
+  const ph = [...(e.phasen || [])].sort((a, b) => a.ab - b.ab);
+  if (!ph.length) return `<span class="klein">Bisher: ${e.sparrate > 0 ? `${geld(e.sparrate)} € je Monat über die ganze Laufzeit (${e.jahre} Jahre).` : "keine Sparrate."}</span>`;
+  const teile = [`Jahr 1–${ph[0].ab - 1}: ${geld(e.sparrate)} €`, ...ph.map((x, i) => { const bis = i + 1 < ph.length ? ph[i + 1].ab - 1 : e.jahre;
+    return `ab Jahr ${x.ab}${bis > x.ab ? `–${bis}` : ""}: ${x.rate > 0 ? geld(x.rate) + " €" : "<b>keine Einzahlung mehr</b>"} <button class="linkknopf" data-pe="${(e.phasen || []).indexOf(x)}" aria-label="Phase entfernen" style="margin-left:6px;color:var(--muted)">✕</button>`; })];
+  return teile.map(t => `<span class="grund-chips" style="display:inline-flex;margin:0 6px 6px 0"><span>${t}</span></span>`).join("");
+}
 function feld(k, titel, e, attr="", art="number"){
   return `<label>${ek(e, titel)}<input data-e2="${k}" type="${art}" value="${esc(DEPOT.e[k])}" ${attr}></label>`;
 }
-function nachkaufZelle(w, p){   // Depot-Spalte „Nachkauf unter“ aus dem Feld nk der Rangliste (Nachkauf-Karte der Titelseite)
+function nachkaufZelle(w, p){   // Depot-Spalte „Wann nachkaufen?“ aus dem Feld nk der Rangliste (Nachkauf-Karte der Titelseite) – in Alltagssprache (Wunsch Marc 23.11.2026)
   const nk = w?.nk; if (!nk) return `<span class="klein">–</span>`;
   const st = w.kurs == null ? 2 : w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, wg = waehrungVon(w), zeichen = wg === "USD" ? " $" : wg === "EUR" ? " €" : "";
-  const k = x => fmt(x, st) + zeichen, fuer = p?.ersatz ? `<div class="klein">gilt für den Ersatz ${esc(kurzname(w))}</div>` : "";
-  const beleg = nk.med != null ? `Beleg: bei Ampel ≥ ${nk.ab} im Mittel ${vz(nk.med,1," %")} pro Jahr (${fmt(nk.q,0," %")} im Plus, ${nk.ph} Phasen), beliebige Wochen ${vz(nk.b_med,1," %")} (${fmt(nk.b_q,0," %")} im Plus)` : "";
-  const noch = nk.jetzt ? `<span class="pos">✓ heute erfüllt</span>` : nk.abstand != null ? `noch ${fmt(-nk.abstand,0)} % tiefer` : "";
+  const k = x => fmt(x, st) + zeichen, fuer = p?.ersatz ? `<div class="klein">gilt für den Ersatz ${esc(kurzname(w))}, nicht für dein Papier</div>` : "";
+  const beleg = nk.med != null ? `Beleg: Käufe unter diesem Kurs (Ampel ab ${nk.ab}) brachten in den 3 Jahren danach im Mittel ${vz(nk.med,1," %")} pro Jahr (${fmt(nk.q,0," %")} der Käufe im Plus, ${nk.ph} getrennte Phasen); Käufe an beliebigen Tagen ${vz(nk.b_med,1," %")} (${fmt(nk.b_q,0," %")} im Plus).` : "";
+  const punkt = f => `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${f};margin-right:6px;vertical-align:1px"></span>`;
+  const drueber = nk.abstand != null && !nk.jetzt ? `heute noch ${fmt(-nk.abstand,0)} % zu teuer dafür` : "";
   if (nk.art === "lohnt" && nk.preis != null)
-    return `<span title="${esc(beleg)}"><b>${k(nk.preis)}</b> ${nk.jetzt ? `<span class="pos">✓</span>` : ""}</span><div class="klein">Ampel ≥ ${nk.ab}${noch ? " · " + noch : ""}</div>${fuer}`;
+    return `<span title="${esc(beleg)}">${punkt(nk.jetzt ? "var(--guenstig)" : "var(--gelb)")}<b>Günstig unter ${k(nk.preis)}</b></span><div class="klein">${nk.jetzt ? `<span class="pos">✓ heute schon darunter</span> – früher ein guter Kaufzeitpunkt` : `darunter hat sich Kaufen früher klar gelohnt · ${drueber}`}</div>${fuer}`;
   if (nk.art === "zufall")
-    return `<span title="Ein Vorteil bei hoher Ampel (${vz(nk.vorteil,1," %")} pro Jahr) entstand auch auf ${nk.z_besser} von ${nk.z_gerechnet} Zufallsverläufen – nicht vom Zufall zu unterscheiden">jederzeit gleich</span><div class="klein">Vorteil nicht belegt</div>${fuer}`;
-  if (nk.art === "daten")
-    return `<span title="Kursgeschichte mit Sprüngen über Faktor 4,5 in einer Woche (vermutlich Datenfehler)">kein Beleg</span><div class="klein">Kursdaten unsicher</div>${fuer}`;
+    return `<span title="Ein scheinbarer Vorteil für Käufe bei tiefen Kursen (${vz(nk.vorteil,1," %")} pro Jahr) entstand auch bei ${nk.z_besser} von ${nk.z_gerechnet} zufällig gewürfelten Kursverläufen – er ist also nicht belegt.">${punkt("var(--muted)")}<b>Kein besonderer Kaufkurs</b></span><div class="klein">einfach regelmäßig kaufen – Warten auf tiefe Kurse brachte nicht belegbar mehr</div>${fuer}`;
   if (nk.art === "egal")
-    return `<span title="Käufe bei hoher Ampel brachten früher nicht mehr als Käufe in beliebigen Wochen (${vz(nk.b_med,1," %")} pro Jahr, ${fmt(nk.b_q,0," %")} im Plus)">jederzeit gleich</span><div class="klein">Warten brachte nichts</div>${fuer}`;
+    return `<span title="Käufe bei tiefen Kursen brachten früher nicht mehr als Käufe an beliebigen Tagen (${vz(nk.b_med,1," %")} pro Jahr, ${fmt(nk.b_q,0," %")} im Plus).">${punkt("var(--muted)")}<b>Kein besonderer Kaufkurs</b></span><div class="klein">einfach regelmäßig kaufen – Warten auf tiefe Kurse brachte nichts</div>${fuer}`;
+  if (nk.art === "daten")
+    return `<span title="Die Kursgeschichte enthält Sprünge um mehr als das 4,5-Fache in einer Woche (vermutlich Datenfehler).">${punkt("var(--muted)")}<b>Keine Aussage</b></span><div class="klein">die Kursdaten dieses Werts sind fehlerhaft</div>${fuer}`;
   if (nk.preis != null)
-    return `<span title="Zu wenig Geschichte für einen Beleg – bis dahin gilt Ampel 80 (historisch sehr günstig)">vorläufig unter <b>${k(nk.preis)}</b></span><div class="klein">zu wenig Geschichte${noch ? " · " + noch : ""}</div>${fuer}`;
+    return `<span title="Für einen Beleg ist die Kursgeschichte noch zu kurz. Bis dahin gilt als Richtwert der Kurs, bei dem die Ampel „historisch sehr günstig“ (80) zeigt.">${punkt(nk.jetzt ? "var(--guenstig)" : "var(--muted)")}<b>Richtwert: unter ${k(nk.preis)}</b></span><div class="klein">noch zu kurz an der Börse für einen Beleg${nk.jetzt ? ` · <span class="pos">✓ heute darunter</span>` : drueber ? " · " + drueber : ""}</div>${fuer}`;
   return `<span class="klein">–</span>`;
 }
 function zeigeDepot(){
@@ -4131,22 +4300,26 @@ function zeigeDepot(){
         <h2 style="margin:0;font-size:16px">Positionen</h2>
         <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${P.some(p => p.basis) ? ` · Werte mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : ""}${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
-      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Gerechnet mit")}</th><th>${ek("d_nachkauf","Nachkauf unter")}</th><th>${ek("d_sparanteil","Sparplan-Anteil %")}</th><th></th></tr></thead><tbody>${
+      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Im Tool gerechnet als")}</th><th>${ek("d_nachkauf","Wann nachkaufen?")}</th><th>${ek("d_plan","Sparplan € / Monat")}</th><th></th></tr></thead><tbody>${
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
           return `<tr class="depot-zeile"><td colspan="7" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
           teil.map(([p, i]) => { const w = wertVon(p.id);
-          return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}</div></td>
-            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro">${mitlaufText(p)}</td>
+          return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}${p.anzahl > 0 ? ` · ${stk(p.anzahl)} Stück` : ""}</div></td>
+            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro">${mitlaufText(p)}${einstandText(p)}</td>
             <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
-            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(p.quelle || "von dir gewählt")}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} J. Daten`}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
+            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(quelleKlar(p))}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} Jahre Kursdaten`}${P.filter(x => x.id === p.id).length > 1 ? ` · in Prognose und Risiko mit ${P.filter(x => x.id === p.id).length - 1} weiteren Position${P.filter(x => x.id === p.id).length > 2 ? "en" : ""} als ein Wert gerechnet` : ""}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
-            <td style="text-align:left;white-space:normal;min-width:130px">${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
-            <td><input class="feld" style="width:70px;text-align:right" data-ps="${i}" value="${fmt(p.spar ?? 0,1)}" aria-label="Sparplan-Anteil in Prozent"></td>
+            <td style="text-align:left;white-space:normal;min-width:210px">${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
+            <td><input class="feld" style="width:80px;text-align:right" data-ps="${i}" value="${fmt(e.sparrate * (p.spar ?? 0) / 100, (e.sparrate * (p.spar ?? 0) / 100) % 1 ? 2 : 0)}" aria-label="Sparplan in Euro je Monat"><div class="klein">${fmt(p.spar ?? 0, 0)} %</div></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
         ${P.some(p => p.id && p.ersatz) ? `<div class="merke" style="margin-top:0">${(() => { const e = P.filter(p => p.id && p.ersatz), ew = e.reduce((a, p) => a + p.wert, 0); return `${e.length} Position${e.length === 1 ? " ist" : "en sind"} nicht im Tool und werden mit einem <b>automatischen Ersatz</b> gerechnet (${fmt(ew / summe * 100, 0, " %")} des Depots), z. B. eine chinesische Aktie mit dem Schwellenländer-ETF. Das ist eine Annäherung: Eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ kannst du einen besseren Ersatz wählen.`; })()}</div>` : ""}
         ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
       : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
+      <div style="padding:10px 14px 14px;display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap">
+        <button class="knopf leise" id="d-plan-plus">＋ Wert für künftige Käufe suchen</button>
+        <span class="klein">Jede Aktie, jeder ETF, Rohstoff oder Krypto-Wert aus dem Tool – auch ohne Bestand. Danach in der Spalte „Sparplan € / Monat“ den Betrag eintragen.</span>
+      </div>
     </section>
     <div class="abstand"></div>
     <section class="karte seite-karte" id="d-risiko" hidden></section>
@@ -4165,7 +4338,7 @@ function zeigeDepot(){
       <h2 style="margin:0;font-size:16px;padding:12px 14px 0">Sparplan und Annahmen</h2>
       <div class="eingabe">
         ${feld("sparrate","Sparrate je Monat €","d_sparrate",'min="0" step="25"')}
-        <label>${ek("d_verteilung","Verteilung")}<select data-e2="verteilung"><option value="depot" ${e.verteilung === "depot" ? "selected" : ""}>wie das Depot</option><option value="gleich" ${e.verteilung === "gleich" ? "selected" : ""}>gleichmäßig</option><option value="eigen" ${e.verteilung === "eigen" ? "selected" : ""}>eigene Anteile (Tabelle)</option></select></label>
+        <label>${ek("d_verteilung","Verteilung")}<select data-e2="verteilung"><option value="depot" ${e.verteilung === "depot" ? "selected" : ""}>wie das Depot</option><option value="gleich" ${e.verteilung === "gleich" ? "selected" : ""}>gleichmäßig</option><option value="eigen" ${e.verteilung === "eigen" ? "selected" : ""}>eigene Beträge (Tabelle oben)</option></select></label>
         ${feld("dynamik","jährliche Erhöhung %","d_dynamik",'min="0" max="20" step="0.5"')}
         ${feld("jahre","Laufzeit Jahre","d_jahre",'min="1" max="40" step="1"')}
         ${feld("ziel","Ziel € (heutige Kaufkraft)","d_ziel",'min="0" step="1000"')}
@@ -4188,6 +4361,11 @@ function zeigeDepot(){
         <div id="d-einmal">${e.einmal.map((x, i) => `<span class="grund-chips" style="display:inline-flex;margin:0 6px 6px 0"><span>Jahr ${x.jahr}: ${x.betrag > 0 ? "+" : ""}${geld(x.betrag)} € <button class="linkknopf" data-el="${i}" aria-label="Einmalbetrag entfernen" style="margin-left:6px;color:var(--muted)">✕</button></span></span>`).join("")}</div>
         <div class="eingabe" style="padding:0"><label>Jahr<input id="d-ej" type="number" min="0" max="40" value="1" style="width:80px"></label><label>Betrag €<input id="d-eb" type="number" step="500" value="5000"></label><button class="knopf leise" id="d-eplus">hinzufügen</button></div>
       </div>
+      <div style="padding:0 14px 12px">
+        <div class="klein" style="margin-bottom:6px">${ek("d_phasen","Nur einige Jahre einzahlen oder die Sparrate später ändern")} – z. B. „ab Jahr 6: 0 €“ heißt: 5 Jahre einzahlen, danach läuft das Depot ohne neue Einzahlung weiter. Eine neue Rate wird im selben Verhältnis auf deine Werte verteilt.</div>
+        <div id="d-phasen">${phasenText(e)}</div>
+        <div class="eingabe" style="padding:0"><label>ab Jahr<input id="d-pj" type="number" min="2" max="40" value="${Math.min(40, Math.max(2, Math.round((e.jahre || 20) / 2) + 1))}" style="width:80px"></label><label>neue Sparrate € je Monat<input id="d-pr" type="number" min="0" step="25" value="0"></label><button class="knopf leise" id="d-pplus">hinzufügen</button></div>
+      </div>
       <div style="padding:0 14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
         <button class="knopf" id="d-rechnen" ${P.some(p => p.id) ? "" : "disabled"}>Prognose berechnen</button>
         <span class="klein" id="d-status">${P.some(p => p.id) ? "Rechnet im Browser, dauert wenige Sekunden." : "Erst Positionen eintragen und zuordnen."}</span>
@@ -4201,7 +4379,11 @@ function zeigeDepot(){
   $("#d-merken").onchange = ev => { DEPOT.merken = ev.target.checked; if (DEPOT.merken) depotSichern(); else { try { localStorage.removeItem(DEPOT_SCHLUESSEL); } catch(x) {} } };
   $("#d-vergessen").onclick = () => { if (confirm("Depot und Einstellungen in diesem Browser löschen?")) depotVergessen(); };
   $$("#haupt [data-pw]").forEach(inp => inp.onchange = () => { const v = zahlDe(inp.value); if (v > 0) { DEPOT.positionen[+inp.dataset.pw].wert = v; delete DEPOT.positionen[+inp.dataset.pw].basis; if (DEPOT.e.verteilung === "depot") sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); } });
-  $$("#haupt [data-ps]").forEach(inp => inp.onchange = () => { DEPOT.positionen[+inp.dataset.ps].spar = Math.max(0, zahlDe(inp.value) || 0); DEPOT.e.verteilung = "eigen"; depotSichern(); zeigeDepot(); });
+  $$("#haupt [data-ps]").forEach(inp => inp.onchange = () => {   // Euro je Monat: die Summe aller Zeilen ist die Sparrate
+    const P = DEPOT.positionen, eur = P.map(p => DEPOT.e.sparrate * (p.spar || 0) / 100); eur[+inp.dataset.ps] = Math.max(0, zahlDe(inp.value) || 0);
+    const su = eur.reduce((a, b) => a + b, 0);
+    DEPOT.e.sparrate = Math.round(su * 100) / 100; P.forEach((p, j) => p.spar = su > 0 ? eur[j] / su * 100 : 0); DEPOT.e.verteilung = "eigen";
+    depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
   $$("#haupt [data-pl]").forEach(b => b.onclick = () => { DEPOT.positionen.splice(+b.dataset.pl, 1); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
   $$("#haupt [data-pz]").forEach(b => b.onclick = () => ersatzWaehlen(+b.dataset.pz));
   $$("#haupt [data-dx]").forEach(b => b.onclick = () => { const dn = b.dataset.dx, n = DEPOT.positionen.filter(p => depotName(p) === dn).length;
@@ -4219,6 +4401,11 @@ function zeigeDepot(){
   });
   $$("#haupt [data-el]").forEach(b => b.onclick = () => { DEPOT.e.einmal.splice(+b.dataset.el, 1); depotSichern(); zeigeDepot(); });
   $("#d-eplus").onclick = () => { const j = Math.round(+$("#d-ej").value), b = +$("#d-eb").value; if (j >= 0 && b) { DEPOT.e.einmal.push({jahr:j, betrag:b}); DEPOT.e.einmal.sort((a, c) => a.jahr - c.jahr); depotSichern(); zeigeDepot(); } };
+  $$("#haupt [data-pe]").forEach(b => b.onclick = () => { DEPOT.e.phasen.splice(+b.dataset.pe, 1); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
+  $("#d-pplus").onclick = () => { const j = Math.round(+$("#d-pj").value), r0 = Math.max(0, +$("#d-pr").value || 0);
+    if (!(j >= 2)) return $("#d-pj").focus();
+    DEPOT.e.phasen = [...(DEPOT.e.phasen || []).filter(x => x.ab !== j), {ab:j, rate:r0}].sort((a, c) => a.ab - c.ab); depotSichern(); DEPOT_ERG = null; zeigeDepot(); };
+  $("#d-plan-plus").onclick = planWaehlen;
   $("#d-rechnen").onclick = depotRechnen;
   $("#d-alarm-kopieren").onclick = async () => { const t = alarmListe(), st = $("#d-alarm-status");
     try { await navigator.clipboard.writeText(t); st.textContent = "Kopiert. Jetzt bei GitHub unter Settings → Secrets and variables → Actions die Einstellung ALARM_WERTE damit füllen."; }
@@ -4258,7 +4445,7 @@ function depotImport(art){
       DEPOT.positionen.push({...pos, ...z0}); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
     };
   } else if (art === "csv") {
-    z.innerHTML = `<p style="margin:0 0 8px">Exportiere die Depot- bzw. Vermögensübersicht bei deiner Bank als CSV und wähle die Datei hier aus – <b>bei mehreren Depots gern mehrere Dateien auf einmal</b>. Sie werden nur in diesem Browser gelesen.</p>
+    z.innerHTML = `<p style="margin:0 0 8px">Exportiere die Depot- bzw. Vermögensübersicht bei deiner Bank als CSV und wähle die Datei hier aus – <b>bei mehreren Depots gern mehrere Dateien auf einmal</b>. Sie werden nur in diesem Browser gelesen. Der <b>Transaktionsexport von Trade Republic</b> (alle Käufe und Verkäufe) wird erkannt: Daraus rechnet das Tool deinen heutigen Bestand und deinen Einstand.</p>
       <input type="file" id="d-datei" accept=".csv,.txt,text/csv" multiple><div id="csv-zuordnung" style="margin-top:10px"></div>
       <p class="klein">Jede Datei wird ein eigenes Depot (Name änderbar). Die Spalten ordnest du einmal zu; Dateien mit gleichem Aufbau (gleiche Bank) werden danach automatisch so zugeordnet. Feste Vorlagen für einzelne Banken gibt es noch nicht.</p>`;
     const lesen = f => new Promise(ok => { const r = new FileReader();
@@ -4389,7 +4576,9 @@ async function naechstePdf(){
   const nr = PDF_GESAMT > 1 ? `<b>Datei ${PDF_GESAMT - PDF_WARTESCHLANGE.length} von ${PDF_GESAMT} („${esc(datei.name)}“):</b> ` : "";
   ziel.innerHTML = `<p class="klein">${nr}wird gelesen …</p>`;
   let erg;
-  try { erg = pdfPositionen(await pdfZeilen(datei)); }
+  let pdfStand = "";
+  try { const zl = await pdfZeilen(datei); erg = pdfPositionen(zl);
+    const m = zl.join("\n").match(/\b(?:zum|per|stand|datum)\s*:?\s*(\d{2})\.(\d{2})\.(\d{4})\b/i); if (m) pdfStand = `${m[3]}-${m[2]}-${m[1]}`; }
   catch(ex) { ziel.innerHTML = `<p class="neg">${nr}PDF nicht lesbar: ${esc(ex.message)}</p>${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Nächste Datei</button>` : ""}`; if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf; return; }
   PDF_POS = erg.positionen;
   if (!PDF_POS.length) { ziel.innerHTML = `<p class="neg">${nr}Keine Positionen mit ISIN gefunden. Ist es ein Depotauszug mit ISINs? Gescannte PDFs (nur Bild) gehen nicht – dann bitte „Von Hand eintragen“ oder einen CSV-Export der Bank nutzen.</p>${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Nächste Datei</button>` : ""}`; if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf; return; }
@@ -4421,12 +4610,13 @@ async function naechstePdf(){
   if ($("#pdf-weiter")) $("#pdf-weiter").onclick = naechstePdf;
   $("#pdf-uebernehmen").onclick = () => {
     const depot = $("#pdf-depot").value.trim() || DEPOT_NAME_STD;
-    const neu = PDF_POS.filter(p => p.an && p.wert > 0).map(p => { const pos = {name:p.name, isin:p.isin, kuerzel:"", wert:Math.round(p.wert * 100) / 100, depot}; return {...pos, ...zuordnen(pos)}; });
+    const neu = PDF_POS.filter(p => p.an && p.wert > 0).map(p => { const pos = {name:p.name, isin:p.isin, kuerzel:"", wert:Math.round(p.wert * 100) / 100, depot, ...(p.anzahl > 0 ? {anzahl:p.anzahl} : {}), ...(pdfStand ? {stand:pdfStand} : {})}; return {...pos, ...zuordnen(pos)}; });
     if (!neu.length) { $("#pdf-info").textContent = "Keine Position mit Wert ausgewählt."; return; }
     if ($("#pdf-ersetzen").checked) {
       const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
       neu.forEach(n => { if (!n.id || n.ersatz) { const a = alt.find(x => x.id && x.quelle === "von dir gewählt" && x.isin === n.isin); if (a) { n.id = a.id; n.quelle = a.quelle; n.ersatz = false; } } });   // deine eigene Wahl geht vor dem automatischen Ersatz
-      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot);
+      neu.forEach(n => { const a = alt.find(x => x.isin === n.isin); if (a?.einstand > 0 && a.anzahl != null && n.anzahl != null && Math.abs(a.anzahl - n.anzahl) <= 1e-4 * Math.max(1, n.anzahl)) n.einstand = a.einstand; });   // Einstand aus dem Transaktionsexport bleibt bei gleicher Stückzahl
+      DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== depot || (p.plan && !(p.wert > 0)));   // reine Sparplan-Zeilen bleiben
     }
     DEPOT.positionen.push(...neu); sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot();
   };
@@ -4471,7 +4661,8 @@ async function depotRechnen(){
     const P = [...gruppen.values()].map(g => ({...g, name:g.namen.join(" / ")}));
     const zusammengefasst = P.filter(g => g.teile > 1).length;
     st.textContent = "lädt Kursreihen …";
-    const ids = [...new Set(["SPY", ...P.map(p => p.id)])];
+    const zuNeu = id => { const j = JUNG?.[id] || (wertVon(id)?.jung ? wertVon(id) : null); return !!j && (j.wochen || 0) < 14; };   // brandneu (z. B. Anthropic): zu wenige Wochen für eine eigene Rechnung
+    const ids = [...new Set(["SPY", ...(P.some(p => zuNeu(p.id)) ? ["QQQ"] : []), ...P.map(p => p.id)])];
     const reihen = Object.fromEntries(await Promise.all(ids.map(async id => [id, await reiheHolen(id)])));
     if (!reihen.SPY) throw new Error("Marktreihe (S&P 500) nicht verfügbar.");
     const markt = rendite(reihen.SPY);
@@ -4479,9 +4670,10 @@ async function depotRechnen(){
     const mWochen = mT.filter(t => t >= ab), mR = mWochen.map(t => markt.get(t));   // Markt: letzte 20 Jahre
     // je Position: Beta, Alpha, Einzelschwankungen (Residuen) über die gemeinsame Zeit
     const modelle = P.map(p => {
-      const r = rendite(reihen[p.id] || new Map()), xs = [], ys = [];
+      const neuErsatz = zuNeu(p.id) && !!reihen.QQQ;   // gerechnet wie der Nasdaq-100, klar gekennzeichnet
+      const r = rendite((neuErsatz ? reihen.QQQ : reihen[p.id]) || new Map()), xs = [], ys = [];
       for (const t of mWochen) if (r.has(t)) { xs.push(markt.get(t)); ys.push(r.get(t)); }
-      const kurz = !!JUNG?.[p.id];   // junge Aktie: wenige Wochen – Beta vorsichtig Richtung 1 ziehen, keine eigene Rendite annehmen
+      const kurz = !!JUNG?.[p.id] && !neuErsatz;   // junge Aktie: wenige Wochen – Beta vorsichtig Richtung 1 ziehen, keine eigene Rendite annehmen
       if (xs.length < (kurz ? 13 : 104)) return {fehler:true, p};
       const mx = xs.reduce((a, b) => a + b) / xs.length, my = ys.reduce((a, b) => a + b) / ys.length;
       let sxy = 0, sxx = 0; for (let i = 0; i < xs.length; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) ** 2; }
@@ -4492,7 +4684,7 @@ async function depotRechnen(){
       const mMittel = mR.reduce((a, b) => a + b) / mR.length;
       // vorsichtig: erwartete Rendite höchstens wie der Markt (Alpha gedeckelt); Werte unter dem Markt behalten ihre Historie
       const alphaSim = e.rendite === "eigen" ? alpha : Math.min(alpha, (1 - beta) * mMittel);
-      return {p, beta, alpha:alphaSim, gedeckelt:alphaSim < alpha - 1e-9, simPa:(Math.exp((alphaSim + beta * mMittel) * 52.18) - 1) * 100, res, wochen:xs.length, jahre:xs.length / 52.18, korr:sxx ? sxy / Math.sqrt(sxx * ys.reduce((a, y) => a + (y - my) ** 2, 0)) : 0, eigenPa:(Math.exp((alpha + beta * mMittel) * 52.18) - 1) * 100};
+      return {p, neuErsatz, beta, alpha:alphaSim, gedeckelt:alphaSim < alpha - 1e-9, simPa:(Math.exp((alphaSim + beta * mMittel) * 52.18) - 1) * 100, res, wochen:xs.length, jahre:xs.length / 52.18, korr:sxx ? sxy / Math.sqrt(sxx * ys.reduce((a, y) => a + (y - my) ** 2, 0)) : 0, eigenPa:(Math.exp((alpha + beta * mMittel) * 52.18) - 1) * 100};
     });
     const gut = modelle.filter(m => !m.fehler);
     if (!gut.length) throw new Error("Keine zugeordnete Position hat mindestens 2 Jahre gemeinsame Daten mit dem Markt.");
@@ -4504,6 +4696,9 @@ async function depotRechnen(){
     const terW = Math.log(1 - e.ter / 100) / 52.18;
     const inflW = Math.log(1 + e.inflation / 100) / 52.18;
     const monatWoche = k => Math.floor(k * 12 / 52.18);
+    // Einzahl-Phasen (Wunsch Marc 23.11.2026: „40 Jahre laufen lassen, aber nur noch ein paar Jahre einzahlen“): ab Jahr J gilt die Rate R
+    const phasen = [...(e.phasen || [])].filter(x => x.ab >= 1 && x.rate >= 0).sort((a, b) => a.ab - b.ab);
+    const rateIm = jahr => { let r0 = e.sparrate; for (const x of phasen) if (jahr >= x.ab) r0 = x.rate; return r0; };   // jahr: 1 = erstes Jahr
     const einmalW = new Map(); e.einmal.forEach(x => { const k = Math.min(W - 1, Math.max(0, Math.round(x.jahr * 52.18))); einmalW.set(k, (einmalW.get(k) || 0) + x.betrag); });
     const STUFEN = 60, schritt = Math.max(1, Math.round(W / STUFEN));   // Zeitpunkte für den Fächer
     const punkte = []; for (let k = 0; k <= W; k += schritt) punkte.push(k); if (punkte[punkte.length - 1] !== W) punkte.push(W);
@@ -4531,7 +4726,7 @@ async function depotRechnen(){
         // Monatsanfang: Sparrate (mit jährlicher Erhöhung) und Einmalbeträge
         const mo = monatWoche(k);
         let zufluss = 0;
-        if (mo !== mon) { mon = mo; if (e.sparrate > 0) zufluss += e.sparrate * Math.pow(1 + e.dynamik / 100, Math.floor(mo / 12)); }
+        if (mo !== mon) { mon = mo; const r0 = rateIm(Math.floor(mo / 12) + 1); if (r0 > 0) zufluss += r0 * Math.pow(1 + e.dynamik / 100, Math.floor(mo / 12)); }
         const em = einmalW.get(k) || 0;
         const kaufen = (betrag, gewichte, orders) => {   // Kosten je Order (fest je Position + Prozent), Rest wird angelegt
           const k1 = e.kfix * orders + betrag * e.kproz / 100, netto = Math.max(0, betrag - k1);
@@ -4541,7 +4736,7 @@ async function depotRechnen(){
         if (zufluss > 0) kaufen(zufluss, sa, nSpar);
         if (em > 0) kaufen(em, anteilHeute, nHeute);
         if (em < 0 && summe > 0) { const ant = Math.min(1, -em / summe); for (let i = 0; i < N; i++) v[i] *= 1 - ant; basis *= 1 - ant; eingezahlt -= Math.min(-em, summe); summe *= 1 - ant; }
-        if (summe > hoch) hoch = summe; else if (hoch > 0) rueck = Math.max(rueck, 1 - summe / hoch);
+        if (summe > hoch) hoch = summe; else if (hoch >= 1000) rueck = Math.max(rueck, 1 - summe / hoch);   // unter 1.000 € (Start ohne Bestand) nicht werten
         if (k + 1 === punkte[pi]) { fächer[pi][pf] = summe; if (pf === 0) eingezahltPunkte[pi] = eingezahlt; pi++; }
       }
       const ende = v.reduce((a, b) => a + b, 0);
@@ -4559,7 +4754,7 @@ async function depotRechnen(){
       netto:{q5:q(endNetto, 5), q50:q(endNetto, 50), q95:q(endNetto, 95)}, brutto50:q(endBrutto, 50), real50:q(real, 50), real5:q(real, 5), real95:q(real, 95),
       verlust:ant(endNetto, x => x < eingezahltEnde), ziel:e.ziel > 0 ? ant(real, x => x >= e.ziel) : null, rueck50:q(maxRueck, 50), rueck95:q(maxRueck, 95),
       depotText:nur ? `Depot „${nur}“` : depotNamen().length > 1 ? `alle ${depotNamen().length} Depots zusammen` : "", zusammengefasst,
-      modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, kurz:!!JUNG?.[m.p.id], wochen:m.wochen, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
+      modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, kurz:!!JUNG?.[m.p.id] && !m.neuErsatz, neu:!!m.neuErsatz, wochen:m.wochen, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
       offenWert:auswahl.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
     };
     depotErgebnisZeigen(DEPOT_ERG);
@@ -4599,6 +4794,7 @@ function depotErgebnisZeigen(r){
         Sparplan monatlich${e.dynamik ? `, jährlich +${fmt(e.dynamik,1," %")}` : ""}, Kosten je Kauf ${fmt(e.kfix,2)} € + ${fmt(e.kproz,2," %")}, laufende Kosten ${fmt(e.ter,2," %")} p.a.
         ${e.steuer ? `Abgeltungssteuer 26,375 % auf den Gewinn beim gedachten Verkauf am Ende, abzüglich Sparerpauschbetrag ${geld(e.pausch)} €${e.teilfrei ? ", Teilfreistellung 30 %" : ""}; Vorabpauschale, Kirchensteuer und Steuern unterwegs sind vereinfacht weggelassen.` : "Ohne Steuer."}
         ${r.zusammengefasst ? `<br>${r.zusammengefasst} Wert${r.zusammengefasst === 1 ? "" : "e"} lag${r.zusammengefasst === 1 ? "" : "en"} in mehreren Depots oder mehrfach in der Liste und wurde${r.zusammengefasst === 1 ? "" : "n"} zu einer Position zusammengefasst, damit sie gemeinsam schwanken.` : ""}
+        ${r.modelle.some(m => m.neu) ? `<br><b>Brandneu an der Börse</b> (${r.modelle.filter(m => m.neu).map(m => esc(m.name)).join(", ")}): Für eine eigene Rechnung gibt es noch zu wenige Kurse. Gerechnet wird ersatzweise wie der Nasdaq-100. Eine einzelne junge Aktie schwankt in Wirklichkeit deutlich stärker – das Ergebnis ist hier zu ruhig.` : ""}
         ${r.modelle.some(m => m.kurz) ? `<br><b>Junge Aktien</b> (${r.modelle.filter(m => m.kurz).map(m => `${esc(m.name)}: ${m.wochen} Wochen`).join(", ")}): gerechnet mit ihren eigenen Kursen. Weil es nur wenige Wochen sind, ist die Schwankung unsicher geschätzt, das Beta vorsichtig Richtung Markt (1) gezogen und keine eigene Rendite über den Markt hinaus angenommen.` : ""}
         ${r.ohne.length ? `<br><b>Nicht gerechnet</b> (zu wenig gemeinsame Daten): ${r.ohne.map(esc).join(", ")}.` : ""}
         ${r.offenWert > 0 ? `<br><b>Ohne Zuordnung</b> und deshalb nicht enthalten: ${geld(r.offenWert)} €.` : ""}
@@ -4689,6 +4885,13 @@ async function risikoRechnen(G, summe, schl){
     let sxy = 0, sxx = 0, syy = 0; for (let k = 0; k < xs.length; k++) { sxy += (xs[k] - mx) * (ys[k] - my); sxx += (xs[k] - mx) ** 2; syy += (ys[k] - my) ** 2; }
     return sxx && syy ? sxy / Math.sqrt(sxx * syy) : null;
   }));
+  // Laien-Maß (Wunsch Marc 23.11.2026): In Wochen, in denen das Depot verlor – welcher Teil der Positionen verlor mit?
+  const wochenAlle = new Map(); ren.forEach((m, i) => { for (const [t, x] of m) { let a = wochenAlle.get(t); if (!a) wochenAlle.set(t, a = []); a.push([i, x]); } });
+  let mfS = 0, mfN = 0;
+  for (const a of wochenAlle.values()) { if (a.length < Math.max(2, Math.ceil(P.length * 0.8))) continue;
+    const gw = a.reduce((su, [i]) => su + P[i].wert, 0), dep = a.reduce((su, [i, x]) => su + P[i].wert * x, 0) / gw;
+    if (dep < 0) { mfS += a.filter(([, x]) => x < 0).length / a.length; mfN++; } }
+  const mitfall = mfN >= 26 ? mfS / mfN : null;
   let kw = 0, ks = 0;   // durchschnittlicher Gleichlauf, nach Wert gewichtet
   for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (korr[i][j] != null) { const g = P[i].wert * P[j].wert; kw += g; ks += g * korr[i][j]; }
   // Stresstest: Kauf am Hoch, gehalten bis zum Tief (feste Stückzahl, kein Umschichten); danach: wann war der alte Stand wieder erreicht?
@@ -4717,7 +4920,7 @@ async function risikoRechnen(G, summe, schl){
     const ende = bisTief.at(-1).v - 1, spyR = spy.c[i1] / spy.c[i0] - 1;
     return {...S, zeilen, abgedeckt:wSum / summe * 100, ende, tief:tief.v - 1, tiefT:tief.t, zurueck:zurueck ? zurueck.t : null, euroEnde:ende * wSum, spyR, letzteT:spy.t.at(-1)};
   });
-  return {schl, P, korr, schnitt:kw ? ks / kw : null, stress, klumpen:klumpen(G, summe), ab};
+  return {schl, P, korr, schnitt:kw ? ks / kw : null, mitfall, stress, klumpen:klumpen(G, summe), ab};
 }
 const monateZwischen = (a, b) => Math.max(0, Math.round((b - a) / (30.44 * 86400)));
 const dauerWorte = m => m < 1 ? "weniger als einem Monat" : m < 24 ? `${m} Monat${m === 1 ? "" : "en"}` : `${fmt(m / 12, 1)} Jahren`;   // nach … (Dativ)
@@ -4772,16 +4975,31 @@ function risikoZeigen(){
       ${!K.genutzt.length && !K.nurMitglied.length ? "Für deine Fonds liegen keine Indexgewichte vor; gezählt sind nur Einzelaktien." : ""}
       Ersatzwerte (automatisch zugeordnet) zählen hier nicht mit, weil ihr Inhalt nicht deinem echten Fonds entspricht.</div>`;
     // 2) Gleichlauf
-    html += `<h3 style="margin:16px 14px 4px">${ek("d_gleichlauf", "Gleichlauf der Positionen")}</h3>`;
+    html += `<h3 style="margin:16px 14px 4px">${ek("d_gleichlauf", "Fallen deine Positionen gemeinsam?")}</h3>`;
     if (r.P.length >= 2) {
       const paare = []; r.P.forEach((a, i) => r.P.forEach((b, j) => { if (j > i && r.korr[i][j] != null) paare.push([a, b, r.korr[i][j]]); }));
-      const eng = paare.filter(p => p[2] >= 0.85).sort((a, b) => b[2] - a[2]), gegen = paare.filter(p => p[2] <= 0.2);
+      const eng = paare.filter(p => p[2] >= 0.85).sort((a, b) => b[2] - a[2]), gegen = paare.filter(p => p[2] <= 0.3).sort((a, b) => a[2] - b[2]);
       const nm = x => { const w = wertVon(x.id); return esc(w ? kurzname(w) : x.id); };
-      html += `<p class="text" style="padding:0 14px">Durchschnittlicher Gleichlauf deines Depots (nach Wert gewichtet, Wochenkurse der letzten 5 Jahre): <b>${fmt(r.schnitt, 2)}</b> – ${r.schnitt == null ? "" : r.schnitt >= 0.8 ? "sehr hoch: deine Positionen fallen in Krisen fast alle gemeinsam, die Streuung schützt wenig." : r.schnitt >= 0.6 ? "hoch: die meisten Positionen bewegen sich ähnlich." : r.schnitt >= 0.3 ? "mittel: die Positionen gleichen sich teilweise aus." : "niedrig: die Positionen gleichen sich oft gegenseitig aus."}
-        ${eng.length ? `<br>Fast im Gleichschritt (ab 0,85): ${eng.slice(0, 6).map(p => `${nm(p[0])} & ${nm(p[1])} (${fmt(p[2], 2)})`).join(", ")}.` : ""}
-        ${gegen.length ? `<br>Wenig gemeinsam (bis 0,2): ${gegen.sort((a, b) => a[2] - b[2]).slice(0, 4).map(p => `${nm(p[0])} & ${nm(p[1])} (${fmt(p[2], 2)})`).join(", ")}.` : ""}</p>
+      const von10 = r.mitfall == null ? null : Math.round(r.mitfall * 10), stufe = r.schnitt == null ? null : r.schnitt >= 0.8 ? 3 : r.schnitt >= 0.6 ? 2 : r.schnitt >= 0.3 ? 1 : 0;
+      const urteil = ["<b>Gut gestreut:</b> Deine Positionen gehen oft eigene Wege. Fällt eine, fangen andere das häufig auf.",
+        "<b>Teilweise gestreut:</b> Manche Positionen gleichen sich aus, viele bewegen sich aber ähnlich.",
+        "<b>Wenig gestreut:</b> Die meisten deiner Positionen steigen und fallen zusammen. Viele verschiedene Titel zu haben schützt hier nur begrenzt.",
+        "<b>Kaum gestreut:</b> Deine Positionen verhalten sich fast wie eine einzige. Wenn es an der Börse kracht, fällt fast alles gleichzeitig."][stufe ?? 1];
+      const kugeln = von10 == null ? "" : `<div style="display:flex;gap:6px;margin:8px 0 2px" aria-hidden="true">${Array.from({length:10}, (_, i) => `<span style="width:22px;height:22px;border-radius:50%;background:${i < von10 ? "var(--teuer)" : "var(--panel2)"};border:1px solid ${i < von10 ? "var(--teuer)" : "var(--line2)"}"></span>`).join("")}</div>`;
+      const skala = r.schnitt == null ? "" : `<div style="max-width:420px;margin:10px 0 2px"><div style="position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--guenstig),var(--gelb),var(--teuer))"><span style="position:absolute;top:-4px;left:calc(${Math.max(0, Math.min(1, r.schnitt)) * 100}% - 9px);width:18px;height:18px;border-radius:50%;background:var(--text);border:3px solid var(--bg)"></span></div>
+          <div class="klein" style="display:flex;justify-content:space-between;margin-top:4px"><span>gehen eigene Wege</span><span>bewegen sich wie eine</span></div></div>`;
+      html += `<div class="text" style="padding:0 14px">
+        <p style="margin:0 0 4px">„Gleichlauf“ heißt: Steigen und fallen zwei Positionen meist zur selben Zeit? Dann bringt es wenig, beide zu haben – sie verlieren auch zusammen.</p>
+        ${von10 == null ? "" : `<p style="margin:8px 0 0;font-size:15px;color:var(--text)">Wenn dein Depot eine schlechte Woche hatte, fielen im Schnitt <b>${von10} von 10</b> deiner Positionen gleichzeitig.</p>${kugeln}<div class="klein">farbig = fällt mit · gerechnet aus den Wochen der letzten 5 Jahre</div>`}
+        ${skala}
+        <p style="margin:10px 0 0">${urteil}</p>
+        ${eng.length ? `<p style="margin:8px 0 0"><b>Bewegen sich fast gleich:</b> ${eng.slice(0, 5).map(p => `${nm(p[0])} und ${nm(p[1])}`).join(" · ")}${eng.length > 5 ? ` · und ${eng.length - 5} weitere Paare` : ""}. Zwei solche Positionen zählen für die Streuung fast wie eine.</p>` : ""}
+        ${gegen.length ? `<p style="margin:8px 0 0"><b>Gehen am ehesten eigene Wege:</b> ${gegen.slice(0, 4).map(p => `${nm(p[0])} und ${nm(p[1])}`).join(" · ")}.</p>` : `<p style="margin:8px 0 0">Kein Paar in deinem Depot geht wirklich eigene Wege. Mehr Ausgleich brächten Dinge, die anders ticken als Aktien – zum Beispiel Anleihen oder Gold (keine Empfehlung, nur wie Streuung funktioniert).</p>`}
+      </div>
+      <details style="margin:8px 14px 4px"><summary class="linkknopf" style="cursor:pointer">Die Zahlen dazu ansehen (alle Paare)</summary>
+      <p class="klein" style="margin:8px 0">Fachwort: Korrelation. Durchschnitt deines Depots, nach Wert gewichtet: <b>${fmt(r.schnitt, 2)}</b>. 1 = bewegen sich immer gemeinsam, 0 = unabhängig, unter 0 = gegenläufig.</p>
       <div class="tab-scroll"><table class="wtab" style="width:auto"><thead><tr><th></th>${r.P.map((x, i) => `<th title="${nm(x)}">${i + 1}</th>`).join("")}</tr></thead><tbody>${r.P.map((x, i) => `<tr><td style="text-align:left">${i + 1}. ${nm(x)}</td>${r.P.map((_, j) => `<td style="text-align:center;background:${i === j ? "var(--panel2)" : korrFarbe(r.korr[i][j])}">${i === j ? "" : fmt(r.korr[i][j], 2)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-      <div class="klein" style="padding:0 14px 4px">1 = immer gemeinsam, 0 = unabhängig, negativ = gegenläufig. Orange = eng verbunden, grün = gleicht aus. Es zählen nur Wochen, in denen beide Werte Kurse hatten (mindestens ein Jahr).${G.length > r.P.length ? ` Gezeigt: die ${r.P.length} größten Positionen.` : ""}</div>`;
+      <div class="klein" style="padding:4px 0">Orange = eng verbunden, grün = gleicht aus. Es zählen nur Wochen, in denen beide Werte Kurse hatten (mindestens ein Jahr).${G.length > r.P.length ? ` Gezeigt: die ${r.P.length} größten Positionen.` : ""}</div></details>`;
     } else html += `<p class="text" style="padding:0 14px">Dafür braucht es mindestens zwei Positionen mit Kursen.</p>`;
     // 3) Stresstest
     html += `<h3 style="margin:16px 14px 4px">${ek("d_stress", "Stresstest: frühere Krisen")}</h3>
@@ -4808,15 +5026,17 @@ function risikoZeigen(){
 const ERKLAERUNG_DEPOT = {
   d_alarm: {titel:"Alarme aufs Handy", text:"Einmal einrichten: die kostenlose App „ntfy“ installieren und das geheime Thema abonnieren (den Namen hast du von Claude bekommen; er steht nirgends öffentlich). Danach prüft jeder Online-Lauf (mehrmals täglich), ob ein Wert neu ab 80 (historisch sehr günstig) oder neu bis 15 (historisch sehr teuer) steht – jeden Wechsel nur einmal, mit Puffer gegen Hin-und-her (sehr günstig endet erst unter 75, sehr teuer erst über 20). ETFs, Krypto und Rohstoffe kommen einzeln, die über 4.000 Aktien gesammelt einmal am Tag (die bekanntesten zuerst). Optional nur bestimmte Werte: diese Liste als geheime Einstellung ALARM_WERTE speichern. Beschreibt die Lage, ist keine Kaufempfehlung."},
   d_klumpen: {titel:"Klumpenrisiko", text:"Viele Index-ETFs enthalten dieselben großen Firmen. Wer einen MSCI-World-ETF, einen Nasdaq-100-ETF und dazu Nvidia-Aktien hat, besitzt Nvidia dreimal – und ist davon abhängiger, als es aussieht. Hier wird zusammengerechnet: dein Betrag im ETF mal das Gewicht der Firma im Index plus das, was du direkt hältst. Bekannt sind nur die größten Titel je Index (aus den offiziellen Factsheets bzw. der Bestandsliste des SPY-Fonds), deshalb „mindestens“."},
-  d_gleichlauf: {titel:"Gleichlauf (Korrelation)", text:"Wie ähnlich sich zwei Positionen Woche für Woche bewegt haben, von −1 bis 1. Nahe 1: steigen und fallen fast immer gemeinsam – zwei solche Positionen streuen das Risiko kaum. Nahe 0: unabhängig. Negativ: gegenläufig, gleicht aus. Gerechnet aus den Wochenkursen der letzten 5 Jahre. In Krisen steigt der Gleichlauf oft noch."},
+  d_gleichlauf: {titel:"Fallen deine Positionen gemeinsam?", text:"Streuung schützt nur, wenn die Positionen sich unterschiedlich verhalten. Zwei Welt-ETFs zum Beispiel steigen und fallen fast immer zusammen – wer beide hat, ist kaum breiter aufgestellt als mit einem. Die farbigen Punkte zeigen: In den Wochen, in denen dein Depot verlor, wie viele von zehn Positionen verloren im Schnitt mit? Der Regler darunter fasst zusammen, wie ähnlich sich alle Positionen bewegen (Fachwort: Korrelation, von „gehen eigene Wege“ bis „bewegen sich wie eine“). Gerechnet aus den Wochenkursen der letzten 5 Jahre, größere Positionen zählen mehr. In echten Krisen fällt meist noch mehr gemeinsam als in normalen Zeiten."},
   d_stress: {titel:"Stresstest", text:"Dein heutiges Depot mit den heutigen Anteilen, zurückversetzt an das Hoch vor einer echten Krise und gehalten bis zum Tiefpunkt des S&P 500. Die Zahl zeigt den Verlust bis zum Tief, „alter Stand wieder erreicht“ die Zeit vom Hoch, bis das Depot wieder so viel wert war. Keine Vorhersage – die nächste Krise verläuft anders."},
   d_rebal: {titel:"Rebalancing", text:"Wenn eine Position stark steigt, wird sie ein immer größerer Teil des Depots – und das Risiko verschiebt sich, ohne dass du etwas getan hast. Rebalancing heißt: ab und zu zurück zu den geplanten Anteilen. Hinweis erscheint ab 5 Prozentpunkten oder einem Viertel über dem Ziel (z. B. 25 % statt 20 % oder 13 % statt 10 %). Die Ziele bleiben nur in diesem Browser (wenn „merken“ an ist)."},
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
   d_wert: {titel:"Wert € – läuft mit dem Kurs mit", text:"Der Euro-Wert jeder Position wird ab dem Eintrag mit dem Kurs des zugeordneten Werts fortgeschrieben: Wert heute = eingetragener Wert × Kurs heute ÷ Kurs beim Eintrag. Bei Dollar-Werten wird die Änderung des Wechselkurses EUR/USD eingerechnet, andere Fremdwährungen laufen ohne Wechselkurs. Die kleine Zeile darunter zeigt die Veränderung seit dem Eintrag. So aktuell wie der Datenstand oben rechts (werktags etwa alle 2 Stunden, keine Echtzeit). Genau ist das nur, wenn der zugeordnete Wert dasselbe Papier ist – bei „gleicher Index“, „ähnlicher Index“ oder einem Ersatz ist es eine Näherung, Käufe und Verkäufe kennt das Tool nicht. Trägst du einen Wert von Hand ein oder lädst dein Depot neu, zählt ab dann diese Zahl. Alles bleibt in diesem Browser."},
-  d_nachkauf: {titel:"Nachkauf unter", text:"Ab welchem Kurs sich Nachkaufen bei dieser Position früher gelohnt hat – dieselbe Rechnung wie auf der Titelseite des Werts (Karte „Nachkaufen“). Ein Preis heißt: Käufe bei dieser Ampel-Schwelle (60, 70, 80 oder 90) brachten in der Geschichte des Werts im Mittel mehr als Käufe in beliebigen Wochen, über mindestens 3 getrennte Phasen; ✓ heißt, der Kurs liegt heute schon darunter. „jederzeit gleich“ heißt: Warten auf tiefe Kurse brachte hier nichts, regelmäßiges Nachkaufen war genauso gut. „vorläufig“ heißt: zu wenig Geschichte für einen Beleg, bis dahin gilt die Grenze Ampel 80. Der Preis steht in der Währung des Werts und wandert jede Woche mit der 200-Wochen-Linie. Bei einem automatischen Ersatz gilt er für den Ersatz, nicht für deine Position. Fahre mit der Maus über den Preis, um den Beleg zu sehen. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
+  d_nachkauf: {titel:"Wann nachkaufen?", text:"Die Frage dahinter: Gab es bei diesem Wert früher einen Kurs, unter dem sich Kaufen besonders gelohnt hat? Dafür wurde die ganze Kursgeschichte des Werts durchgerechnet. „Günstig unter 80 $“ heißt: Wer unter diesem Kurs kaufte, hatte in den drei Jahren danach deutlich mehr Ertrag als jemand, der an irgendeinem Tag kaufte – und dieser Vorteil hielt auch einer Gegenprobe mit zufällig gewürfelten Kursen stand. Grüner Punkt: Der Kurs liegt heute schon darunter. Gelber Punkt: noch nicht. „Kein besonderer Kaufkurs“ heißt: Bei diesem Wert war es egal, wann man kaufte – auf tiefe Kurse warten brachte nichts Belegbares, regelmäßig kaufen (z. B. jeden Monat) war genauso gut. Das ist bei den meisten Werten so. „Richtwert“ heißt: Der Wert ist noch zu kurz an der Börse für einen Beleg; genannt wird der Kurs, bei dem die Ampel „historisch sehr günstig“ zeigt. Der Kurs steht in der Währung des Werts und verändert sich jede Woche ein wenig. Bei einem automatischen Ersatz gilt er für den Ersatz, nicht für dein Papier. Mit der Maus über dem Text siehst du die Zahlen dazu. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
   d_sparanteil: {titel:"Sparplan-Anteil", text:"Welcher Teil der monatlichen Sparrate in diese Position fließt. „Wie das Depot“ verteilt nach dem heutigen Wert, „gleichmäßig“ zu gleichen Teilen; eigene Werte werden auf 100 % hochgerechnet."},
+  d_phasen: {titel:"Einzahl-Phasen", text:"Die Sparrate muss nicht die ganze Laufzeit gleich bleiben. Jede Zeile heißt: ab diesem Jahr gilt eine neue Rate. „ab Jahr 6: 0 €“ bedeutet 5 Jahre einzahlen, danach nichts mehr – das Depot läuft bis zum Ende der Laufzeit weiter. Mehrere Zeilen sind möglich (z. B. Jahr 1–5: 500 €, ab Jahr 6: 200 €, ab Jahr 16: 0 €). Die neue Rate wird im selben Verhältnis auf deine Werte verteilt wie die Beträge in der Spalte „Sparplan € / Monat“. Die jährliche Erhöhung in Prozent zählt, falls eingestellt, ab dem ersten Jahr und läuft in allen Phasen weiter."},
+  d_plan: {titel:"Sparplan € je Monat", text:"Wie viel von deiner Sparrate jeden Monat in diesen Wert fließt. Die Summe aller Zeilen ist deine Sparrate. Mit „Wert für künftige Käufe suchen“ kannst du jeden Wert aus dem Tool dazunehmen – auch einen, den du noch gar nicht besitzt; er steht dann mit 0 € Bestand in der Liste. Änderst du oben die gesamte Sparrate, bleiben die Anteile gleich und alle Beträge wachsen oder schrumpfen mit. Die Verteilung „wie das Depot“ setzt die Beträge wieder nach den heutigen Depot-Anteilen."},
   d_sparrate: {titel:"Sparrate je Monat", text:"Betrag, der jeden Monat zusätzlich angelegt wird. 0 = kein Sparplan, dann rechnet die Simulation nur mit dem heutigen Depot."},
   d_verteilung: {titel:"Verteilung", text:"Wie die Sparrate auf die Positionen verteilt wird: wie das heutige Depot, gleichmäßig oder nach den Anteilen in der Tabelle."},
   d_dynamik: {titel:"Jährliche Erhöhung", text:"Um wie viel Prozent die Sparrate jedes Jahr steigt (Dynamik), z. B. 3 % wie eine Gehaltserhöhung. 0 = gleichbleibend."},
