@@ -590,6 +590,49 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .kv-gross{font-size:34px}
   .lt .lt-n .lt-a{display:none}
 }
+
+/* ------------------------------------------------------------ Titelseite, dritte Runde (23.11.2026): räumliche Tiefe – Glas-Karten, 3D-Ampel, Stufen, Kugeln, Röhren */
+:root{--tiefe:0 22px 44px -22px rgba(0,0,0,.7);--kante:rgba(255,255,255,.09);--boden:rgba(0,0,0,.42)}
+:root[data-theme="light"]{--tiefe:0 20px 38px -22px rgba(30,45,90,.3);--kante:rgba(255,255,255,.95);--boden:rgba(30,45,90,.14)}
+.karte{box-shadow:inset 0 1px 0 var(--kante),var(--tiefe)}
+.sekt .nr{box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 0 color-mix(in srgb,var(--akzent) 45%,#000),0 12px 22px -8px color-mix(in srgb,var(--akzent) 60%,transparent)}
+/* Kopf: Bühne mit Raster-Boden unter der Ampel */
+.wert-kopf{position:relative;overflow:hidden}
+.wert-kopf>*{position:relative;z-index:1}
+.wert-kopf .gauge{position:relative;perspective:760px}
+.wert-kopf .gauge::before{content:"";position:absolute;left:-90px;right:-90px;top:120px;height:150px;z-index:-1;pointer-events:none;opacity:.5;
+  background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--zf,var(--akzent)) 55%,transparent) 0 1px,transparent 1px 34px),repeating-linear-gradient(0deg,color-mix(in srgb,var(--zf,var(--akzent)) 55%,transparent) 0 1px,transparent 1px 34px);
+  transform:perspective(300px) rotateX(64deg);transform-origin:50% 0;
+  -webkit-mask-image:radial-gradient(ellipse 58% 90% at 50% 0,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 58% 90% at 50% 0,#000 10%,transparent 72%)}
+.wert-kopf .gauge svg,.wert-kopf .gauge .g-zahl{transform:rotateX(var(--kx,0deg)) rotateY(var(--ky,0deg));transition:transform .25s ease-out;will-change:transform}
+.wert-kopf .gauge svg{animation:kipp 1s cubic-bezier(.2,.9,.25,1) both}
+@keyframes kipp{from{transform:rotateX(62deg) translateY(14px);opacity:0}}
+.wert-kopf .gauge .g-zahl{position:relative;text-shadow:0 2px 0 var(--boden),0 0 30px color-mix(in srgb,var(--zf,var(--akzent)) 60%,transparent)}
+.wert-kopf .gauge .g-wort,.wert-kopf .gauge .g-rang,.wert-kopf .gauge .g-vor{position:relative}
+.g-zeiger{transform-origin:115px 108px}
+/* Kacheln, Fakten, Blöcke: leicht erhaben */
+.kpi,.fakt,.kv-block,.verl,.wk-rendite{box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden),0 16px 26px -18px var(--boden)}
+.fakt .f-i{background:linear-gradient(145deg,color-mix(in srgb,var(--ff,var(--akzent)) 38%,transparent),color-mix(in srgb,var(--ff,var(--akzent)) 10%,transparent));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 8px 16px -8px var(--ff,var(--akzent))}
+/* Preisleiter als Stufen */
+.leiter{gap:11px;padding-bottom:5px}
+.lt{box-shadow:inset 0 1px 0 var(--kante),0 5px 0 color-mix(in srgb,var(--zf) 30%,var(--bg)),0 16px 22px -16px var(--boden);background:linear-gradient(180deg,color-mix(in srgb,var(--zf) 13%,var(--panel)),color-mix(in srgb,var(--zf) 5%,var(--panel)))}
+.lt>i{background:linear-gradient(180deg,color-mix(in srgb,#fff 40%,var(--zf)),var(--zf) 45%,color-mix(in srgb,var(--zf) 70%,#000));box-shadow:0 0 12px color-mix(in srgb,var(--zf) 55%,transparent)}
+.lt.heute{transform:translateY(-3px);background:linear-gradient(180deg,color-mix(in srgb,var(--zf) 30%,var(--panel)),color-mix(in srgb,var(--zf) 14%,var(--panel)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 8px 0 color-mix(in srgb,var(--zf) 42%,var(--bg)),0 0 0 1px color-mix(in srgb,var(--zf) 70%,transparent),0 20px 34px -14px color-mix(in srgb,var(--zf) 55%,transparent)}
+.lt-heute{box-shadow:0 3px 0 color-mix(in srgb,var(--text) 55%,#000),0 10px 18px -8px rgba(0,0,0,.6)}
+/* 100 Punkte als Kugeln */
+.p100{gap:5px}
+.p100 i{background:color-mix(in srgb,var(--text) 15%,transparent);box-shadow:inset 0 1.5px 2.5px var(--boden)}
+.p100 i.an{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95) 0 9%,color-mix(in srgb,#fff 28%,var(--pf)) 24%,var(--pf) 52%,color-mix(in srgb,var(--pf) 52%,#000) 100%);
+  box-shadow:0 2px 3px var(--boden),0 0 9px color-mix(in srgb,var(--pf) 40%,transparent)}
+/* Balken als Röhren */
+.balken,.meter{box-shadow:inset 0 2px 3px var(--boden)}
+.balken i,.meter i{position:relative}
+.balken i::after,.meter i::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 58%);pointer-events:none}
+.kurve{filter:drop-shadow(0 7px 7px var(--boden))}
+.fazit{box-shadow:inset 0 1px 0 var(--kante),0 14px 26px -18px var(--boden)}
+@media (prefers-reduced-motion:reduce){.wert-kopf .gauge svg{animation:none}}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1910,6 +1953,11 @@ function abschnittNavSpur(){
   if (h.scrollTop > 0 && h.scrollTop + h.clientHeight >= h.scrollHeight - 4) aktiv = nav.lastElementChild;   // ganz unten: letzter Abschnitt
   for (const b of nav.children) { const an = String(b === aktiv); if (b.getAttribute("aria-current") !== an) b.setAttribute("aria-current", an); }
 }
+function tiefeInit(){   // räumlicher Effekt: die Ampel neigt sich leicht zur Maus (nur mit Maus, nicht bei „weniger Bewegung“)
+  const g = $("#wert-kopf .gauge"); if (!g || !matchMedia("(hover:hover)").matches || matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+  g.onpointermove = ev => { const r = g.getBoundingClientRect(); g.style.setProperty("--ky", (((ev.clientX - r.left) / r.width - .5) * 16).toFixed(1) + "deg"); g.style.setProperty("--kx", ((.5 - (ev.clientY - r.top) / r.height) * 16).toFixed(1) + "deg"); };
+  g.onpointerleave = () => { g.style.setProperty("--kx", "0deg"); g.style.setProperty("--ky", "0deg"); };
+}
 function abschnittNavInit(){
   const nav = $("#abschnitt-nav"); if (!nav) return;
   const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["chart-karte","Chart"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Ausblick und Risiko"],["vertiefung","Details"]].filter(([id]) => document.getElementById(id));
@@ -1976,18 +2024,26 @@ async function risikoVergleich(id, c){   // Schwankung, Gleichlauf und Beta gege
     <div class="kv"><span data-e="r_markt">Gleichlauf mit dem S&amp;P 500</span><b>${fmt(kor,2)} · ${wort}</b></div>
     <div class="kv"><span data-e="r_markt">Bewegung je 1 % im S&amp;P 500</span><b>${fmt(beta,2)} %</b></div>`;
 }
-function gaugeSvg(s){   // Halbkreis mit Farbverlauf (links teuer, rechts günstig), weichem Schein und Zeiger, der beim Laden einschwenkt
-  const cx = 115, cy = 112, r = 92, w = 15;
+function gaugeSvg(s){   // Halbkreis als räumliches Instrument: Bogen mit Tiefe und Glanz, Teilstriche, Kugel-Zeiger, der beim Laden einschwenkt
+  const cx = 115, cy = 108, r = 90, w = 15, tf = 6, F5 = AMPEL_FARBEN;
   const pt = (v, rr) => { const a = Math.PI * (1 - v / 100); return [cx + rr * Math.cos(a), cy - rr * Math.sin(a)]; };
-  const bahn = `M${cx - r} ${cy} A${r} ${r} 0 0 1 ${cx + r} ${cy}`, F5 = AMPEL_FARBEN;
-  const striche = [15, 40, 60, 80].map(v => { const [a, b] = pt(v, r - w / 2 - 1), [c, d] = pt(v, r + w / 2 + 1); return `<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="var(--panel)" stroke-width="2.4"/>`; }).join("");
-  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${s == null ? "keine" : fmt(s,0)} von 100: ${zonenWort(s)}">
+  const bogen = rr => `M${cx - rr} ${cy} A${rr} ${rr} 0 0 1 ${cx + rr} ${cy}`, bahn = bogen(r), an = s != null;
+  const strich = (v, a, b, farbe, br) => { const [x1, y1] = pt(v, a), [x2, y2] = pt(v, b); return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${farbe}" stroke-width="${br}" stroke-linecap="round"/>`; };
+  const teil = Array.from({length:21}, (_, i) => strich(i * 5, r - w / 2 - (i % 2 ? 6 : 9), r - w / 2 - 4, "var(--muted)", i % 2 ? .8 : 1.3)).join("");
+  const grenzen = [15, 40, 60, 80].map(v => strich(v, r - w / 2 - .5, r + w / 2 + .5, "var(--panel)", 2.2)).join("");
+  let svg = `<svg viewBox="0 0 230 140" role="img" aria-label="Ampel ${an ? fmt(s,0) : "keine"} von 100: ${zonenWort(s)}">
     <defs><linearGradient id="g-verlauf" gradientUnits="userSpaceOnUse" x1="${cx - r}" y1="0" x2="${cx + r}" y2="0"><stop offset="0" stop-color="${F5[0]}"/><stop offset=".28" stop-color="${F5[1]}"/><stop offset=".5" stop-color="${F5[2]}"/><stop offset=".72" stop-color="${F5[3]}"/><stop offset="1" stop-color="${F5[4]}"/></linearGradient>
-    <filter id="g-schein" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="7"/></filter></defs>
-    ${s == null ? "" : `<path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w + 8}" stroke-linecap="round" fill="none" opacity=".3" filter="url(#g-schein)"/>`}
-    <path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none" opacity="${s == null ? .3 : 1}"/>${striche}`;
-  if (s != null) { const zf = F5[stufe(s)];
-    svg += `<g class="g-zeiger" style="--w:${(Math.max(0, Math.min(100, s)) * 1.8).toFixed(1)}deg"><circle cx="${cx - r}" cy="${cy}" r="15" fill="${zf}" opacity=".28"/><circle cx="${cx - r}" cy="${cy}" r="10.5" fill="var(--panel)" stroke="var(--text)" stroke-width="3.5"/><circle cx="${cx - r}" cy="${cy}" r="4.2" fill="${zf}"/></g>`; }
+    <radialGradient id="g-glanz" cx=".34" cy=".28" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".35" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="g-dunkel" cx=".42" cy=".38" r=".62"><stop offset=".5" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+    <filter id="g-schein" x="-20%" y="-40%" width="140%" height="190%"><feGaussianBlur stdDeviation="8"/></filter></defs>
+    ${an ? `<path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w + 10}" stroke-linecap="round" fill="none" opacity=".34" filter="url(#g-schein)"/>` : ""}
+    <g opacity="${an ? 1 : .3}"><g transform="translate(0 ${tf})"><path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none"/><path d="${bahn}" stroke="#000" stroke-width="${w}" stroke-linecap="round" fill="none" opacity=".52"/></g>
+    <path d="${bahn}" stroke="url(#g-verlauf)" stroke-width="${w}" stroke-linecap="round" fill="none"/>
+    <path d="${bogen(r - w / 2 + 2.2)}" stroke="#000" stroke-width="3" fill="none" opacity=".16"/>${grenzen}
+    <path d="${bogen(r + w / 2 - 3)}" stroke="#fff" stroke-width="1.8" stroke-linecap="round" fill="none" opacity=".42"/></g>
+    <g opacity=".55">${teil}</g>`;
+  if (an) { const zf = F5[stufe(s)], mx = cx - r;
+    svg += `<g class="g-zeiger" style="--w:${(Math.max(0, Math.min(100, s)) * 1.8).toFixed(1)}deg"><circle cx="${mx}" cy="${cy}" r="17" fill="${zf}" opacity=".3"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="${zf}" stroke="rgba(255,255,255,.7)" stroke-width="1"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="url(#g-dunkel)"/><circle cx="${mx}" cy="${cy}" r="11.5" fill="url(#g-glanz)"/></g>`; }
   svg += `<text x="${cx - r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">teuer</text><text x="${cx + r}" y="137" font-size="10.5" fill="var(--muted)" text-anchor="middle">günstig</text></svg>`;
   return svg;
 }
@@ -2349,6 +2405,7 @@ async function zeige(id, opt={}){
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
   reiter(REITER);
   abschnittNavInit();
+  tiefeInit();
   risikoVergleich(id, c);
   lohntSichCheck(id);
   if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
