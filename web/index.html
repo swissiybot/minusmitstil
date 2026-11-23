@@ -1337,6 +1337,7 @@ const ERKLAERUNG = {
   pi_top: {titel:"Pi Cycle Top", text:"Ein Warnsignal für ein mögliches Zyklushoch bei Bitcoin: Es löst aus, wenn die 111-Tage-Linie über das Doppelte der 350-Tage-Linie steigt. „Kein Warnsignal“ heißt: Das ist im Moment nicht der Fall – es ist ein gemessener Zustand, kein Schalter. Die beiden Linien und die früheren Auslöser („Pi Top“) sind im Bitcoin-Chart von Anfang an eingeblendet und lassen sich dort über den Knopf „Pi Cycle Top“ ausblenden. Nur für Bitcoin geeicht, sehr wenige Fälle."},
   pi_signal: {titel:"Boden-Signal", text:"Der Tag, an dem die 150-Tage-EMA wieder über die 471-Tage-SMA × 0,745 steigt. Die Tabelle zeigt, wie der Kurs 1, 2 und 3 Jahre danach stand. Mit zwei Fällen ist das ein Rückblick, keine Statistik."},
   // --- Chart-Legende
+  l_wma: {titel:"100-, 300- und 400-Wochen-Linie", text:"Zusatzlinien zum Ein- und Ausklicken: der Durchschnitt der letzten 100, 300 oder 400 Wochenschlusskurse (rund 2, 6 und 8 Jahre), gerechnet wie die 200-Wochen-Linie. Die 100er folgt dem Kurs schneller, die 300er und 400er liegen meist tief darunter und wurden bisher nur in großen Krisen erreicht. Sie dienen nur der Orientierung im Chart: In die Ampel, die Kaufzonen und alle Rechnungen fließt weiterhin allein die 200-Wochen-Linie ein."},
   l_200w: {titel:"200-Wochen-Linie (gelb)", text:"Gelbe Linie: der Durchschnitt der letzten 200 Wochenschlusskurse (knapp 4 Jahre). Sie ist die Grundlage der Ampel: Liegt der Kurs an der Linie, zeigt die Ampel 70 (günstig); darunter umso mehr, je seltener der Kurs früher so tief lag. Bei starken Werten wie dem S&P 500 oder Bitcoin war die Linie früher oft ein Boden, unter den der Kurs nur selten und kurz fiel."},
   l_trend: {titel:"Trendkanal (blau)", text:"So zeichnen ihn Profis in Charting-Programmen (lineare Regression, z. B. „Regression Trend“ bei TradingView): Durch die Schlusskurse der gerade sichtbaren Kerzen wird die Gerade gelegt, die am besten passt (Methode der kleinsten Quadrate) – das ist die durchgezogene Mittellinie. Die gestrichelten Linien liegen 2 Standardabweichungen darüber und darunter; dazwischen lagen im sichtbaren Zeitraum etwa 95 % der Kurse. Der Kanal passt sich immer der Ansicht an: Zoomen, Verschieben, Zeitebene (Monat, Woche, Tag) oder Log/Linear wechseln rechnet ihn neu. Bei Log-Skala steht die Gerade für gleichmäßiges prozentuales Wachstum (bei langen Zeiträumen die richtige Wahl), bei Linear für gleichmäßigen Zuwachs in Dollar. Im Fadenkreuz steht, wie stark der Trend pro Jahr steigt oder fällt und wo der letzte sichtbare Kurs im Kanal liegt (über dem Kanal = weit über dem Trend, unter dem Kanal = weit darunter). Rückblick auf den gewählten Ausschnitt, keine Vorhersage: Ein anderer Ausschnitt ergibt einen anderen Kanal."},
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
@@ -2331,17 +2332,18 @@ async function lohntSichCheck(id){
       warten80:["Warten auf sehr günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel historisch sehr günstig zeigt (ab 80)"]} : {};
     const L = WEGE.filter(([k]) => e[k]).map(([k, n, was, f]) => ({k, n:wegText[k]?.[0] || n, was:wegText[k]?.[1] || was, f, x:e[k]})), rang = [...L].sort((p, q) => q.x.netto - p.x.netto), sieger = rang[0], zweiter = rang[1];
     const vor = (sieger.x.netto / zweiter.x.netto - 1) * 100, knapp = vor < 3, mx = sieger.x.netto || 1;
-    const fazit = knapp ? `<b>Kein klarer Sieger:</b> ${sieger.n} und ${zweiter.n} lagen bei ${name} fast gleichauf (Unterschied ${fmt(vor,0)} %).`
+    // Der beste Weg ist immer markiert (Wunsch Marc 23.11.2026); bei unter 3 % Vorsprung steht „knapp vorn“ mit dem genauen Abstand dabei
+    const fazit = knapp ? `<b>Knapp vorn bei ${name}: ${sieger.n}</b> – nur ${fmt(vor, 1)} % vor ${zweiter.n}. Die beiden lagen praktisch gleichauf.`
       : `<b>Am meisten brachte bei ${name}: ${sieger.n}</b> – ${sieger.was}. Vorsprung vor dem zweitbesten Weg (${zweiter.n}): <b>${fmt(vor,0)} %</b>.`;
-    const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger && !knapp, zuSpar = z.k === "spar" ? "" : ` · ${vz((z.x.netto / e.spar.netto - 1) * 100, 0, " %")} gegenüber ${nurEinmal ? "„Sofort kaufen“" : "dem Sparplan"}`;
+    const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger, zuSpar = z.k === "spar" ? "" : ` · ${vz((z.x.netto / e.spar.netto - 1) * 100, 0, " %")} gegenüber ${nurEinmal ? "„Sofort kaufen“" : "dem Sparplan"}`;
       const kaeufe = z.x.kaeufe === 0 ? "kam nie zum Zug – die Ampel stand nie so günstig" : `${z.x.kaeufe} ${z.x.kaeufe === 1 ? "Kauf" : "Käufe"}${z.x.bar_anteil_ende >= 1 ? `, am Ende ${fmt(z.x.bar_anteil_ende,0)} % noch nicht angelegt` : ""}`;
-      return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">am besten</span>` : ""}<span class="weg-geld">${geld(z.x.netto)}</span></div>
+      return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">${knapp ? "knapp vorn" : "am besten"}</span>` : ""}<span class="weg-geld">${geld(z.x.netto)}</span></div>
         <div class="balken"><i style="width:${Math.max(1, z.x.netto / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
         <div class="klein">${z.was.charAt(0).toUpperCase() + z.was.slice(1)}. ${kaeufe}${zuSpar}.</div></div>`; };
     const rueck = L.every(z => z.x.max_verlust != null) ? ` Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}.` : "";
     const abweichend = eigen && (o.kfix !== 1 || o.kproz !== 0 || o.zins !== "echt") ? ` Gerechnet mit ${fmt(o.kfix, o.kfix % 1 ? 2 : 0)} je Kauf${o.kproz ? ` plus ${fmt(o.kproz * 100, 2)} %` : ""}${o.zins === "echt" ? "" : `, Zins fest ${fmt(o.zins, o.zins % 1 ? 1 : 0)} %`} (im Strategie-Vergleich eingestellt).` : "";
     el.innerHTML = kopf + eingabe + `<div class="fazit${knapp ? "" : " gut"}">${fazit}</div>
-      <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${r.von.slice(0,4)} (${fmt(r.jahre,0)} Jahre). So viel wäre daraus geworden:</p>
+      <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${r.von.slice(0,4)} (${fmt(r.jahre,0)} Jahre). <b>Alle vier Wege zahlen genau dasselbe zur selben Zeit ein</b> – der Unterschied ist nur, wann gekauft wird. So viel wäre daraus geworden:</p>
       <div class="wege">${L.map(zeile).join("")}</div>
       <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck}${abweichend} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Eigene Beträge lassen sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
       ${nurEinmal ? `<p class="klein">Für einen einzelnen Einmalbetrag gibt es keine Gegenprobe mit Zufallsverläufen: Das Ergebnis hängt hier allein vom Startzeitpunkt ab.</p>`
@@ -2356,13 +2358,13 @@ let charts = [], tabCharts = [], KERZEN = null, HAUPT = null, ZWEI = null, KEGEL
 let SERIEN = {}, ZEIT_I = new Map();
 // Startzustand bei JEDEM Aufruf (Wunsch Marc 22.11.2026): 200-Wochen-Linie, Kaufzonen, Ampel-Verlauf, Tief-/Hochpunkte und
 // Prognose-Kegel an, alles andere aus; Wochenansicht, 10 Jahre. Umschalten gilt bis zum nächsten Neuladen der Seite.
-let CHIPS = {w200:true, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, kq:true, vq:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:true, mayer:false, mvrv:false};
+let CHIPS = {w200:true, w100:false, w300:false, w400:false, kaufzonen:true, ampel:true, tiefhoch:true, kegel:true, kq:true, vq:true, trend:false, phasen:false, ergebnis:false, bb:false, ema:false, fib:false, gp:false, pi:false, pitop:true, mayer:false, mvrv:false};
 // Kauf-/Verkaufsqualität (Rückblick): Farben der Bänder im Kurs-Chart
 const KQ_FARBEN = ["#e2583e", "#e2583e80", "transparent", "#14a08580", "#0b7a64"];   // schlecht … sehr gut gekauft
 const VQ_FARBE = "#f59e0b";
 const kqFarbe = v => v == null ? null : v >= 80 ? KQ_FARBEN[4] : v >= 60 ? KQ_FARBEN[3] : v > 40 ? null : v > 20 ? KQ_FARBEN[1] : KQ_FARBEN[0];
 const vqFarbe = v => v == null ? null : v >= 80 ? VQ_FARBE : v >= 60 ? VQ_FARBE + "70" : null;
-const CHIPS_WICHTIG = ["w200", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
+const CHIPS_WICHTIG = ["w200", "w100", "w300", "w400", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 // Zeitebene: M/W/D im eigenen Chart, 60/30/15 Minuten nur über TradingView (keine eigenen Intraday-Kurse)
@@ -3292,12 +3294,15 @@ async function zeige(id, opt={}){
   const {info:w, chart:c} = daten;
   if (vorher?.f && !w.f) w.f = vorher.f;   // Geschäftszahlen stehen nur in der Rangliste
   const scrollY = $("#haupt").scrollTop;
-  alleChartsWeg(); INFO = w; CDATA = c;
+  alleChartsWeg(); INFO = w; CDATA = c; wmaErgaenzen(c);
   const btc = !!w.pi, krypto = w.gruppe === "Krypto", eigen = !!c.c;
   if (!eigen || !w.tv) CHARTQUELLE = "eigen";
   const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
   const chips = [
     ["w200", "200-Wochen-Linie", `<i style="color:var(--gelb)"></i>`, "l_200w", eigen],
+    ["w100", "100-Wochen-Linie", `<i style="color:var(--cyan)"></i>`, "l_wma", eigen && !!c.wma100],
+    ["w300", "300-Wochen-Linie", `<i style="color:var(--lila)"></i>`, "l_wma", eigen && !!c.wma300],
+    ["w400", "400-Wochen-Linie", `<i style="color:var(--pitop2)"></i>`, "l_wma", eigen && !!c.wma400],
     ["trend", "Trendkanal", `<i style="color:var(--akzent)"></i>`, "l_trend", eigen],
     ["kegel", "Prognose-Kegel", `<i class="flaeche" style="color:var(--kegel)"></i>`, "l_kegel", eigen],
     ["phasen", "Günstig-/Teuer-Phasen", `<i class="flaeche" style="color:var(--guenstig);opacity:.5"></i>`, "l_phasen", eigen],
@@ -3459,7 +3464,7 @@ function tvHinweis(){
 function meldung(text){ const m = $("#chart-meldung"); if (!m) return; m.hidden = !text; m.textContent = text || ""; }
 // ------------------------------------------------------------ Umschalter $ / € (echter EUR/USD-Kurs; Ampel, Klartext und Kaufzonen-Texte bleiben in Dollar)
 let FX = undefined, WAEHRUNG = lade("waehrung", "USD");
-const PREIS_FELDER = ["o", "h", "l", "c", "sma200w", "kz90", "kz80", "kz60", "kz40", "kz15", "pi_ema150", "pi_sma471", "pi_top111", "pi_top350x2"];
+const PREIS_FELDER = ["o", "h", "l", "c", "sma200w", "wma100", "wma300", "wma400", "kz90", "kz80", "kz60", "kz40", "kz15", "pi_ema150", "pi_sma471", "pi_top111", "pi_top350x2"];
 const EUR_BOERSEN = /\.(DE|F|AS|PA|MI|MC|BR|HE|LS|VI|IR)$/i;
 function waehrungVon(w){   // nur wo sicher: US-Börsen und US-ETFs, Krypto in Dollar, US-Rohstoff-Futures → USD; Euro-Börsen → EUR; sonst unbekannt
   if (!w) return null; const s = String(w.symbol || w.id || "");
@@ -3507,7 +3512,7 @@ async function intervallSetzen(iv){
 }
 // ------------------------------------------------------------ Zeitebenen für den eigenen Chart
 function monatsDaten(c){   // Wochen zu Monaten zusammenfassen (Kerze: erste Eröffnung, Hoch, Tief, letzter Schluss; Linien: Stand am Monatsende)
-  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","kz90","kz80","kz60","kz40","kz15","kq","vq","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
+  const out = {t:[], o:[], h:[], l:[], c:[]}, linien = ["sma200w","wma100","wma300","wma400","kz90","kz80","kz60","kz40","kz15","kq","vq","score","pi_ema150","pi_sma471","pi_top111","pi_top350x2","mayer","mvrv"].filter(k => c[k]);
   linien.forEach(k => out[k] = []); if (c.pi_zone) out.pi_zone = [];
   const zuMonat = new Map(); let schl = null, i0 = 0;
   const abschliessen = i1 => {   // Wochen i0..i1-1
@@ -3527,6 +3532,18 @@ function markenAuf(marken, zu){   // Markierungen auf die Kerzen der Zeitebene l
   for (const [t, art, s] of marken) { const t2 = zu(t); if (t2 == null) continue; const k = t2 + art; if (gesehen.has(k)) continue; gesehen.add(k); out.push([t2, art, s]); }
   return out.sort((a, b) => a[0] - b[0]);
 }
+// 100-, 300- und 400-Wochen-Linie: einfacher Durchschnitt der letzten N Wochenschlusskurse (wie die 200-Wochen-Linie gerechnet), nur als
+// zuschaltbare Linien im Chart. Die Ampel, die Kaufzonen und alle Rechnungen nutzen weiter ausschließlich die 200-Wochen-Linie.
+function wmaErgaenzen(c){
+  if (!c?.c || c.wma100 !== undefined) return;
+  const n = c.c.length;
+  for (const N of [100, 300, 400]) { const out = new Array(n).fill(null); let su = 0, zahl = 0;
+    for (let k = 0; k < n; k++) { const v = c.c[k];
+      if (v > 0) { su += v; zahl++; } else { su = 0; zahl = 0; }   // Lücke in den Kursen: neu anfangen
+      if (zahl > N) { su -= c.c[k - N]; zahl--; }
+      if (zahl === N) out[k] = su / N; }
+    c["wma" + N] = out.some(x => x != null) ? out : null; }
+}
 async function tagesDaten(id){
   if (!TAG_CACHE.has(id)) TAG_CACHE.set(id, STATISCH ? holeJson("daten/tage/" + encodeURIComponent(dateiId(id)) + ".json") : holeJson("api/tag?id=" + encodeURIComponent(id)));
   const d = await TAG_CACHE.get(id);
@@ -3534,6 +3551,11 @@ async function tagesDaten(id){
   if (!d.marken) {   // Wochen-Markierung auf den letzten Handelstag dieser Woche legen
     const t = d.t;
     d.marken = markenAuf(CDATA.marken, wt => { let lo = 0, hi = t.length - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (t[m] <= wt) { r = m; lo = m + 1; } else hi = m - 1; } return r >= 0 && wt - t[r] < 8 * 86400 ? t[r] : null; });
+  }
+  if (d.wma100 === undefined && CDATA?.t) {   // Wochen-Linien auf die Tage legen: jeder Tag bekommt den Wert des letzten Wochenschlusses davor
+    const wt = CDATA.t;
+    for (const N of [100, 300, 400]) { const q = CDATA["wma" + N]; if (!q) { d["wma" + N] = null; continue; }
+      let i = 0; d["wma" + N] = d.t.map(t => { while (i + 1 < wt.length && wt[i + 1] <= t) i++; return wt[i] <= t ? q[i] : null; }); }
   }
   return d;
 }
@@ -3893,7 +3915,7 @@ function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
   const ch = LightweightCharts.createChart($("#chart"), {...basis, rightPriceScale:{...basis.rightPriceScale, mode:SKALA, scaleMargins:{top:0.12, bottom:0.06}}, handleScale:{axisPressedMouseMove:true}});
-  SERIEN = {w200:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[], kaufzonen:[], kq:[], vq:[]};
+  SERIEN = {w200:[], w100:[], w300:[], w400:[], trend:[], pi:[], pitop:[], mayer:[], mvrv:[], phasen:[], bb:[], ema:[], kaufzonen:[], kq:[], vq:[]};
   // ohneSkala: Linie bestimmt die Skala nicht mit (sonst drücken weit entfernte Linien die Kerzen zusammen)
   const linie = (key, werte, farbe, breite=1, stil=0, ohneSkala=false) => { if (!werte) return null; const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS[key] !== false,
       ...(ohneSkala ? {autoscaleInfoProvider:() => null} : {})});
@@ -3924,6 +3946,7 @@ function zeichne(c, w){
     TK_SERIEN = [tk(f.akzent, 0, 2), tk(f.akzent + "aa", 2, 1), tk(f.akzent + "aa", 2, 1)];
   }
   const w200 = linie("w200", c.sma200w, f.gelb, 2);
+  linie("w100", c.wma100, f.cyan, 1); linie("w300", c.wma300, f.lila, 1); linie("w400", c.wma400, f.pitop2, 1);   // zuschaltbare Zusatzlinien, fließen in keine Rechnung ein
   w200.applyOptions({lastValueVisible:true, title:"200W"});
   if (c.kz80 || c.kz15) {   // Kaufzonen je Woche: wandern mit (Kurs, bei dem die Ampel in der Woche 80/60/40/15 gezeigt hätte)
     [["kz80", 4, "sehr günstig darunter", 2, 0], ["kz60", 3, "günstig darunter", 1, 1], ["kz40", 1, "teuer darüber", 1, 1], ["kz15", 0, "sehr teuer darüber", 2, 0]].forEach(([k, st, t, b, stil]) => {
