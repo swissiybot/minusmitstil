@@ -3,8 +3,9 @@
 Die Kurse in kurse.parquet sind um Dividenden bereinigt (auto_adjust): Renditen und Charts enthalten die Dividenden schon.
 Hier werden sie NUR AUSGEWIESEN (wie viel, wie oft, seit wann), nirgends ein zweites Mal in Renditen gerechnet.
 
-Laden:   python dividenden.py           hoechstens einmal pro Woche neu (sonst sofort fertig), alle Aktien und ETFs
-         python dividenden.py --neu     jetzt neu laden
+Laden:   python dividenden.py           jeden Wert hoechstens einmal pro Woche neu, je Lauf hoechstens DIVIDENDEN_MINUTEN
+                                        (Standard 12) Minuten; der Rest folgt im naechsten Lauf
+         python dividenden.py --neu     alle jetzt neu laden (auch dann mit Zeitgrenze)
          python dividenden.py AAPL SPY  nur diese Symbole (zum Testen)
 Quelle:  Yahoo ueber yfinance, Monatskerzen mit „actions“ (Ausschuettungen eines Monats zusammengezaehlt, je Aktie,
          um Aktiensplits bereinigt wie bei Yahoo). Ergebnis daten/dividenden.parquet (s, monat, betrag) – nicht im Repo.
@@ -69,16 +70,44 @@ def _stapel_laden(liste: list[str]) -> tuple[dict, set]:
     return gefunden, mit_kursen
 
 
+def _speichern(alt: pd.DataFrame, neu_teile: list, geprueft: set) -> pd.DataFrame:
+    """Neu geprüfte Werte ersetzen, alle anderen behalten ihren alten Stand (erst Zwischendatei, dann umbenennen)."""
+    behalten = alt[~alt["s"].isin(geprueft)] if len(alt) else alt
+    gesamt = pd.concat([behalten] + neu_teile, ignore_index=True) if neu_teile or len(behalten) else behalten
+    if len(gesamt):
+        gesamt["monat"] = pd.to_datetime(gesamt["monat"]).astype("datetime64[ms]")
+        gesamt = gesamt.groupby(["s", "monat"], as_index=False)["betrag"].sum().sort_values(["s", "monat"])
+        tmp = DATEI.with_suffix(".tmp")
+        gesamt.to_parquet(tmp, index=False, compression="zstd")
+        tmp.replace(DATEI)
+    return gesamt
+
+
 def main(argv):
+    """Laedt die Werte, deren letzter Abruf aelter als ALTER_TAGE ist (nie geladene zuerst), hoechstens MINUTEN lang;
+    der Rest folgt im naechsten Lauf. Zwischenstaende werden laufend gesichert – ein Abbruch verliert nichts."""
+    t0 = time.time()
+    minuten = float(os.environ.get("DIVIDENDEN_MINUTEN", "12"))
     neu = "--neu" in argv
     nur = [a for a in argv if not a.startswith("--")]
-    if not nur and not neu and DATEI.exists() and time.time() - DATEI.stat().st_mtime < ALTER_TAGE * 86400:
-        print(f"Dividenden: Stand vom {dt.date.fromtimestamp(DATEI.stat().st_mtime):%d.%m.%Y} gilt noch (wöchentlich neu)")
-        return
-    liste = nur or symbole()
+    stand = json.loads(LAUF.read_text()) if LAUF.exists() else {}
+    am = stand.get("geprueft_am", {})
+    heute = dt.date.today()
+    if nur:
+        liste = nur
+    else:
+        alle = symbole()
+        faellig = [s for s in alle if neu or not am.get(s) or (heute - dt.date.fromisoformat(am[s])).days >= ALTER_TAGE]
+        liste = sorted(faellig, key=lambda s: am.get(s, ""))
+        if not liste:
+            print(f"Dividenden: alle {len(alle)} Werte in den letzten {ALTER_TAGE} Tagen geladen – nichts zu tun")
+            return
     alt = pd.read_parquet(DATEI) if DATEI.exists() else pd.DataFrame(columns=["s", "monat", "betrag"])
-    neu_teile, geprueft, leer_folge, abgebrochen = [], set(), 0, False
-    for i in range(0, len(liste), STAPEL):
+    neu_teile, geprueft, leer_folge, abgebrochen, zeit_um = [], set(), 0, False, False
+    for nr, i in enumerate(range(0, len(liste), STAPEL)):
+        if time.time() - t0 > minuten * 60:
+            zeit_um = True
+            break
         stapel = liste[i:i + STAPEL]
         for versuch in range(3):
             try:
@@ -90,32 +119,33 @@ def main(argv):
         else:
             gef, mit = {}, set()
         geprueft |= mit
+        for s in stapel:
+            am[s] = heute.isoformat()   # auch ohne Treffer: erst in einer Woche wieder versuchen
         for s, ser in gef.items():
             neu_teile.append(pd.DataFrame({"s": s, "monat": ser.index, "betrag": ser.values}))
         leer_folge = leer_folge + 1 if not mit else 0
-        if (i // STAPEL) % 10 == 0 or i + STAPEL >= len(liste):
-            print(f"  Dividenden: {min(i + STAPEL, len(liste))}/{len(liste)}", flush=True)
+        if nr % 10 == 0 or i + STAPEL >= len(liste):
+            print(f"  Dividenden: {min(i + STAPEL, len(liste))}/{len(liste)} ({time.time() - t0:.0f} s)", flush=True)
+        if nr % 10 == 9 and not nur:   # Zwischenstand sichern
+            alt = _speichern(alt, neu_teile, geprueft); neu_teile = []
+            stand.update({"geprueft_am": am}); LAUF.write_text(json.dumps(stand))
+            geprueft = set()
         if leer_folge >= ABBRUCH_NACH:
             print("  Dividenden: ABBRUCH – mehrere Stapel ohne Daten (Yahoo sperrt vermutlich); alter Stand bleibt", flush=True)
+            for s in liste[i + STAPEL - STAPEL * ABBRUCH_NACH: i + STAPEL]:
+                am.pop(s, None)   # diese Werte im nächsten Lauf erneut versuchen
             abgebrochen = True
             break
         time.sleep(E.PAUSE_SEKUNDEN)
-    # neu geprüfte Werte ersetzen, alle anderen behalten ihren alten Stand
-    behalten = alt[~alt["s"].isin(geprueft)] if len(alt) else alt
-    gesamt = pd.concat([behalten] + neu_teile, ignore_index=True) if neu_teile or len(behalten) else behalten
-    if len(gesamt):
-        gesamt["monat"] = pd.to_datetime(gesamt["monat"]).astype("datetime64[ms]")
-        gesamt = gesamt.groupby(["s", "monat"], as_index=False)["betrag"].sum().sort_values(["s", "monat"])
-        tmp = DATEI.with_suffix(".tmp")
-        gesamt.to_parquet(tmp, index=False, compression="zstd")
-        tmp.replace(DATEI)
-    stand = json.loads(LAUF.read_text()) if LAUF.exists() else {}
-    stand.update({"stand": dt.date.today().isoformat(), "geprueft": len(geprueft), "von": len(liste),
-                  "mit_dividende": int(gesamt["s"].nunique()) if len(gesamt) else 0, "abgebrochen": abgebrochen})
+    gesamt = _speichern(alt, neu_teile, geprueft)
+    rest = len([s for s in (symbole() if not nur else []) if not am.get(s) or (heute - dt.date.fromisoformat(am[s])).days >= ALTER_TAGE])
+    stand.update({"stand": heute.isoformat(), "geprueft_am": am, "mit_dividende": int(gesamt["s"].nunique()) if len(gesamt) else 0,
+                  "abgebrochen": abgebrochen, "offen": rest})
     if not nur:
         LAUF.write_text(json.dumps(stand))
-    print(f"Dividenden: {len(geprueft)} von {len(liste)} Werten bei Yahoo gefunden, "
-          f"{stand['mit_dividende']} mit Ausschüttungen" + (" – abgebrochen, alter Stand ergänzt" if abgebrochen else ""))
+    print(f"Dividenden: {stand['mit_dividende']} Werte mit Ausschüttungen; noch offen {rest}"
+          + (f" (Zeitgrenze {minuten:g} Min. erreicht, weiter im nächsten Lauf)" if zeit_um else "")
+          + (" – abgebrochen, alter Stand bleibt" if abgebrochen else ""))
 
 
 # ----------------------------------------------------------------- Auswerten
