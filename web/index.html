@@ -764,6 +764,234 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .weg-geld{margin-left:auto;font-size:18px;font-weight:760;letter-spacing:-.02em}
 .weg .balken{height:12px}
 .weg .klein{margin-top:7px;line-height:1.45}
+/* ------------------------------------------------------------ Fünfte Runde (23.11.2026 nachts, Marc: „sieht nicht aus wie cyberfuture sondern eher langweilig … noch schöner“):
+   Leuchtröhren statt flacher Balken, Karten statt grauer Tabellen, Eingaben und Knöpfe mit Tiefe. Nur Aussehen – Zahlen, Texte und Kennungen bleiben. */
+/* Reiterleiste (Vertiefung, Depot-Import): Glas-Schiene mit leuchtender Pille */
+.reiter{gap:6px;padding:10px 34px 10px 12px;background:linear-gradient(180deg,color-mix(in srgb,var(--text) 4%,transparent),transparent);
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 30px),transparent)}
+.reiter::-webkit-scrollbar{display:none}
+.reiter button{flex:none;padding:8px 15px;border-radius:999px;font-size:13.5px;transition:color .15s,background .15s,box-shadow .15s}
+.reiter button.an{color:var(--auf-akzent);background:linear-gradient(135deg,var(--akzent),color-mix(in srgb,var(--akzent) 60%,var(--lila)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 18px -8px var(--akzent)}
+@media (max-width:620px){
+  .vertiefung>.reiter{display:grid;grid-template-columns:1fr 1fr;padding:10px 12px;-webkit-mask-image:none;mask-image:none}
+  .vertiefung>.reiter button{padding:9px 8px;text-align:center}
+}
+/* Eingaben und Knöpfe */
+.eingabe{gap:12px}
+.eingabe label{gap:6px;font-weight:650}
+.eingabe input:not([type=checkbox]):not([type=range]):not([type=file]),.eingabe select{height:42px;border-radius:13px;padding:0 13px;font-size:15px;font-weight:650;
+  box-shadow:inset 0 2px 3px var(--boden);outline:none;transition:border-color .15s,box-shadow .15s}
+.eingabe input:not([type=checkbox]):not([type=range]):not([type=file]):focus,.eingabe select:focus{border-color:var(--akzent);box-shadow:0 0 0 3px var(--akzent-weich),inset 0 2px 3px var(--boden)}
+.eingabe button{height:42px;border-radius:13px}
+.knopf{border-radius:12px}
+.eingabe button:not(.leise):not(.linkknopf):not(.an),.knopf:not(.leise):not(.an){background:linear-gradient(135deg,var(--akzent),color-mix(in srgb,var(--akzent) 58%,var(--lila)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 0 color-mix(in srgb,var(--akzent) 45%,#000),0 14px 22px -12px var(--akzent);transition:transform .08s,box-shadow .12s,filter .12s}
+.eingabe button:not(.leise):not(.linkknopf):not(.an):hover,.knopf:not(.leise):not(.an):hover{filter:brightness(1.08);color:var(--auf-akzent)}
+.eingabe button:not(.leise):not(.linkknopf):not(.an):active,.knopf:not(.leise):not(.an):active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 1px 0 color-mix(in srgb,var(--akzent) 45%,#000)}
+.knopf.leise{box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+.eingabe button.linkknopf{height:auto;padding:0;border-radius:0;background:none;color:var(--akzent);box-shadow:none;font-weight:600}
+.eingabe input[type=range]{-webkit-appearance:none;appearance:none;height:30px;padding:0;border:0;background:none;box-shadow:none;cursor:pointer}
+.eingabe input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:6px;background:color-mix(in srgb,var(--text) 16%,transparent);box-shadow:inset 0 1px 2px var(--boden)}
+.eingabe input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;margin-top:-8px;border-radius:50%;border:2px solid #fff;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--akzent) 55%,color-mix(in srgb,var(--akzent) 55%,#000));box-shadow:0 0 0 5px color-mix(in srgb,var(--akzent) 22%,transparent),0 8px 16px -4px var(--boden)}
+.eingabe input[type=range]::-moz-range-track{height:8px;border-radius:6px;background:color-mix(in srgb,var(--text) 16%,transparent)}
+.eingabe input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:var(--akzent)}
+/* Tabellen: Ziffern gleich breit, Zeile leuchtet beim Darüberfahren */
+.wtab{font-variant-numeric:tabular-nums}
+.wtab th{font-weight:650;border-bottom-color:var(--line2)}
+.wtab tbody tr:hover td{background:color-mix(in srgb,var(--akzent) 9%,transparent)}
+.wtab tbody tr:hover td:first-child{box-shadow:inset 3px 0 0 var(--akzent)}
+.merke{border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.55;box-shadow:inset 0 1px 0 var(--kante),0 14px 26px -18px var(--boden)}
+
+/* Marktphase: Bühne mit Zeichen, Kennzahlen als Kacheln, Phasen als leuchtende Röhre, Rückblick als Karten */
+.mp-buehne{position:relative;display:flex;align-items:center;gap:16px;margin:4px 0 12px;padding:16px;border-radius:18px;overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--mf) 40%,transparent);
+  background:radial-gradient(440px 190px at 0 0,color-mix(in srgb,var(--mf) 24%,transparent),transparent 70%),color-mix(in srgb,var(--panel2) 70%,transparent);
+  box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden),0 24px 38px -26px color-mix(in srgb,var(--mf) 75%,transparent)}
+.mp-buehne::after{content:"";position:absolute;right:-40px;bottom:-16px;width:480px;height:210px;pointer-events:none;opacity:.6;
+  background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--mf) 55%,transparent) 0 1px,transparent 1px 26px),repeating-linear-gradient(0deg,color-mix(in srgb,var(--mf) 55%,transparent) 0 1px,transparent 1px 26px);
+  transform:perspective(260px) rotateX(62deg);transform-origin:50% 100%;
+  -webkit-mask-image:radial-gradient(ellipse 60% 100% at 60% 100%,#000 5%,transparent 70%);mask-image:radial-gradient(ellipse 60% 100% at 60% 100%,#000 5%,transparent 70%)}
+.mp-zeichen{position:relative;z-index:1;flex:none;display:grid;place-items:center;width:64px;height:64px;border-radius:20px;color:#0b0e14;
+  background:linear-gradient(145deg,color-mix(in srgb,#fff 42%,var(--mf)),var(--mf) 48%,color-mix(in srgb,var(--mf) 62%,#000));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 5px 0 color-mix(in srgb,var(--mf) 45%,#000),0 0 34px -4px var(--mf)}
+.mp-zeichen svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.mp-zeichen::after{content:"";position:absolute;inset:-7px;border-radius:26px;border:1.5px solid var(--mf);opacity:0;animation:mp-puls 2.8s ease-out infinite}
+@keyframes mp-puls{0%{opacity:.7;transform:scale(.9)}70%,100%{opacity:0;transform:scale(1.22)}}
+.mp-wort{position:relative;z-index:1;min-width:0}
+.mp-phase{font-size:34px;font-weight:780;letter-spacing:-.035em;line-height:1.1;background:linear-gradient(100deg,var(--text) 10%,var(--mf) 85%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.mp-seit{display:inline-block;margin-top:7px;padding:3px 10px;border-radius:12px;border:1px solid var(--line2);background:color-mix(in srgb,var(--panel) 70%,transparent);font-size:12.5px;line-height:1.5;color:var(--text2)}
+.karte p.mp-note{margin:0 0 12px;padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 70%,transparent);color:var(--text);font-size:14px;line-height:1.55;box-shadow:inset 0 1px 0 var(--kante)}
+.karte p.mp-note.warn{border-color:color-mix(in srgb,var(--teuer) 42%,transparent);background:color-mix(in srgb,var(--teuer) 9%,transparent)}
+.mp-kacheln{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:0 0 4px}
+.mp-k{position:relative;padding:13px 14px 12px;overflow:hidden}
+.mp-k::before{content:"";position:absolute;left:14px;right:14px;top:0;height:2px;border-radius:0 0 2px 2px;background:var(--kf);box-shadow:0 0 12px var(--kf)}
+.mp-k .k-w{font-size:23px;white-space:normal;overflow:visible}
+.mp-k .k-l{margin-top:4px;font-size:12px;line-height:1.35;font-weight:600}
+.mp-k .k-u{white-space:normal;margin-top:3px;line-height:1.35}
+.mp-zeit-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:20px 0 0;font-size:14px}
+.mp-zeit-kopf b{color:var(--text);font-weight:700;letter-spacing:-.01em}
+.mp-leg{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text2)}
+.mp-leg i{width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff 0 12%,var(--mf) 55%,color-mix(in srgb,var(--mf) 55%,#000));box-shadow:0 0 9px color-mix(in srgb,var(--mf) 60%,transparent)}
+.mp-zeit{margin:10px 0 6px;outline-offset:5px}
+.mp-roehre{position:relative;display:flex;gap:2px;height:26px;padding:4px;border-radius:999px;background:color-mix(in srgb,var(--text) 7%,transparent);box-shadow:inset 0 2px 4px var(--boden),inset 0 0 0 1px var(--line)}
+.mp-roehre i{display:block;min-width:2px;border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,#fff 48%,var(--mf)),var(--mf) 46%,color-mix(in srgb,var(--mf) 60%,#000));box-shadow:0 0 12px -2px var(--mf);
+  transform-origin:left center;animation:wachs .9s cubic-bezier(.2,.9,.25,1) both}
+.mp-roehre i:first-child{border-top-left-radius:999px;border-bottom-left-radius:999px}
+.mp-roehre i:last-of-type{border-top-right-radius:999px;border-bottom-right-radius:999px}
+.mp-heute{position:absolute;right:-2px;top:50%;width:14px;height:14px;margin-top:-7px;border-radius:50%;background:var(--text);border:3px solid var(--mf);animation:mp-heute 2.2s ease-out infinite}
+@keyframes mp-heute{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--mf) 70%,transparent)}100%{box-shadow:0 0 0 12px transparent}}
+.mp-jahre{position:relative;height:18px;margin:5px 4px 0}
+.mp-jahre span{position:absolute;top:0;padding-left:5px;border-left:1px solid var(--line2);font-size:11px;line-height:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mp-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin:22px 0 6px;font-size:16px;font-weight:720;letter-spacing:-.01em}
+.mp-lagen{display:grid;gap:9px;margin:10px 0 12px;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--text)}
+.mp-lage,.mp-lagen-kopf{display:grid;grid-template-columns:minmax(215px,1.5fr) .8fr repeat(4,minmax(0,1fr));gap:4px 14px;align-items:center}
+.mp-lagen-kopf{padding:0 14px;font-size:11.5px;font-weight:650;line-height:1.3;color:var(--muted);align-items:end}
+.mp-lage{padding:12px 14px;border-radius:15px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 72%,transparent);box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+.mp-lage.mp-jetzt{border-color:color-mix(in srgb,var(--mf) 65%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--mf) 18%,var(--panel)),color-mix(in srgb,var(--mf) 6%,var(--panel)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 5px 0 color-mix(in srgb,var(--mf) 40%,var(--bg)),0 18px 30px -16px color-mix(in srgb,var(--mf) 55%,transparent)}
+.mp-l-name{display:flex;align-items:center;flex-wrap:wrap;gap:6px 8px;font-weight:650}
+.mp-l-pf{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:8px;font-size:14px;font-weight:800;line-height:1;color:#0b0e14;
+  background:linear-gradient(145deg,color-mix(in srgb,#fff 40%,var(--mf)),var(--mf) 55%,color-mix(in srgb,var(--mf) 65%,#000));box-shadow:0 0 12px -2px var(--mf)}
+.mp-l-heute{padding:2px 9px;border-radius:999px;background:var(--mf);color:#0b0e14;font-size:11.5px;font-weight:750}
+.mp-z{min-width:0}
+.mp-z .mp-zl{display:none;margin-bottom:2px;font-size:11.5px;line-height:1.3;color:var(--muted)}
+.mp-z b{font-weight:720}
+.mp-qb{display:block;height:5px;margin-top:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 10%,transparent);overflow:hidden;box-shadow:inset 0 1px 2px var(--boden)}
+.mp-qb i{display:block;height:100%;border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,#fff 40%,var(--qf)),var(--qf));box-shadow:0 0 8px var(--qf);transform-origin:left center;animation:wachs .9s cubic-bezier(.2,.9,.25,1) both}
+@container haupt (max-width:760px){
+  .mp-lagen-kopf{display:none}
+  .mp-lage{grid-template-columns:1fr 1fr;gap:10px 14px;align-items:start}
+  .mp-l-name{grid-column:1/-1}
+  .mp-z .mp-zl{display:block}
+}
+@media (max-width:620px){
+  .mp-kacheln{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mp-k .k-w{font-size:21px}
+  .mp-phase{font-size:29px}
+  .mp-zeichen{width:56px;height:56px;border-radius:18px}
+  .mp-buehne{padding:14px;gap:14px}
+}
+@media (prefers-reduced-motion:reduce){.mp-zeichen::after,.mp-heute,.mp-roehre i,.mp-qb i{animation:none}}
+
+/* Strategie-Vergleich: große Eingabefelder, Rangliste als Röhren, Tabelle mit fester Beschriftung und hervorgehobenem Sieger */
+.sv-eingabe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end;padding:16px 16px 12px}
+.sv-eingabe label{min-width:0}
+.sv-eingabe input:not([type=checkbox]):not([type=range]):not([type=file]),.sv-eingabe select{width:100%;height:48px;font-size:19px;font-weight:720;letter-spacing:-.02em}
+.sv-eingabe select{font-size:15px;letter-spacing:0}
+.sv-eingabe button{height:48px;font-size:15px}
+#st-hinweis{padding:0 16px;line-height:1.5}
+#st-erg .bl-t{margin:16px 16px 8px}
+.sv-rang{display:grid;gap:9px;margin:0 14px 16px}
+.sv-r{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:7px 10px;align-items:center;padding:10px 13px 12px;border-radius:14px;border:1px solid var(--line);background:var(--panel2);
+  box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden);font-size:14.5px}
+.sv-r .balken{grid-column:1/-1;height:11px}
+.sv-r .sv-geld{font-size:18px;font-weight:760;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.sv-r.sieger{border-color:color-mix(in srgb,var(--wf) 65%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--wf) 17%,var(--panel)),color-mix(in srgb,var(--wf) 6%,var(--panel)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25),0 5px 0 color-mix(in srgb,var(--wf) 40%,var(--bg)),0 18px 30px -16px color-mix(in srgb,var(--wf) 55%,transparent)}
+.sv-r.sieger .weg-platz{background:var(--wf);color:#0b0e14}
+.sv-tab{font-size:13.5px}
+.sv-tab th{vertical-align:bottom;white-space:normal;min-width:108px;line-height:1.25;color:var(--text2)}
+.sv-tab th .sv-dot{display:block;width:10px;height:10px;margin:0 0 6px auto;border-radius:50%;background:var(--wf);box-shadow:0 0 10px var(--wf)}
+.sv-tab td.best,.sv-tab th.best{background:color-mix(in srgb,var(--akzent) 10%,transparent)}
+.sv-tab th.best{color:var(--text);border-radius:12px 12px 0 0;box-shadow:inset 0 2px 0 var(--akzent)}
+.sv-tab tbody tr:last-child td.best{border-radius:0 0 12px 12px}
+.sv-tab td:first-child,.sv-tab th:first-child{position:sticky;left:0;z-index:1;background:var(--panel)}
+@media (max-width:760px){.sv-tab td:first-child,.sv-tab th:first-child{min-width:132px;max-width:44vw;white-space:normal}}
+.sv-tab tbody tr:hover td:first-child{background:var(--panel)}
+#st-erg .legende{gap:8px 10px;padding:0 14px 12px}
+#st-erg .legende span{display:inline-flex;align-items:center;gap:7px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 70%,transparent)}
+#st-erg .legende i{width:9px;height:9px;margin:0;border-radius:50%}
+#chart3{border-radius:16px;box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+.sv-regeln{margin:4px 14px 14px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);border-left:3px solid var(--akzent);background:color-mix(in srgb,var(--panel2) 60%,transparent)}
+.sv-regeln b{color:var(--text2)}
+
+/* Kaufweg-Karte: zwei große Betragsfelder */
+.kw-eingabe{display:grid;grid-template-columns:repeat(2,minmax(0,210px)) minmax(0,1fr);gap:10px 12px;align-items:end;padding:2px 0 12px}
+.kw-eingabe label{min-width:0}
+.kw-eingabe input:not([type=checkbox]):not([type=range]):not([type=file]){width:100%;height:50px;font-size:21px;font-weight:740;letter-spacing:-.02em}
+.kw-eingabe .klein{padding-bottom:6px;line-height:1.45}
+@container haupt (max-width:620px){.kw-eingabe{grid-template-columns:1fr 1fr}.kw-eingabe .klein{grid-column:1/-1;padding:0}}
+
+/* Depot: Abschnitte mit Leuchtmarke, Kugeln und Skala mit Tiefe, Positionen und „Was wäre, wenn“ auf dem Handy als Karten */
+.seite-karte h3{font-size:16px;font-weight:720;letter-spacing:-.01em}
+#d-risiko h3{display:flex;align-items:center;gap:9px;margin:24px 14px 6px!important;padding-top:20px;border-top:1px solid var(--line)}
+#d-risiko h3::before{content:"";flex:none;width:9px;height:9px;border-radius:3px;background:linear-gradient(135deg,var(--akzent),var(--lila));box-shadow:0 0 12px var(--akzent)}
+#d-risiko h3:first-of-type{margin-top:14px!important;padding-top:0;border-top:0}
+.kg{display:inline-block;flex:none;width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--text) 13%,transparent);box-shadow:inset 0 1.5px 2.5px var(--boden)}
+.kg.an{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.95) 0 9%,color-mix(in srgb,#fff 28%,var(--teuer)) 24%,var(--teuer) 52%,color-mix(in srgb,var(--teuer) 52%,#000) 100%);
+  box-shadow:0 2px 3px var(--boden),0 0 10px color-mix(in srgb,var(--teuer) 45%,transparent)}
+.kg.klein{width:11px;height:11px;font-size:0}
+.kg-reihe{display:flex;gap:6px;margin:10px 0 4px}
+.kg-reihe.klein{display:inline-flex;gap:3px;margin:0;vertical-align:-2px}
+.gl-skala{max-width:420px;margin:14px 0 2px}
+.gl-bahn{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,var(--guenstig),var(--gelb),var(--teuer));box-shadow:inset 0 2px 3px var(--boden),0 0 18px -6px var(--gelb)}
+.gl-bahn::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.4),rgba(255,255,255,0) 58%);pointer-events:none}
+.gl-knopf{position:absolute;z-index:1;top:-6px;width:24px;height:24px;margin-left:-12px;border-radius:50%;border:2px solid #fff;background:radial-gradient(circle at 35% 30%,#fff,var(--text) 62%);
+  box-shadow:0 0 0 5px color-mix(in srgb,var(--text) 18%,transparent),0 8px 16px -4px var(--boden)}
+.dp-l{display:none}
+.dp-tab td .feld+.klein{margin-top:5px}
+.dk-tab .mp-qb{min-width:90px}
+.dp-tab .feld,textarea.feld{border-radius:11px;box-shadow:inset 0 2px 3px var(--boden);transition:border-color .15s,box-shadow .15s}
+.dp-tab .feld{height:38px;font-weight:650}
+.dp-tab .feld:focus,textarea.feld:focus{outline:none;border-color:var(--akzent);box-shadow:0 0 0 3px var(--akzent-weich)}
+.dp-block{margin:0 14px 12px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 60%,transparent);box-shadow:inset 0 1px 0 var(--kante)}
+.dp-block>.klein{font-size:12.5px;line-height:1.5}
+.dp-block .grund-chips>span{border-color:color-mix(in srgb,var(--akzent) 45%,transparent);background:var(--akzent-weich);color:var(--text);box-shadow:inset 0 1px 0 var(--kante)}
+.dp-eingabe{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end}
+.dp-eingabe label{min-width:0}
+.dp-eingabe input:not([type=checkbox]):not([type=range]):not([type=file]),.dp-eingabe select{width:100%}
+.karte p.dp-hinweis{padding:11px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--guenstig) 40%,transparent);background:color-mix(in srgb,var(--guenstig) 9%,transparent);color:var(--text);font-size:13px;line-height:1.5;box-shadow:inset 0 1px 0 var(--kante)}
+.tab-scroll.rahmen{border:1px solid var(--line);border-radius:14px;background:color-mix(in srgb,var(--panel2) 45%,transparent);box-shadow:inset 0 1px 0 var(--kante)}
+.tab-scroll.rahmen .wtab th:first-child,.tab-scroll.rahmen .wtab td:first-child{padding-left:12px}
+.tab-scroll.rahmen .wtab th:last-child,.tab-scroll.rahmen .wtab td:last-child{padding-right:12px}
+@container haupt (max-width:1000px){
+  .dp-tab{display:block;width:auto;margin:8px 12px 12px}
+  .dp-tab thead{display:none}
+  .dp-tab tbody{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start}
+  .dp-tab tr{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;padding:13px 14px;
+    border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 72%,transparent);box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+  .dp-tab tr.depot-zeile{display:block;grid-column:1/-1;padding:10px 14px;background:var(--akzent-weich);border-color:color-mix(in srgb,var(--akzent) 35%,transparent);box-shadow:inset 0 1px 0 var(--kante)}
+  .dp-tab td{display:block;padding:0;border:0;text-align:left;white-space:normal;min-width:0!important}
+  .dp-tab tr.depot-zeile td{padding:0;background:none}
+  .dp-tab tbody tr:hover td{background:none}
+  .dp-tab tbody tr:hover td:first-child{box-shadow:none}
+  .dp-tab tr:not(.depot-zeile) td:nth-child(1){grid-column:1/-1;padding-right:104px;font-size:14.5px}
+  .dp-tab td:nth-child(2){grid-column:1}
+  .dp-tab td:nth-child(3){position:absolute;top:12px;right:42px}
+  .dp-tab td:nth-child(4){grid-column:1/-1;grid-row:3}
+  .dp-tab td:nth-child(5){grid-column:1/-1;grid-row:4}
+  .dp-tab td:nth-child(6){grid-column:2;grid-row:2}
+  .dp-tab td:nth-child(7){position:absolute;top:9px;right:12px}
+  .dp-tab td:nth-child(7) .linkknopf{padding:4px 6px;font-size:15px}
+  .dp-tab .feld{width:100%!important;height:44px;font-size:17px;text-align:left!important}
+  .dp-l{display:block;margin-bottom:4px;font-size:11.5px;font-weight:650;color:var(--muted)}
+  .dp-anteil{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--panel3);font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap}
+}
+@container haupt (max-width:760px){
+  .dk-tab{display:block;width:auto}
+  .dk-tab thead{display:none}
+  .dk-tab tbody{display:grid;gap:8px}
+  .dk-tab tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:11px 13px;border-radius:14px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 72%,transparent);box-shadow:inset 0 1px 0 var(--kante)}
+  .dk-tab td{display:block;padding:0;border:0;white-space:normal}
+  .dk-tab td:nth-child(2){text-align:right;white-space:nowrap}
+  .dk-tab td:nth-child(3){grid-column:1/-1;font-size:12.5px;color:var(--text2)}
+  .dk-tab tbody tr:hover td{background:none}
+  .dk-tab tbody tr:hover td:first-child{box-shadow:none}
+  .dw-tab{display:block;width:100%!important}
+  .dw-tab thead{display:none}
+  .dw-tab tbody{display:grid;gap:10px}
+  .dw-tab tr{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:color-mix(in srgb,var(--panel2) 72%,transparent);box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+  .dw-tab td{display:block;padding:0;border:0;text-align:left;white-space:normal}
+  .dw-tab td:first-child{grid-column:1/-1;font-weight:650;color:var(--text)}
+  .dw-tab td:nth-child(4){grid-column:1/-1}
+  .dw-tab td:nth-child(4):empty{display:none}
+  .dw-tab td[data-l]::before{content:attr(data-l);display:block;margin-bottom:3px;font-size:11.5px;font-weight:650;color:var(--muted)}
+  .dw-tab tbody tr:hover td{background:none}
+  .dw-tab tbody tr:hover td:first-child{box-shadow:none}
+}
+.kal{border-radius:16px;box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -2083,10 +2311,10 @@ async function lohntSichCheck(id){
   const eigen = !!s.plan?.t?.length;   // eigene Eingaben gehen, sobald die Daten den Monatsplan enthalten
   const zeichnen = () => {
     const o = kwOptionen(), betrag = eigen ? o.betrag : (s.betrag ?? 500), einmal = eigen ? o.einmal : 0;
-    const eingabe = eigen ? `<div class="eingabe" style="padding:2px 0 10px;align-items:flex-end">
-        <label>Jeden Monat<input id="kw-betrag" type="number" min="0" step="50" value="${betrag}" style="width:130px"></label>
-        <label>Einmalig zu Beginn<input id="kw-einmal" type="number" min="0" step="500" value="${einmal}" style="width:130px"></label>
-        <span class="klein" style="padding-bottom:9px">Trag deinen Betrag ein – alle vier Wege rechnen sofort damit. In der Währung des Werts. <button class="linkknopf" id="check-einst">Dauer, Kosten und Zins ändern →</button></span></div>` : "";
+    const eingabe = eigen ? `<div class="eingabe kw-eingabe">
+        <label>Jeden Monat<input id="kw-betrag" type="number" min="0" step="50" value="${betrag}"></label>
+        <label>Einmalig zu Beginn<input id="kw-einmal" type="number" min="0" step="500" value="${einmal}"></label>
+        <span class="klein">Trag deinen Betrag ein – alle vier Wege rechnen sofort damit. In der Währung des Werts. <button class="linkknopf" id="check-einst">Dauer, Kosten und Zins ändern →</button></span></div>` : "";
     const geldText = [betrag > 0 ? `${geld(betrag)} jeden Monat` : "", einmal > 0 ? `${geld(einmal)} einmalig zu Beginn` : ""].filter(Boolean).join(" und ");
     const kopf = kopfMit(`Vier Wege mit demselben Geld${geldText ? " (" + geldText + ")" : ""}, nachgerechnet mit den echten Kursen.`);
     const binden = () => { if (!eigen) return;
@@ -3484,13 +3712,15 @@ const MP_FARBE = {2:"var(--cyan)", 1:"var(--neutral)", 0:"var(--teuer)"};
 const MP_PFEIL = {2:"↗", 1:"↔", 0:"↘"};
 const MP_KURZ = {2:"aufwärts", 1:"gemischt", 0:"abwärts"};
 const mpGruppe = w => w.gruppe === "ETF" ? "etf" : w.gruppe === "Krypto" ? "krypto" : w.gruppe === "Rohstoffe" ? "rohstoffe" : "aktien";
-function mpStreifen(verlauf, t){
-  const n = Math.min(520, verlauf.length), ab = verlauf.length - n, b = 600 / n;
-  let r = "";
-  for (let i = 0; i < n; i++) { const ch = verlauf[ab + i]; if (ch === "-") continue; r += `<rect x="${(i * b).toFixed(2)}" y="0" width="${(b + .4).toFixed(2)}" height="18" fill="${MP_FARBE[+ch]}"/>`; }
+function mpStreifen(verlauf, t){   // Phasen der letzten 10 Jahre als leuchtende Röhre: je Phase ein Stück, Jahreszahlen darunter, Punkt = heute
+  const n = Math.min(520, verlauf.length), ab = verlauf.length - n, stuecke = [];
+  for (let i = 0; i < n; i++) { const ch = verlauf[ab + i], l = stuecke[stuecke.length - 1]; if (l && l.ch === ch) l.n++; else stuecke.push({ch, n:1}); }
   const jahre = []; let letztes = null;
-  for (let i = 0; i < n; i++) { const j = new Date(t[ab + i] * 1000).getUTCFullYear(); if (j !== letztes) { if (letztes != null && j % 2 === 0) jahre.push(`<text x="${(i * b).toFixed(1)}" y="31" font-size="10" fill="var(--muted)">${j}</text>`); letztes = j; } }
-  return `<svg viewBox="0 0 600 34" width="100%" role="img" aria-label="Phasen der letzten ${Math.round(n / 52)} Jahre" data-e="mp_streifen" tabindex="0" style="display:block;margin:10px 0 2px">${r}${jahre.join("")}</svg>`;
+  for (let i = 0; i < n; i++) { const j = new Date(t[ab + i] * 1000).getUTCFullYear(); if (j !== letztes) { if (letztes != null && j % 2 === 0) jahre.push(`<span style="left:min(${(i / n * 100).toFixed(2)}%, calc(100% - 36px))">${j}</span>`); letztes = j; } }
+  const zuletzt = [...stuecke].reverse().find(x => x.ch !== "-");
+  return `<div class="mp-zeit" role="img" aria-label="Phasen der letzten ${Math.round(n / 52)} Jahre" data-e="mp_streifen" tabindex="0">
+    <div class="mp-roehre">${stuecke.map(x => `<i style="flex:${x.n} 0 0;${x.ch === "-" ? "visibility:hidden" : `--mf:${MP_FARBE[+x.ch]}`}"></i>`).join("")}${zuletzt ? `<b class="mp-heute" style="--mf:${MP_FARBE[+zuletzt.ch]}"></b>` : ""}</div>
+    <div class="mp-jahre" aria-hidden="true">${jahre.join("")}</div></div>`;
 }
 function mvrvKarte(c){
   const m = c?.mvrv_info; if (!m) return "";
@@ -3515,9 +3745,15 @@ function marktphaseKarte(w, c){   // Richtung der letzten Monate in Alltagssprac
     : m.phase === 0 ? "Der Durchschnittskurs der letzten 20 Wochen liegt <b>unter</b> dem der letzten 50 Wochen. Der Kurs ist in den letzten Monaten also unterm Strich gefallen."
     : "Die Durchschnittskurse der letzten 20 und 50 Wochen zeigen keine klare Richtung.";
   const v100 = x => x == null ? "–" : `${fmt(x,0)} von 100`;
+  const KOPF = [`So viele Wochen seit ${jahrAb} insgesamt`, "3 Monate später stand der Kurs höher", "1 Jahr später stand der Kurs höher", "Typische Veränderung nach 1 Jahr", "Im Jahr danach noch 20 % oder mehr gefallen"];
+  const quote = (x, f) => x == null ? "–" : `<b>${fmt(x,0)}</b> von 100<span class="mp-qb" style="--qf:${f}"><i style="width:${Math.max(0, Math.min(100, x)).toFixed(0)}%"></i></span>`;
+  const zelle = (i, inhalt) => `<div class="mp-z" role="cell"><div class="mp-zl">${KOPF[i]}</div>${inhalt}</div>`;
   const zeile = (p, i) => { const a = r3[i], b = r1[i], jetzt = p === m.phase;
-    return `<tr${jetzt ? ' class="mp-jetzt"' : ""}><td style="text-align:left">${p == null ? "alle Wochen zusammen" : `<span style="color:${MP_FARBE[p]}">${MP_PFEIL[p]}</span> ${IM[p]}${jetzt ? ' <span class="klein">· wie heute</span>' : ""}`}</td>
-      <td>${b.n.toLocaleString("de-DE")}</td><td>${v100(a.quote)}</td><td>${v100(b.quote)}</td><td class="${klasse(b.median)}">${vz(b.median,0," %")}</td><td>${v100(b.absturz)}</td></tr>`; };
+    return `<div class="mp-lage${jetzt ? " mp-jetzt" : ""}" role="row"${p == null ? "" : ` style="--mf:${MP_FARBE[p]}"`}><div class="mp-l-name" role="cell">${p == null ? "alle Wochen zusammen" : `<span class="mp-l-pf" aria-hidden="true">${MP_PFEIL[p]}</span> ${IM[p]}${jetzt ? ' <span class="mp-l-heute">wie heute</span>' : ""}`}</div>
+      ${zelle(0, `<b>${b.n.toLocaleString("de-DE")}</b>`)}${zelle(1, quote(a.quote, "var(--guenstig)"))}${zelle(2, quote(b.quote, "var(--guenstig)"))}${zelle(3, `<b class="${klasse(b.median)}">${vz(b.median,0," %")}</b>`)}${zelle(4, quote(b.absturz, "var(--teuer)"))}</div>`; };
+  const ZEICHEN = {2:'<path d="M6 18 18 6M9 6h9v9"/>', 1:'<path d="M4 12h16M15 7l5 5-5 5"/>', 0:'<path d="M6 6l12 12M18 9v9H9"/>'};
+  const kf = x => x == null ? "var(--neutral)" : x > 0 ? "var(--pos)" : x < 0 ? "var(--neg)" : "var(--neutral)";
+  const kachel = (label, wert, x, unter="") => `<div class="kpi mp-k" style="--kf:${kf(x)}"><div class="k-w ${klasse(x)}">${wert}</div><div class="k-l">${label}</div>${unter ? `<div class="k-u">${unter}</div>` : ""}</div>`;
   const pr = m.pruefung || {}, g = PRUEF?.marktphase?.[mpGruppe(w)];
   const skillText = x => x?.skill == null ? "–" : `${vz(x.skill,1)} %`, hilft = x => x?.skill != null && x.skill > 2;
   const auf = r1.find(x => x.phase === 2), ab = r1.find(x => x.phase === 0), alle = r1.find(x => x.phase == null), heute = r1.find(x => x.phase === m.phase);
@@ -3528,23 +3764,24 @@ function marktphaseKarte(w, c){   // Richtung der letzten Monate in Alltagssprac
     ? `Ein wenig. In der Gegenprobe – nur mit dem Wissen von damals – lag die Phase bei ${name} etwas besser als die einfache Faustregel.`
     : `Kaum. In der Gegenprobe – nur mit dem Wissen von damals – war die Phase bei ${name} nicht besser als die einfache Faustregel.`;
   return `<section class="karte breit-voll" id="mp-karte">${kopf}
-    <div class="mp-kopf"><div class="gross-zahl" style="color:${MP_FARBE[m.phase]}">${MP_PFEIL[m.phase]} ${PH[m.phase]}</div>
-      <div class="klein">seit ${datumDe(m.seit)}${wochen != null ? ` – also seit ${wochen} Woche${wochen === 1 ? "" : "n"}` : ""}</div></div>
-    <p style="margin:6px 0 8px"><b>Was heißt das?</b> ${heisst}</p>
-    <div class="mp-kv">
-      <div class="kv"><span>Kurs gegenüber vor 12 Monaten</span><b class="${klasse(m.mom12)}">${vz(m.mom12,1," %")}</b></div>
-      <div class="kv"><span>Kurs gegenüber seinem Durchschnitt der letzten 50 Wochen</span><b class="${klasse(m.zu_lang)}">${vz(m.zu_lang,1," %")}</b></div>
-      <div class="kv"><span data-e="mp_karte">Durchschnitt 20 Wochen gegenüber Durchschnitt 50 Wochen</span><b class="${klasse(m.abstand ?? m.zu_linie)}">${vz(m.abstand ?? m.zu_linie,1," %")}</b></div>
-      <div class="kv"><span data-e="mp_baer">Abstand zum bisherigen Höchstkurs</span><b>${fmt(m.dd,1," %")}${m.baer_seit ? ` · mehr als 20 % darunter seit ${datumDe(m.baer_seit)}` : ""}</b></div>
+    <div class="mp-buehne" style="--mf:${MP_FARBE[m.phase]}"><div class="mp-zeichen" aria-hidden="true"><svg viewBox="0 0 24 24">${ZEICHEN[m.phase]}</svg></div>
+      <div class="mp-wort"><div class="mp-phase">${PH[m.phase]}</div>
+        <div class="mp-seit">seit ${datumDe(m.seit)}${wochen != null ? ` – also seit ${wochen} Woche${wochen === 1 ? "" : "n"}` : ""}</div></div></div>
+    <p class="mp-note"><b>Was heißt das?</b> ${heisst}</p>
+    <div class="mp-kacheln">
+      ${kachel("Kurs gegenüber vor 12 Monaten", vz(m.mom12,1," %"), m.mom12)}
+      ${kachel("Kurs gegenüber seinem Durchschnitt der letzten 50 Wochen", vz(m.zu_lang,1," %"), m.zu_lang)}
+      ${kachel(`<span data-e="mp_karte">Durchschnitt 20 Wochen gegenüber Durchschnitt 50 Wochen</span>`, vz(m.abstand ?? m.zu_linie,1," %"), m.abstand ?? m.zu_linie)}
+      ${kachel(`<span data-e="mp_baer">Abstand zum bisherigen Höchstkurs</span>`, fmt(m.dd,1," %"), null, m.baer_seit ? `mehr als 20 % darunter seit ${datumDe(m.baer_seit)}` : "")}
     </div>
-    <p class="klein" style="margin:12px 0 0"><b style="color:var(--text)">So wechselten die Phasen in den letzten 10 Jahren:</b> &nbsp; <i class="leg fl" style="background:${MP_FARBE[2]};opacity:1"></i>Aufwärtstrend &nbsp; <i class="leg fl" style="background:${MP_FARBE[0]};opacity:1"></i>Abwärtstrend</p>
+    <div class="mp-zeit-kopf"><b>So wechselten die Phasen in den letzten 10 Jahren</b><span class="mp-leg" style="--mf:${MP_FARBE[2]}"><i></i>Aufwärtstrend</span><span class="mp-leg" style="--mf:${MP_FARBE[0]}"><i></i>Abwärtstrend</span></div>
     ${mpStreifen(m.verlauf, c.t)}
-    <h4 style="margin:14px 0 4px" data-e="mp_tabelle" tabindex="0">Was kam früher danach? <span class="klein">Rückblick ${jahrAb}–heute</span></h4>
+    <h4 class="mp-h" data-e="mp_tabelle" tabindex="0">Was kam früher danach? <span class="klein">Rückblick ${jahrAb}–heute</span></h4>
     ${frueher ? `<p style="margin:0 0 8px">${frueher}</p>` : ""}
-    <div class="tab-scroll"><table class="wtab mp-tab"><thead><tr><th style="text-align:left">Lage damals</th><th>So viele Wochen seit ${jahrAb} insgesamt</th><th>3 Monate später stand der Kurs höher</th><th>1 Jahr später stand der Kurs höher</th><th>Typische Veränderung nach 1 Jahr</th><th>Im Jahr danach noch 20 % oder mehr gefallen</th></tr></thead>
-      <tbody>${[2,1,0,null].map((p, i) => [p, i]).filter(([p, i]) => p == null || r1[i].n > 0).map(([p, i]) => zeile(p, i)).join("")}</tbody></table></div>
-    ${risiko ? `<p style="margin:10px 0 4px">${risiko}</p>` : ""}
-    <p style="margin:10px 0 4px"><b>Taugt die Phase als Vorhersage?</b> ${taugt} Die Faustregel lautet: Der Kurs steht ein Jahr später in ${v100(alle?.quote)} Fällen höher – egal in welcher Phase.</p>
+    <div class="mp-lagen" role="table" aria-label="Was kam früher danach?"><div class="mp-lagen-kopf" role="row"><div role="columnheader">Lage damals</div>${KOPF.map(k => `<div role="columnheader">${k}</div>`).join("")}</div>
+      ${[2,1,0,null].map((p, i) => [p, i]).filter(([p, i]) => p == null || r1[i].n > 0).map(([p, i]) => zeile(p, i)).join("")}</div>
+    ${risiko ? `<p class="mp-note warn">${risiko}</p>` : ""}
+    <p class="mp-note"><b>Taugt die Phase als Vorhersage?</b> ${taugt} Die Faustregel lautet: Der Kurs steht ein Jahr später in ${v100(alle?.quote)} Fällen höher – egal in welcher Phase.</p>
     <details class="mehr"><summary>Zahlen der Gegenprobe</summary><p class="klein" style="margin:8px 0 0"><span data-e="mp_pruefung" tabindex="0">Vorteil gegenüber der Faustregel</span> bei ${name}: über 3 Monate ${skillText(pr["3m"])}, über 1 Jahr ${skillText(pr["1"])}${pr["1"] ? ` (geprüft ${pr["1"].jahr_von}–${pr["1"].jahr_bis})` : ""}.${g && g["3m"] ? ` Über alle ${g.name} (${g.werte.toLocaleString("de-DE")} Werte): 3 Monate ${skillText(g["3m"])}, 1 Jahr ${skillText(g["1"])}.` : ""} Werte um 0 % heißen: kein Vorteil.</p></details>
     <p class="klein" style="margin:10px 0 0">Die Phase beschreibt, wohin der Kurs zuletzt gelaufen ist – sie sagt nicht voraus, wohin er geht. Keine Anlageberatung.</p>
   </section>`;
@@ -4245,12 +4482,12 @@ async function trVorschau(csv, vorschlag){
   const namen = depotNamen().filter(() => DEPOT.positionen.length);
   const vorName = namen.length === 1 ? namen[0] : (vorschlag || "").replace(/\.(csv|txt)$/i, "").trim() || neuerDepotName();
   ziel.innerHTML = `
-    <p class="klein">${nr}<b>Transaktionsexport erkannt</b> (${TR.zeilen.toLocaleString("de-DE")} Buchungen vom ${datumDe(TR.von)} bis ${datumDe(TR.bis)}). Daraus gerechnet: dein Bestand je Wertpapier – Käufe minus Verkäufe, Splits und Gratisaktien eingerechnet – und was du dafür bezahlt hast (Einstand).</p>
+    <p class="klein dp-hinweis">${nr}<b>Transaktionsexport erkannt</b> (${TR.zeilen.toLocaleString("de-DE")} Buchungen vom ${datumDe(TR.von)} bis ${datumDe(TR.bis)}). Daraus gerechnet: dein Bestand je Wertpapier – Käufe minus Verkäufe, Splits und Gratisaktien eingerechnet – und was du dafür bezahlt hast (Einstand).</p>
     <div class="eingabe" style="padding:4px 0 6px">
       <label>${ek("d_depotname","Depot-Name")}<input id="tr-depot" list="tr-depots" value="${esc(vorName)}" style="width:200px"><datalist id="tr-depots">${namen.map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
       <label id="tr-modus-l">Wenn das Depot schon Positionen hat<select id="tr-modus"><option value="ergaenzen">ergänzen: Werte im Depot bleiben, Stück und Einstand kommen dazu</option><option value="ersetzen">ersetzen: Depot neu aus dieser Datei aufbauen</option></select></label>
     </div>
-    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Wertpapier</th><th>Stück</th><th>Einstand €</th><th>Wert heute €</th><th style="text-align:left">Hinweis</th></tr></thead><tbody id="tr-zeilen"></tbody></table></div>
+    <div class="tab-scroll rahmen"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Wertpapier</th><th>Stück</th><th>Einstand €</th><th>Wert heute €</th><th style="text-align:left">Hinweis</th></tr></thead><tbody id="tr-zeilen"></tbody></table></div>
     <p class="klein" id="tr-summe"></p>
     ${TR.sonst.length ? `<p class="klein"><span class="neg">Bitte Stückzahlen prüfen:</span> Die Datei enthält besondere Buchungen mit Stücken (${esc(TR.sonst.join(", "))}). Sie wurden als Zu- oder Abgang gezählt.</p>` : ""}
     <p class="klein">Die Datei enthält keine heutigen Kurse. „Wert heute“ rechnet das Tool deshalb selbst: Stück × aktueller Kurs, wo es genau dieses Papier kennt, sonst als Schätzung (mit „ca.“ markiert). Auf den Cent genau sind nur die Werte aus der Vermögensübersicht (PDF) – ist sie geladen, bleiben ihre Werte stehen.</p>
@@ -4424,18 +4661,18 @@ function zeigeDepot(){
         <h2 style="margin:0;font-size:16px">Positionen</h2>
         <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${P.some(p => p.basis) ? ` · Werte mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : ""}${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
-      ${P.length ? `<div class="tab-scroll"><table class="wtab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Im Tool gerechnet als")}</th><th>${ek("d_nachkauf","Wann nachkaufen?")}</th><th>${ek("d_plan","Sparplan € / Monat")}</th><th></th></tr></thead><tbody>${
+      ${P.length ? `<div class="tab-scroll"><table class="wtab dp-tab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Im Tool gerechnet als")}</th><th>${ek("d_nachkauf","Wann nachkaufen?")}</th><th>${ek("d_plan","Sparplan € / Monat")}</th><th></th></tr></thead><tbody>${
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
           return `<tr class="depot-zeile"><td colspan="7" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
           teil.map(([p, i]) => { const w = wertVon(p.id);
           return `<tr><td style="text-align:left;white-space:normal;min-width:180px"><b>${esc(p.name)}</b><div class="klein">${esc([p.isin, p.kuerzel].filter(Boolean).join(" · ") || "ohne Kennung")}${p.anzahl > 0 ? ` · ${stk(p.anzahl)} Stück` : ""}</div></td>
-            <td><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro">${mitlaufText(p)}${einstandText(p)}</td>
-            <td>${fmt(p.wert / summe * 100, 1, " %")}</td>
-            <td style="text-align:left">${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(quelleKlar(p))}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} Jahre Kursdaten`}${P.filter(x => x.id === p.id).length > 1 ? ` · in Prognose und Risiko mit ${P.filter(x => x.id === p.id).length - 1} weiteren Position${P.filter(x => x.id === p.id).length > 2 ? "en" : ""} als ein Wert gerechnet` : ""}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
+            <td><div class="dp-l">${ek("d_wert","Wert €")}</div><input class="feld" style="width:110px;text-align:right" data-pw="${i}" value="${fmt(p.wert,2)}" aria-label="Wert in Euro">${mitlaufText(p)}${einstandText(p)}</td>
+            <td><span class="dp-anteil">${fmt(p.wert / summe * 100, 1, " %")}</span></td>
+            <td style="text-align:left"><div class="dp-l">${ek("d_zuordnung","Im Tool gerechnet als")}</div>${w ? `${pille(w.score)} ${esc(kurzname(w))} <div class="klein">${esc(quelleKlar(p))}${w.jung ? "" : ` · ${fmt(w.jahre_daten,0)} Jahre Kursdaten`}${P.filter(x => x.id === p.id).length > 1 ? ` · in Prognose und Risiko mit ${P.filter(x => x.id === p.id).length - 1} weiteren Position${P.filter(x => x.id === p.id).length > 2 ? "en" : ""} als ein Wert gerechnet` : ""}</div>` : `<span class="neg">noch offen</span>${p.hinweis ? `<div class="klein">${esc(p.hinweis)}</div>` : ""}`}
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
-            <td style="text-align:left;white-space:normal;min-width:210px">${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
-            <td><input class="feld" style="width:80px;text-align:right" data-ps="${i}" value="${fmt(e.sparrate * (p.spar ?? 0) / 100, (e.sparrate * (p.spar ?? 0) / 100) % 1 ? 2 : 0)}" aria-label="Sparplan in Euro je Monat"><div class="klein">${fmt(p.spar ?? 0, 0)} %</div></td>
+            <td style="text-align:left;white-space:normal;min-width:210px"><div class="dp-l">${ek("d_nachkauf","Wann nachkaufen?")}</div>${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
+            <td><div class="dp-l">${ek("d_plan","Sparplan € / Monat")}</div><input class="feld" style="width:80px;text-align:right" data-ps="${i}" value="${fmt(e.sparrate * (p.spar ?? 0) / 100, (e.sparrate * (p.spar ?? 0) / 100) % 1 ? 2 : 0)}" aria-label="Sparplan in Euro je Monat"><div class="klein">${fmt(p.spar ?? 0, 0)} %</div></td>
             <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
         ${P.some(p => p.id && p.ersatz) ? `<div class="merke" style="margin-top:0">${(() => { const e = P.filter(p => p.id && p.ersatz), ew = e.reduce((a, p) => a + p.wert, 0); return `${e.length} Position${e.length === 1 ? " ist" : "en sind"} nicht im Tool und werden mit einem <b>automatischen Ersatz</b> gerechnet (${fmt(ew / summe * 100, 0, " %")} des Depots), z. B. eine chinesische Aktie mit dem Schwellenländer-ETF. Das ist eine Annäherung: Eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ kannst du einen besseren Ersatz wählen.`; })()}</div>` : ""}
         ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
@@ -4460,7 +4697,7 @@ function zeigeDepot(){
     <div class="abstand"></div>
     <section class="karte seite-karte">
       <h2 style="margin:0;font-size:16px;padding:12px 14px 0">Sparplan und Annahmen</h2>
-      <div class="eingabe">
+      <div class="eingabe dp-eingabe">
         ${feld("sparrate","Sparrate je Monat €","d_sparrate",'min="0" step="25"')}
         <label>${ek("d_verteilung","Verteilung")}<select data-e2="verteilung"><option value="depot" ${e.verteilung === "depot" ? "selected" : ""}>wie das Depot</option><option value="gleich" ${e.verteilung === "gleich" ? "selected" : ""}>gleichmäßig</option><option value="eigen" ${e.verteilung === "eigen" ? "selected" : ""}>eigene Beträge (Tabelle oben)</option></select></label>
         ${feld("dynamik","jährliche Erhöhung %","d_dynamik",'min="0" max="20" step="0.5"')}
@@ -4468,7 +4705,7 @@ function zeigeDepot(){
         ${feld("ziel","Ziel € (heutige Kaufkraft)","d_ziel",'min="0" step="1000"')}
         ${depotNamen().length > 1 ? `<label>${ek("d_nurdepot","Prognose für")}<select data-e2="nurDepot"><option value="">alle Depots zusammen</option>${depotNamen().map(n => `<option value="${esc(n)}" ${e.nurDepot === n ? "selected" : ""}>${esc(n)}</option>`).join("")}</select></label>` : ""}
       </div>
-      <div class="eingabe" style="padding-top:0">
+      <div class="eingabe dp-eingabe" style="padding-top:0">
         ${feld("kfix","Kosten je Kauf €","d_kosten",'min="0" step="0.5"')}
         ${feld("kproz","Kosten je Kauf %","d_kosten",'min="0" max="5" step="0.05"')}
         ${feld("ter","laufende Kosten % p.a.","d_ter",'min="0" max="3" step="0.05"')}
@@ -4480,12 +4717,12 @@ function zeigeDepot(){
         ${feld("pausch","Sparerpauschbetrag €","d_pausch",'min="0" step="100"')}
         <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px"><input type="checkbox" data-e2="teilfrei" ${e.teilfrei ? "checked" : ""}> ${ek("d_teilfrei","Teilfreistellung 30 % (Aktienfonds)")}</label>
       </div>
-      <div style="padding:0 14px 12px">
+      <div class="dp-block">
         <div class="klein" style="margin-bottom:6px">${ek("d_einmal","Einmalbeträge")} (z. B. Bonus in Jahr 3; negativ = Entnahme):</div>
         <div id="d-einmal">${e.einmal.map((x, i) => `<span class="grund-chips" style="display:inline-flex;margin:0 6px 6px 0"><span>Jahr ${x.jahr}: ${x.betrag > 0 ? "+" : ""}${geld(x.betrag)} € <button class="linkknopf" data-el="${i}" aria-label="Einmalbetrag entfernen" style="margin-left:6px;color:var(--muted)">✕</button></span></span>`).join("")}</div>
         <div class="eingabe" style="padding:0"><label>Jahr<input id="d-ej" type="number" min="0" max="40" value="1" style="width:80px"></label><label>Betrag €<input id="d-eb" type="number" step="500" value="5000"></label><button class="knopf leise" id="d-eplus">hinzufügen</button></div>
       </div>
-      <div style="padding:0 14px 12px">
+      <div class="dp-block">
         <div class="klein" style="margin-bottom:6px">${ek("d_phasen","Nur einige Jahre einzahlen oder die Sparrate später ändern")} – z. B. „ab Jahr 6: 0 €“ heißt: 5 Jahre einzahlen, danach läuft das Depot ohne neue Einzahlung weiter. Eine neue Rate wird im selben Verhältnis auf deine Werte verteilt.</div>
         <div id="d-phasen">${phasenText(e)}</div>
         <div class="eingabe" style="padding:0"><label>ab Jahr<input id="d-pj" type="number" min="2" max="40" value="${Math.min(40, Math.max(2, Math.round((e.jahre || 20) / 2) + 1))}" style="width:80px"></label><label>neue Sparrate € je Monat<input id="d-pr" type="number" min="0" step="25" value="0"></label><button class="knopf leise" id="d-pplus">hinzufügen</button></div>
@@ -4716,7 +4953,7 @@ async function naechstePdf(){
       <label>${ek("d_depotname","Depot-Name")}<input id="pdf-depot" list="pdf-depots" value="${esc(vorName)}" style="width:200px"><datalist id="pdf-depots">${depotNamen().filter(() => DEPOT.positionen.length).map(n => `<option value="${esc(n)}">`).join("")}</datalist></label>
       <label style="flex-direction:row;align-items:center;gap:8px;color:var(--text2);font-size:13px;align-self:flex-end;padding-bottom:8px"><input type="checkbox" id="pdf-ersetzen" checked> <span id="pdf-ersetzen-text"></span></label>
     </div>
-    <div class="tab-scroll"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Name</th><th style="text-align:left">ISIN</th><th>Stück</th><th>Wert €</th><th></th></tr></thead><tbody>${
+    <div class="tab-scroll rahmen"><table class="wtab" style="margin:0;width:100%"><thead><tr><th></th><th style="text-align:left">Name</th><th style="text-align:left">ISIN</th><th>Stück</th><th>Wert €</th><th></th></tr></thead><tbody>${
       PDF_POS.map((p, i) => `<tr><td><input type="checkbox" data-pa="${i}" ${p.an ? "checked" : ""} aria-label="übernehmen"></td>
         <td style="text-align:left"><input class="feld" data-pn="${i}" value="${esc(p.name)}" style="width:190px" aria-label="Name"></td>
         <td style="text-align:left" class="klein">${esc(p.isin)}</td><td>${p.anzahl != null ? fmt(p.anzahl, p.anzahl % 1 ? 3 : 0) : "–"}</td>
@@ -5104,20 +5341,21 @@ async function wennZeigen(G, summe, r){
   }
   const z2 = $("#d-wenn-erg"); if (!z2) return;
   const e = WENN_ERG.e, name = esc(wennName(WENN.id)), mit = `mit ${fmt(WENN.anteil, 0)} % ${name}`;
-  const kugeln = n => n == null ? "–" : `<span style="display:inline-flex;gap:3px;vertical-align:-2px" aria-hidden="true">${Array.from({length:10}, (_, i) => `<span style="width:11px;height:11px;border-radius:50%;background:${i < n ? "var(--teuer)" : "var(--panel2)"};border:1px solid ${i < n ? "var(--teuer)" : "var(--line2)"}"></span>`).join("")}</span> <b>${n} von 10</b>`;
+  const kugeln = n => n == null ? "–" : `<span class="kg-reihe klein" aria-hidden="true">${Array.from({length:10}, (_, i) => `<i class="kg klein${i < n ? " an" : ""}"></i>`).join("")}</span> <b>${n} von 10</b>`;
   const v10 = x => x == null ? null : Math.round(x * 10);
   const G2 = wennGruppen(G, summe, WENN.id, WENN.anteil), r0 = renditeSchnitt(G), r1 = renditeSchnitt(G2);
   const krisen = r.stress.map((S, i) => ({S, T:e.stress[i]})).filter(k => !k.S.leer && !k.T.leer);
   const zahl = x => `<b class="${x < 0 ? "neg" : ""}">${x > 0 ? "+" : x < 0 ? "−" : ""}${fmt(Math.abs(x) * 100, 0, " %")}</b>`;
   const mehrWeniger = (d, n, was) => Math.abs(d) < 0.5 * 10 ** -n ? "kaum Unterschied" : `<span class="${(d < 0) === (was !== "Rendite") ? "pos" : "neg"}">${fmt(Math.abs(d), n)} Punkte ${d < 0 ? "weniger" : "mehr"}${was ? " " + was : ""}</span>`;
   const groesste = krisen.slice().sort((a, b) => a.S.ende - b.S.ende)[0];
-  z2.innerHTML = `<div class="tab-scroll"><table class="wtab" style="width:auto;margin:0"><thead><tr><th></th><th>dein Depot heute</th><th>${mit}</th><th>Unterschied</th></tr></thead><tbody>
-      <tr><td style="text-align:left">Positionen, die in schlechten Wochen mitfielen</td><td>${kugeln(v10(r.mitfall))}</td><td>${kugeln(v10(e.mitfall))}</td><td></td></tr>
-      <tr><td style="text-align:left">Teil deines Geldes, der in schlechten Wochen mitfiel</td><td><b>${fmt(r.mitfallWert * 100, 0, " %")}</b></td><td><b>${fmt(e.mitfallWert * 100, 0, " %")}</b></td><td>${mehrWeniger((e.mitfallWert - r.mitfallWert) * 100, 0, "")}</td></tr>
-      ${krisen.map(({S, T}) => `<tr><td style="text-align:left">${esc(S.titel)} <span class="klein">(Hoch bis Tief der Krise)</span></td><td>${zahl(S.ende)} <span class="klein">${S.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(S.euroEnde))} €</span></td><td>${zahl(T.ende)} <span class="klein">${T.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(T.euroEnde))} €</span></td><td>${mehrWeniger((S.ende - T.ende) * 100, 0, "Verlust")}${Math.abs(T.euroEnde - S.euroEnde) >= 1 ? ` · ${geld(Math.abs(T.euroEnde - S.euroEnde))} €` : ""}</td></tr>`).join("")}
-      ${r0 && r1 ? `<tr><td style="text-align:left">Rendite pro Jahr, letzte bis zu 20 Jahre <span class="klein">(keine Prognose)</span></td><td><b>${fmt(r0.r, 1, " %")}</b></td><td><b>${fmt(r1.r, 1, " %")}</b></td><td>${mehrWeniger(r1.r - r0.r, 1, "Rendite")}</td></tr>` : ""}
+  const L = ['data-l="dein Depot heute"', `data-l="${mit}"`, 'data-l="Unterschied"'];   // Beschriftung der Zellen, wenn die Tabelle auf dem Handy zu Karten wird
+  z2.innerHTML = `<div class="tab-scroll"><table class="wtab dw-tab" style="width:auto;margin:0"><thead><tr><th></th><th>dein Depot heute</th><th>${mit}</th><th>Unterschied</th></tr></thead><tbody>
+      <tr><td style="text-align:left">Positionen, die in schlechten Wochen mitfielen</td><td ${L[0]}>${kugeln(v10(r.mitfall))}</td><td ${L[1]}>${kugeln(v10(e.mitfall))}</td><td></td></tr>
+      <tr><td style="text-align:left">Teil deines Geldes, der in schlechten Wochen mitfiel</td><td ${L[0]}><b>${fmt(r.mitfallWert * 100, 0, " %")}</b></td><td ${L[1]}><b>${fmt(e.mitfallWert * 100, 0, " %")}</b></td><td ${L[2]}>${mehrWeniger((e.mitfallWert - r.mitfallWert) * 100, 0, "")}</td></tr>
+      ${krisen.map(({S, T}) => `<tr><td style="text-align:left">${esc(S.titel)} <span class="klein">(Hoch bis Tief der Krise)</span></td><td ${L[0]}>${zahl(S.ende)} <span class="klein">${S.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(S.euroEnde))} €</span></td><td ${L[1]}>${zahl(T.ende)} <span class="klein">${T.euroEnde < 0 ? "−" : "+"}${geld(Math.abs(T.euroEnde))} €</span></td><td ${L[2]}>${mehrWeniger((S.ende - T.ende) * 100, 0, "Verlust")}${Math.abs(T.euroEnde - S.euroEnde) >= 1 ? ` · ${geld(Math.abs(T.euroEnde - S.euroEnde))} €` : ""}</td></tr>`).join("")}
+      ${r0 && r1 ? `<tr><td style="text-align:left">Rendite pro Jahr, letzte bis zu 20 Jahre <span class="klein">(keine Prognose)</span></td><td ${L[0]}><b>${fmt(r0.r, 1, " %")}</b></td><td ${L[1]}><b>${fmt(r1.r, 1, " %")}</b></td><td ${L[2]}>${mehrWeniger(r1.r - r0.r, 1, "Rendite")}</td></tr>` : ""}
     </tbody></table></div>
-    ${groesste ? `<p class="text" style="margin:10px 0 0">In Worten: Mit ${fmt(WENN.anteil, 0)} % ${name} wäre dein Depot in der ${esc(groesste.S.titel.replace(/ \d{4}$/, ""))} um <b>${fmt(Math.abs(groesste.T.ende) * 100, 0)} %</b> statt ${fmt(Math.abs(groesste.S.ende) * 100, 0)} % gefallen${Math.abs(groesste.T.euroEnde - groesste.S.euroEnde) >= 1 ? ` – etwa ${geld(Math.abs(groesste.T.euroEnde - groesste.S.euroEnde))} € ${groesste.T.euroEnde > groesste.S.euroEnde ? "weniger" : "mehr"} Verlust` : ""}.${r0 && r1 ? ` Die Rendite der letzten Jahre hätte bei ${fmt(r1.r, 1)} % statt ${fmt(r0.r, 1)} % pro Jahr gelegen.` : ""}</p>` : ""}
+    ${groesste ? `<p class="mp-note" style="margin:12px 0 0">In Worten: Mit ${fmt(WENN.anteil, 0)} % ${name} wäre dein Depot in der ${esc(groesste.S.titel.replace(/ \d{4}$/, ""))} um <b>${fmt(Math.abs(groesste.T.ende) * 100, 0)} %</b> statt ${fmt(Math.abs(groesste.S.ende) * 100, 0)} % gefallen${Math.abs(groesste.T.euroEnde - groesste.S.euroEnde) >= 1 ? ` – etwa ${geld(Math.abs(groesste.T.euroEnde - groesste.S.euroEnde))} € ${groesste.T.euroEnde > groesste.S.euroEnde ? "weniger" : "mehr"} Verlust` : ""}.${r0 && r1 ? ` Die Rendite der letzten Jahre hätte bei ${fmt(r1.r, 1)} % statt ${fmt(r0.r, 1)} % pro Jahr gelegen.` : ""}</p>` : ""}
     <p class="klein" style="margin:8px 0 0">Gerechnet mit echten Kursen der Vergangenheit, in der Währung der Werte (meist Dollar), ohne Kosten und Steuern. ${WENN.id === BAR_ID ? "Bargeld ist ohne Zinsen und ohne Schwankung gerechnet. " : ""}${r0 && r0.anteil < 99.5 ? `Die Rendite gilt für ${fmt(r0.anteil, 0)} % des Depots (Positionen mit genug Kursgeschichte). ` : ""}Was in der nächsten Krise passiert, kann anders aussehen – 2022 fielen zum Beispiel Aktien und Anleihen gemeinsam. Kein Rat, was du kaufen oder verkaufen sollst.</p>`;
 }
 function risikoZeigen(){
@@ -5140,8 +5378,8 @@ function risikoZeigen(){
     html += `<h3 style="margin:14px 14px 4px">${ek("d_klumpen", "Klumpenrisiko: dieselbe Firma mehrfach")}</h3>`;
     if (K.zeilen.length) {
       html += `<p class="text" style="padding:0 14px">Die zehn größten Firmen machen zusammen <b>mindestens ${fmt(K.top10, 0, " %")}</b> deines Depots aus – direkt gekauft und über deine Index-ETFs zusammengerechnet.</p>
-      <div class="tab-scroll"><table class="wtab"><thead><tr><th>Firma</th><th>Anteil am Depot</th><th>davon</th></tr></thead><tbody>${K.zeilen.map(f => `<tr><td style="text-align:left"><b>${esc(f.name)}</b></td>
-        <td><b>${fmt(f.anteil, 1, " %")}</b> <span class="klein">(${geld(f.euro)} €)</span></td>
+      <div class="tab-scroll"><table class="wtab dk-tab"><thead><tr><th>Firma</th><th>Anteil am Depot</th><th>davon</th></tr></thead><tbody>${K.zeilen.map(f => `<tr><td style="text-align:left"><b>${esc(f.name)}</b></td>
+        <td><b>${fmt(f.anteil, 1, " %")}</b> <span class="klein">(${geld(f.euro)} €)</span><span class="mp-qb" style="--qf:var(--akzent)" aria-hidden="true"><i style="width:${Math.max(2, f.anteil / Math.max(...K.zeilen.map(x => x.anteil)) * 100).toFixed(0)}%"></i></span></td>
         <td style="text-align:left;white-space:normal">${f.teile.map(z => `${z.quelle === "direkt" ? "als Einzelaktie" : "im " + esc(z.quelle)} ${geld(z.euro)} €`).join(" · ")}${f.mitglied.length ? `${f.teile.length ? " · " : ""}<span class="klein">auch im ${f.mitglied.map(esc).join(", ")} (Gewicht unbekannt)</span>` : ""}</td></tr>`).join("")}</tbody></table></div>`;
     } else html += `<p class="text" style="padding:0 14px">Keine Firma steckt mehrfach in deinem Depot – soweit die bekannten Indexgewichte reichen.</p>`;
     html += `<div class="klein" style="padding:0 14px 4px">${K.genutzt.map(I => `${esc(I.name)}: die ${I.titel.length} größten von ${I.bestand ? I.bestand.toLocaleString("de-DE") : "vielen"} Titeln (zusammen ${fmt(I.top, 0, " %")} des Index) · Quelle: ${esc(I.quelle)}`).join("<br>")}
@@ -5159,9 +5397,9 @@ function risikoZeigen(){
         "<b>Teilweise gestreut:</b> Manche Positionen gleichen sich aus, viele bewegen sich aber ähnlich.",
         "<b>Wenig gestreut:</b> Die meisten deiner Positionen steigen und fallen zusammen. Viele verschiedene Titel zu haben schützt hier nur begrenzt.",
         "<b>Kaum gestreut:</b> Deine Positionen verhalten sich fast wie eine einzige. Wenn es an der Börse kracht, fällt fast alles gleichzeitig."][stufe ?? 1];
-      const kugeln = von10 == null ? "" : `<div style="display:flex;gap:6px;margin:8px 0 2px" aria-hidden="true">${Array.from({length:10}, (_, i) => `<span style="width:22px;height:22px;border-radius:50%;background:${i < von10 ? "var(--teuer)" : "var(--panel2)"};border:1px solid ${i < von10 ? "var(--teuer)" : "var(--line2)"}"></span>`).join("")}</div>`;
-      const skala = r.schnitt == null ? "" : `<div style="max-width:420px;margin:10px 0 2px"><div style="position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--guenstig),var(--gelb),var(--teuer))"><span style="position:absolute;top:-4px;left:calc(${Math.max(0, Math.min(1, r.schnitt)) * 100}% - 9px);width:18px;height:18px;border-radius:50%;background:var(--text);border:3px solid var(--bg)"></span></div>
-          <div class="klein" style="display:flex;justify-content:space-between;margin-top:4px"><span>gehen eigene Wege</span><span>bewegen sich wie eine</span></div></div>`;
+      const kugeln = von10 == null ? "" : `<div class="kg-reihe" aria-hidden="true">${Array.from({length:10}, (_, i) => `<i class="kg${i < von10 ? " an" : ""}"></i>`).join("")}</div>`;
+      const skala = r.schnitt == null ? "" : `<div class="gl-skala"><div class="gl-bahn"><span class="gl-knopf" style="left:${Math.max(0, Math.min(1, r.schnitt)) * 100}%"></span></div>
+          <div class="klein" style="display:flex;justify-content:space-between;margin-top:8px"><span>gehen eigene Wege</span><span>bewegen sich wie eine</span></div></div>`;
       html += `<div class="text" style="padding:0 14px">
         <p style="margin:0 0 4px">„Gleichlauf“ heißt: Steigen und fallen zwei Positionen meist zur selben Zeit? Dann bringt es wenig, beide zu haben – sie verlieren auch zusammen.</p>
         ${von10 == null ? "" : `<p style="margin:8px 0 0;font-size:15px;color:var(--text)">Wenn dein Depot eine schlechte Woche hatte, fielen im Schnitt <b>${von10} von 10</b> deiner Positionen gleichzeitig.</p>${kugeln}<div class="klein">farbig = fällt mit · gerechnet aus den Wochen der letzten 5 Jahre${r.mitfallWert != null ? ` · nach Geld gerechnet fielen <b>${fmt(r.mitfallWert * 100, 0)} %</b> deines Depotwerts mit` : ""}</div>`}
@@ -5383,7 +5621,7 @@ function svgKal(kurven){
   const x = v => L + v/100*(W-L-R), y = v => H-B - v/100*(H-B-T);
   const maxN = Math.max(1, ...kurven.flatMap(k => k.bins.map(b => b.n)));
   let s = `<svg class="kal" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
-  for (const v of [0,25,50,75,100]) s += `<line x1="${x(0)}" y1="${y(v)}" x2="${x(100)}" y2="${y(v)}" stroke=F().line/><line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(100)}" stroke=F().line/>
+  for (const v of [0,25,50,75,100]) s += `<line x1="${x(0)}" y1="${y(v)}" x2="${x(100)}" y2="${y(v)}" stroke="${F().line}"/><line x1="${x(v)}" y1="${y(0)}" x2="${x(v)}" y2="${y(100)}" stroke="${F().line}"/>
     <text x="${L-5}" y="${y(v)+3}" text-anchor="end">${v}</text><text x="${x(v)}" y="${H-B+13}" text-anchor="middle">${v}</text>`;
   s += `<line x1="${x(0)}" y1="${y(0)}" x2="${x(100)}" y2="${y(100)}" style="stroke:var(--muted)" stroke-dasharray="4 3"/>
     <text x="${x(50)}" y="${H-4}" text-anchor="middle">angezeigt (%)</text><text x="11" y="${y(50)}" text-anchor="middle" transform="rotate(-90 11 ${y(50)})">eingetreten (%)</text>`;
@@ -5437,7 +5675,7 @@ async function tabPruefung(w, h="3"){
 function tabStrategie(w){
   const o0 = kwOptionen();
   $("#tab").innerHTML = `
-    <div class="eingabe">
+    <div class="eingabe sv-eingabe">
       <label>Betrag je Monat<input id="st-betrag" type="number" value="${o0.betrag}" min="0" step="50"></label>
       <label>Einmalig zu Beginn<input id="st-einmal" type="number" value="${o0.einmal}" min="0" step="500"></label>
       <label>Jahre (höchstens)<input id="st-jahre" type="number" value="${o0.jahre}" min="2" max="60"></label>
@@ -5446,19 +5684,23 @@ function tabStrategie(w){
       <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins">${[["echt", "echt (US-Geldmarkt)"], ["0", "0 %"], ["2", "fest 2 %"], ["3", "fest 3 %"]].map(([v, t]) => `<option value="${v}" ${String(o0.zins) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
       <button id="st-los">Berechnen</button>
     </div>
-    <p class="klein" id="st-hinweis" style="margin:-4px 0 10px">Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit. <button class="linkknopf" id="st-zur-karte">↑ Zur Kaufweg-Karte</button></p>
+    <p class="klein" id="st-hinweis" style="margin:0 0 10px">Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit. <button class="linkknopf" id="st-zur-karte">↑ Zur Kaufweg-Karte</button></p>
     <div id="st-erg"><div class="text">rechnet …</div></div>`;
   const zeigen = (d, alle) => {   // d wie aus strategie.vergleich(); alle = auch die drei Warte-Wege der Kaufweg-Karte
     const e = d.ergebnis, kurz = {spar:"Sparplan", staffel:"Staffelkauf 60/75/90", staffel_vk:"Staffelkauf + Teilverkauf ≤ 15", misch:"Mischung", warten60:"Warten auf günstig", warten80:"Warten auf sehr günstig"};
     const ks = ["spar", "staffel", "staffel_vk", ...(alle ? ["misch", "warten60", "warten80"] : [])].filter(k => e[k]);
     const best = ks.reduce((a, b) => (e[b].netto > e[a].netto ? b : a), "spar");
-    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td>${f(e[k])}</td>`).join("")}</tr>`;
+    const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td${k === best ? ' class="best"' : ""}>${f(e[k])}</td>`).join("")}</tr>`;
+    const hoechst = Math.max(...ks.map(k => e[k].netto)) || 1, folge = [...ks].sort((a, b) => e[b].netto - e[a].netto);   // Rangliste nach Steuer als Röhren
     const farben = {ein:"#868993", spar:"#2962ff", staffel:F().guenstig, staffel_vk:"#ff9800", misch:F().kegel, warten60:"#14b8a6", warten80:F().cyan};
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     $("#st-erg").innerHTML = `
       <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}${d.einmal > 0 ? `, davon ${geld(d.einmal)} einmalig zu Beginn` : ""}).
         Am meisten nach Steuer: <b>${kurz[best] || e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
-      <div class="tab-scroll"><table class="wtab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}" style="${k===best?"color:var(--text)":""}">${kurz[k] || e[k].name}</th>`).join("")}</tr></thead><tbody>
+      <div class="bl-t">${ek("s_netto", "Nach Steuer, alles verkauft")}</div>
+      <div class="sv-rang">${folge.map((k, i) => `<div class="sv-r${k === best ? " sieger" : ""}" style="--wf:${farben[k]}"><span class="weg-platz">${i + 1}.</span><b>${kurz[k] || e[k].name}</b><span class="sv-geld">${geld(e[k].netto)}</span>
+        <div class="balken"><i style="width:${Math.max(1, e[k].netto / hoechst * 100).toFixed(1)}%;background:var(--wf)"></i></div></div>`).join("")}</div>
+      <div class="tab-scroll"><table class="wtab sv-tab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}"${k === best ? ' class="best"' : ""} style="--wf:${farben[k]}"><i class="sv-dot"></i>${kurz[k] || e[k].name}</th>`).join("")}</tr></thead><tbody>
         ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto), "s_brutto")}
         ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")}
         ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "s_irr")}
@@ -5470,8 +5712,8 @@ function tabStrategie(w){
         ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "s_bar")}
       </tbody></table></div>
       <div id="chart3"></div>
-      <div class="legende" style="border:none;margin-top:-8px"><span><i style="background:${farben.ein}"></i>eingezahlt</span>${ks.map(k => `<span><i style="background:${farben[k]}"></i>${kurz[k]}</span>`).join("")}</div>
-      <div class="text">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
+      <div class="legende" style="border:none"><span><i style="background:${farben.ein}"></i>eingezahlt</span>${ks.map(k => `<span><i style="background:${farben[k]}"></i>${kurz[k]}</span>`).join("")}</div>
+      <div class="text sv-regeln">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
       <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
       ${alle ? `<b>Mischung</b>: die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60. <b>Warten auf günstig / sehr günstig</b>: Geld sammeln und alles kaufen, sobald die Ampel 60 bzw. 80 erreicht. Ein <b>Einmalbetrag</b> wird im ersten Monat eingezahlt und folgt denselben Regeln.` : ""}
       Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
