@@ -4797,7 +4797,8 @@ const monatDe = s => s ? s.split("-").reverse().join("/") : "–";
 const r2Wort = r => r == null ? "–" : r > 2 ? "etwas besser" : r < -2 ? "schlechter" : "kaum anders";
 function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SEC-Daten, nur US-Firmen)
   const f = w.f; if (!f || SONDERGRUPPE(w)) return "";
-  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd. $") : fmt(x, 0, " Mio. $");
+  const wg = f.waehrung && f.waehrung !== "USD" ? " " + esc(f.waehrung) : " $";   // ausländische Firmen: Beträge in der Berichtswährung
+  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd." + wg) : fmt(x, 0, " Mio." + wg);
   const zum = x => x == null ? "" : ` (${vz(x, 0, " %")} zum Vorjahr)`;
   let t = "";
   if (f.kgv != null) {
@@ -4810,6 +4811,7 @@ function geschaeftSaetze(w){   // KGV und Geschäftszahlen in Alltagssprache (SE
       t += ` (in dieser Zeit lag es zwischen ${fmt(f.kgv_min, 0)} und ${fmt(f.kgv_max, 0)}, in der Mitte bei ${fmt(f.kgv_median, 0)}${f.kgv_verlust_anteil ? `; in ${fmt(f.kgv_verlust_anteil, 0)} % der Wochen machte die Firma Verlust` : ""}). `;
     }
   } else if (f.verlust) t += `Die Firma macht gerade <b>Verlust</b> (${mio(f.gewinn)} in ${f.art === "12 Monate" ? "12 Monaten" : "einem Geschäftsjahr"}) – ein KGV gibt es dann nicht. `;
+  else if (f.kgv_fehlt) t += `${esc(f.kgv_fehlt)} `;
   if (!f.verlust && f.gewinn != null) t += `Sie verdiente ${f.art === "12 Monate" ? "in den letzten 12 Monaten" : "im letzten Geschäftsjahr"} <b>${mio(f.gewinn)}</b>${zum(f.d_gewinn)}`;
   if (f.umsatz != null) t += !f.verlust && f.gewinn != null ? ` bei <b>${mio(f.umsatz)}</b> Umsatz${zum(f.d_umsatz)}` : `Der Umsatz lag bei <b>${mio(f.umsatz)}</b>${zum(f.d_umsatz)}`;
   if (f.umsatz_pa != null) t += `; über ${f.umsatz_pa_jahre} Jahre ${f.umsatz_pa >= 0 ? "wuchs" : "schrumpfte"} der Umsatz im Schnitt um ${fmt(Math.abs(f.umsatz_pa), 0)} % pro Jahr`;
@@ -4822,22 +4824,23 @@ function geschaeftKarte(w){
   if (SONDERGRUPPE(w) || !/Nasdaq|NYSE/.test(String(w.gruppe))) return "";
   const f = w.f;
   const kopf = kk("geschaeft", "Wie läuft das Geschäft?", "Gewinn, Umsatz und KGV aus den Pflichtberichten an die US-Börsenaufsicht (SEC).", f ? `${f.art} bis ${datumDe(f.stand)}` : "", "f_sec");
-  if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen der US-Börsenaufsicht – meist ausländische Firmen (Bilanz nach IFRS) oder sehr junge Börsengänge." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
-  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd. $") : fmt(x, 0, " Mio. $");
+  if (!f) return `<section class="karte" id="geschaeft-karte">${kopf}<p class="klein">${STATISCH || ALLE.some(x => x.f) ? "Keine Geschäftszahlen bei der US-Börsenaufsicht gefunden – meist sehr junge Börsengänge oder ausländische Firmen ohne maschinenlesbare Berichte." : "Geschäftszahlen werden nur im Online-Lauf geladen (SEC, braucht eine Kontaktangabe)."}</p></section>`;
+  const wg = f.waehrung && f.waehrung !== "USD" ? " " + esc(f.waehrung) : " $";   // ausländische Firmen: Beträge in der Berichtswährung
+  const mio = x => x == null ? "–" : Math.abs(x) >= 1000 ? fmt(x / 1000, 1, " Mrd." + wg) : fmt(x, 0, " Mio." + wg);
   const d = x => x == null ? "" : ` <span class="${klasse(x)}">(${vz(x,0," %")})</span>`;
   return `<section class="karte" id="geschaeft-karte">${kopf}
     ${f.falle ? `<div class="falle-box">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Ampel günstig, aber ${esc(f.gruende.join(", "))}.</div>` : f.schwach ? `<p class="klein neg" style="margin:0 0 6px">Geschäft schwach: ${esc(f.gruende.join(", "))}</p>` : ""}
-    <div class="gross-zahl">${f.kgv != null ? fmt(f.kgv,1) : f.verlust ? "Verlust" : "–"}</div>
-    <p>${f.kgv != null ? ek("f_kgv","KGV") + " (Kurs-Gewinn-Verhältnis)" : f.verlust ? "kein KGV – die Firma macht Verlust" : "KGV nicht berechenbar"}</p>
+    <div class="gross-zahl">${f.kgv != null ? fmt(f.kgv,1) : f.verlust ? "Verlust" : f.kgv_fehlt ? "ohne KGV" : "–"}</div>
+    <p>${f.kgv != null ? ek("f_kgv","KGV") + " (Kurs-Gewinn-Verhältnis)" : f.verlust ? "kein KGV – die Firma macht Verlust" : f.kgv_fehlt ? esc(f.kgv_fehlt) : "KGV nicht berechenbar"}</p>
     <div class="kv"><span data-e="f_trend">Gewinn</span><b>${mio(f.gewinn)}${d(f.d_gewinn)}</b></div>
     <div class="kv"><span data-e="f_trend">Umsatz</span><b>${mio(f.umsatz)}${d(f.d_umsatz)}</b></div>
     ${f.kgv_rang != null ? `<div class="kv"><span data-e="f_laie">KGV ${fmt(f.kgv_jahre,0)} Jahre (tief · Mitte · hoch)</span><b>${fmt(f.kgv_min,0)} · ${fmt(f.kgv_median,0)} · ${fmt(f.kgv_max,0)}</b></div>
     <div class="kv"><span data-e="f_laie">KGV heute höher als</span><b>${fmt(f.kgv_rang,0)} % der Zeit</b></div>` : ""}
     ${f.umsatz_pa != null ? `<div class="kv"><span data-e="f_trend">Umsatz Ø pro Jahr (${f.umsatz_pa_jahre} J.)</span><b class="${klasse(f.umsatz_pa)}">${vz(f.umsatz_pa,0," %")}</b></div>` : ""}
-    <div class="kv"><span data-e="f_kuv">KUV</span><b>${fmt(f.kuv,2)}</b></div>
+    ${f.kuv != null || !f.waehrung ? `<div class="kv"><span data-e="f_kuv">KUV</span><b>${fmt(f.kuv,2)}</b></div>` : ""}
     <div class="kv"><span>Jahre mit Gewinn</span><b>${f.jahre_gewinn} von ${f.jahre}</b></div>
     ${f.veraltet ? `<p class="klein neg">Zahlen älter als 18 Monate – keine Warnung möglich.</p>` : ""}
-    <p class="klein" style="margin-top:6px">In Klammern: Veränderung zum Vorjahr. Quelle: SEC EDGAR.</p></section>`;
+    <p class="klein" style="margin-top:6px">In Klammern: Veränderung zum Vorjahr. ${f.waehrung ? `Ausländische Firma: Beträge in ${esc(f.waehrung)}${f.standard ? `, Bilanz nach ${esc(f.standard)}` : ""}, nur ganze Geschäftsjahre. ` : ""}Quelle: SEC EDGAR.</p></section>`;
 }
 function bewKachel(){
   const b = BEWERTUNG; if (!b) return "";
