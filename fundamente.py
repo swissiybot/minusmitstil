@@ -11,7 +11,13 @@ Daten: SEC "frames"-Schnittstelle (data.sec.gov/api/xbrl/frames): je Kennzahl un
             dann us-gaap WeightedAverageNumberOfDilutedSharesOutstanding (verwaessert, Quartal)
 Jahre (CY2009 ...) und Quartale (CY2009Q1 ...). Das letzte Quartal eines Geschaeftsjahrs fehlt oft und wird aus
 Jahr minus die drei Quartale davor gebildet – zugeordnet ueber die Enddaten (auch bei Geschaeftsjahr bis Juni o. ae.).
-Nur Firmen mit US-Bilanzierung in US-Dollar (Form 10-K/10-Q); auslaendische Firmen (20-F, IFRS) haben hier keine Zahlen.
+US-Firmen: Bilanzierung nach US-GAAP in US-Dollar (frames, Jahre und Quartale).
+Auslaendische Firmen an US-Boersen (Formulare 20-F/40-F): die frames-Schnittstelle kennt die IFRS-Taxonomie nicht. Fuer sie
+werden die Firmendaten einzeln geholt (data.sec.gov/api/xbrl/companyfacts, hoechstens alle 4 Wochen je Firma) und nur die
+Geschaeftsjahre ausgewertet: ifrs-full ProfitLossAttributableToOwnersOfParent (sonst ProfitLoss), Revenue (sonst
+RevenueFromContractsWithCustomers, RevenueFromSaleOfGoods) – oder US-GAAP in einer anderen Waehrung als Dollar. Angegeben wird die Berichtswaehrung.
+Ein KGV gibt es fuer sie nicht: Der US-Kurs gilt je ADR (oft mehrere oder Bruchteile von Aktien) und in Dollar, die Zahlen
+je Stammaktie in der Berichtswaehrung – ohne sicheres ADR-Verhaeltnis waere es geraten.
 
 Die SEC verlangt bei automatischen Abrufen eine Kontaktangabe im User-Agent. Sie kommt aus der Umgebungsvariable
 SEC_KONTAKT (auf GitHub als geheime Einstellung) und steht nie im Code. Ohne SEC_KONTAKT wird nichts geladen;
@@ -39,6 +45,17 @@ import einstellungen as E
 ORDNER = E.DATEN / "sec"
 FAKTEN = ORDNER / "fakten.parquet"
 ABRUFE = ORDNER / "abrufe.json"
+AUSLAND = ORDNER / "ausland.parquet"          # Geschaeftsjahre auslaendischer Firmen (companyfacts)
+AUSLAND_ABRUFE = ORDNER / "ausland_abrufe.json"
+AUSLAND_NEU_TAGE = 27
+AUSLAND_MAX_JE_LAUF = 400
+AUSLAND_FORMULARE = {"20-F", "20-F/A", "40-F", "40-F/A", "10-K", "10-K/A"}
+AUSLAND_KONZEPTE = {   # Code: [(Taxonomie, Kennzahl), ...] in dieser Reihenfolge
+    "ni": [("ifrs-full", "ProfitLossAttributableToOwnersOfParent"), ("ifrs-full", "ProfitLoss"), ("us-gaap", "NetIncomeLoss")],
+    "rv": [("ifrs-full", "Revenue"), ("ifrs-full", "RevenueFromContractsWithCustomers"), ("ifrs-full", "RevenueFromSaleOfGoods"),
+           ("us-gaap", "Revenues"),
+           ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"), ("us-gaap", "SalesRevenueNet")],
+}
 TICKER = ORDNER / "company_tickers.json"
 BASIS = "https://data.sec.gov/api/xbrl/frames"
 START_JAHR = 2009
@@ -158,7 +175,96 @@ def laden() -> bool:
         tmp.replace(FAKTEN)
     ABRUFE.write_text(json.dumps(abrufe, indent=0, sort_keys=True))
     print(f"SEC: {geholt} Abrufe, {fehler} gescheitert; Datei {FAKTEN.stat().st_size / 1e6:.1f} MB" if FAKTEN.exists() else "SEC: keine Daten")
+    try:
+        ausland_laden(s)
+    except Exception as ex:
+        print(f"SEC Ausland: {ex.__class__.__name__}: {ex} – vorhandene Daten bleiben")
     return FAKTEN.exists()
+
+
+def _ausland_kandidaten() -> list[int]:
+    """CIKs der US-gelisteten Aktien aus der Werteliste, fuer die es keine US-GAAP-Dollar-Zahlen gibt (meist 20-F/40-F)."""
+    uni = pd.read_csv(E.DATEN / "universum.csv")
+    uni = uni[uni["gruppe"].astype(str).str.contains("Nasdaq|NYSE")]
+    tick = _ticker_zu_cik()
+    ciks = {tick[s.upper().replace(".", "-")] for s in uni["symbol"].astype(str) if s.upper().replace(".", "-") in tick}
+    mit_us = set()
+    if FAKTEN.exists():
+        df = pd.read_parquet(FAKTEN, columns=["cik", "k"])
+        mit_us = set(df.loc[df["k"].astype(str) == "ni", "cik"].astype(int))
+    return sorted(c for c in ciks if c not in mit_us)
+
+
+def _ausland_auszug(d: dict) -> list[dict]:
+    """Geschaeftsjahre (Gewinn, Umsatz) aus companyfacts: IFRS oder US-GAAP in Fremdwaehrung, Hauptwaehrung der Firma."""
+    fakten = d.get("facts", {})
+    zeilen = []
+    for code, liste in AUSLAND_KONZEPTE.items():
+        for tax, name in liste:
+            einheiten = fakten.get(tax, {}).get(name, {}).get("units", {})
+            jahre = {}
+            for einheit, eintraege in einheiten.items():
+                if "/" in einheit or len(einheit) != 3 or (tax == "us-gaap" and einheit == "USD"):
+                    continue   # US-GAAP in Dollar kommt schon ueber die frames
+                for x in eintraege:
+                    if x.get("fp") != "FY" or x.get("form") not in AUSLAND_FORMULARE or not x.get("start"):
+                        continue
+                    tage = (pd.Timestamp(x["end"]) - pd.Timestamp(x["start"])).days
+                    if not 340 <= tage <= 380:
+                        continue
+                    alt = jahre.get((einheit, x["end"]))
+                    if alt is None or x.get("filed", "") > alt[1]:   # neueste Meldung (Korrekturen) gewinnt
+                        jahre[(einheit, x["end"])] = (float(x["val"]), x.get("filed", ""))
+            if not jahre:
+                continue
+            je_einheit = {}
+            for (einheit, _), _w in jahre.items():
+                je_einheit[einheit] = je_einheit.get(einheit, 0) + 1
+            haupt = max(je_einheit, key=lambda e: (je_einheit[e], e != "USD"))   # Berichtswaehrung = die mit den meisten Jahren
+            for (einheit, ende), (val, _) in jahre.items():
+                if einheit == haupt:
+                    zeilen.append({"k": code, "end": ende, "val": val, "waehrung": haupt,
+                                   "standard": "IFRS" if tax == "ifrs-full" else "US-GAAP"})
+            break   # erste vorhandene Kennzahl je Code
+    return zeilen
+
+
+def ausland_laden(s) -> None:
+    abrufe = json.loads(AUSLAND_ABRUFE.read_text()) if AUSLAND_ABRUFE.exists() else {}
+    heute = pd.Timestamp(dt.date.today())
+    kand = _ausland_kandidaten()
+    faellig = [c for c in kand if not abrufe.get(str(c)) or (heute - pd.Timestamp(abrufe[str(c)])).days >= AUSLAND_NEU_TAGE]
+    faellig = sorted(faellig, key=lambda c: abrufe.get(str(c), ""))[:AUSLAND_MAX_JE_LAUF]   # nie geholte zuerst
+    alt = pd.read_parquet(AUSLAND) if AUSLAND.exists() else None
+    neu, geholt, fehler, mit = [], 0, 0, 0
+    for c in faellig:
+        d = _holen(s, f"https://data.sec.gov/api/xbrl/companyfacts/CIK{c:010d}.json")
+        time.sleep(PAUSE)
+        if d is None:
+            fehler += 1
+            if fehler >= 5 and geholt == 0:
+                print("SEC Ausland: mehrere Abrufe gescheitert – Abbruch, vorhandene Daten bleiben.")
+                break
+            continue
+        geholt += 1
+        abrufe[str(c)] = heute.strftime("%Y-%m-%d")
+        z = _ausland_auszug(d) if d else []
+        if z:
+            mit += 1
+            df = pd.DataFrame(z); df["cik"] = c
+            neu.append(df)
+    geholte = {int(c) for c in faellig if abrufe.get(str(c)) == heute.strftime("%Y-%m-%d")}
+    teile = ([alt[~alt["cik"].isin(geholte)]] if alt is not None else []) + neu
+    if teile:
+        df = pd.concat(teile, ignore_index=True)
+        df["cik"] = df["cik"].astype("int32"); df["val"] = df["val"].astype("float64")
+        df["end"] = pd.to_datetime(df["end"]).astype("datetime64[ms]")
+        tmp = AUSLAND.with_suffix(".tmp")
+        df.sort_values(["cik", "k", "end"]).to_parquet(tmp, compression="zstd", index=False)
+        tmp.replace(AUSLAND)
+    AUSLAND_ABRUFE.write_text(json.dumps(abrufe, indent=0, sort_keys=True))
+    print(f"SEC Ausland: {len(kand)} Firmen ohne US-GAAP-Dollar-Zahlen, {geholt} abgerufen ({mit} mit Geschäftsjahren), "
+          f"{fehler} gescheitert, noch fällig {max(0, len([c for c in kand if not abrufe.get(str(c))]))}")
 
 
 # ----------------------------------------------------------------- Auswerten
@@ -215,9 +321,9 @@ def _vorjahr(reihe: list, e: pd.Timestamp, tage: int = 40):
 
 def kennzahlen() -> dict:
     """{Yahoo-Symbol: Geschaeftszahlen} fuer alle Firmen mit SEC-Daten."""
-    if not FAKTEN.exists():
+    if not FAKTEN.exists() and not AUSLAND.exists():
         return {}
-    df = pd.read_parquet(FAKTEN)
+    df = pd.read_parquet(FAKTEN) if FAKTEN.exists() else pd.DataFrame({"cik": [], "k": [], "p": [], "end": [], "val": []})
     df["k"] = df["k"].astype(str); df["p"] = df["p"].astype(str)
     tick = _ticker_zu_cik()
     cik_zu = {}
@@ -250,6 +356,27 @@ def kennzahlen() -> dict:
              "aktien_reihe": _aktien_bereinigt(sd if len(sd) >= 8 else sh)}
         for t in cik_zu[cik]:
             out[t] = f
+    for cik, f in _ausland_kennzahlen().items():   # auslaendische Firmen (nur Geschaeftsjahre, ohne Aktienzahl)
+        for t in cik_zu.get(cik, []):
+            out.setdefault(t, f)
+    return out
+
+
+def _ausland_kennzahlen() -> dict:
+    if not AUSLAND.exists():
+        return {}
+    df = pd.read_parquet(AUSLAND)
+    out = {}
+    for cik, teil in df.groupby("cik", sort=False):
+        reihe = lambda k: sorted({pd.Timestamp(e): (pd.Timestamp(e), float(v)) for e, v in
+                                  zip(teil.loc[teil["k"] == k, "end"], teil.loc[teil["k"] == k, "val"])}.values())
+        ni = reihe("ni")
+        if not ni:
+            continue
+        w = teil.loc[teil["k"] == "ni", "waehrung"].iloc[-1]; st = teil.loc[teil["k"] == "ni", "standard"].iloc[-1]
+        rv = reihe("rv") if (teil.loc[teil["k"] == "rv", "waehrung"] == w).all() else []   # Umsatz nur in derselben Waehrung
+        out[int(cik)] = {"cik": int(cik), "ni_jahr": ni, "rv_jahr": rv, "ni_ttm": [], "rv_ttm": [], "aktien": None,
+                         "aktien_reihe": None, "waehrung": w, "standard": st}
     return out
 
 
@@ -369,10 +496,13 @@ def fuer_zeile(f: dict, kurs: float | None, score: float | None, w=None) -> dict
     except Exception:
         hist = {}
     u_pa, u_j = _wachstum_pa(f["rv_jahr"]); g_pa, g_j = _wachstum_pa(f["ni_jahr"])
-    return {**hist, "umsatz_pa": r(u_pa, 0), "umsatz_pa_jahre": u_j, "gewinn_pa": r(g_pa, 0), "gewinn_pa_jahre": g_j,
+    ausland = {"waehrung": f["waehrung"], "standard": f["standard"],
+               "kgv_fehlt": "Kein KGV: Der Kurs an der US-Börse gilt je ADR in Dollar, die Zahlen je Stammaktie in "
+                            f"{f['waehrung']} – das Verhältnis ist nicht sicher bekannt."} if f.get("waehrung") else {}
+    return {**hist, **ausland, "umsatz_pa": r(u_pa, 0), "umsatz_pa_jahre": u_j, "gewinn_pa": r(g_pa, 0), "gewinn_pa_jahre": g_j,
         "stand": stand.strftime("%Y-%m-%d") if stand is not None else None, "art": art, "veraltet": bool(alt),
         "gewinn": r(ni / 1e6, 1), "umsatz": r(rv / 1e6, 1) if rv else None,
-        "mw": r(mw / 1e6, 0) if mw else None,   # Boersenwert in Mio. USD (Kurs x Aktienzahl laut SEC), Groesse der Heatmap-Kacheln
+        "mw": r(mw / 1e6, 0) if mw else None,   # Boersenwert in Mio. USD (fehlt bei auslaendischen Firmen) (Kurs x Aktienzahl laut SEC), Groesse der Heatmap-Kacheln
         "kgv": kgv_out, "kuv": r(kuv, 2) if kuv is not None and kuv < 1000 else None,
         "d_gewinn": r(d_ni, 0), "d_umsatz": r(d_rv, 0), "verlust": bool(ni <= 0),
         "jahre_gewinn": sum(1 for _, v in jahre if v > 0), "jahre": len(jahre),

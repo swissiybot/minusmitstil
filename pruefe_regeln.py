@@ -14,6 +14,9 @@ Geprueft wird mit echten Daten an einer festen Stichprobe (alle ETFs, Krypto, Ro
   7. Die ausgegebene Ampel ist genau die der Formel (nachgerechnet mit ampel_rechnen).
   8. Nachkauf je Titel: Art lohnt/egal/unklar; Nachkauf-Preis = Kurs, bei dem die Ampel heute die Schwelle erreicht;
      „heute erfüllt“ passt zur Ampel; Kurse für Ampel 90 <= 80 <= 70; Kurs unter dem Kurs für Ampel 90 => Ampel >= 90.
+  9. Dividenden: nicht negativ, Jahre lückenlos bis zum laufenden Jahr, Rendite 0–25 % = Summe 12 Monate / Kurs,
+     Rangliste = Kopfzeile.  10. ETF-Inhalt: Kosten 0–5 %, Gewichte der Top-Positionen zusammen höchstens 100 %,
+     Branchen zusammen etwa 100 %.
 Dazu Rechenproben mit kuenstlichen Kursreihen (konstanter Kurs = an der Linie = 70, Absturz tiefer als je zuvor = 100,
 Kurs knapp unter/ueber der Kaufzone 80).
 
@@ -119,7 +122,30 @@ def ein_wert(z: dict, rl: dict):
     for k in ("kq", "vq"):
         v = [x for x in chart.get(k, []) if x is not None]
         pruef(all(0 <= x <= 100 for x in v), f"{wid}: {'Kauf' if k == 'kq' else 'Verkaufs'}qualität außerhalb 0–100")
+    zusatz_pruefen(wid, zeile, rl.get((wid, z["gruppe"])) or {})
     return True
+
+
+def zusatz_pruefen(wid: str, zeile: dict, rz: dict):
+    """9. Dividenden, 10. ETF-Inhalt: nur ausgewiesen, in sich stimmig, Rangliste = Kopfzeile."""
+    d = zeile.get("div")
+    if d:
+        pruef(d["summe12"] >= 0 and all(v >= 0 for _, v in d["jahre"]), f"{wid}: negative Ausschüttung")
+        jahre = [j for j, _ in d["jahre"]]
+        pruef(jahre == list(range(jahre[0], jahre[-1] + 1)) and jahre[-1] == d["laufend"], f"{wid}: Dividenden-Jahre nicht lückenlos bis zum laufenden Jahr")
+        if d.get("rendite") is not None and zeile.get("kurs"):
+            pruef(0 <= d["rendite"] <= 25, f"{wid}: Dividendenrendite {d['rendite']} % außerhalb 0–25")
+            pruef(math.isclose(d["rendite"], d["summe12"] / zeile["kurs"] * 100, abs_tol=0.011), f"{wid}: Dividendenrendite ≠ Summe 12 Monate / Kurs")
+        if rz:
+            pruef((rz.get("div") or {}).get("rendite") == d.get("rendite"), f"{wid}: Dividendenrendite in Rangliste ≠ Kopfzeile")
+    e = zeile.get("etf")
+    if e:
+        if e.get("ter") is not None:
+            pruef(0 < e["ter"] < 5, f"{wid}: laufende Kosten {e['ter']} % unplausibel")
+        top = e.get("top") or []
+        pruef(all(0 < g <= 100 for _, g in top) and sum(g for _, g in top) <= 100.5, f"{wid}: Gewichte der größten Positionen unplausibel")
+        if e.get("branchen"):
+            pruef(90 <= sum(g for _, g in e["branchen"]) <= 110, f"{wid}: Branchenanteile ergeben nicht etwa 100 %")
 
 
 def main():

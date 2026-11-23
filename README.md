@@ -78,6 +78,14 @@ Im Depot zeigt die Spalte **Nachkauf unter** dasselbe je Position: „lohnt“ �
 ### Aufbau der Titelseite (Umbau 23.11.2026)
 Oben eine Sprungleiste (Überblick · Nachkaufen · Chart · Preis · Rückblick · Ausblick und Risiko · Details), die den sichtbaren Abschnitt markiert. Der Kopf zeigt Name, ISIN/WKN und Beschreibung, darunter nebeneinander die Lage in wenigen Sätzen, die Ø Jahresrendite (mit „Aus 10.000 wurden …“) und die Ampel, darunter eine Kennzahlen-Leiste (Kurs, 200-Wochen-Linie, Günstig-Grenze, Abstand zum Hoch, Trend). Jede Karte beginnt gleich (`kk()` in `web/index.html`): farbige Kategorie, Titel als Frage, ein Satz „was zeigt die Karte“, die Erklärung hinter dem „i“. Lange Belege und Methodentexte sind aufklappbar. Die Karte „Was passierte früher …“ nennt Kaufen und Verkaufen getrennt in „x von 100“ mit Vergleich zu jeder beliebigen Woche und stellt die Gegenprobe als Balken gegen den Münzwurf (50) dar; liegt die Gegenprobe unter 50, sagt das Fazit „nichts Verlässliches“. Neu ist das **Risiko-Profil** (im Browser aus den Wochenschlusskursen): größter Rückgang mit Dauer bis zur Erholung, Schwankung pro Jahr, längste Zeit unter altem Hoch, bestes/schlechtestes Kalenderjahr, dazu Schwankung, Gleichlauf (Korrelation) und Beta gegenüber dem S&P 500 aus den gemeinsamen Wochen der letzten 10 Jahre.
 
+### Neue Datenfelder für die Titelseite (23.11.2026)
+Wunsch Marc: Dividenden, ETF-Inhalt und Kosten, Rendite nach Inflation, Geschäftszahlen auch für ausländische Firmen. Nur echte Quellen; fehlt eine, fehlt das Feld.
+- **Dividenden** (`dividenden.py`, wöchentlich, Yahoo-Monatskerzen mit Ausschüttungen → `daten/dividenden.parquet`): Feld `div` in der Kopfzeile (Rendite 12 Monate zum heutigen Kurs, Summe, Jahressummen lückenlos mit laufendem Jahr, Wachstum 5 Jahre, seit / ohne Lücke seit, letzte Ausschüttung), kurz in der Rangliste. Nur ausgewiesen – die Kurse sind schon dividendenbereinigt. Londoner Börse ohne Rendite (Kurs und Ausschüttung oft in verschiedenen Währungen).
+- **ETF-Inhalt und Kosten** (`etf_daten.py`, wöchentlich, Yahoo `funds_data` = Morningstar → `daten/etf_daten.json`): Feld `etf` (laufende Kosten laut Jahresbericht, Top 10, Branchen, Anlageklassen, Anbieter). Keine Länderanteile in der Quelle; VWRL ohne Kosten.
+- **Inflation** (`inflation.py`, FRED: HVPI Deutschland CP0000DEM086NEST, CPI-U USA CPIAUCSL → `web/daten/inflation.json`); die Rendite nach Inflation rechnet der Browser.
+- **Ausländische Firmen an US-Börsen** (`fundamente.py`): Die frames-Schnittstelle kennt IFRS nicht, deshalb Firmendaten einzeln (companyfacts, höchstens alle 4 Wochen je Firma, nur Firmen ohne US-GAAP-Dollar-Zahlen): Geschäftsjahre nach IFRS oder US-GAAP in Fremdwährung, Felder `waehrung`, `standard`, `kgv_fehlt` in `f`. Kein KGV (US-Kurs je ADR in Dollar, Zahlen je Stammaktie in Berichtswährung).
+- Prüfregeln 9 (Dividenden) und 10 (ETF) in `pruefe_regeln.py`.
+
 ### Bewertungszonen im Chart (22.11.2026)
 Wunsch Marc (Vorbild: „200-Wochen-Bewertungszonen“ eines anderen Chart-Programms): In jedem eigenen Chart (Woche und Monat, alle Werte) liegen farbige Flächen zwischen den mitwandernden Kaufzonen-Linien – Ausverkauf (Ampel ≥ 90, Grenze `kz90`, nur im Chart exportiert), historisch sehr günstig (80–90), günstig (60–80, darin die 200-Wochen-Linie), neutral (40–60), teuer (15–40), historisch sehr teuer (≤ 15). Gezeichnet als Series-Primitive von Lightweight Charts (`zonenFlaechen`), ein-/ausgeschaltet mit dem Chip „Kaufzonen“. Die Grenzen sind exakt die der Ampel, nichts zusätzlich geschätzt.
 
@@ -120,7 +128,10 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, �
 | `kurse.py` | Tageskurse von Yahoo (yfinance) → eine komprimierte Datei `daten/kurse.parquet` |
 | `analyse.py` | Ampel 0–100, Ø Jahresrendite, Wahrscheinlichkeiten, Rangliste, Signal-Tagebuch |
 | `bewertung.py` | Shiller-CAPE des S&P 500: Bewertung 0–100 ohne Blick in die Zukunft, Renditen danach, Walk-forward-Prüfung, Sparplan gegen Warten |
-| `fundamente.py` | Geschäftszahlen aus SEC EDGAR (frames-Schnittstelle): KGV, KUV, Gewinn-/Umsatztrend, Fallen-Warnung und deren Prüfung; lädt nur mit `SEC_KONTAKT` |
+| `fundamente.py` | Geschäftszahlen aus SEC EDGAR (frames-Schnittstelle, ausländische Firmen über companyfacts): KGV, KUV, Gewinn-/Umsatztrend, Fallen-Warnung und deren Prüfung; lädt nur mit `SEC_KONTAKT` |
+| `dividenden.py` | Ausschüttungen aller Aktien und ETFs (Yahoo, wöchentlich) → Feld `div` |
+| `etf_daten.py` | ETF-Kosten, Top 10, Branchen (Yahoo/Morningstar, wöchentlich) → Feld `etf` |
+| `inflation.py` | Verbraucherpreise Deutschland und USA (FRED) → `web/daten/inflation.json` |
 | `indexanteile.py` | Grobe Indexgewichte der größten Titel für das Klumpenrisiko (SPY-Bestandsliste täglich, Factsheet-Top-10 fest im Code, Nasdaq-100-Mitglieder) → `web/daten/indexanteile.json` |
 | `alarm.py` | Alarme aufs Handy (ntfy.sh) bei Wechsel in „sehr günstig“ (≥ 80) oder „sehr teuer“ (≤ 15); nur im Online-Lauf mit `NTFY_THEMA`, Standard alle Werte (optional `ALARM_WERTE`) |
 | `pruefe_regeln.py` | Automatische Prüfung der Rechenregeln (Ampel, Kaufzonen, Seltenheits-Formel, Qualitäten) vor dem Veröffentlichen; Rückgabecode 1 bei Fehlern |
