@@ -174,11 +174,18 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
     max_unter = {k: 0.0 for k in NAMEN}
     tage_set = set(tage)
     letzter_satz = 0.0
+    # Plan je Monat für den Rechner mit eigenem Betrag in der Kaufweg-Karte (Wunsch Marc 23.11.2026): Zeitpunkt, Ausführungskurs,
+    # Ampel der Vorwoche ≥ 60 / ≥ 80 (als fertige Entscheidung, damit Rundung der Ampel nichts verschiebt) und Zinssatz. Der Browser
+    # rechnet damit die Wege Sparplan, Mischung, Warten auf günstig / sehr günstig mit denselben Regeln für jeden Betrag nach.
+    plan = {"t": [], "k": [], "g60": [], "g80": [], "z": []}
     for i in range(tage[0], n):
         if i in tage_set:
             kurs = o[i] if not math.isnan(o[i]) and o[i] > 0 else c[i - 1]
             s = score[i - 1]
             letzter_satz = satz(idx[i])
+            if reihe:   # nur für die Einzelseite (export.py, server.py); die Massenprüfungen mit reihe=False brauchen den Plan nicht
+                plan["t"].append(int((idx[i] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)))
+                plan["k"].append(float(f"{kurs:.9g}")); plan["g60"].append(int(s >= 60)); plan["g80"].append(int(s >= 80)); plan["z"].append(round(float(letzter_satz), 4))
             for d in depots.values():
                 d.jahr_setzen(idx[i].year)
             eingezahlt += betrag
@@ -250,5 +257,6 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
         "pausch": pausch, "teilfrei": teilfrei,
         "zins": "fest " + f"{fester_zins:g}".replace(".", ",") + " % p.a." if fester_zins is not None else (("US-Geldmarkt 3 Monate (FRED TB3MS), zuletzt %.2f %%" % letzter_satz).replace(".", ",") if zins is not None else "kein Zins (FRED-Daten fehlen)"),
         "ergebnis": erg,
+        "plan": {**plan, "ende": float(f"{c[-1]:.9g}")} if reihe else None,
         "reihe": {"t": verlauf_t, "ein": verlauf_ein, **verlauf} if reihe else None,
     }
