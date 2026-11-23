@@ -95,6 +95,10 @@ jobs:
         continue-on-error: true
         run: python waehrung.py
 
+      - name: Verbraucherpreise Deutschland/USA (FRED) für die Rendite nach Inflation
+        continue-on-error: true
+        run: python inflation.py
+
       - name: Bewertung S&P 500 (Shiller-CAPE)
         run: python bewertung.py
 

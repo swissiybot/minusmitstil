@@ -7,7 +7,7 @@ cd "$(dirname "$0")"
   .venv/bin/python btc_alt.py   # Bitcoin vor 2014 (einmalig, danach aus daten/btc_alt)
   .venv/bin/python mvrv.py      # Bitcoin MVRV-Z (Coin Metrics), höchstens alle 20 Stunden
   .venv/bin/python welt.py   # Auslandsaktien (Wikidata, höchstens wöchentlich)
-  .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python umfeld.py && { .venv/bin/python waehrung.py || true; } \
+  .venv/bin/python universum.py && .venv/bin/python kurse.py && .venv/bin/python umfeld.py && { .venv/bin/python waehrung.py || true; } && { .venv/bin/python inflation.py || true; } \
     && .venv/bin/python bewertung.py && .venv/bin/python fundamente.py && { .venv/bin/python nasdaq100.py || true; } && { .venv/bin/python indexanteile.py || true; } && .venv/bin/python isin.py && { .venv/bin/python beschreibung.py || true; } \
     && .venv/bin/python analyse.py && .venv/bin/python tagebuch_pruefung.py \
     && { .venv/bin/python trendstudie.py || echo "Trendstudie nicht gerechnet"; }
