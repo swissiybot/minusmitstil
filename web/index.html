@@ -5021,7 +5021,7 @@ function zonenFlaechen(ch, serie, c, f){
     let zuletzt = -99;
     [...worte].sort((p, q) => (p[2][1] + p[2][2]) - (q[2][1] + q[2][2])).forEach(([name, fa, [px, a, b]]) => {
       const o = Math.max(a, 3), u = Math.min(b, gr.height - 3); if (u - o < 17) return;
-      const ym = Math.max(o + 9, Math.min(u - 9, (o + u) / 2)); if (ym - zuletzt < 18) return;
+      const ym = Math.max(o + 9, Math.min(u - 9, (o + u) / 2)); if (ym - zuletzt < 18 || ym > gr.height - 28) return;   // ganz unten liegen die Bänder der Kauf-/Verkaufsqualität
       const xl = Math.max(ym > gr.height - 46 ? 82 : 6, Math.min(px + 6, gr.width * .25)), br = x.measureText(name).width;   // unten links steht das Zeichen der Chart-Bibliothek
       x.fillStyle = f.panel + "e6"; x.beginPath(); if (x.roundRect) x.roundRect(xl, ym - 8.5, br + 12, 17, 5); else x.rect(xl, ym - 8.5, br + 12, 17); x.fill();
       x.fillStyle = fa; x.fillText(name, xl + 6, ym + .5); zuletzt = ym;
