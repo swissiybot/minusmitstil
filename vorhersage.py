@@ -456,6 +456,10 @@ def main():
     except Exception as ex:
         print(f"Zinsen nicht lesbar ({type(ex).__name__}) – Gegenprobe rechnet ohne Zins aufs Wartegeld", file=sys.stderr)
     zeilen = A.universum().to_dict("records")
+    # Vorhersage wie bisher (Stand vor der Erweiterung vom 24.11.2026): ohne die Krypto-Top-200 (nur die fünf Kernwerte) und ohne
+    # Hebel-Produkte. Sonst änderten sich die gebündelten Häufigkeiten der Gruppen „Krypto“ und „ETF“ – und damit die Vorhersage
+    # der bisherigen Werte; für Hebel-Produkte ist das Verfahren zudem nicht geprüft. Ihre Titelseite zeigt die Karte nicht.
+    zeilen = [z for z in zeilen if not ((z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS) or z.get("branche") == E.HEBEL_BRANCHE)]
     with mp.get_context("fork").Pool(min(os.cpu_count() or 2, 15)) as pool:      # fork: Kurse und Zinsen liegen schon im Arbeitsspeicher
         pr, D = pruefung_holen(zeilen, pool, "--neu" in sys.argv)
         if D is None:
