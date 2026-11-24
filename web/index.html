@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#04070e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect width='28' height='28' rx='8' fill='%2304070e'/%3E%3Crect x='1.5' y='1.5' width='25' height='25' rx='7' fill='none' stroke='%2322d3ee' stroke-width='1.4'/%3E%3Cpath d='M6 17.5 11 12l4 4 7-8' fill='none' stroke='%2322d3ee' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 21.5h14' stroke='%2322d3ee' stroke-width='2.4' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E">
 <title>minus mit stil · Kaufplan</title>
 <script>
 // Thema so früh wie möglich setzen (kein Aufblitzen); Standard: dunkel
@@ -1395,7 +1397,7 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 }
 /* Werkzeugleiste: oben Zeitraum und die wichtigsten Linien, der Rest klappt über „Linien & Werkzeuge“ auf */
 .chart-leiste{align-items:center}
-.ot-chips-haupt{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.ot-chips-haupt{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin-left:auto;flex:1 1 280px;min-width:0}
 .ot-mehr{height:28px;padding:0 10px;gap:6px}
 .ot-mehr svg{width:15px;height:15px}
 .ot-mehr[aria-expanded="true"]{color:var(--text);border-color:color-mix(in srgb,var(--akzent) 60%,transparent);background:var(--akzent-weich);box-shadow:0 0 16px -6px var(--akzent)}
@@ -1403,12 +1405,14 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-werkzeug .chart-leiste{border-bottom:0;background:none;padding-bottom:4px}
 .ot-werkzeug .chips{border-bottom:0;padding-top:6px}
 @keyframes ot-auf{from{opacity:0;transform:translateY(-4px)}}
-@media (max-width:900px){.ot-chips-haupt{flex-wrap:nowrap;margin-left:0} .ot-werkzeug .chart-leiste{flex-wrap:wrap;overflow:visible}}
+@media (max-width:900px){.ot-chips-haupt{flex:none;flex-wrap:nowrap;justify-content:flex-start;margin-left:0} .ot-werkzeug .chart-leiste{flex-wrap:wrap;overflow:visible}}
+.ot-chips-haupt{gap:5px}
+.ot-chips-haupt .chip{padding:0 9px 0 8px;font-size:11.5px;gap:6px}
 /* ---- 6 Rechte Spalte: vier kompakte Karten; am PC als dritte Spalte neben Halbkreis und Chart */
 .ot-rail{display:grid;gap:12px;min-width:0;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr))}
 @container haupt (max-width:620px){.ot-rail{grid-template-columns:minmax(0,1fr);gap:10px}}
-@container haupt (min-width:900px){
-  .ot-term{grid-template-columns:minmax(0,1fr) clamp(268px,26cqw,330px)}
+@container haupt (min-width:800px){
+  .ot-term{grid-template-columns:minmax(0,1fr) clamp(250px,26cqw,330px)}
   .ot-rail{grid-template-columns:minmax(0,1fr);position:sticky;top:46px;align-self:start}
 }
 .ot-k{position:relative;padding:13px 14px 12px;min-width:0;overflow:hidden}
@@ -1428,6 +1432,7 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-c-name .weg-best{font-size:10.5px;padding:2px 8px;background:color-mix(in srgb,var(--wf) 16%,transparent);color:var(--wf);border:1px solid color-mix(in srgb,var(--wf) 55%,transparent)}
 .ot-c-haupt{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
 .ot-c-zahl{font-family:var(--f-zahl);font-size:30px;font-weight:700;letter-spacing:-.05em;line-height:1.05;color:var(--text)}
+.ot-c-zahl small{font-size:.58em;font-weight:650;letter-spacing:0;margin-left:-.12em}
 .ot-c-zahl.pos{color:var(--pos);text-shadow:0 0 22px color-mix(in srgb,var(--pos) 55%,transparent)}
 .ot-c-spark{flex:0 1 46%;min-width:84px;max-width:150px;height:auto;overflow:visible}
 .ot-c-fuss{margin-top:8px}
@@ -1578,6 +1583,54 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 .sv-regeln{border-left-color:var(--akzent);background:var(--glas-leicht)}
 .zr-annahme-satz,.wk-aus{background:var(--akzent-weich)}
 .nk-karte .nk-status{background:var(--glas-leicht)}
+/* ---- 8 Handy und heller Modus */
+/* untere Leiste am Handy im selben Glas-Stil */
+@media (max-width:900px){
+  .unten-nav{position:relative;background:color-mix(in srgb,var(--bg2) 80%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--line);
+    box-shadow:inset 0 1px 0 var(--kante),0 -12px 30px -18px rgba(0,0,0,.9)}
+  .unten-nav::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--rim) 30%,var(--rim) 70%,transparent)}
+  .unten-nav button{position:relative;gap:3px;padding:8px 0 7px;font-size:10.5px;font-weight:600;letter-spacing:.01em;color:var(--muted);transition:color var(--tempo) var(--ruck)}
+  .unten-nav button svg{width:20px;height:20px;transition:filter var(--tempo) var(--ruck)}
+  .unten-nav button[aria-current="page"]{color:var(--akzent)}
+  .unten-nav button[aria-current="page"] svg{filter:drop-shadow(0 0 6px var(--akzent))}
+  .unten-nav button[aria-current="page"]::before{content:"";position:absolute;left:28%;right:28%;top:-1px;height:2px;border-radius:0 0 2px 2px;background:var(--akzent);box-shadow:0 0 12px var(--akzent),0 6px 18px -2px color-mix(in srgb,var(--akzent) 70%,transparent)}
+  #lese-bereich{padding:0 14px 26px}
+  .lese-kopf{margin:0 -14px 8px;padding:12px 14px 10px}
+  .seiten-titel{font-size:20px}
+  .dp-kopf{padding:14px}
+  .dp-k-haupt>b{font-size:32px}
+  .dp-k-zahlen{width:100%}
+  .dp-k-zahlen>div{flex:1 1 104px}
+  .cape-kopf{margin:4px 0 12px;padding:12px}
+  .ot-bogen-klein{flex-basis:180px;width:180px;margin:0 auto}
+  #karte-box{border-radius:10px}
+  .wetter{gap:10px}
+}
+@media (max-width:420px){
+  .ot-instr .wk-titel{gap:6px 8px}
+  .ot-instr .modus-wahl button{padding:5px 11px}
+  .kopf .knopf-ikon{padding:0 8px}
+  .plakette{padding:0 8px}
+}
+/* heller Modus: schlichter, alles lesbar – kein Neon auf Weiß */
+:root[data-theme="light"] .kopf{background:color-mix(in srgb,var(--panel) 82%,transparent);box-shadow:0 8px 24px -18px rgba(24,44,90,.5)}
+:root[data-theme="light"] .pille{box-shadow:none;background:color-mix(in srgb,var(--pf,var(--muted)) 12%,#fff)}
+:root[data-theme="light"] .zeile .pille{text-shadow:none;background:none}
+:root[data-theme="light"] .zeile.aktiv{background:linear-gradient(90deg,color-mix(in srgb,var(--akzent) 16%,transparent),color-mix(in srgb,var(--akzent) 6%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 50%,transparent),inset 3px 0 0 var(--akzent)}
+:root[data-theme="light"] .zeile.aktiv .pille{background:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--pf) 14%,transparent)}
+:root[data-theme="light"] .z-balken i{box-shadow:none}
+:root[data-theme="light"] .fk-ampel,:root[data-theme="light"] .vh-marke,:root[data-theme="light"] .verl-marke,:root[data-theme="light"] .mp-l-heute,:root[data-theme="light"] .mp-l-pf,:root[data-theme="light"] .mp-zeichen,
+:root[data-theme="light"] .weg.sieger .weg-platz,:root[data-theme="light"] .weg-best,:root[data-theme="light"] .sv-r.sieger .weg-platz{color:#fff}
+:root[data-theme="light"] .ot-c-name .weg-best{color:var(--wf)}
+:root[data-theme="light"] .ot-b-wort.an,:root[data-theme="light"] .ot-b-wert{filter:none}
+:root[data-theme="light"] .ot-c-zahl.pos,:root[data-theme="light"] .ot-s-vs b,:root[data-theme="light"] .wetter .wk-wert,:root[data-theme="light"] .kachel .s b,:root[data-theme="light"] .dp-k-haupt>b{text-shadow:none}
+:root[data-theme="light"] .suche-box{box-shadow:0 0 0 4px var(--akzent-weich),0 24px 60px -20px rgba(24,44,90,.45)}
+:root[data-theme="light"] #suche-dlg::backdrop{background:rgba(20,30,50,.28)}
+:root[data-theme="light"] .hm-stufe{color:var(--text)}
+:root[data-theme="light"] .unten-nav{background:color-mix(in srgb,var(--panel) 86%,transparent);box-shadow:0 -10px 26px -18px rgba(24,44,90,.5)}
+:root[data-theme="light"] .lt-heute{box-shadow:none}
+:root[data-theme="light"] .ot-l-z>i{box-shadow:0 0 0 3px color-mix(in srgb,var(--zf) 16%,transparent)}
+:root[data-theme="light"] .marke svg{filter:none}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -2228,6 +2281,7 @@ function themaIkon(){
   $("#thema-ikon").innerHTML = hell ? '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>'
     : '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
   $("#k-thema").setAttribute("aria-label", hell ? "Dunkles Thema einschalten" : "Helles Thema einschalten");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", hell ? "#edf1f7" : "#04070e");
 }
 $("#k-thema").onclick = () => {
   const neu = document.documentElement.dataset.theme === "light" ? "dark" : "light";
@@ -3311,7 +3365,7 @@ function otCheck(e){
   if (e.leer) { el.innerHTML = `<p class="ot-k-leer">${e.leer}</p><button type="button" class="linkknopf" data-ot="check">Zur Kaufweg-Karte →</button>`; return; }
   el.innerHTML = `<div class="ot-k-l">Bester Kaufweg${e.von ? ` seit ${e.von.slice(0,4)}` : ""}</div>
     <div class="ot-c-name"><b>${e.name}</b><span class="weg-best" style="--wf:${e.farbe || "var(--guenstig)"}">${e.knapp ? "knapp vorn" : "am besten"}</span></div>
-    <div class="ot-c-haupt"><div><div class="ot-c-zahl${e.knapp ? "" : " pos"}">+${fmt(e.vor, e.knapp ? 1 : 0)} %</div><div class="ot-k-u">Vorsprung vor „${e.zweiter}“</div></div>${otSpark(e.reihe, e.ein, e.knapp ? "var(--neutral)" : "var(--pos)")}</div>
+    <div class="ot-c-haupt"><div><div class="ot-c-zahl${e.knapp ? "" : " pos"}">+${fmt(e.vor, e.knapp ? 1 : 0)}<small> %</small></div><div class="ot-k-u">Vorsprung vor „${e.zweiter}“</div></div>${otSpark(e.reihe, e.ein, e.knapp ? "var(--neutral)" : "var(--pos)")}</div>
     <div class="ot-k-u ot-c-fuss">${e.geldText ? esc(e.geldText) + " · " : ""}Rückblick${e.jahre ? ` über ${fmt(e.jahre,0)} Jahre` : ""}, keine Vorhersage${e.reihe ? " · Kurve: Depotwert, gestrichelt: eingezahlt" : ""}</div>
     <button type="button" class="linkknopf" data-ot="check">Alle vier Wege ansehen →</button>`;
 }
@@ -4140,8 +4194,8 @@ async function zeige(id, opt={}){
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>` : ""}
-        <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien">${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
         <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" aria-label="Linien und Werkzeuge" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Mehr</span></button>
+        <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien">${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
       </div>
       <div class="ot-werkzeug nur-profi" id="chart-werkzeug"${CHART_MEHR ? "" : " hidden"}>
         <div class="chart-leiste">
