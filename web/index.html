@@ -5236,11 +5236,11 @@ function zeichne(c, w){
   ch.subscribeClick(p => linealKlick(p));
   // Fadenkreuz mit Werten
   const fk = $("#fk");
-  const fkZeigen = t => {
+  const fkFuellen = t => {
     const i = t == null ? c.t.length - 1 : ZEIT_I.get(t);
     if (i == null) {   // in der Zukunft: Prognose-Kegel
       const m = KEGEL_D; const k = m ? m.t.indexOf(t) : -1;
-      if (k < 0) { fk.innerHTML = ""; return; }
+      if (k < 0) return;   // außerhalb des Kegels: Zeile stehen lassen – eine leere Zeile verschwindet und der Chart springt
       fk.innerHTML = `<div class="r"><b>${tDe(t)}</b><span style="color:var(--kegel)">Prognose (Simulation)</span></div>
         <div class="r"><span>Median <b>${fmt(m.kegel.q50[k], m.kurs >= 100 ? 0 : 2)}</b></span><span>50 %: ${fmt(m.kegel.q25[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q75[k], m.kurs >= 100 ? 0 : 2)}</span><span>90 %: ${fmt(m.kegel.q5[k], m.kurs >= 100 ? 0 : 2)} – ${fmt(m.kegel.q95[k], m.kurs >= 100 ? 0 : 2)}</span></div>`;
       return;
@@ -5261,6 +5261,16 @@ function zeichne(c, w){
       ${CHIPS.ema && c._ema?.[20]?.[i] != null ? `<span><i class="sw" style="background:linear-gradient(90deg,${EMA_BAND[0][1]},${EMA_BAND[7][1]})"></i>EMA-Band ${fmt(c._ema[20][i],nk)} (20) – ${c._ema[55][i] == null ? "–" : fmt(c._ema[55][i],nk)} (55)${c._ema[55][i] != null ? (c.c[i] > Math.max(c._ema[20][i], c._ema[55][i]) ? " · Kurs darüber" : c.c[i] < Math.min(c._ema[20][i], c._ema[55][i]) ? " · Kurs darunter" : " · Kurs im Band") : ""}</span>` : ""}
       ${CHIPS.bb && c._bb?.mitte[i] != null ? `<span><i class="sw" style="background:var(--bb)"></i>Bollinger ${c._bb.unten[i] == null ? "–" : fmt(c._bb.unten[i],nk)} – ${fmt(c._bb.oben[i],nk)}</span>` : ""}</div>`;
   };
+  // Die Zeile über dem Chart behält die größte Höhe, die sie bei diesem Chart je gebraucht hat. Sonst wird sie je nach Woche zwei oder
+  // drei Zeilen hoch und schiebt den Chart beim Darüberfahren hoch und runter (Marc 24.11.2026: „der Chart wackelt“).
+  // Bei geänderter Breite wird neu gemessen.
+  const fkFest = () => { if (fk.offsetWidth < 120) { fk.style.minHeight = ""; fk.dataset.h = 0; fk.dataset.b = ""; return; }   // noch ohne Platz (verdeckt): nichts festlegen
+    if (+fk.dataset.b !== fk.offsetWidth) { fk.dataset.b = fk.offsetWidth; fk.dataset.h = 0; fk.style.minHeight = ""; }
+    const h = fk.offsetHeight; if (h > (+fk.dataset.h || 0)) { fk.dataset.h = h; fk.style.boxSizing = "border-box"; fk.style.minHeight = h + "px"; } };
+  const fkZeigen = t => { fkFuellen(t); fkFest(); };
+  fk.dataset.h = 0; fk.dataset.b = ""; fk.style.minHeight = "";
+  if (window.ResizeObserver) { if (fk._ro) fk._ro.disconnect(); fk._ro = new ResizeObserver(() => { if (+fk.dataset.b !== fk.offsetWidth) fkFest(); }); fk._ro.observe(fk); }
+  if (c.t.length > 80) { fkFuellen(c.t[c.t.length - 60]); fkFest(); }   // einmal eine ältere Woche messen: dort steht die längste Zeile
   fkZeigen(null);
   ch.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null); linealZiehen(p); HUD_FEST = p && p.time != null && p.point ? p : null; hudZeigen(c, HUD_FEST); });
   HUD_FEST = null; setTimeout(() => { if (HAUPT === ch) hudZeigen(c, null); }, 160);
