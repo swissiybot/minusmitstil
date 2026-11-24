@@ -1001,6 +1001,146 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .dw-tab tbody tr:hover td:first-child{box-shadow:none}
 }
 .kal{border-radius:16px;box-shadow:inset 0 1px 0 var(--kante),0 3px 0 var(--boden)}
+/* ------------------------------------------------------------ Sechste Runde (24.11.2026, Marc: „Holographic Obsidian Terminal“): Obsidian-Schwarz, Glas-Karten mit Lichtkante, Neon-Ampel in Marcs Spektrum,
+   Zahlen in Festbreitenschrift, 3-Spalten-Terminal. Nur Aussehen und Anordnung – Rechnungen, Texte und Kennungen bleiben. */
+/* ---- 1 Grundlage: Farben, Glas, Schrift (Tokens). Chart und SVG lesen diese Werte über F(). */
+:root{
+  --bg:#04070e; --bg2:#060a13; --panel:#0a101c; --panel2:#0f1828; --panel3:#172338; --hover:#122036;
+  --line:rgba(120,180,255,.13); --line2:rgba(120,180,255,.24); --rand:rgba(120,180,255,.16);
+  --text:#eaf2ff; --text2:#b6c3d9; --muted:#8190aa;
+  --akzent:#22d3ee; --akzent-stark:#06b6d4; --akzent-weich:rgba(34,211,238,.12); --auf-akzent:#02131a;
+  /* Ampel 0 = teuer … 100 = günstig: fünf Stufen (bis 15 · 15–40 · 40–60 · 60–80 · ab 80) */
+  --a0:#ff2e54; --a1:#ff7a2f; --a2:#d4a853; --a3:#22d3ee; --a4:#00f59b;
+  --guenstig:#00f59b; --teuer:#ff7a2f; --neutral:#94a3b8;
+  --pos:#1ff0a0; --neg:#ff5271;
+  --gelb:#f59e0b; --lila:#c084fc; --cyan:#22d3ee; --kegel:#a855f7; --pitop1:#fbbf24; --pitop2:#ff5c8a; --mayer:#e2b8ff; --mvrv:#93c5fd;
+  --kerze-auf:#00f59b; --kerze-ab:#ff5271; --bb:#7fa8d8; --fib:#e0b85a; --neu:#b48cff; --ema20:#5ad1ff; --ema50:#a6e35a; --ema100:#ff8fc8; --ema200:#ff5f5f; --marke-gut:#9ff5e2;
+  --chart-bg:#050912; --chart-grid:#0b1320; --chart-text:#8a9ab4; --kurs:#ffffff;
+  /* Heatmap: Kursveränderung in 7 Stufen (stark fallend … stark steigend) */
+  --hm0:#ff2e54; --hm1:#ff7a2f; --hm2:#a8683c; --hm3:#5a6679; --hm4:#2c8f9c; --hm5:#22d3ee; --hm6:#00f59b; --hm-grund:#060b15;
+  --glas:rgba(10,16,28,.78); --glas-stark:rgba(8,13,24,.9); --glas-leicht:rgba(18,28,46,.55);
+  --kante:rgba(255,255,255,.08); --boden:rgba(0,0,0,.5); --rim:rgba(0,229,255,.34);
+  --tiefe:0 26px 50px -28px rgba(0,0,0,.85); --schatten:0 18px 60px rgba(0,0,0,.6); --schatten-klein:0 2px 10px rgba(0,0,0,.35);
+  --r:14px; --r-klein:9px;
+  --ruck:cubic-bezier(.16,1,.3,1); --tempo:180ms;
+  /* Schrift (Entscheidung Marc 24.11.2026, Probe A): Oberfläche in der bisherigen Geräteschrift, Zahlen in der Festbreitenschrift des Geräts – nichts wird geladen */
+  --f-ui:system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  --f-zahl:ui-monospace,"SF Mono","Roboto Mono","DejaVu Sans Mono",Menlo,Consolas,monospace;
+}
+:root[data-theme="light"]{
+  --bg:#edf1f7; --bg2:#e5eaf3; --panel:#ffffff; --panel2:#f2f5fa; --panel3:#e4eaf3; --hover:#eaf0f8;
+  --line:rgba(24,52,110,.14); --line2:rgba(24,52,110,.26); --rand:rgba(24,52,110,.18);
+  --text:#0c1422; --text2:#303d55; --muted:#586680;
+  --akzent:#0b7285; --akzent-stark:#095c6b; --akzent-weich:rgba(11,114,133,.10); --auf-akzent:#ffffff;
+  --a0:#d5133d; --a1:#c8500a; --a2:#8a6a16; --a3:#0b7f95; --a4:#078552;
+  --guenstig:#078552; --teuer:#c8500a; --neutral:#64748b;
+  --pos:#067a4c; --neg:#c81e45;
+  --gelb:#b06a00; --lila:#8b2fd6; --cyan:#0b7f95; --kegel:#7c3aed; --pitop1:#b06a00; --pitop2:#d6336c; --mayer:#8e44ad; --mvrv:#1d4ed8;
+  --kerze-auf:#078552; --kerze-ab:#d5133d; --bb:#4f6f93; --fib:#a0700a; --neu:#7c3aed; --ema20:#0277bd; --ema50:#4c8a00; --ema100:#c2185b; --ema200:#c62828; --marke-gut:#06604f;
+  --chart-bg:#ffffff; --chart-grid:#eef2f7; --chart-text:#4b5870; --kurs:#0c1422;
+  --hm-grund:#0a1120;
+  --glas:rgba(255,255,255,.9); --glas-stark:rgba(255,255,255,.96); --glas-leicht:rgba(255,255,255,.7);
+  --kante:rgba(255,255,255,.95); --boden:rgba(24,44,90,.14); --rim:rgba(11,114,133,.28);
+  --tiefe:0 20px 38px -24px rgba(24,44,90,.3); --schatten:0 14px 44px rgba(24,44,90,.18); --schatten-klein:0 2px 10px rgba(24,44,90,.1);
+}
+html{background:var(--bg)}
+body{font-family:var(--f-ui);font-variant-numeric:tabular-nums lining-nums;letter-spacing:-.003em;
+  background:
+    radial-gradient(ellipse 75% 62% at 52% 34%,transparent 0,var(--bg) 100%),
+    radial-gradient(circle,rgba(120,180,255,.10) 1px,transparent 1.5px) 0 0/26px 26px,
+    radial-gradient(1200px 660px at 56% 26%,rgba(22,70,160,.26),transparent 72%),
+    radial-gradient(700px 420px at 100% 0,rgba(0,229,255,.07),transparent 70%),
+    var(--bg)}
+:root[data-theme="light"] body{background:radial-gradient(1200px 660px at 56% 20%,rgba(11,114,133,.07),transparent 72%),var(--bg)}
+::selection{background:color-mix(in srgb,var(--akzent) 35%,transparent)}
+*{scrollbar-color:color-mix(in srgb,var(--line2) 90%,transparent) transparent;scrollbar-width:thin}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+:focus-visible{outline:2px solid var(--akzent);outline-offset:2px}
+a{color:var(--akzent)}
+h1,h2,h3{letter-spacing:-.02em}
+/* Zahlen für sich (Ampel-Zahl, Kennzahlen, Zahlenspalten, Beträge in Tabellen, Eingabefelder): Festbreitenschrift, Ziffern gleich breit.
+   Zahlen mitten im Fließtext bleiben in der normalen Schrift. */
+.zahl,.pille,kbd,.gross-zahl,.mittel-zahl,.kpi .k-w,.kv-gross,.za-gross,.vh-z .w,.weg-geld,.sv-geld,.ampel-marke b,.zahl-r,.w4,.wtab td,.wert .v,.wetter .wk-wert,.kachel .s b,.hm-stufe,
+.st-chip b,.lt .lt-w,.vb b,.bl-z b,.mp-jahre,.regler-achse,.kurve-leg,.meter-leg,input[type=number],.zr-feld input,.dp-anteil{
+  font-family:var(--f-zahl);font-variant-numeric:tabular-nums lining-nums}
+.wtab td:first-child{font-family:var(--f-ui)}
+.kv-gross small,.za-gross small,.vh-z .w small,.gross-zahl small{font-family:var(--f-ui);letter-spacing:0}
+.gross-zahl,.kv-gross,.za-gross,.vh-z .w,.wetter .wk-wert,.kachel .s b,.ampel-marke b{letter-spacing:-.045em}
+.kpi .k-w,.weg-geld,.sv-geld,.mittel-zahl{letter-spacing:-.04em}
+.klein{color:var(--muted)}
+/* Ampel-Pille: leuchtender Rahmen statt Farbfläche (Farbe über --pf) */
+.pille{min-width:38px;height:23px;padding:0 7px;border-radius:999px;font-weight:700;font-size:12.5px;letter-spacing:-.02em;color:var(--pf,var(--text));
+  background:color-mix(in srgb,var(--pf,var(--muted)) 13%,transparent);border:1px solid color-mix(in srgb,var(--pf,var(--muted)) 55%,transparent);
+  box-shadow:0 0 14px -4px var(--pf,transparent),inset 0 0 8px -4px var(--pf,transparent)}
+.pille.gross{min-width:50px;height:30px;font-size:15px}
+.pille.leer{background:var(--panel3);color:var(--muted);border-color:var(--line);box-shadow:none}
+/* Glas-Karten: durchscheinende Fläche, feine Haarlinie, Lichtkante oben, weicher Schatten */
+.karte{background:
+    linear-gradient(90deg,transparent 4%,var(--rim) 30%,color-mix(in srgb,var(--rim) 45%,transparent) 62%,transparent 96%) top/100% 1px no-repeat,
+    linear-gradient(180deg,color-mix(in srgb,var(--text) 4%,transparent),transparent 130px),
+    var(--glas);
+  border:1px solid var(--line);border-radius:var(--r);box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.25),var(--tiefe)}
+:root[data-theme="light"] .karte{box-shadow:inset 0 1px 0 var(--kante),var(--tiefe)}
+.kpi,.fakt,.kv-block,.verl,.wk-rendite,.vh,.vh-z,.za-info,.weg,.sv-r,.mp-lage,.dp-block,.verl-zeile,.wert,.schritt,.kern{
+  background:var(--glas-leicht);border-color:var(--line);box-shadow:inset 0 1px 0 var(--kante),0 12px 24px -20px var(--boden)}
+.kern{background:linear-gradient(135deg,var(--akzent-weich),transparent 60%),var(--glas)}
+/* Knöpfe, Felder, Umschalter */
+.segment{background:var(--glas-leicht);border:1px solid var(--line);border-radius:10px;padding:2px;box-shadow:inset 0 1px 0 var(--kante)}
+.segment button{border-radius:8px;transition:color var(--tempo) var(--ruck),background var(--tempo) var(--ruck),box-shadow var(--tempo) var(--ruck)}
+.segment button[aria-pressed="true"]{background:var(--akzent-weich);color:var(--text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 55%,transparent),0 0 16px -6px var(--akzent)}
+.modus-wahl button[aria-pressed="true"]{background:var(--akzent-weich);color:var(--text);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 60%,transparent),0 0 18px -6px var(--akzent)}
+.knopf-ikon{border-color:var(--line);background:var(--glas-leicht);border-radius:10px;transition:color var(--tempo) var(--ruck),border-color var(--tempo) var(--ruck),box-shadow var(--tempo) var(--ruck)}
+.knopf-ikon:hover{background:var(--hover);border-color:var(--line2)}
+.knopf-ikon[aria-pressed="true"]{border-color:color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:0 0 16px -6px var(--akzent)}
+.eingabe button:not(.leise):not(.linkknopf):not(.an),.knopf:not(.leise):not(.an){background:linear-gradient(180deg,color-mix(in srgb,#fff 22%,var(--akzent)),var(--akzent-stark));color:var(--auf-akzent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 0 0 1px color-mix(in srgb,var(--akzent) 60%,transparent),0 10px 24px -10px var(--akzent)}
+.eingabe button:not(.leise):not(.linkknopf):not(.an):active,.knopf:not(.leise):not(.an):active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 1px color-mix(in srgb,var(--akzent) 60%,transparent)}
+.knopf.leise{background:var(--glas-leicht);border-color:var(--line2);box-shadow:inset 0 1px 0 var(--kante)}
+.knopf.an,.knopf.leise.an{background:var(--akzent-weich);color:var(--text);border:1px solid color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:0 0 16px -6px var(--akzent)}
+.linkknopf{color:var(--akzent)}
+.listen-werkzeug input[type=search],.listen-werkzeug select,.feld,.eingabe input,.eingabe select,.filter-aktien input[type=number],.filter-aktien select,.zr-feld{background:var(--glas-leicht);border-color:var(--line2)}
+.eingabe input:not([type=checkbox]):not([type=range]):not([type=file]),.eingabe select{font-family:var(--f-zahl);letter-spacing:-.03em}
+.eingabe select{font-family:var(--f-ui);letter-spacing:0}
+.zr-feld input{letter-spacing:-.04em}
+select option{background:var(--panel2);color:var(--text)}
+input[type=checkbox]{accent-color:var(--akzent)}
+.reiter button.an{color:var(--text);background:var(--akzent-weich);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 60%,transparent),0 0 18px -6px var(--akzent)}
+.abschnitt-nav{background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom-color:var(--line)}
+.abschnitt-nav button{position:relative;border-radius:8px;font-size:12.5px;letter-spacing:.01em;transition:color var(--tempo) var(--ruck)}
+.abschnitt-nav button[aria-current="true"]{color:var(--text);background:none}
+.abschnitt-nav button[aria-current="true"]::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;border-radius:2px;background:var(--akzent);box-shadow:0 0 12px var(--akzent)}
+.sekt .nr{border-radius:9px;background:var(--akzent-weich);color:var(--akzent);font-family:var(--f-zahl);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 50%,transparent),0 0 18px -6px var(--akzent)}
+.sekt h2{font-weight:650;letter-spacing:-.025em}
+.kk-kat{letter-spacing:.09em;font-size:10.5px}
+.kk-kat::before{border-radius:50%;box-shadow:0 0 10px var(--kf)}
+.kk-i{background:var(--glas-leicht)}
+.frage{background:var(--glas-leicht);border-color:var(--line2);box-shadow:inset 0 1px 0 var(--kante)}
+.frage:hover{border-color:color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:0 0 16px -6px var(--akzent)}
+.fazit{background:var(--akzent-weich);border-color:color-mix(in srgb,var(--akzent) 30%,transparent)}
+.wtab tbody tr:hover td{background:color-mix(in srgb,var(--akzent) 7%,transparent)}
+.wtab th{font-family:var(--f-ui);letter-spacing:.02em}
+.sv-tab td:first-child,.sv-tab th:first-child,.sv-tab tbody tr:hover td:first-child{background:var(--panel)}
+.balken,.meter{background:color-mix(in srgb,var(--text) 8%,transparent)}
+kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);border-bottom-width:2px;border-radius:5px;font-weight:600;font-size:10.5px;padding:3px 6px}
+#tip,.karte-tip{background:var(--glas-stark);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line2);box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.3),var(--schatten);border-radius:11px}
+#warnband{background:color-mix(in srgb,var(--gelb) 12%,var(--bg2));border-bottom-color:color-mix(in srgb,var(--gelb) 30%,transparent);font-size:12.5px;padding:5px 16px}
+.lade{background:color-mix(in srgb,var(--text) 5%,transparent)}
+.lade::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--akzent) 14%,transparent),transparent);animation-duration:1.1s}
+.merke{background:color-mix(in srgb,var(--gelb) 8%,transparent)}
+.falle-box{background:color-mix(in srgb,var(--gelb) 10%,transparent);border-color:color-mix(in srgb,var(--gelb) 45%,transparent)}
+.falle-mark{color:var(--gelb)}
+.fussnote{border-top-color:var(--line)}
+.vh-marke,.verl-marke,.weg-best,.mp-l-heute,.lt-heute{font-family:var(--f-ui)}
+.urteil-satz{font-weight:700;letter-spacing:-.04em}
+.ampel-marke{background:radial-gradient(closest-side,var(--panel) 78%,transparent 80% 100%),conic-gradient(from 180deg,var(--zf,var(--akzent)) calc(var(--p)*1%),color-mix(in srgb,var(--text) 10%,transparent) 0);box-shadow:0 0 34px -8px var(--zf,var(--akzent))}
+.ampel-marke b{color:var(--zf,var(--text))}
+.regler::-webkit-slider-thumb,.eingabe input[type=range]::-webkit-slider-thumb{background:radial-gradient(circle at 35% 30%,#fff,var(--akzent) 60%,var(--akzent-stark));box-shadow:0 0 0 5px color-mix(in srgb,var(--akzent) 20%,transparent),0 0 18px var(--akzent)}
+@media (prefers-reduced-motion:reduce){*{transition-duration:0s!important}}
+/* Die Kugeln (100 simulierte Wege) behalten ihre bisherigen Farben (Marc, 23.11.2026) */
+.p100{--teuer:#ff8a3d;--guenstig:#2ec4a6;--text:#e7eaf0;--boden:rgba(0,0,0,.42)}
+:root[data-theme="light"] .p100{--teuer:#d9600f;--guenstig:#0f9d84;--text:#121722;--boden:rgba(30,45,90,.14)}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1083,7 +1223,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
       <div id="lesehilfe-zahlen"><div class="lade" style="height:90px"></div></div>
       <h4>Wie du das Tool liest</h4>
       <ul>
-        <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (blaugrün = günstig, orange = teuer).</li>
+        <li><b>Die Ampel allein ist kein Kaufsignal.</b> Sie sagt nur, dass ein Wert gemessen an seiner Geschichte tief steht. Zahl und Wort stehen immer dabei, die Farbe ist nur eine Hilfe (grün und cyan = günstig, gold = neutral, orange und rot = teuer).</li>
         <li>Aussagekräftiger ist der „Vorteil“ – aber nur, wenn er deutlich positiv ist <b>und</b> auf vielen Phasen beruht (Karte „Wie oft stand der Kurs später höher?“ im Detail; unter 3 Phasen ist das meist Zufall).</li>
         <li>Im Detail jedes Werts zeigen der <b>Lohnt-sich-Check</b> und der Reiter „Strategie-Vergleich“, ob Warten auf eine günstige Ampel bei genau diesem Wert früher etwas gebracht hätte.</li>
         <li><b>Fallen-Warnung ⚠</b> bei Nasdaq-Aktien: Ampel günstig, aber Verlust oder deutlich sinkender Gewinn bzw. Umsatz (Zahlen der US-Börsenaufsicht SEC). Ein gefallener Kurs ist dann oft kein Schnäppchen. Im Screener lässt sie sich ausblenden.</li>
@@ -1126,10 +1266,11 @@ const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 let ALLE = [], SORT = {k:"score", dir:-1}, AKTIV = null, SEITE = "uebersicht";
 const fmt = (x, n=1, suf="") => x==null || Number.isNaN(x) ? "–" : (Math.round(x*10**n)/10**n).toLocaleString("de-DE",{minimumFractionDigits:n,maximumFractionDigits:n})+suf;
-// Ampel-Farben: blaugrün = günstig, grau = neutral, orange = teuer (für Farbenblinde unterscheidbar; Zahl und Wort stehen immer dabei)
-const AMPEL_FARBEN = ["#ff8a3d", "#ffb67f", "#a3abbb", "#86d9c6", "#2ec4a6"];
+// Ampel-Farben (0 = teuer … 100 = günstig): rot · orange · gold · cyan · grün. Sie stehen als --a0 … --a4 im Stil und kommen über F() –
+// so ziehen Liste, Halbkreis, Heatmap, Legende und Chart bei hell/dunkel gemeinsam mit. Zahl und Wort stehen immer dabei.
+const AF = () => F().ampel;
 const stufe = s => s==null ? -1 : s>=80 ? 4 : s>=60 ? 3 : s>40 ? 2 : s>15 ? 1 : 0;
-const farbe = s => s==null ? "#6b7280" : AMPEL_FARBEN[stufe(s)];
+const farbe = s => s==null ? "#6b7280" : AF()[stufe(s)];
 const zonen = {"historisch sehr guenstig":"historisch sehr günstig","guenstig":"günstig","neutral":"neutral","teuer":"teuer","historisch sehr teuer":"historisch sehr teuer","keine Daten":"keine Daten"};
 const zonenWort = s => s==null ? "keine Ampel" : ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"][stufe(s)];
 const umlaut = t => (t||"").replace(/ae/g,"ä").replace(/oe/g,"ö").replace(/ue/g,"ü").replace(/Standardabw\./g,"Standardabw.");
@@ -1141,7 +1282,7 @@ const p3 = w => w.p && w.p["3"] ? w.p["3"] : null;
 const wert = (w,k) => ({score:w.score, score_auf:w.score, cagr20:w.cagr20, p3:p3(w)?.quote, vorteil:p3(w) ? p3(w).quote-p3(w).basis : null,
   rueck:w.p?.rueckschlag10, dd:w.dd, delta:(w.score!=null&&w.score_vor4w!=null)? w.score-w.score_vor4w : null, name:kurzname(w)})[k];
 const pille = (s, gross=false) => s==null ? `<span class="pille leer${gross?" gross":""}" title="keine Ampel">–</span>`
-  : `<span class="pille${gross?" gross":""}" style="background:${farbe(s)}" title="Ampel ${fmt(s,0)}: ${zonenWort(s)}">${fmt(s,0)}</span>`;
+  : `<span class="pille${gross?" gross":""}" style="--pf:${farbe(s)}" title="Ampel ${fmt(s,0)}: ${zonenWort(s)}">${fmt(s,0)}</span>`;
 const esc = t => String(t ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"})[c]);
 const datumDe = s => s ? s.slice(0,10).split("-").reverse().join(".") : "–";
 const tDe = t => new Date(t*1000).toLocaleDateString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric", timeZone:"UTC"});
@@ -1155,7 +1296,8 @@ const istHandy = () => matchMedia("(max-width:900px)").matches;
 let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
-    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), neu:g("neu"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut")}; })());
+    gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), neu:g("neu"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut"),
+    ampel:[0, 1, 2, 3, 4].map(i => g("a" + i)), kurs:g("kurs"), hm:[0, 1, 2, 3, 4, 5, 6].map(i => g("hm" + i)), hmGrund:g("hm-grund"), fzahl:g("f-zahl"), fui:g("f-ui")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -1352,7 +1494,7 @@ const ERKLAERUNG = {
   l_ema150: {titel:"150-Tage-EMA (lila)", text:"Exponentiell gewichteter Durchschnitt der letzten 150 Tage; neuere Kurse zählen stärker. Teil des Pi Cycle Bottom bei Bitcoin."},
   l_sma471: {titel:"471-Tage-SMA × 0,745 (türkis)", text:"Einfacher Durchschnitt der letzten 471 Tage, mal 0,745. Fällt die 150-Tage-EMA darunter, beginnt beim Pi Cycle Bottom die Bodenbildungszone."},
   l_pizone: {titel:"Bodenbildungszone (lila Fläche)", text:"Zeit, in der die 150-Tage-EMA unter der 471-Tage-SMA × 0,745 lag. Laut Indikator liegt der Boden in dieser Zone. Nur Bitcoin."},
-  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe blaugrüne Balken = günstig, niedrige orange Balken = teuer. Die gestrichelten Linien liegen bei 80 und 15."},
+  l_ampelverlauf: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe grüne und cyanfarbene Balken = günstig, niedrige orange und rote Balken = teuer. Die gestrichelten Linien liegen bei 80 und 15."},
   l_kegel: {titel:"Wahrscheinlichkeitskegel (violett)", text:"Ergebnis des Monte-Carlo-Rechners für die nächsten 3 Jahre (die Karte „Prognose“ zeigt die Zahlen nach 12 Monaten). Je weiter in der Zukunft, desto breiter der Kegel: Die mittlere Linie ist der Median der simulierten Wege, die inneren Linien umschließen 50 %, die gestrichelten 90 % der Wege. Beruht auf echten Wochenrenditen der letzten 20 Jahre."},
   tv_chart: {titel:"Kurs-Chart von TradingView", text:"Online zeigt die Seite den Kurs über das kostenlose Chart-Widget von TradingView: Monatskerzen mit der 200-Wochen-Linie (im Monatsbild als Durchschnitt über 46 Monate, das sind etwa 200 Wochen). Die Kurse kommen dort von TradingView und können leicht von den Daten abweichen, mit denen die Ampel gerechnet ist (Yahoo, nur intern). Rohstoffe zeigt das Widget als Referenz- bzw. CFD-Kurs, nicht als Terminkontrakt. Eigene Linien, Günstig-/Teuer-Phasen und den Prognose-Kegel zeigt nur der eigene Chart (Umschalter über dem Chart)."},
   // --- Wahrscheinlichkeitstabelle
@@ -1559,7 +1701,7 @@ function datenstand(stand){
 
 // ------------------------------------------------------------ zusätzliche Erklärungen der neuen Oberfläche
 const ERKLAERUNG_NEU = {
-  karte: {titel:"Heatmap", text:"Jede Kachel ist ein Titel. Farbe: Kursveränderung am letzten Handelstag, über 1 Woche, 1 Monat oder 1 Jahr (blaugrün = gestiegen, orange = gefallen, grau = kaum verändert; die Skala steht über der Karte) – wahlweise auch Ampel oder Trend. Enthalten sind die Nasdaq-100-Aktien, die Index-ETFs, Krypto und Rohstoffe. Größe der Aktien-Kacheln: Börsenwert (online aus den SEC-Geschäftszahlen), sonst der mittlere Handelsumsatz; ETFs, Krypto und Rohstoffe sind gleich groß. Aktien sind nach Branche (ICB) gruppiert, laut Wikipedia-Liste der Nasdaq-100-Unternehmen. Antippen öffnet den Titel."},
+  karte: {titel:"Heatmap", text:"Jede Kachel ist ein Titel. Farbe: Kursveränderung am letzten Handelstag, über 1 Woche, 1 Monat oder 1 Jahr (cyan und grün = gestiegen, orange und rot = gefallen, grau = kaum verändert; die Skala steht über der Karte) – wahlweise auch Ampel oder Trend. Enthalten sind die Nasdaq-100-Aktien, die Index-ETFs, Krypto und Rohstoffe. Größe der Aktien-Kacheln: Börsenwert (online aus den SEC-Geschäftszahlen), sonst der mittlere Handelsumsatz; ETFs, Krypto und Rohstoffe sind gleich groß. Aktien sind nach Branche (ICB) gruppiert, laut Wikipedia-Liste der Nasdaq-100-Unternehmen. Antippen öffnet den Titel."},
   mp_karte: {titel:"Marktphase", text:"Beschreibt, ob der Kurs gerade im Aufwärts- oder Abwärtstrend ist – nur mit dem Wissen von heute. Regel: Aufwärtstrend, solange die 20-Wochen-Linie (Durchschnitt der letzten 20 Wochenschlusskurse, etwa 100 Tage) über der 50-Wochen-Linie (etwa 250 Tage) liegt, sonst Abwärtstrend. Diese Regel hat in der Trendstudie (23 Indikatoren, Prüfung ab 2005, siehe Prüfungsseite) über alle Gruppen am besten abgeschnitten und wechselt nur etwa einmal im Jahr. Sie sagt nicht voraus, wohin es geht; ihr Nutzen liegt vor allem in kleineren Abstürzen."},
   mp_baer: {titel:"Bärenmarkt (klassisch)", text:"Übliche Faustregel: ab 20 % unter dem bisherigen Hoch spricht man von Bärenmarkt, ab 20 % über dem Tief von Bullenmarkt. Das steht immer erst fest, wenn ein großer Teil der Bewegung schon vorbei ist – zur Vorhersage taugt es nicht."},
   mp_tabelle: {titel:"Was danach kam", text:"Rückblick über alle Wochen dieses Werts: Wie oft stand der Kurs 3 Monate bzw. 1 Jahr später höher, wie groß war die mittlere Veränderung (Median), und wie oft fiel er im folgenden Jahr irgendwann um 20 % oder mehr unter den Kurs der Woche? Die Zeile „alle Wochen“ ist die Grundquote zum Vergleich. Benachbarte Wochen sind fast derselbe Fall, die echte Zahl unabhängiger Fälle ist viel kleiner."},
@@ -1568,15 +1710,15 @@ const ERKLAERUNG_NEU = {
   ts_studie: {titel:"Trendstudie", text:"23 verbreitete Trend-Indikatoren, jeder nur mit dem Wissen der jeweiligen Woche. Gemessen ab 2005 (Prüfzeit): Trendfilter (investiert bei „aufwärts“, sonst Geldmarktzins, 0,1 % Kosten je Wechsel) gegen Kaufen und Halten. ΔSharpe = Rendite je Schwankung gegenüber Halten (positiv = besser), ΔRückgang = um so viele Prozentpunkte kleinerer größter Rückgang. „Besser als Zufall“: Anteil von 200 Zufallssignalen je Wert (gleich oft „aufwärts“, gleich lange Phasen), die der Indikator schlägt – um 50 % heißt: nicht von Zufall zu unterscheiden. Rang Ø: mittlerer Rang über ETFs, Rohstoffe, Aktien und Krypto."},
   datenstand: {titel:"Datenstand", text:() => STAND_TEXT || "lädt …"},
   sparkline: {titel:"Ampel im letzten Jahr", text:"Die kleine Linie zeigt die Ampel des letzten Jahres, alle 4 Wochen ein Punkt. Steigt sie, ist der Wert günstiger geworden (meist, weil der Kurs gefallen ist); fällt sie, ist er teurer geworden."},
-  gauge: {titel:"Ampel-Halbkreis", text:"Der Halbkreis zeigt die Ampel von heute: links teuer (orange), rechts günstig (blaugrün). Entscheidend ist die Zahl von 0 bis 100 und das Wort darunter. Ganz unten steht, wo die Ampel vor 4 Wochen stand."},
+  gauge: {titel:"Ampel-Halbkreis", text:"Der Halbkreis zeigt die Ampel von heute: links teuer (rot und orange), in der Mitte neutral (gold), rechts günstig (cyan und grün). Entscheidend ist die Zahl von 0 bis 100 und das Wort darunter. Ganz unten steht, wo die Ampel vor 4 Wochen stand."},
   klartext: {titel:"In wenigen Sätzen", text:"Die Lage in Worten: wo der Kurs zur 200-Wochen-Linie steht, wie selten das früher war, was die Ampel daraus macht und ab welchem Kurs es günstig wäre. Beschreibung, keine Empfehlung."},
   lineal: {titel:"Lineal", text:"Messen im Chart: 1. Klick setzt den Start, dann zieht das Lineal mit der Maus mit. 2. Klick setzt das Ende, die Messung bleibt stehen. 3. Klick beendet das Lineal, die Maus ist wieder frei. Angezeigt werden die Veränderung in Prozent und im Kurs, die Zeitspanne und die Zahl der Kerzen. Esc oder erneuter Klick auf „Lineal“ beendet."},
-  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Farbige Flächen hinter dem Kurs zeigen, wann die Ampel günstig oder teuer war: kräftig blaugrün = Ampel ab 80 (historisch sehr günstig), hell blaugrün = 60 bis 80 (günstig), orange = bis 15 (historisch sehr teuer). So siehst du auf einen Blick, wie lange solche Phasen dauerten und wie es danach weiterging. Wichtig: Der tiefste Kurs kam oft erst mitten in einer günstigen Phase (z. B. März 2020) – „günstig“ heißt nicht „ganz unten“."},
+  l_phasen: {titel:"Günstig-/Teuer-Phasen (Fläche)", text:"Farbige Flächen hinter dem Kurs zeigen, wann die Ampel günstig oder teuer war: kräftig grün = Ampel ab 80 (historisch sehr günstig), hell grün = 60 bis 80 (günstig), orange = bis 15 (historisch sehr teuer). So siehst du auf einen Blick, wie lange solche Phasen dauerten und wie es danach weiterging. Wichtig: Der tiefste Kurs kam oft erst mitten in einer günstigen Phase (z. B. März 2020) – „günstig“ heißt nicht „ganz unten“."},
   l_ema: {titel:"EMA-Band (Ribbon)", text:"Acht exponentielle gleitende Durchschnitte über 20, 25, 30, 35, 40, 45, 50 und 55 Kerzen der gewählten Zeitebene, eingefärbt von grün (kurz) über gelb bis rot (lang) – wie das bekannte EMA-Ribbon bei TradingView. Liegen die Linien eng beieinander, ist der Trend schwach oder dreht; fächern sie auf und liegt der Kurs darüber, läuft ein Aufwärtstrend, liegt er darunter ein Abwärtstrend. Achtung: Im Wochenchart sind 55 Kerzen gut ein Jahr, im Tageschart knapp drei Monate. Die Trendstudie im Tool fand für solche Linien keinen verlässlichen Vorteil bei der Richtung, nur kleinere Rückgänge auf Kosten von Rendite."},
   l_bb: {titel:"Bollinger-Bänder (20, 2)", text:"Gleitender Durchschnitt der letzten 20 Kerzen der gewählten Zeitebene (gestrichelt) und ein Band von zwei Standardabweichungen darüber und darunter. Enges Band = ruhige Phase, Kurs am Rand = ungewöhnlich weit vom Durchschnitt. Ein beliebtes Chart-Werkzeug; einen verlässlichen Vorteil zeigt es in Studien nicht."},
   l_gp: {titel:"Golden Pocket (Fibonacci)", text:"Fibonacci-Linien 0,382 / 0,5 / 0,618 und die Golden Pocket (Zone zwischen 0,618 und 0,65) zwischen Hoch und Tief des sichtbaren Ausschnitts. Kam das Hoch nach dem Tief (Aufwärtsbewegung), zeigen sie, bis wohin ein Rücksetzer laufen könnte – die Golden Pocket gilt bei vielen Händlern als beliebte Kaufzone. Kam das Tief nach dem Hoch (Abwärtsbewegung), zeigen sie mögliche Erholungsziele nach oben. Die Zone beginnt am Anfang der Bewegung. Verschieben oder Zoomen rechnet neu. Weil viele darauf achten, reagieren Kurse dort manchmal – eine belegte Vorhersagekraft haben die Linien nicht."},
   l_nachkauf: {titel:"Nachkaufen", text:"Für jeden Titel einzeln aus seiner eigenen Geschichte: Für die Schwellen Ampel 60, 70, 80 und 90 wird nachgerechnet, wie viel ein Kauf in allen früheren Wochen mit dieser Ampel in den 3 Jahren danach pro Jahr brachte (bei kurzer Geschichte: im Jahr danach), verglichen mit Käufen in beliebigen Wochen. Gezählt wird eine Schwelle nur mit mindestens 3 getrennten Phasen, höherem Median und nicht deutlich seltener im Plus. Dann der Zufallsvergleich: Dieselbe Rechnung läuft auf bis zu 39 Zufallsverläufen desselben Titels – gleiche Wochenrenditen, aber in neu gereihten Halbjahres-Blöcken, sodass es keinen echten Zusammenhang zwischen Kurslage und späterem Ertrag gibt. Nur wenn höchstens einer davon denselben Vorteil zeigt, steht „lohnte sich unter …“. Sonst heißt es ehrlich: nicht belegt, regelmäßig nachkaufen war früher etwa gleich gut. Titel mit Kurssprüngen über Faktor 4,5 in einer Woche (meist Datenfehler) bekommen keinen Beleg. Rückblick ohne Kosten und Steuern, keine Garantie und keine Anlageberatung."},
-  l_kaufzonen: {titel:"Kaufzonen und Bewertungszonen", text:"Farbige Flächen hinter den Kerzen zeigen Woche für Woche, in welcher Zone der Kurs lag: von unten Ausverkauf (Ampel 90 oder mehr), historisch sehr günstig (80–90), günstig (60–80, darin liegt die gelbe 200-Wochen-Linie), neutral (40–60), teuer (15–40) und historisch sehr teuer (15 oder weniger). Rechts am Rand steht der Name der Zone. Dazu vier Linien im Chart, die Woche für Woche mitwandern: Ab welchem Kurs war der Wert in der jeweiligen Woche günstig oder teuer? Rechts an der Achse steht der Stand von heute. Dunkel-blaugrün: darunter stünde die Ampel bei 80 oder mehr (historisch sehr günstig) – also tiefer unter der 200-Wochen-Linie als in einem Drittel der früheren Wochen unter der Linie. Hell-blaugrün: darunter bei 60 oder mehr (günstig) – knapp über der Linie. Hell-orange: darüber bei 40 oder weniger (teuer). Dunkel-orange: darüber bei 15 oder weniger (historisch sehr teuer). Alle Grenzen kommen aus der Geschichte des Werts: wie tief der Kurs früher unter und wie weit über der Linie lag. Die Grenzen wandern mit, weil sich die Linie bewegt und jede Woche Geschichte dazukommt. Beschreibung, keine Kaufempfehlung."},
+  l_kaufzonen: {titel:"Kaufzonen und Bewertungszonen", text:"Farbige Flächen hinter den Kerzen zeigen Woche für Woche, in welcher Zone der Kurs lag: von unten Ausverkauf (Ampel 90 oder mehr), historisch sehr günstig (80–90), günstig (60–80, darin liegt die gelbe 200-Wochen-Linie), neutral (40–60), teuer (15–40) und historisch sehr teuer (15 oder weniger). Rechts am Rand steht der Name der Zone. Dazu vier Linien im Chart, die Woche für Woche mitwandern: Ab welchem Kurs war der Wert in der jeweiligen Woche günstig oder teuer? Rechts an der Achse steht der Stand von heute. Grün: darunter stünde die Ampel bei 80 oder mehr (historisch sehr günstig) – also tiefer unter der 200-Wochen-Linie als in einem Drittel der früheren Wochen unter der Linie. Cyan: darunter bei 60 oder mehr (günstig) – knapp über der Linie. Orange: darüber bei 40 oder weniger (teuer). Rot: darüber bei 15 oder weniger (historisch sehr teuer). Alle Grenzen kommen aus der Geschichte des Werts: wie tief der Kurs früher unter und wie weit über der Linie lag. Die Grenzen wandern mit, weil sich die Linie bewegt und jede Woche Geschichte dazukommt. Beschreibung, keine Kaufempfehlung."},
   l_mvrv: {titel:"MVRV-Z-Score (Bitcoin)", text:"Vergleicht den Marktwert aller Bitcoin mit dem „Realized Value“: jeder Coin zu dem Preis bewertet, zu dem er zuletzt bewegt wurde – grob der Durchschnittseinstand aller Besitzer. Z-Score = (Marktwert − Einstand) / Schwankung des Marktwerts. Unter 0: Kurs unter dem Ø-Einstand, die meisten Besitzer liegen im Minus – das war 2011, 2015, 2018/19, März 2020 und 2022 der Fall (Böden). Über 7: überhitzt (2013, 2017, 2021). In der Prüfung ohne Zukunftswissen leicht besser als die Grundquote; nur wenige Fälle. Blaue Linie im Ampel-Bereich, gestrichelte Linie im Kurs-Chart = Ø-Einstand."},
   kegel_pruefung: {titel:"Prüfung des Prognose-Kegels", text:"Ein Kegel ist gut, wenn er so oft trifft, wie er verspricht: Das 90-%-Band soll den späteren Kurs in etwa 9 von 10 Fällen enthalten, das 50-%-Band in etwa jedem zweiten. Trifft er seltener, ist er zu schmal (zu selbstsicher), trifft er öfter, ist er zu breit. Geprüft werden Varianten: wie viel Geschichte, ob die heutige Schwankung zählt (nach einem Einbruch ist der Markt meist unruhiger) und ob eine vorsichtigere Grundrendite besser passt. Die Variante mit der besten Trefferquote rechnet im Tool."},
   ampel_rang: {titel:"Teurer oder günstiger als …", text:"Übersetzt die Ampelzahl in einen Satz, der sich direkt vergleichen lässt: „teurer als in 91 % der Zeit davor“ heißt, dass die Ampel bis zu diesem Zeitpunkt in 91 % aller Wochen höher stand – es war also fast immer günstiger als jetzt. Zwei Zeitpunkte vergleichst du so: „teurer als in 91 %“ ist teurer als „teurer als in 69 %“. Merke: Bei der Ampelzahl selbst heißt eine HOHE Zahl günstig und eine NIEDRIGE Zahl teuer (Ampel 9 ist teurer als Ampel 31)."},
@@ -1590,7 +1732,7 @@ const ERKLAERUNG_NEU = {
   zeitraum: {titel:"Zeitraum", text:"Wie viele Jahre der Chart zeigt. Der Prognose-Kegel (12 Monate) wird immer mit angezeigt. Mit dem Mausrad oder zwei Fingern lässt sich frei zoomen, Ziehen verschiebt."},
   skala: {titel:"Log oder linear", text:"Logarithmisch: gleiche Abstände bedeuten gleiche Prozent-Änderungen – bei langen Zeiträumen die ehrlichere Darstellung. Linear: gleiche Abstände bedeuten gleiche Beträge."},
   quelle_chart: {titel:"Eigener Chart oder TradingView", text:"Eigener Chart: Wochenkerzen mit 200-Wochen-Linie, Günstig-/Teuer-Phasen, Prognose-Kegel und bei Bitcoin Pi Cycle – berechnet aus den Daten des Tools. TradingView: Monatskerzen mit 200-Wochen-Linie (Durchschnitt über 46 Monate), Kurse von TradingView; eigene Linien, Phasen und Kegel gibt es dort nicht."},
-  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe blaugrüne Balken = günstig (an oder unter der 200-Wochen-Linie), niedrige orange Balken = teuer (weit über der Linie). Gestrichelt: 80 und 15. Blasse Balken am Anfang = vorläufige Ampel: Solange es noch keine 200 Wochen gibt, nimmt das Tool ab 2 Jahren den Durchschnitt aller bisherigen Wochen als Linie und vergleicht schon mit wenigen früheren Wochen über der Linie. Das ist unsicherer und zählt nicht in Prüfungen und Ranglisten. Die Trennlinie darüber lässt sich ziehen."},
+  c_ampel: {titel:"Ampel im Zeitverlauf (unten)", text:"Unter dem Kurs: die Ampel jeder Woche, so wie sie damals mit den Kursen bis dahin berechnet worden wäre. Hohe grüne und cyanfarbene Balken = günstig (an oder unter der 200-Wochen-Linie), niedrige orange und rote Balken = teuer (weit über der Linie). Gestrichelt: 80 und 15. Blasse Balken am Anfang = vorläufige Ampel: Solange es noch keine 200 Wochen gibt, nimmt das Tool ab 2 Jahren den Durchschnitt aller bisherigen Wochen als Linie und vergleicht schon mit wenigen früheren Wochen über der Linie. Das ist unsicherer und zählt nicht in Prüfungen und Ranglisten. Die Trennlinie darüber lässt sich ziehen."},
   l_pitop: {titel:"Pi Cycle Top (gestrichelt)", text:"111-Tage-Durchschnitt (orange) und 2 × 350-Tage-Durchschnitt (rosa). Stieg die 111-Tage-Linie darüber, lag bei Bitcoin früher ein Zyklushoch nahe (Markierung „Pi Top“). Nur für Bitcoin geeicht, sehr wenige Fälle."},
   l_mayer: {titel:"Mayer Multiple (unten, linke Skala)", text:"Kurs geteilt durch den 200-Tage-Durchschnitt, je Woche. Gestrichelt: 0,8 (früher tief) und 2,4 (früher überhitzt) – Grenzen aus der Bitcoin-Geschichte, für andere Coins nicht erprobt."},
   prognose: {titel:"Prognose (Simulation, 12 Monate)", text:"Monte-Carlo-Simulation: Aus echten Wochenrenditen der letzten 20 Jahre (bei kürzerer Historie der vorhandenen) werden 10.000 mögliche Wege gebaut. Gezeigt werden der mittlere Weg und die Spanne, in der 90 % der Wege enden. Keine Vorhersage: die Zukunft muss der Vergangenheit nicht ähneln, die heutige Ampel fließt nicht ein."},
@@ -2026,7 +2168,7 @@ function zeigeKarte(opt = {}){
   const mitBranche = aktien.filter(w => w.branche).length;
   const stand = werte.reduce((a, w) => w.datum > a ? w.datum : a, "");
   const knopf = (k, v, t) => `<button data-k="${k}" data-v="${v}" aria-pressed="${KARTE[k] === v}">${t}</button>`;
-  // Farbskala: 7 Stufen von stark fallend (orange) über unverändert (grau) bis stark steigend (blaugrün)
+  // Farbskala: 7 Stufen von stark fallend (rot) über unverändert (grau) bis stark steigend (grün) – Tokens --hm0 … --hm6
   const SKALA = ["#c2410c", "#e0703a", "#a5705c", "#4a505e", "#3f8578", "#14a085", "#0b7a64"];
   const stufePerf = v => { const x = v / (GRENZE[KARTE.farbe] / 3); return Math.max(-3, Math.min(3, Math.round(x))) + 3; };
   const f = F();
@@ -2040,7 +2182,7 @@ function zeigeKarte(opt = {}){
   const legende = perfModus
     ? SKALA.map((c, i) => `<span class="hm-stufe" style="background:${c}">${i === 3 ? "0 %" : (i < 3 ? "−" : "+") + fmt(Math.abs(i - 3) * g3, g3 < 1 ? 1 : 0) + " %"}${i === 0 || i === 6 ? "+" : ""}</span>`).join("")
     : KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"],[f.teuer,"↘ Abwärtstrend"]].map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("")
-    : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("");
+    : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AF()[i]}"></i>${t}</span>`).join("");
   wurzel.innerHTML = `
     ${ziel ? "" : '<h1 class="seiten-titel">Heatmap</h1>'}
     <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
@@ -2188,7 +2330,7 @@ function zeigeUebersicht(){
     <div class="wetter">${wetter}</div>
     ${erfolgsbilanzHtml()}
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
-    <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AMPEL_FARBEN[i]}"></i>${t}</span>`).join("")}</div>
+    <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AF()[i]}"></i>${t}</span>`).join("")}</div>
     ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
     <h2 class="abschnitt-titel"><span data-e="karte">Heatmap: Kursveränderung</span><span class="klein">Nasdaq-100, Index-ETFs, Krypto, Rohstoffe · <button class="linkknopf" id="zu-karte">groß öffnen</button></span></h2>
     <div id="uebersicht-heatmap"></div>
@@ -2383,7 +2525,7 @@ let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 let INTERVALL = "W", CD = null, KEGEL_D = null;
 const INTRADAY = ["60", "30", "15"], TAG_CACHE = new Map();
 const INTERVALLE = [["M","Monat"],["W","Woche"],["D","Tag"],["60","1 Std"],["30","30 Min"],["15","15 Min"]];
-const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:getComputedStyle(document.body).fontFamily, fontSize:11},
+const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:f.fzahl || getComputedStyle(document.body).fontFamily, fontSize:11},
   grid:{vertLines:{color:f.grid}, horzLines:{color:f.grid}},
   timeScale:{borderColor:f.line, minBarSpacing:0.02, rightOffset:4}, rightPriceScale:{borderColor:f.line}, leftPriceScale:{borderColor:f.line},
   crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.akzent}},
@@ -2559,7 +2701,7 @@ function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der 
 // Räumliches Hauptbild: die fünf Stufen als durchscheinende Schichten (oben teuer, unten günstig), der Kurs schwebt als Kugel auf seiner Höhe
 function saeule(w){
   const kz = w.kz; if (!kz || w.kurs == null || w.score == null) return "";
-  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), heute = stufe(w.score), F5 = AMPEL_FARBEN;
+  const nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), heute = stufe(w.score), F5 = AF();
   const ber = (lo, hi) => lo == null ? (hi == null ? "nie erreicht" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
   const zeilen = [["sehr teuer", kz["15"], null], ["teuer", kz["40"], kz["15"]], ["neutral", kz["60"], kz["40"]], ["günstig", kz["80"], kz["60"]], ["sehr günstig", null, kz["80"]]];
   const cx = 150, a = 58, b = 24, h = 31, lu = 10, y0 = 40, y = i => y0 + i * (h + lu);
@@ -2691,12 +2833,12 @@ function zaInfo(){
   const c = ZA.c, n = c.c.length, kurs = c.c[n - 1], z = ZA.z, w = ZA.w, nk = kurs >= 100 ? 0 : kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kl = x => x > 0 ? "pos" : x < 0 ? "neg" : "", name = esc(kurzname(w));
   if (z < 0) { const i = n - 1 + z, s = c.score?.[i], p = c.c[i], nach = wo => i + wo < n && c.c[i + wo] > 0 ? (c.c[i + wo] / p - 1) * 100 : null, r1 = nach(52), r3 = nach(156), bis = (kurs / p - 1) * 100;
     return `<div class="za-auge">Zeitreise · ${datumDe(new Date(c.t[i] * 1000).toISOString())} · vor ${zeitText(Math.max(1, -ZA.m))}</div>
-      <div class="za-gross">${s == null ? "noch keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(s)]}">${zonenWort(s)}</span>`}</div>
+      <div class="za-gross">${s == null ? "noch keine Ampel" : `<span style="color:${AF()[stufe(s)]}">${zonenWort(s)}</span>`}</div>
       <p class="za-satz">${s == null ? "Damals gab es noch zu wenig Geschichte für eine Ampel." : `Das hätte das Tool damals gesagt (Ampel <b>${fmt(s,0)}</b>), nur mit dem Wissen von damals.`} Kurs damals: <b>${k(p)}</b>.</p>
       <div class="kv"><span>Ein Jahr später stand der Kurs</span><b class="${kl(r1)}">${r1 == null ? "noch offen" : vz(r1, 0, " %")}</b></div>
       <div class="kv"><span>Drei Jahre später stand der Kurs</span><b class="${kl(r3)}">${r3 == null ? "noch offen" : vz(r3, 0, " %")}</b></div>
       <div class="kv"><span>Von damals bis heute</span><b class="${kl(bis)}">${vz(bis, 0, " %")}</b></div>`; }
-  if (z === 0) return `<div class="za-auge">Heute · ${datumDe(w.datum)}</div><div class="za-gross">${w.score == null ? "keine Ampel" : `<span style="color:${AMPEL_FARBEN[stufe(w.score)]}">${zonenWort(w.score)}</span>`}</div>
+  if (z === 0) return `<div class="za-auge">Heute · ${datumDe(w.datum)}</div><div class="za-gross">${w.score == null ? "keine Ampel" : `<span style="color:${AF()[stufe(w.score)]}">${zonenWort(w.score)}</span>`}</div>
       <p class="za-satz">${w.score == null ? "" : `Ampel <b>${fmt(w.score,0)}</b>, `}Kurs <b>${k(kurs)}</b>. Schieb den Regler nach links in die Vergangenheit oder nach rechts in die Zukunft.</p>`;
   const q = ZA.q; if (!q) return `<div class="za-auge">Mögliche Zukunft</div><p class="za-satz">Die Simulation wird gerechnet …</p>`;
   const t = c.t[n - 1] + z * 7 * 86400, lo = kurs * q.q10[z], hi = kurs * q.q90[z], d = new Date(t * 1000);
@@ -3205,7 +3347,7 @@ function kaufzonenKarte(w){   // Kursgrenzen der Ampel von heute als Preisleiter
   const s = w.score, heute = stufe(s);
   const bereich = (lo, hi) => lo == null ? (hi == null ? "wird nie erreicht" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)} bis ${k(hi)}`;
   const abstand = (i, lo, hi) => i === heute ? `<span class="lt-heute">Heute ${k(w.kurs)}</span>` : i < heute ? (lo != null ? `ab ${weg(lo)}` : "") : (hi != null ? `ab ${weg(hi)}` : "");
-  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<div class="lt${i === heute ? " heute" : ""}" style="--zf:${AMPEL_FARBEN[i]}"><i></i><div class="lt-n"><b>${wort}</b><span>${bereich(lo, hi)}</span> <span class="lt-a">· Ampel ${amp}</span></div><div class="lt-w">${abstand(i, lo, hi)}</div></div>`).join("");
+  const zeilen = stufen.map(([i, wort, amp, lo, hi]) => `<div class="lt${i === heute ? " heute" : ""}" style="--zf:${AF()[i]}"><i></i><div class="lt-n"><b>${wort}</b><span>${bereich(lo, hi)}</span> <span class="lt-a">· Ampel ${amp}</span></div><div class="lt-w">${abstand(i, lo, hi)}</div></div>`).join("");
   const saetze = [];
   if (heute <= 2 && kz["60"] != null) saetze.push(`Günstig wird es <b>unter ${k(kz["60"])}</b> (${weg(kz["60"])} von heute)${kz["80"] != null ? `, historisch sehr günstig <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])})` : ""}.`);
   else if (heute === 3 && kz["80"] != null) saetze.push(`Historisch sehr günstig wird es <b>unter ${k(kz["80"])}</b> (${weg(kz["80"])} von heute).`);
@@ -3322,7 +3464,7 @@ async function zeige(id, opt={}){
     ["tiefhoch", "Tief-/Hochpunkte", `<i class="pfeil"><span style="color:var(--guenstig)">●</span><span style="color:var(--teuer)">●</span></i>`, "l_tiefhoch", eigen && !!c.c],
     ["bb", "Bollinger-Bänder", `<i style="color:var(--bb)"></i>`, "l_bb", eigen],
     ["ema", "EMA-Band", `<i style="background:linear-gradient(90deg,${EMA_BAND[0][1]},${EMA_BAND[3][1]},${EMA_BAND[7][1]})"></i>`, "l_ema", eigen],
-    ["kaufzonen", "Kaufzonen", `<i style="background:linear-gradient(${AMPEL_FARBEN[4]},${AMPEL_FARBEN[0]})"></i>`, "l_kaufzonen", eigen && !!w.kz],
+    ["kaufzonen", "Kaufzonen", `<i style="background:linear-gradient(${AF()[4]},${AF()[0]})"></i>`, "l_kaufzonen", eigen && !!w.kz],
     ["fib", "Fibonacci-Zonen", `<i style="color:var(--fib)"></i>`, "l_fib", eigen],
     ["gp", "Golden Pocket", `<i class="flaeche" style="color:var(--fib)"></i>`, "l_gp", eigen],
     ["pi", "Pi Cycle Bottom", `<i class="flaeche" style="color:var(--lila)"></i>`, "pi_bottom", btc],
@@ -3336,7 +3478,7 @@ async function zeige(id, opt={}){
   const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
     <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
-    <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AMPEL_FARBEN[stufe(w.score)]}"` : ""}>
+    <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
       <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
@@ -3647,7 +3789,7 @@ function kaufzonenLinien(){
   const kz = INFO?.kz; if (!CHIPS.kaufzonen || !kz || CDATA?.kz80 || CDATA?.kz15) return;   // waagerecht nur noch, falls die Daten noch keinen Verlauf haben
   [["80", 4, "sehr günstig darunter"], ["60", 3, "günstig darunter"], ["40", 1, "teuer darüber"], ["15", 0, "sehr teuer darüber"]].forEach(([k, st, t]) => {
     if (kz[k] == null) return;
-    KZ_LINIEN.push(KERZEN.createPriceLine({price:kz[k] * fxFaktor(), color:AMPEL_FARBEN[st], lineWidth:k === "80" || k === "15" ? 2 : 1, lineStyle:k === "40" || k === "60" ? 1 : 0, axisLabelVisible:true, title:t}));
+    KZ_LINIEN.push(KERZEN.createPriceLine({price:kz[k] * fxFaktor(), color:AF()[st], lineWidth:k === "80" || k === "15" ? 2 : 1, lineStyle:k === "40" || k === "60" ? 1 : 0, axisLabelVisible:true, title:t}));
   });
 }
 function markenSetzen(){
@@ -3884,7 +4026,7 @@ const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deck
   ["kz90", null,   5, "30", "Ausverkauf"]];
 function zonenFlaechen(ch, serie, c, f){
   if (!c.kz80 && !c.kz15) return;
-  const farbe = i => i === 5 ? f.cyan : AMPEL_FARBEN[i];
+  const farbe = i => i === 5 ? f.cyan : AF()[i];
   let sichtbar = CHIPS.kaufzonen, neu = null;
   const zeichnen = ({context:x, mediaSize:gr}) => {
     if (!sichtbar) return;
@@ -3962,7 +4104,7 @@ function zeichne(c, w){
   w200.applyOptions({lastValueVisible:true, title:"200W"});
   if (c.kz80 || c.kz15) {   // Kaufzonen je Woche: wandern mit (Kurs, bei dem die Ampel in der Woche 80/60/40/15 gezeigt hätte)
     [["kz80", 4, "sehr günstig darunter", 2, 0], ["kz60", 3, "günstig darunter", 1, 1], ["kz40", 1, "teuer darüber", 1, 1], ["kz15", 0, "sehr teuer darüber", 2, 0]].forEach(([k, st, t, b, stil]) => {
-      const s = linie("kaufzonen", c[k], AMPEL_FARBEN[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:t});
+      const s = linie("kaufzonen", c[k], AF()[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:t});
     });
     zonenFlaechen(ch, kerzen, c, f);
   }
