@@ -203,9 +203,9 @@ def main(argv):
                 gs_s, ts_s = [w for w in gs if meldet_einzeln(w)], [w for w in ts if meldet_einzeln(w)]
                 text = (f"Alarme sind eingerichtet: alle {len(beobachtet):,} Werte mit Ampel werden beobachtet.".replace(",", ".")
                         + " ETFs, Rohstoffe und die fünf großen Kryptowerte melden sich einzeln, sobald einer neu historisch sehr günstig (ab 80) oder sehr teuer (bis 15) wird; "
-                        + "Aktien und die übrigen Kryptowerte kommen gesammelt einmal am Tag.\n"
+                        + "Aktien, die übrigen Kryptowerte und Hebel-Produkte kommen gesammelt einmal am Tag.\n"
                         + f"ETFs/Rohstoffe/große Kryptowerte gerade sehr günstig: {kurz(gs_s)}.\nGerade sehr teuer: {kurz(ts_s)}.\n"
-                        + f"Aktien und übrige Kryptowerte gerade sehr günstig: {len(gs) - len(gs_s)}, sehr teuer: {len(ts) - len(ts_s)}.")
+                        + f"Aktien, übrige Kryptowerte und Hebel-Produkte gerade sehr günstig: {len(gs) - len(gs_s)}, sehr teuer: {len(ts) - len(ts_s)}.")
             else:
                 text = (f"Alarme sind eingerichtet: {len(beobachtet)} Werte werden beobachtet. Du bekommst eine Meldung, wenn einer "
                         f"historisch sehr günstig (Ampel ab 80) oder sehr teuer (bis 15) wird.\n"

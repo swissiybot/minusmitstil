@@ -7,7 +7,7 @@
 **⚠️ Spaßprojekt. Historische Statistik, keine Anlageberatung.** Nichts hier ist eine Empfehlung, etwas zu kaufen oder zu verkaufen. Vergangene Kurse garantieren nichts. Wer nach diesem Tool handelt, tut das auf eigene Rechnung – und mit Stil.
 
 ## Was es macht
-Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nasdaq), Index-ETFs, Kryptowährungen (BTC, ETH, SOL, LINK, XLM) und Rohstoffe **im Vergleich zu ihrer eigenen Geschichte** günstig oder teuer stehen:
+Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nasdaq), Index-ETFs, Kryptowährungen (die größten nach Marktwert, feste Liste), Hebel-Produkte (täglich 2-fach, ohne Knock-out) und Rohstoffe **im Vergleich zu ihrer eigenen Geschichte** günstig oder teuer stehen:
 
 - **Ampel 0–100** (seit 22.11.2026 spät, Wunsch Marc „je Wert neu rechnen“, „überall das beste Modell“): an der **200-Wochen-Linie verankert, unter der Linie nach Seltenheit** (`anker_ampel` / `ampel_rechnen` in `analyse.py`), für alle Gruppen. An der Linie 70 (günstig). Darunter 70 + 30 × Anteil der früheren Wochen unter der Linie, die weniger tief lagen (so tief wie meistens ≈ 85, Rekordtiefe = 100; solange es weniger als 26 frühere Wochen unter der Linie gibt, ersatzweise 70 + 2 Punkte je %). Darüber 70 × (1 − Rang), Rang = Anteil der früheren Wochen über der Linie, die näher an der Linie lagen. Immer nur mit den Daten bis zum jeweiligen Tag. 70 an der Linie ist ein gesetzter Wert. Kaufzonen exakt aus derselben Formel, Woche für Woche mitwandernd. Frühere Ampeln: bis 21.11. Mischung (Allzeithoch, 200-Wochen-Linie, Trend, RSI); 22.11. tagsüber reines 200-Wochen-Perzentil, dann Studien-Ampel (`AMPEL_BAUSTEINE`), abends Anker-Ampel mit festen +2 Punkten je % unter der Linie (dadurch stand jede zweite Aktie auf 100). Das Signal-Tagebuch wertet nur Einträge der heutigen Ampel aus (`ampel: anker200s`).
 - **Ø Jahresrendite** über 20 Jahre (oder so viele, wie es Daten gibt), ETFs mit Index-Historie davor.
@@ -24,7 +24,7 @@ Ein lokales Dashboard im TradingView-Stil. Es zeigt täglich, welche Aktien (Nas
 ## Bedienung
 - **Übersicht** mit Marktwetter (Marktbreite, VIX, Zinskurve, Prüfung der Ampel), Heatmap aller ETFs, Kryptowährungen und Rohstoffe nach Ampel und „Heute auffällig“.
 - **Suche** oben (Taste `/` oder `Strg K`), verzeiht Tippfehler („bitcon“ findet Bitcoin).
-- **Liste** links mit Reitern Übersicht · ETFs · Krypto · Rohstoffe · Aktien (Screener mit Filtern, flüssig bei 3.000 Zeilen) · Meine (Favoriten-Stern); je Zeile Ampel, Verlauf des letzten Jahres und Änderung in 4 Wochen. Breiter ziehen zeigt mehr Spalten.
+- **Liste** links mit Reitern Übersicht · ETFs · Krypto · Rohstoffe · Hebel 2x · Aktien (Screener mit Filtern, flüssig bei 3.000 Zeilen) · Meine (Favoriten-Stern); je Zeile Ampel, Verlauf des letzten Jahres und Änderung in 4 Wochen. Breiter ziehen zeigt mehr Spalten.
 - **Detail**: Ampel-Halbkreis mit Klartext-Satz, Chart mit Zeitraum-Knöpfen (1J/5J/10J/Alles), Log/Linear, Fadenkreuz mit Werten und ein-/ausschaltbaren Linien (200-Wochen-Linie, Trendkanal (lineare Regression über den sichtbaren Ausschnitt, ±2 Standardabw., passt sich Zoom, Zeitebene und Skala an), Prognose-Kegel, Günstig-/Teuer-Phasen, Kaufzonen, bei Bitcoin Pi Cycle Bottom/Top und Mayer); Golden Pocket (Fibonacci 0,382 / 0,5 / 0,618 und Zone 0,618–0,65 zwischen Hoch und Tief des sichtbaren Ausschnitts, Richtung automatisch); Umschalter auf den TradingView-Chart (Monat, 200-Wochen-Linie). Darunter Karten: Lohnt-sich-Check, Wahrscheinlichkeiten gegen „beliebiger Tag“, Prognose, Rückschlag, Ø Rendite, weitere Kennzahlen – und Reiter für Details, Kurs-Rechner, Prüfung und Strategie-Vergleich.
 - **Zeitebenen**: Monat, Woche, Tag im eigenen Chart (Tag: letzte 15 Jahre; online für ETFs, Krypto und Rohstoffe), 1 Std., 30 und 15 Min. über das TradingView-Widget (eigene Intraday-Kurse gibt es nicht). Die Ampel wird immer aus Wochenkursen berechnet.
 - **Werkzeuge**: Lineal (zwei Klicks: Prozent, Betrag, Dauer, Zahl der Kerzen), Bollinger-Bänder (20, 2), Fibonacci-Zonen des sichtbaren Ausschnitts und eine Fläche für die ganze Günstig-/Teuer-Phase (Ampel ≥ 80 bzw. ≤ 15) – alles ein- und ausschaltbar.
@@ -126,6 +126,22 @@ Nur das Nötigste; Aussehen, Aufbau und Texte sonst unverändert.
 - **Heatmap:** neuer Knopf „Hebel 2x“; „Krypto“ zeigt alle Kryptowerte.
 - **Titelseite eines Hebel-Produkts:** Art „Hebel-ETF 2x“ bzw. „Hebel-ETC 2x“ und ganz oben in den Hinweisen der Warnhinweis: täglicher Hebel, Wertverlust in Schwankungsphasen auch bei unverändertem Index, die Ampel misst nur den Kurs an der eigenen Geschichte, keine Empfehlung; bei US-Produkten der Zusatz „in der EU meist nicht kaufbar“, bei ETCs „kein Fonds“.
 - **Junge Kryptowerte:** „Noch keine Ampel: erst … Wochen Kurse in unserer Datenquelle“ statt „an der Börse“.
+
+### Mehr Titel: Laufzeit und Größe des Online-Laufs (24.11.2026)
+Ausgangslage, Online-Lauf vom 24.11.2026 mit 6.044 Werten: **56 Minuten** (Kurse 10, Auswertung 14, Trendstudie 5, Rechenregeln 1, Export 20, Rest 6), Seite **717 MB** (GitHub Pages erlaubt 1 GB). Der Zusatz ist am PC in einer Arbeitskopie gemessen und auf den GitHub-Rechner hochgerechnet: Der PC ist 2,2-mal so schnell (Stichprobe 514 Nasdaq-Werte: Auswertung 42 ms je Wert am PC gegen 93 ms online; Export 91 ms gegen 200 ms).
+
+| Zusatz durch 171 Kryptowerte und 28 Hebel-Produkte | am PC gemessen | online hochgerechnet |
+|---|---|---|
+| Kurse (5 Stapel mehr, je knapp 4 s) | – | + 20 s |
+| Auswertung | 2,0 s + 1,1 s | + 7 s |
+| Export | 11,0 s + 3,4 s | + 32 s |
+| Rechenregeln, Vorhersage, Hochladen | – | + 10 s |
+| **zusammen** | | **gut 1 Minute** |
+
+**Erwartet: 57–58 Minuten je Lauf**, am Tag der wöchentlichen Vorhersage-Prüfung rund 73 Minuten (bisher rund 71). Der erste Lauf nach dem Hochladen dauert einmalig länger (volle Kursgeschichte für 199 Werte, Neuaufbau der Kurzbeschreibungen): grob 60–70 Minuten. Alles unter dem Zeitlimit von 120 Minuten. Die Seite wächst um rund 38 MB auf etwa 755 MB.
+- Trendstudie, Kegelprüfung und die Gegenprobe der Vorhersage rechnen bewusst weiter nur mit den fünf Krypto-Kernwerten und ohne Hebel-Produkte – sonst kämen rund 3–4 Minuten je Lauf dazu, und die wöchentliche Gegenprobe (Zeitgrenze 25 Minuten) würde knapp.
+- Unsicherheit: Die Geschwindigkeit der GitHub-Rechner schwankt um etwa ein Fünftel, und Yahoo kann den Kursabruf bremsen. Nicht gemessen ist ein echter Online-Lauf mit der neuen Liste.
+- Mit dem FTSE All-World (grob 2.000 weitere Werte) wären es etwa 20 Minuten und 240 MB mehr – die Seitengröße läge dann an der Grenze von 1 GB.
 
 ### Ordnung, Ruhe und Verständlichkeit im Terminal (24.11.2026 mittags)
 Marc nach der sechsten Gestaltungsrunde: „Sortiere es so, wie es visuell für Menschen am besten ist. Alles muss geordnet, passend und stimmig wirken“ – und: verständlich für einen Laien. Kein neuer Effekt, sondern Rangfolge, Reihenfolge und Wörter; nur `web/index.html` (Stil-Schicht „Ordnung und Ruhe“ am Ende des Stylesheets), keine Rechnung berührt (Rückprobe 360 Fälle: alle Geldbeträge gleich). Wo dieser Abschnitt dem folgenden widerspricht, gilt dieser.
@@ -279,7 +295,8 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF von Hand 
 ## Aufbau
 | Datei | Aufgabe |
 |---|---|
-| `einstellungen.py` | Pfade, ETF-Liste mit Index-Vorlauf, Krypto- und Rohstoffliste, Drosselung |
+| `einstellungen.py` | Pfade, ETF-Liste mit Index-Vorlauf, Hebel-2x-Liste, Krypto- (Kernwerte + `listen/krypto.csv`) und Rohstoffliste, Drosselung |
+| `krypto_liste.py` | baut von Hand die feste Krypto-Liste `listen/krypto.csv` (Rangliste CoinGecko, Yahoo-Kürzel geprüft); läuft nie im Online-Lauf |
 | `universum.py` | Werteliste: Nasdaq-Verzeichnis, Vanguard-Excel (FTSE All-World) aus `daten/eingang/`, ETFs, Krypto, Rohstoffe |
 | `kurse.py` | Tageskurse von Yahoo (yfinance) → eine komprimierte Datei `daten/kurse.parquet` |
 | `analyse.py` | Ampel 0–100, Ø Jahresrendite, Wahrscheinlichkeiten, Rangliste, Signal-Tagebuch |
