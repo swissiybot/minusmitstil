@@ -711,6 +711,12 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .zr-feld input{flex:1;min-width:0;width:100%;border:0;background:none;outline:none;color:var(--text);font-size:20px;font-weight:720;letter-spacing:-.02em;-moz-appearance:textfield}
 .zr-feld input::-webkit-outer-spin-button,.zr-feld input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .zr-feld i{font-style:normal;color:var(--muted);font-size:14px;font-weight:600}
+/* Jahre und Monate: eigene Zeile und feste Breite, sonst wird auf dem Handy aus „10“ ein „1“ */
+.zr-dauer{grid-column:1/-1}
+.zr-dauer .zr-feld{width:max-content;max-width:100%}
+.zr-dauer .zr-feld input{flex:0 0 46px;width:46px;text-align:right}
+.zr-dauer .zr-feld i{margin-right:10px}
+.zr-dauer .zr-feld i:last-child{margin-right:0}
 .zr-annahme{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;margin:8px 0 2px}
 .zr-annahme .segment{flex-wrap:wrap}
 .zr-annahme-satz{margin:10px 0 0!important;padding:10px 12px;border-radius:12px;background:var(--akzent-weich);color:var(--text)!important;font-size:13.5px;line-height:1.5}
@@ -2719,7 +2725,7 @@ function rechnerKarte(w, c){
   const e = {...ZR_STD, ...lade("zrechner", {})}, mon = Math.max(1, Math.min(360, Math.round(e.monate ?? e.jahre * 12)));
   const feld = (id, titel, wert, einheit, attr) => `<label class="zr-f"><span>${titel}</span><span class="zr-feld"><input type="number" id="${id}" inputmode="numeric" value="${wert}" ${attr}><i>${einheit}</i></span></label>`;
   return `<section class="karte breit2" id="rechner-karte">${kk("ausblick", "Was wird aus meinem Geld?", "Trag ein, was du anlegen willst. Das Tool spielt tausende mögliche Verläufe durch – aus den echten Wochen der Vergangenheit.", "Simulation", "zrechner")}
-    <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}<label class="zr-f"><span>Wie lange?</span><span class="zr-feld"><input type="number" id="zr-jahre" inputmode="numeric" value="${Math.floor(mon / 12)}" min="0" max="30" step="1" aria-label="Jahre"><i>Jahre</i><input type="number" id="zr-monate" inputmode="numeric" value="${mon % 12}" min="0" max="11" step="1" aria-label="Monate" style="max-width:54px"><i>Monate</i></span></label></div>
+    <div class="zr-eingabe">${feld("zr-einmal", "Einmal anlegen", e.einmal, "€", 'min="0" step="100"')}${feld("zr-rate", "Jeden Monat dazu", e.rate, "€", 'min="0" step="25"')}<label class="zr-f zr-dauer"><span>Wie lange?</span><span class="zr-feld"><input type="number" id="zr-jahre" inputmode="numeric" value="${Math.floor(mon / 12)}" min="0" max="30" step="1" aria-label="Jahre"><i>Jahre</i><input type="number" id="zr-monate" inputmode="numeric" value="${mon % 12}" min="0" max="11" step="1" aria-label="Monate"><i>Monate</i></span></label></div>
     <input type="range" class="regler" id="zr-regler" min="1" max="360" step="1" value="${mon}" style="--heute:0%" aria-label="Anlagedauer in Monatsschritten">
     <div class="zr-annahme"><span class="klein" data-e="zr_annahme" tabindex="0">Wie soll die Vergangenheit zählen?</span><div class="segment" id="zr-annahme" role="group" aria-label="Annahme für die Rendite">${Object.entries(ANNAHMEN).map(([k, a]) => `<button type="button" data-a="${k}" aria-pressed="false">${a.name}</button>`).join("")}</div></div>
     <div id="zr-aus"><div class="lade" style="height:190px;margin-top:10px"></div></div></section>`;
