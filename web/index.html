@@ -1197,8 +1197,6 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
   .kopf .knopf-ikon{padding:0 9px}
 }
 /* ---- 3 Liste links: Glas-Spalte, Filter als Pillen, Spalten Ticker · Score · 1 Jahr · Status, leuchtende aktive Zeile */
-#layout{grid-template-columns:var(--g-liste,390px) 7px minmax(0,1fr)}
-#layout.lesen-offen{grid-template-columns:var(--g-liste,390px) 7px minmax(0,1fr) 7px var(--g-lesen,420px)}
 #liste-bereich{position:relative;background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 62%,transparent),color-mix(in srgb,var(--bg2) 70%,transparent))}
 #liste-bereich.blitz{animation:ot-blitz .9s var(--ruck)}
 @keyframes ot-blitz{0%{box-shadow:inset 0 0 0 1px var(--akzent),inset 0 0 60px -10px var(--akzent)}100%{box-shadow:inset 0 0 0 1px transparent}}
@@ -1275,6 +1273,74 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .trenner.senkrecht:hover::before,.trenner.senkrecht.zieht::before{background:repeating-linear-gradient(180deg,currentColor 0 1px,transparent 1px 8px) 2px 0/3px 100% no-repeat,repeating-linear-gradient(180deg,currentColor 0 1px,transparent 1px 40px) 0 0/7px 100% no-repeat}
 .trenner.waagerecht:hover::before,.trenner.waagerecht.zieht::before{background:repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px 8px) 0 2px/100% 3px no-repeat,repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px 40px) 0 0/100% 7px no-repeat}
 .trenner:hover::after,.trenner.zieht::after,.trenner:focus-visible::after{background:var(--akzent);box-shadow:0 0 10px var(--akzent)}
+/* ---- 4 Terminal: Instrument-Karte mit Ampel-Halbkreis, darunter der Chart */
+#haupt{padding:14px 16px 40px;scrollbar-gutter:stable}
+.abschnitt-nav{margin:-14px -16px 14px;padding:6px 16px}
+.ot-term{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-bottom:14px}
+.ot-mitte{display:grid;gap:14px;min-width:0;align-content:start}
+.ot-instr{position:relative;padding:14px 18px 12px;overflow:hidden;
+  background:
+    linear-gradient(90deg,transparent 4%,var(--rim) 30%,color-mix(in srgb,var(--rim) 45%,transparent) 62%,transparent 96%) top/100% 1px no-repeat,
+    radial-gradient(520px 300px at 50% 108%,color-mix(in srgb,var(--zf,var(--akzent)) 16%,transparent),transparent 70%),
+    radial-gradient(circle,rgba(120,180,255,.10) 1px,transparent 1.4px) 0 0/18px 18px,
+    var(--glas)}
+.ot-instr .wk-titel{position:relative;z-index:2;gap:8px 10px}
+.ot-instr .wk-titel h1{font-size:22px;font-weight:650;letter-spacing:-.03em;line-height:1.2}
+.ot-sym{font-family:var(--f-zahl);font-size:12px;font-weight:650;letter-spacing:.04em;padding:3px 8px;border-radius:7px;color:var(--akzent);background:var(--akzent-weich);border:1px solid color-mix(in srgb,var(--akzent) 35%,transparent)}
+.ot-instr .stern{height:30px;border-radius:9px;font-size:12.5px;border-color:var(--line2);background:var(--glas-leicht)}
+.ot-gauge{position:relative;z-index:1;width:min(100%,540px);margin:-4px auto 0;outline-offset:-2px;border-radius:14px}
+.ot-bogen{display:block;width:100%;height:auto;overflow:visible}
+.ot-b-zahl{font-family:var(--f-zahl);font-size:8.5px;fill:var(--muted)}
+.ot-b-wort{font-family:var(--f-ui);font-size:10.5px;font-weight:650;letter-spacing:.09em;opacity:.78}
+.ot-b-wort.an{opacity:1;filter:drop-shadow(0 0 5px currentColor)}
+.ot-b-ankertext{font-family:var(--f-ui);font-size:10px;font-weight:650;letter-spacing:.02em}
+.ot-b-ankerunter{font-family:var(--f-ui);font-size:9px;fill:var(--muted)}
+.ot-b-anker{cursor:help}
+.ot-b-wert{font-family:var(--f-zahl);font-weight:700;letter-spacing:.02em;filter:drop-shadow(0 0 10px color-mix(in srgb,currentColor 55%,transparent))}
+.ot-b-gross{font-size:40px;letter-spacing:-.04em}
+.ot-b-trenn{font-size:20px;opacity:.55}
+.ot-b-stufe{font-family:var(--f-ui);font-size:19px;font-weight:700;letter-spacing:.07em}
+.ot-nadel{transform-box:view-box;transform-origin:200px 176px;transform:rotate(var(--w,0deg));animation:ot-nadel 900ms var(--ruck) both}
+@keyframes ot-nadel{from{transform:rotate(var(--von,0deg))}}
+.ot-b-schein{animation:ot-atmen 5s ease-in-out infinite}
+@keyframes ot-atmen{50%{opacity:.48}}
+.ot-unter{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:center;gap:4px 16px;margin-top:2px;font-size:12px;line-height:1.5;color:var(--muted);text-align:center}
+.ot-vor4 b{font-family:var(--f-zahl);color:var(--text2)}
+.ot-laedt{display:grid;gap:14px}
+.ot-lade-bogen{width:min(72%,400px);aspect-ratio:2/1;margin:0 auto;border-radius:999px 999px 14px 14px}
+/* breite Karte: Titel und Umschalter liegen oben links und rechts, der Halbkreis rückt dazwischen nach oben */
+@container haupt (min-width:820px){
+  .ot-instr .wk-titel{position:absolute;left:18px;right:18px;top:14px}
+  .ot-instr .wk-titel h1{max-width:calc(50% - 250px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ot-gauge{width:min(100%,500px);margin-top:0}
+}
+/* schmale Karte (Handy): Beschriftung im Halbkreis größer, damit sie lesbar bleibt */
+@container haupt (max-width:520px){
+  .ot-b-wort{font-size:13px;letter-spacing:.06em}
+  .ot-b-zahl{font-size:10.5px}
+  .ot-b-ankertext{font-size:12px}
+  .ot-b-ankerunter{font-size:10.5px}
+  .ot-b-gross{font-size:44px}
+  .ot-b-stufe{font-size:21px}
+}
+@media (prefers-reduced-motion:reduce){.ot-nadel,.ot-b-schein,.marke-punkt{animation:none}}
+:root[data-theme="light"] .ot-b-schein{opacity:.34;animation:none}
+:root[data-theme="light"] .ot-instr{background:radial-gradient(520px 300px at 50% 108%,color-mix(in srgb,var(--zf,var(--akzent)) 12%,transparent),transparent 70%),var(--glas)}
+/* Lage-Karte (bisherige Kopf-Karte) beginnt jetzt mit dem Steckbrief */
+.wert-kopf{padding:16px 18px 16px;background:radial-gradient(620px 300px at 100% -10%,color-mix(in srgb,var(--zf,var(--akzent)) 12%,transparent),transparent 70%),var(--glas)}
+.wert-kopf .wk-steck{margin-top:0}
+.st-chip{background:var(--glas-leicht);border-color:var(--line)}
+.st-chip.art{border-color:color-mix(in srgb,var(--akzent) 50%,transparent);background:var(--akzent-weich)}
+.wert-kopf .gauge::before{display:none}
+@media (max-width:900px){
+  #haupt{padding:10px 10px 24px}
+  .abschnitt-nav{margin:-10px -10px 10px;padding:5px 10px}
+  .ot-term,.ot-mitte{gap:10px}
+  .ot-instr{padding:12px 12px 10px}
+  .ot-instr .wk-titel h1{font-size:20px}
+  .ot-gauge{margin-top:6px}
+  .wert-kopf{padding:14px 12px}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -2681,6 +2747,7 @@ const KQ_FARBEN = ["#e2583e", "#e2583e80", "transparent", "#14a08580", "#0b7a64"
 const VQ_FARBE = "#f59e0b";
 const kqFarbe = v => v == null ? null : v >= 80 ? KQ_FARBEN[4] : v >= 60 ? KQ_FARBEN[3] : v > 40 ? null : v > 20 ? KQ_FARBEN[1] : KQ_FARBEN[0];
 const vqFarbe = v => v == null ? null : v >= 80 ? VQ_FARBE : v >= 60 ? VQ_FARBE + "70" : null;
+const CHIPS_EINFACH = ["w200", "kaufzonen", "kegel", "ampel"];   // diese Linien-Knöpfe stehen auch in der Ansicht „Einfach“ am Chart
 const CHIPS_WICHTIG = ["w200", "w100", "w300", "w400", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
@@ -2713,7 +2780,7 @@ const ERKLAERUNG_TITEL = {
   r_profil: {titel:"Risiko-Profil", text:"Alle Zahlen stammen aus den Wochenschlusskursen dieses Werts über seine ganze Geschichte. Größter Rückgang: der tiefste Fall von einem Hoch bis zum folgenden Tief. Schwankung pro Jahr: wie stark die Wochenrenditen streuen, auf ein Jahr hochgerechnet. Längste Zeit unter altem Hoch: so lange musste man warten, bis ein früherer Höchstkurs wieder erreicht war. Kalenderjahre: Veränderung von Jahresende zu Jahresende, das laufende Jahr zählt nicht mit. Die Vergangenheit ist keine Obergrenze – der nächste Rückgang kann größer ausfallen."},
   r_vola: {titel:"Schwankung pro Jahr (Volatilität)", text:"Das gängigste Risikomaß: Standardabweichung der Wochenrenditen, auf ein Jahr hochgerechnet (× Wurzel aus 52). Grobe Faustregel: In etwa zwei von drei Jahren lag das Jahresergebnis innerhalb dieser Spanne um den Durchschnitt, in jedem dritten Jahr außerhalb. Je höher die Zahl, desto unruhiger der Wert. Zum Einordnen steht darunter der Vergleich mit dem S&P 500."},
   r_markt: {titel:"Vergleich mit dem S&P 500", text:"Aus den gemeinsamen Wochen der letzten 10 Jahre, verglichen mit dem S&P 500 (500 große US-Firmen). Schwankung: 1,5-fach heißt, die Ausschläge waren im Schnitt anderthalbmal so groß. Gleichlauf (Korrelation, von −1 bis +1): Bei +1 bewegen sich beide immer in dieselbe Richtung, bei 0 unabhängig voneinander, bei −1 entgegengesetzt. Werte mit niedrigem Gleichlauf können ein Depot ruhiger machen. Bewegung je 1 % (Beta): Um wie viel sich dieser Wert im Schnitt bewegte, wenn der S&P 500 in einer Woche um 1 % stieg oder fiel."},
-  modus: {titel:"Einfach oder Profi", text:"Einfach zeigt das Wichtigste: die Antwort, den Nachkauf-Kurs, die Zeitachse, den Zukunfts-Rechner und das Risiko. Profi zeigt zusätzlich alles andere – den großen Chart mit allen Linien, Kaufzonen, Rückblick-Karten, Geschäftszahlen und Details. Es wird nichts gelöscht, nur ausgeblendet; die Wahl merkt sich dieser Browser."},
+  modus: {titel:"Einfach oder Profi", text:"Einfach zeigt das Wichtigste: die Ampel, den Chart mit den wichtigsten Linien, die Antwort, den Nachkauf-Kurs, die Zeitachse, den Zukunfts-Rechner und das Risiko. Profi zeigt zusätzlich alles andere – alle Linien und Werkzeuge im Chart, Kaufzonen, Rückblick-Karten, Geschäftszahlen und Details. Es wird nichts gelöscht, nur ausgeblendet; die Wahl merkt sich dieser Browser."},
   saeule: {titel:"Die fünf Stufen als Säule", text:"Jede Schicht ist eine Stufe der Ampel, oben teuer, unten günstig – wie im Chart. Daneben steht der Kursbereich der Stufe von heute. Die Kugel schwebt auf der Höhe des heutigen Kurses: Je weiter unten, desto günstiger gemessen an der eigenen Geschichte des Werts. Die Grenzen wandern jede Woche mit der 200-Wochen-Linie."},
   zeitachse: {titel:"Zeitachse", text:"Ein Bild für Rückblick und Ausblick. Links vom Strich „Heute“: der echte Kurs der letzten Jahre. Wählst du dort einen Zeitpunkt, zeigt das Tool die Ampel von damals – so, wie sie mit dem Wissen von damals berechnet worden wäre – und was danach wirklich kam. Rechts: mögliche Wege aus der Simulation (echte Wochen der letzten 20 Jahre, neu zusammengesetzt). Das helle Band enthält 9 von 10 Wegen, das kräftige jeden zweiten; die Zahlen darunter nennen den Bereich von 8 von 10 Wegen. Keine Vorhersage."},
   zrechner: {titel:"Zukunfts-Rechner", text:"Rechnet für deinen Betrag und deine monatliche Rate tausende mögliche Verläufe durch: Aus den echten Wochenrenditen der letzten 20 Jahre werden zusammenhängende 13-Wochen-Stücke zufällig neu aneinandergehängt. „8 von 10“ heißt: In 80 % der Wege lag das Ergebnis in diesem Bereich, in je 10 % darüber oder darunter. Bei Werten in Dollar wird in Euro gerechnet (mit dem Wechselkurs jeder Woche). Die Wege übernehmen die Durchschnittsrendite der letzten 20 Jahre – war sie ungewöhnlich hoch, sind die Ergebnisse entsprechend optimistisch."},
@@ -2781,7 +2848,7 @@ function rueckgangKurve(c){   // „unter Wasser“: wie weit der Kurs zu jeder 
 }
 const punkte100 = (n, farbe) => { const a = Math.max(0, Math.min(100, Math.round(n))); return `<div class="p100" style="--pf:${farbe}" role="img" aria-label="${a} von 100">${"<i class=\"an\"></i>".repeat(a)}${"<i></i>".repeat(100 - a)}</div>`; };
 // ============================================================ Titelseite „Antwort zuerst“ (Umbau 23.11.2026, Marc: „wie im Jahr 2050“)
-// Einfach zeigt das Wichtigste (Antwort, Nachkaufen, eigene Position, Zeitachse, Zukunfts-Rechner, Risiko), Profi zusätzlich alles Bisherige.
+// Einfach zeigt das Wichtigste (Ampel-Halbkreis, Chart mit den wichtigsten Linien, Antwort, Nachkaufen, eigene Position, Zeitachse, Zukunfts-Rechner, Risiko), Profi zusätzlich alles Bisherige.
 let MODUS = lade("modus", "einfach");
 const URTEIL_SATZ = ["Historisch sehr teuer.", "Eher teuer.", "Weder günstig noch teuer.", "Günstig.", "Historisch sehr günstig."];
 function modusSetzen(m){
@@ -2854,6 +2921,68 @@ async function wegEinordnung(id){   // Kaufweg-Karte: Wie oft gewinnt „Warten 
   const pz = w6.p_anteil, von = pz < 0.01 ? "weniger als 1" : fmt(pz * 100, 0);
   p.innerHTML = `<b>Einordnung:</b> Bei ${w6.besser_sim} von 100 ${G[2]} brachte „Warten auf günstig“ über die ganze Geschichte mehr als der Sparplan. Auf Zufallsverläufen (gleiche Rendite und Schwankung, aber ohne Zusammenhang zwischen Preis und späterem Ertrag) gelingt das im Schnitt bei ${w6.besser_zufall} von 100, üblich sind ${w6.zufall_5} bis ${w6.zufall_95}. ${pz >= 0.05 ? "Das liegt im Bereich des Zufalls: Ein Sieg des Wartens bei einem einzelnen Wert belegt nicht, dass die Ampel den richtigen Zeitpunkt findet." : `Der Zufall allein erreicht das nur in ${von} von 100 Durchläufen – bei ${ZF.sim_titel} Werten ein Hinweis, kein Beweis.`}`;
   p.hidden = false;
+}
+// ------------------------------------------------------------ Ampel-Halbkreis (Obsidian Terminal, 24.11.2026): datengetriebenes SVG
+// 60 radiale Leucht-Segmente von 0 (sehr teuer, links) bis 100 (sehr günstig, rechts); jedes Segment trägt die Farbe seiner Stufe
+// (Grenzen 15 · 40 · 60 · 80 liegen genau auf Segmentgrenzen). Darunter ein weichgezeichneter Schein, darüber die Licht-Nadel auf der
+// heutigen Ampel-Zahl. Die 70er-Marke (Kurs genau auf der 200-Wochen-Linie) erscheint nur bei Werten mit dieser Ampel-Art.
+const STUFEN_GROSS = ["SEHR TEUER", "TEUER", "NEUTRAL", "GÜNSTIG", "SEHR GÜNSTIG"];
+let NADEL_VORHER = null;   // Winkel der Nadel beim zuletzt gezeigten Wert: von dort schwenkt sie zum neuen
+function halbkreis(w){
+  const s = w.score, hat = s != null, F5 = AF(), cx = 200, cy = 176, R = 148, r = 112, N = 60, luecke = 0.62;
+  const pkt = (rad, grad) => { const a = (180 - grad) * Math.PI / 180; return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)]; };   // grad: 0 = links (Ampel 0), 180 = rechts (Ampel 100)
+  const P = (rad, grad) => pkt(rad, grad).map(v => v.toFixed(1)).join(",");
+  const st = hat ? stufe(s) : -1, zf = hat ? F5[st] : "var(--muted)", sg = hat ? Math.max(0, Math.min(100, s)) : null, jetzt = hat ? Math.min(N - 1, Math.floor(sg / 100 * N)) : -1;
+  let seg = "", schein = "";
+  for (let i = 0; i < N; i++) {
+    const a0 = i * 180 / N + luecke, a1 = (i + 1) * 180 / N - luecke, f = F5[stufe((i + 0.5) * 100 / N)], an = i === jetzt, ra = an ? R + 5 : R, ri = an ? r - 3 : r;
+    const form = `${P(ri, a0)} ${P(ra, a0)} ${P(ra, a1)} ${P(ri, a1)}`;
+    seg += `<polygon points="${form}" fill="${f}" opacity="${!hat ? .28 : an ? 1 : stufe((i + 0.5) * 100 / N) === st ? .96 : .78}"/>`;
+    if (hat) schein += `<polygon points="${form}" fill="${f}"/>`;
+    if (an) seg += `<polygon points="${form}" fill="#fff" opacity=".55"/>`;
+  }
+  const marke = (wert, text) => { const g = wert * 1.8, [x, y] = pkt(r - 13, g); return `<path d="M${P(r - 6, g)}L${P(r - 2, g)}" stroke="var(--text2)" stroke-width="1" opacity=".7"/><text x="${x.toFixed(1)}" y="${(y + 3.5).toFixed(1)}" text-anchor="middle" class="ot-b-zahl">${text}</text>`; };
+  const wort = (wert, i, anker, dx = 0, dy = 0) => { const [x, y] = pkt(R + 14, wert * 1.8); return `<text x="${(x + dx).toFixed(1)}" y="${(y + dy).toFixed(1)}" text-anchor="${anker}" class="ot-b-wort${i === st ? " an" : ""}" fill="${F5[i]}">${STUFEN_GROSS[i]}</text>`; };
+  const anker70 = w.ampel_art === "anker200s";
+  const [ax, ay] = pkt(R + 17, 126);
+  const winkel = hat ? sg * 1.8 : 0, von = NADEL_VORHER ?? Math.max(0, winkel - 50);
+  if (hat) NADEL_VORHER = winkel;
+  return `<svg class="ot-bogen" id="ot-bogen" viewBox="0 0 420 248" role="img" aria-label="${hat ? `Ampel ${fmt(s,0)} von 100: ${zonenWort(s)}. Skala von 0 (sehr teuer) bis 100 (sehr günstig).` : "Noch keine Ampel"}">
+    <defs>
+      <filter id="ot-bloom" x="-30%" y="-40%" width="160%" height="190%"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="ot-glut" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="3.2"/></filter>
+      <linearGradient id="ot-nadel-v" x1="${cx}" y1="${cy}" x2="${cx - r}" y2="${cy}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${zf}" stop-opacity=".15"/><stop offset=".55" stop-color="${zf}" stop-opacity=".9"/><stop offset="1" stop-color="#fff"/></linearGradient>
+      <radialGradient id="ot-boden" cx="50%" cy="100%" r="75%"><stop offset="0" stop-color="${zf}" stop-opacity=".2"/><stop offset="1" stop-color="${zf}" stop-opacity="0"/></radialGradient>
+    </defs>
+    <path d="M${P(r - 20, 0)}A${r - 20} ${r - 20} 0 0 1 ${P(r - 20, 180)}Z" fill="url(#ot-boden)"/>
+    <g filter="url(#ot-bloom)" opacity=".62" class="ot-b-schein">${schein}</g>
+    <g>${seg}</g>
+    <path d="M${P(R + 4.5, 0)}A${R + 4.5} ${R + 4.5} 0 0 1 ${P(R + 4.5, 180)}" fill="none" stroke="var(--line2)" stroke-width=".8"/>
+    <path d="M${P(r - 4, 0)}A${r - 4} ${r - 4} 0 0 1 ${P(r - 4, 180)}" fill="none" stroke="var(--line2)" stroke-width=".8" stroke-dasharray="1 4.2"/>
+    ${marke(0, "0")}${marke(15, "15")}${marke(40, "40")}${marke(60, "60")}${marke(80, "80")}${marke(100, "100")}
+    ${wort(27.5, 1, "end", 2, 2)}${wort(50, 2, "middle", 0, -1)}${wort(63.5, 3, "start", 2, 0)}
+    <text x="${cx - R - 4}" y="${cy + 16}" text-anchor="start" class="ot-b-wort${st === 0 ? " an" : ""}" fill="${F5[0]}">${STUFEN_GROSS[0]}</text>
+    <text x="${cx + R + 4}" y="${cy + 16}" text-anchor="end" class="ot-b-wort${st === 4 ? " an" : ""}" fill="${F5[4]}">${STUFEN_GROSS[4]}</text>
+    ${anker70 ? `<g class="ot-b-anker" data-e="l_200w"><path d="M${P(r - 9, 126)}L${P(R + 15, 126)}" stroke="var(--gelb)" stroke-width="1.3"/><circle cx="${pkt(R + 15, 126)[0].toFixed(1)}" cy="${pkt(R + 15, 126)[1].toFixed(1)}" r="1.8" fill="var(--gelb)"/>
+      <text x="${(ax + 6).toFixed(1)}" y="${(ay + 3).toFixed(1)}" class="ot-b-ankertext" fill="var(--gelb)">70er Ankerlinie</text><text x="${(ax + 6).toFixed(1)}" y="${(ay + 14.5).toFixed(1)}" class="ot-b-ankerunter">(200-Wochen-Linie)</text></g>` : ""}
+    ${hat ? `<g class="ot-nadel" style="--w:${winkel.toFixed(1)}deg;--von:${von.toFixed(1)}deg">
+      <polygon points="${cx},${cy - 3.2} ${cx - r + 8},${cy - .55} ${cx - r + 8},${cy + .55} ${cx},${cy + 3.2}" fill="${zf}" opacity=".5" filter="url(#ot-glut)"/>
+      <polygon points="${cx + 9},${cy - 2.6} ${cx - r + 6},${cy - .5} ${cx - r + 6},${cy + .5} ${cx + 9},${cy + 2.6}" fill="url(#ot-nadel-v)"/>
+      <circle cx="${cx - r + 7}" cy="${cy}" r="6.5" fill="#fff" opacity=".85" filter="url(#ot-glut)"/><circle cx="${cx - r + 7}" cy="${cy}" r="2.1" fill="#fff"/></g>
+    <circle cx="${cx}" cy="${cy}" r="11" fill="${zf}" opacity=".5" filter="url(#ot-glut)"/><circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--panel)" stroke="${zf}" stroke-width="1.6"/><circle cx="${cx}" cy="${cy}" r="1.7" fill="#fff"/>` : ""}
+    <text x="${cx}" y="${cy + 62}" text-anchor="middle" class="ot-b-wert" fill="${zf}"><tspan class="ot-b-gross">${hat ? fmt(s,0) : "–"}</tspan><tspan class="ot-b-trenn" dx="9" dy="-6"> · </tspan><tspan class="ot-b-stufe" dx="5">${hat ? STUFEN_GROSS[st] : (w.jung ? "NOCH ZU JUNG" : "NOCH KEINE AMPEL")}</tspan></text>
+  </svg>`;
+}
+function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel, Merken, Einfach/Profi – und der Ampel-Halbkreis
+  const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
+  return `<section class="karte ot-instr" id="ot-instr"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
+      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span>
+        <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
+        <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
+      <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
+      <div class="ot-unter">${w.score == null ? (w.jung ? "Für eine Ampel braucht es mehr Kursgeschichte." : "Für diesen Wert gibt es noch keine Ampel.")
+        : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">vor 4 Wochen <b>${fmt(w.score_vor4w,0)}</b> ${w4Html(de)}</span>` : ""}`}</div>
+    </section>`;
 }
 function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der Vergleich mit der eigenen Geschichte
   if (w.score == null) return `<div class="urteil-zeile"><div><div class="urteil-satz">${w.jung ? "Noch zu jung für eine Ampel." : "Noch keine Ampel."}</div></div></div>`;
@@ -3272,11 +3401,11 @@ function abschnittNavSpur(){
 }
 function abschnittNavInit(){
   const nav = $("#abschnitt-nav"); if (!nav) return;
-  const Z = [["wert-kopf","Überblick"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["chart-karte","Chart"],["s-zeit","Zeitachse"],["s-weg","Kaufweg"],["s-inhalt","Inhalt"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
+  const Z = [["ot-term","Überblick"],["chart-karte","Chart"],["wert-kopf","Lage"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["s-zeit","Zeitachse"],["s-weg","Kaufweg"],["s-inhalt","Inhalt"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
     .filter(([id]) => { const e = document.getElementById(id); return e && e.offsetParent !== null; });   // nur, was in der gewählten Ansicht (Einfach/Profi) sichtbar ist
   nav.innerHTML = Z.map(([id, t], i) => `<button type="button" data-ziel="${id}" aria-current="${i === 0}">${t}</button>`).join("");
   nav.onclick = ev => { const b = ev.target.closest("button[data-ziel]"); if (!b) return;
-    if (b.dataset.ziel === "wert-kopf") $("#haupt").scrollTo({top:0, behavior:"smooth"}); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
+    if (b.dataset.ziel === "ot-term") $("#haupt").scrollTo({top:0, behavior:"smooth"}); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
   if (!NAV_SPUR_AN) { NAV_SPUR_AN = true; $("#haupt").addEventListener("scroll", abschnittNavSpur, {passive:true}); }
   abschnittNavSpur();
 }
@@ -3599,10 +3728,10 @@ async function zeige(id, opt={}){
   listeMarkieren(); kopfNavAn();
   if (!opt.ohneAnsicht) ansicht("haupt");
   const vorher = ALLE.find(w => w.id === id);
-  if (!opt.ohneScroll || !$("#wert-kopf")) {   // Ladezustand
+  if (!opt.ohneScroll || !$("#ot-term") || !$("#wert-kopf")) {   // Ladezustand
     alleChartsWeg();
-    $("#haupt").innerHTML = `<div class="karte wert-kopf"><div class="wk-haupt" style="margin:0"><div style="flex:1 1 300px"><div class="lade" style="height:28px;width:45%"></div><div class="lade" style="height:14px;width:30%;margin-top:10px"></div><div class="lade" style="height:44px;margin-top:14px"></div></div><div class="lade" style="width:230px;height:128px;border-radius:14px"></div></div></div>
-      <div class="abstand"></div><div class="karte lade" style="height:var(--g-chart,540px)"></div>`;
+    $("#haupt").innerHTML = `<div class="ot-term"><div class="ot-mitte"><div class="karte ot-instr ot-laedt"><div class="lade" style="height:26px;width:42%"></div><div class="lade ot-lade-bogen"></div><div class="lade" style="height:12px;width:60%;margin:0 auto"></div></div>
+      <div class="karte lade" style="height:var(--g-chart,540px)"></div></div></div>`;
     if (!opt.ohneScroll) $("#haupt").scrollTop = 0;
   }
   const daten = await apiWert(id);
@@ -3638,13 +3767,36 @@ async function zeige(id, opt={}){
     ["vq", "Verkaufsqualität (Rückblick)", `<i class="flaeche" style="background:linear-gradient(90deg,transparent,${VQ_FARBE})"></i>`, "vq", eigen && !!c.vq],
     ["ampel", "Ampel-Verlauf (unten)", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
   ].filter(x => x[4]).sort((a, b) => (CHIPS_WICHTIG.includes(a[0]) ? CHIPS_WICHTIG.indexOf(a[0]) : 99) - (CHIPS_WICHTIG.includes(b[0]) ? CHIPS_WICHTIG.indexOf(b[0]) : 99));
-  const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
+  const chipKnopf = ([k, t, ik, e]) => `<button class="chip${CHIPS_EINFACH.includes(k) ? "" : " nur-profi"}" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
     <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
+    <div class="ot-term" id="ot-term">
+      <div class="ot-mitte">
+      ${instrumentKarte(w, id)}
+      <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
+      <div class="chart-leiste">
+        <div class="segment nur-profi" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        <div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+        ${eigen && waehrungVon(w) === "USD" ? `<div class="segment nur-profi" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein nur-profi" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
+        ${eigen ? `<button class="werkzeug nur-profi" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
+        ${eigen && w.tv ? `<div class="segment rechts nur-profi" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">
+        <div class="chip-zeile"><span class="chip-titel">Das Wichtigste</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div>
+        <div class="chip-zeile nur-profi"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
+      <div class="chart-flaeche">
+        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
+        <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
+        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
+      </div>
+      <div class="tv-hinweis" id="tv-hinweis" hidden></div><div class="tv-hinweis" id="chart-meldung" hidden></div>
+      ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
+      <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
+    </section>
+      </div>
+    </div>
     <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
-      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1>
-        <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
-        <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
       ${steckbrief(w)}
       ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}${w.beschreibung_quelle ? ` <span class="klein">Quelle: ${/^https:\/\//.test(w.beschreibung_url || "") ? `<a href="${esc(w.beschreibung_url)}" target="_blank" rel="noopener">${esc(w.beschreibung_quelle)}</a>` : esc(w.beschreibung_quelle)}</span>` : ""}</p>` : ""}
       <div class="wk-haupt">
@@ -3664,28 +3816,6 @@ async function zeige(id, opt={}){
     <div id="vergleich"></div>
     ${nachkaufKarte(w) ? `<div class="abstand"></div>${nachkaufKarte(w)}` : ""}
     ${positionKarte(w) ? `<div class="abstand"></div>${positionKarte(w)}` : ""}
-    <div class="abstand nur-profi"></div>
-    <section class="karte chart-karte nur-profi ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
-      <div class="chart-leiste">
-        <div class="segment" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
-        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
-        <div class="segment" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
-        ${eigen && waehrungVon(w) === "USD" ? `<div class="segment" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
-        ${eigen ? `<button class="werkzeug" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
-        ${eigen && w.tv ? `<div class="segment rechts" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
-      </div>
-      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">
-        <div class="chip-zeile"><span class="chip-titel">Das Wichtigste</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div>
-        <div class="chip-zeile"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
-      <div class="chart-flaeche">
-        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
-        <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
-        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
-      </div>
-      <div class="tv-hinweis" id="tv-hinweis" hidden></div><div class="tv-hinweis" id="chart-meldung" hidden></div>
-      ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
-      <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
-    </section>
     <div class="abstand"></div>
     ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
