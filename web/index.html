@@ -1669,6 +1669,63 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
   .ot-instr .wk-titel h1{font-size:20px}
 }
 @media (max-width:380px){.chart-leiste .segment button{padding:5px 7px}}
+/* ---- O3 Rangfolge des Leuchtens: Stufe 1 = Halbkreis mit Nadel · Stufe 2 = aktive Listenzeile, Zustand der Fallen-Warnung, Lichtpunkt am letzten Kurs ·
+   Stufe 3 = alles andere: Farbe ja, Leuchten nein. Die Bedienung (aktiver Reiter, gewählter Knopf, Fokus) trägt ein eigenes Blau, damit sie nicht mit
+   der Stufe „günstig“ (Cyan) verwechselt wird; die Cyan-Lichtkante der Karten bleibt. */
+:root{--akzent:#5aaeff;--akzent-stark:#2f8ff0;--akzent-weich:rgba(90,174,255,.13);--auf-akzent:#031221}
+:root[data-theme="light"]{--akzent:#1763b8;--akzent-stark:#0f4f98;--akzent-weich:rgba(23,99,184,.10);--auf-akzent:#ffffff}
+.marke svg{filter:none}
+.marke-punkt{animation:none;box-shadow:none;background:var(--guenstig);width:5px;height:5px}
+.kopf-nav button::after{box-shadow:none;height:2px}
+.kopf-nav button[aria-current="page"]{background:none}
+.abschnitt-nav button[aria-current="true"]::after,.reiter-liste button[aria-selected="true"]::after{box-shadow:none}
+.suchfeld:hover{box-shadow:inset 0 1px 0 var(--kante)}
+.plakette i,.plakette.alt i{box-shadow:none}
+.segment button[aria-pressed="true"],.modus-wahl button[aria-pressed="true"],.reiter button.an,.knopf.an,.knopf.leise.an,.ot-mehr[aria-expanded="true"]{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 55%,transparent)}
+.knopf-ikon[aria-pressed="true"],.werkzeug[aria-pressed="true"]{box-shadow:none}
+.eingabe button:not(.leise):not(.linkknopf):not(.an),.knopf:not(.leise):not(.an){box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 0 0 1px color-mix(in srgb,var(--akzent) 55%,transparent)}
+.regler::-webkit-slider-thumb,.eingabe input[type=range]::-webkit-slider-thumb{box-shadow:0 0 0 4px color-mix(in srgb,var(--akzent) 18%,transparent)}
+.pille{box-shadow:none}
+.zeile .pille{text-shadow:none}
+.z-balken i{box-shadow:none;background:var(--zf);opacity:.85}
+.zeile.aktiv .z-balken i{opacity:1;box-shadow:0 0 8px color-mix(in srgb,var(--zf) 80%,transparent)}
+.listen-werkzeug input[type=search]:focus{box-shadow:0 0 0 3px var(--akzent-weich)}
+.filter-aktien input[type=checkbox]:checked{box-shadow:none}
+.chip i,.chip i.flaeche{box-shadow:none}
+.kk-kat::before,.sekt .nr,.frage i,.skala-legende i,#d-risiko h3::before{box-shadow:none}
+.sekt .nr{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 45%,transparent)}
+.frage:hover,.wetter .karte:hover{box-shadow:inset 0 1px 0 var(--kante)}
+.kachel{box-shadow:inset 0 1px 0 var(--kante)}
+.kachel:hover{box-shadow:inset 0 1px 0 var(--kante)}
+.ot-c-zahl.pos,.ot-s-vs b.pos,.ot-s-vs b.neg,.wetter .wk-wert,.kachel .s b,.dp-k-haupt>b{text-shadow:none}
+.ot-c-spark path[filter]{display:none}
+.ot-s-b i.gut,.ot-s-b i.schlecht{box-shadow:none}
+.ot-l-z>i{box-shadow:none;background:var(--zf)}
+.ot-l-z.heute{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--zf) 45%,transparent)}
+.hm-stufe{box-shadow:none}
+.ot-hud{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(0,0,0,.3),0 14px 30px -14px rgba(0,0,0,.85)}
+.lese-ehrlich{box-shadow:inset 0 1px 0 var(--kante)}
+.lese-ehrlich::before,.lese-stufen i{box-shadow:none}
+/* ältere Runden: Leuchtröhren, Leuchtkanten und Schatten an Balken und Hervorhebungen werden zu ruhigen Farbflächen (die Kugeln der 100 Wege bleiben, wie sie sind) */
+.balken i,.meter i,.mp-roehre i,.mp-qb i,.lt>i,.dv-s i,.vh-z .b i,.anteil-b i{box-shadow:none}
+.gl-bahn{box-shadow:inset 0 2px 3px var(--boden)}
+.lt,.lt.heute{box-shadow:inset 0 1px 0 var(--kante)}
+.lt.heute{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--zf) 70%,transparent)}
+.lt-heute{box-shadow:none}
+.weg.sieger,.sv-r.sieger{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--wf) 55%,transparent)}
+.mp-lage.mp-jetzt{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mf) 55%,transparent)}
+.mp-buehne{box-shadow:inset 0 1px 0 var(--kante)}
+.mp-buehne::after,.mp-zeichen::after{display:none}
+.mp-zeichen{box-shadow:inset 0 1px 0 rgba(255,255,255,.4)}
+.mp-leg i,.mp-l-pf,.mp-k::before,.sv-tab th .sv-dot{box-shadow:none}
+.mp-heute{animation:none}
+.fakt .f-i{box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.dp-kopf{background:var(--glas)}
+.unten-nav button[aria-current="page"] svg{filter:none}
+.unten-nav button[aria-current="page"]::before{box-shadow:none}
+.suche-box{box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.35),0 30px 70px -20px rgba(0,0,0,.9)}
+.ot-b-schein{animation:none}
+@media (min-width:901px){.ot-gauge{width:min(100%,480px)}}
 </style>
 </head>
 <body data-ansicht="haupt">
