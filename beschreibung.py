@@ -29,7 +29,7 @@ import requests
 import einstellungen as E
 
 ZIEL = E.DATEN / "beschreibung.json"
-VERSION = 5   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200, 5: Hebel 2x)
+VERSION = 6   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200, 5: Hebel 2x, 6: Hebel 2x auf 62 Produkte)
 WIKIDATA = "https://query.wikidata.org/sparql"
 KOPF = {"User-Agent": "minusmitstil-kaufplan/1.0 (Lernprojekt, GitHub swissiybot/minusmitstil)", "Accept": "application/sparql-results+json"}
 BOERSE = {"Q82059": "Nasdaq", "Q13677": "NYSE"}
@@ -299,10 +299,16 @@ def satz_bereinigen(x: str | None) -> str | None:
 def main():
     offen_datei = E.DATEN / "beschreibung_offen.txt"   # noch fehlende Wikipedia-Sätze: dann nicht 7 Tage warten
     try:
-        alte_version = json.loads(ZIEL.read_text()).get("_version") if ZIEL.exists() else None
+        alt = json.loads(ZIEL.read_text()) if ZIEL.exists() else {}
+        alte_version = alt.get("_version")
     except Exception:
-        alte_version = None
-    if (ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv and alte_version == VERSION
+        alt, alte_version = {}, None
+    # Werte der festen Listen (Hebel-Produkte), die in der vorhandenen Datei noch fehlen: dann sofort neu bauen. Am 24.11.2026 wurde die
+    # Hebel-Liste von 28 auf 62 erweitert, die Datei war aber schon frisch gebaut – die 34 neuen standen online ohne ISIN, WKN und Kurztext.
+    fehlt = [e["id"] for e in E.HEBEL_ETFS if e["id"] not in alt]
+    if fehlt and ZIEL.exists():
+        print(f"Beschreibungen: {len(fehlt)} Werte der festen Listen fehlen noch (z. B. {fehlt[0]}) – wird neu gebaut")
+    if (ZIEL.exists() and time.time() - ZIEL.stat().st_mtime < 7 * 86400 and "--neu" not in sys.argv and alte_version == VERSION and not fehlt
             and not (offen_datei.exists() and offen_datei.read_text().strip() not in ("", "0"))):
         print("Beschreibungen: jünger als 7 Tage, nicht neu geladen")
         return
