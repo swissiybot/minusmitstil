@@ -1065,7 +1065,8 @@ h1,h2,h3{letter-spacing:-.02em}
 .zahl,.pille,kbd,.gross-zahl,.mittel-zahl,.kpi .k-w,.kv-gross,.za-gross,.vh-z .w,.weg-geld,.sv-geld,.ampel-marke b,.zahl-r,.w4,.wtab td,.wert .v,.wetter .wk-wert,.kachel .s b,.hm-stufe,
 .st-chip b,.lt .lt-w,.vb b,.bl-z b,.mp-jahre,.regler-achse,.kurve-leg,.meter-leg,input[type=number],.zr-feld input,.dp-anteil{
   font-family:var(--f-zahl);font-variant-numeric:tabular-nums lining-nums}
-.wtab td:first-child{font-family:var(--f-ui)}
+.wtab td:first-child,.dp-tab td,.dk-tab td,.dw-tab td,.lese .wtab td,.wtab tr.depot-zeile td{font-family:var(--f-ui)}
+.dp-tab .feld,.dp-tab td:nth-child(3),.dw-tab td[data-l]{font-family:var(--f-zahl)}
 .kv-gross small,.za-gross small,.vh-z .w small,.gross-zahl small{font-family:var(--f-ui);letter-spacing:0}
 .gross-zahl,.kv-gross,.za-gross,.vh-z .w,.wetter .wk-wert,.kachel .s b,.ampel-marke b{letter-spacing:-.045em}
 .kpi .k-w,.weg-geld,.sv-geld,.mittel-zahl{letter-spacing:-.04em}
@@ -1309,9 +1310,10 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-laedt{display:grid;gap:14px}
 .ot-lade-bogen{width:min(72%,400px);aspect-ratio:2/1;margin:0 auto;border-radius:999px 999px 14px 14px}
 /* breite Karte: Titel und Umschalter liegen oben links und rechts, der Halbkreis rückt dazwischen nach oben */
-@container haupt (min-width:820px){
+.ot-mitte{container-type:inline-size;container-name:mitte}
+@container mitte (min-width:800px){
   .ot-instr .wk-titel{position:absolute;left:18px;right:18px;top:14px}
-  .ot-instr .wk-titel h1{max-width:calc(50% - 250px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ot-instr .wk-titel h1{max-width:calc(50% - 240px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ot-gauge{width:min(100%,500px);margin-top:0}
 }
 /* schmale Karte (Handy): Beschriftung im Halbkreis größer, damit sie lesbar bleibt */
@@ -1491,6 +1493,91 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-l-fuss{margin-top:8px}
 @media (prefers-reduced-motion:reduce){.ot-f-striche,.ot-f-dreh,.ot-falle[data-zustand="warn"] .ot-f-schild{animation:none}}
 @media (max-width:900px){.ot-k{padding:12px 12px 11px} .ot-f-buehne{margin:-4px -12px 0}}
+/* ---- 7 Übrige Ansichten: Übersicht, Heatmap, Depot, Lesehilfe, Marktumfeld, Prüfung */
+.seiten-titel{font-size:22px;font-weight:650;letter-spacing:-.03em;margin:2px 0 4px}
+.seiten-unter{color:var(--text2);font-size:13.5px}
+.abschnitt-titel{font-size:15px;font-weight:650;letter-spacing:-.015em}
+.karte-kopf{font-size:10.5px;letter-spacing:.09em;color:var(--muted)}
+/* Übersicht */
+.wetter{gap:12px}
+.wetter .karte{padding:13px 14px;transition:border-color var(--tempo) var(--ruck),box-shadow var(--tempo) var(--ruck),transform var(--tempo) var(--ruck)}
+.wetter .karte:hover{border-color:color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:inset 0 1px 0 var(--kante),0 0 26px -10px var(--akzent),var(--tiefe);transform:translateY(-1px)}
+.wetter .wk-wert{font-family:var(--f-ui);font-size:27px;font-weight:700;letter-spacing:-.035em;text-shadow:0 0 22px color-mix(in srgb,currentColor 35%,transparent)}
+.schritte{gap:12px}
+.schritt .nr{font-family:var(--f-zahl);background:var(--akzent-weich);color:var(--akzent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--akzent) 45%,transparent)}
+.kachel{border-color:color-mix(in srgb,var(--kf) 34%,var(--line));border-radius:12px;background:var(--glas);box-shadow:inset 0 1px 0 var(--kante),inset 0 0 26px -16px var(--kf);
+  transition:transform var(--tempo) var(--ruck),box-shadow var(--tempo) var(--ruck),border-color var(--tempo) var(--ruck)}
+.kachel::before{opacity:1;background:linear-gradient(180deg,color-mix(in srgb,var(--kf) 20%,transparent),color-mix(in srgb,var(--kf) 6%,transparent))}
+.kachel:hover{border-color:var(--kf);box-shadow:inset 0 1px 0 var(--kante),0 0 24px -8px var(--kf);transform:translateY(-1px)}
+.kachel .s b{color:var(--kf);text-shadow:0 0 16px color-mix(in srgb,var(--kf) 50%,transparent)}
+.heat-gruppe h3{font-size:10.5px;letter-spacing:.1em}
+.skala-legende{gap:6px 14px;font-size:11.5px}
+.skala-legende i{width:9px;height:9px;border-radius:50%;box-shadow:0 0 0 3px color-mix(in srgb,currentColor 16%,transparent),0 0 10px currentColor}
+.af-zeile{border-bottom-color:var(--line);transition:background 140ms}
+.af-zeile:hover{background:color-mix(in srgb,var(--akzent) 6%,transparent)}
+/* Heatmap */
+.hm-leiste{padding:8px 0;border-bottom:0;background:none}
+.hm-stufe{min-width:50px;padding:3px 7px;border-radius:7px;font-size:11px;font-weight:650;color:var(--text);background:color-mix(in srgb,var(--pf) 24%,transparent);border:1px solid color-mix(in srgb,var(--pf) 70%,transparent);box-shadow:0 0 12px -4px var(--pf)}
+#karte-box{border:1px solid var(--line2);box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.3),var(--tiefe)}
+#karte-legende{gap:6px}
+/* Depot */
+.dp-kopf{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 28px;padding:16px 18px;margin-bottom:14px;
+  background:radial-gradient(520px 220px at 0 0,color-mix(in srgb,var(--akzent) 16%,transparent),transparent 70%),var(--glas)}
+.dp-k-haupt{display:grid;gap:2px;min-width:0}
+.dp-k-haupt>b{font-family:var(--f-zahl);font-size:38px;font-weight:700;letter-spacing:-.055em;line-height:1.1;color:var(--text);text-shadow:0 0 28px color-mix(in srgb,var(--akzent) 45%,transparent)}
+.dp-k-zahlen{display:flex;flex-wrap:wrap;gap:10px}
+.dp-k-zahlen>div{display:grid;gap:1px;min-width:108px;padding:8px 12px;border-radius:11px;border:1px solid var(--line);background:var(--glas-leicht);box-shadow:inset 0 1px 0 var(--kante)}
+.dp-k-zahlen b{font-family:var(--f-zahl);font-size:18px;font-weight:650;letter-spacing:-.04em;color:var(--text)}
+.dp-k-zahlen b.neg{color:var(--neg)}
+.dp-k-zahlen span{font-size:11.5px;color:var(--muted)}
+.seite-karte h2{letter-spacing:-.02em}
+.dp-tab tbody tr:not(.depot-zeile){transition:background 140ms,box-shadow 140ms}
+.dp-tab tbody tr:not(.depot-zeile):hover td{background:color-mix(in srgb,var(--akzent) 8%,transparent)}
+.wtab tr.depot-zeile td{background:var(--glas-leicht)}
+textarea.feld{background:var(--glas-leicht);color:var(--text)}
+#d-risiko h3::before{background:var(--akzent);border-radius:50%;box-shadow:0 0 12px var(--akzent)}
+.gl-bahn{background:linear-gradient(90deg,var(--a4),var(--a2),var(--a0))}
+.eingabe input[type=text],.eingabe input:not([type]),.eingabe input[type=search]{font-family:var(--f-ui);letter-spacing:0}
+/* Marktumfeld: kleiner Halbkreis für die CAPE-Bewertung */
+.cape-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px;margin:4px 14px 12px;padding:12px 16px;border-radius:var(--r);border:1px solid var(--line);background:var(--glas);box-shadow:inset 0 1px 0 var(--kante),var(--tiefe)}
+.ot-bogen-klein{flex:0 0 220px;width:220px;max-width:100%;height:auto;overflow:visible}
+.ot-kb-zahl{font-family:var(--f-zahl);font-size:30px;font-weight:700;letter-spacing:-.04em;filter:drop-shadow(0 0 8px currentColor)}
+.cape-text{flex:1 1 240px;min-width:0;font-size:13.5px;line-height:1.5;color:var(--text2)}
+.cape-text b{color:var(--text)}
+.mini{border-radius:12px}
+.kal{background:var(--glas-leicht)}
+/* Lesehilfe als Glas-Spalte */
+#lese-bereich{background:linear-gradient(180deg,color-mix(in srgb,var(--panel) 70%,transparent),color-mix(in srgb,var(--bg2) 78%,transparent));padding:0 16px 30px}
+.lese-kopf{background:color-mix(in srgb,var(--bg2) 82%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);margin:0 -16px 8px;padding:13px 16px 11px;border-bottom-color:var(--line)}
+.lese-kopf h2{font-size:15px;font-weight:650;letter-spacing:-.02em}
+.lese h4{margin:18px 0 6px;font-size:13.5px;font-weight:650;letter-spacing:-.01em;color:var(--text)}
+.lese p,.lese li{font-size:13px;line-height:1.6}
+.lese .wtab tr{background:var(--glas-leicht);border-color:var(--line)}
+.lese-stufen{display:flex;gap:3px;height:9px;margin:10px 0 4px}
+.lese-stufen i{border-radius:3px;background:linear-gradient(180deg,color-mix(in srgb,#fff 30%,var(--zf)),var(--zf));box-shadow:0 0 12px -2px var(--zf)}
+.lese-stufen-achse{position:relative;height:16px;margin-bottom:8px;font-family:var(--f-zahl);font-size:10.5px;color:var(--muted)}
+.lese-stufen-achse span{position:absolute;top:0;transform:translateX(-50%)}
+.lese-stufen-achse span:first-child{transform:none}
+.lese-stufen-achse span:last-child{transform:translateX(-100%)}
+.lese-ehrlich{position:relative;margin:16px 0 4px;padding:12px 14px 10px 16px;border-radius:12px;border:1px solid color-mix(in srgb,var(--gelb) 38%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--gelb) 12%,transparent),color-mix(in srgb,var(--gelb) 3%,transparent));box-shadow:inset 0 1px 0 var(--kante),0 0 26px -16px var(--gelb)}
+.lese-ehrlich::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 3px 3px 0;background:var(--gelb);box-shadow:0 0 12px var(--gelb)}
+.lese-ehrlich h4{margin-top:0;color:color-mix(in srgb,var(--gelb) 60%,var(--text))}
+.lese-ehrlich p{color:var(--text)}
+/* Titelseite, übrige Karten */
+.lt{background:linear-gradient(180deg,color-mix(in srgb,var(--zf) 12%,transparent),color-mix(in srgb,var(--zf) 4%,transparent));box-shadow:inset 0 1px 0 var(--kante),0 12px 22px -18px var(--boden)}
+.lt.heute{transform:none;background:linear-gradient(180deg,color-mix(in srgb,var(--zf) 26%,transparent),color-mix(in srgb,var(--zf) 10%,transparent));box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 0 0 1px color-mix(in srgb,var(--zf) 70%,transparent),0 0 30px -10px var(--zf)}
+.lt-heute{box-shadow:0 0 18px -4px var(--text)}
+.weg.sieger,.sv-r.sieger{background:linear-gradient(180deg,color-mix(in srgb,var(--wf) 16%,transparent),color-mix(in srgb,var(--wf) 5%,transparent));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px color-mix(in srgb,var(--wf) 55%,transparent),0 0 30px -12px var(--wf)}
+.weg.sieger .weg-platz,.weg-best,.sv-r.sieger .weg-platz{color:#04101a}
+.mp-lage.mp-jetzt{background:linear-gradient(180deg,color-mix(in srgb,var(--mf) 16%,transparent),color-mix(in srgb,var(--mf) 5%,transparent));box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px color-mix(in srgb,var(--mf) 55%,transparent),0 0 30px -12px var(--mf)}
+.mp-buehne{background:radial-gradient(440px 190px at 0 0,color-mix(in srgb,var(--mf) 22%,transparent),transparent 70%),var(--glas-leicht)}
+.vh-marke,.verl-marke,.mp-l-heute,.mp-l-pf,.mp-zeichen{color:#04101a}
+.fk-rang{color:var(--text2)}
+.sv-tab td.best,.sv-tab th.best{background:color-mix(in srgb,var(--akzent) 9%,transparent)}
+.sv-regeln{border-left-color:var(--akzent);background:var(--glas-leicht)}
+.zr-annahme-satz,.wk-aus{background:var(--akzent-weich)}
+.nk-karte .nk-status{background:var(--glas-leicht)}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1564,6 +1651,8 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
       </ol>
       <p>Warum so? An der 200-Wochen-Linie haben starke Werte wie der S&amp;P 500 früher oft ihren Boden gefunden. Wie weit „weit darüber“ oder „tief darunter“ ist, hängt dagegen vom Wert ab: Für den S&amp;P 500 sind 50 % über der Linie extrem, für Bitcoin normal. Deshalb vergleicht die Ampel über und unter der Linie mit der eigenen Geschichte des Werts.</p>
       <h4>Die fünf Stufen</h4>
+      <div class="lese-stufen" aria-hidden="true"><i style="--zf:var(--a0);flex:15"></i><i style="--zf:var(--a1);flex:25"></i><i style="--zf:var(--a2);flex:20"></i><i style="--zf:var(--a3);flex:20"></i><i style="--zf:var(--a4);flex:20"></i></div>
+      <div class="lese-stufen-achse" aria-hidden="true"><span style="left:0">0</span><span style="left:15%">15</span><span style="left:40%">40</span><span style="left:60%">60</span><span style="left:80%">80</span><span style="left:100%">100</span></div>
       <ul>
         <li><b>ab 80 – historisch sehr günstig:</b> tiefer unter der 200-Wochen-Linie als in einem Drittel der früheren Wochen darunter.</li>
         <li><b>60 bis 80 – günstig:</b> von knapp über der Linie bis etwas darunter.</li>
@@ -1571,8 +1660,8 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
         <li><b>15 bis 40 – teuer:</b> so weit über der Linie wie meistens oder weiter.</li>
         <li><b>bis 15 – historisch sehr teuer:</b> weiter über der Linie als in fast 4 von 5 früheren Wochen über der Linie.</li>
       </ul>
-      <h4>Was die Ampel nicht kann</h4>
-      <p>Sie sagt nicht voraus, ob der Kurs steigt. <b>Ehrlich:</b> Die 70 an der Linie ist ein gesetzter Wert, nicht aus der Geschichte gerechnet. Eine Ampel, die für jeden Wert einzeln aus seiner Geschichte lernt, war in der Prüfung ohne Zukunftswissen nicht besser – dafür hat ein einzelner Wert zu wenige voneinander unabhängige 3-Jahres-Abschnitte. Bei schwachen Firmen kann der Kurs jahrelang unter der Linie bleiben, und die Linie sinkt mit; dann zeigt die Ampel „sehr günstig“, obwohl es weiter abwärts geht. In der Prüfung ohne Zukunftswissen hat keine Ampel-Variante zuverlässig besser vorhergesagt als „beliebiger Tag“.</p>
+      <div class="lese-ehrlich"><h4>Was die Ampel nicht kann</h4>
+      <p>Sie sagt nicht voraus, ob der Kurs steigt. <b>Ehrlich:</b> Die 70 an der Linie ist ein gesetzter Wert, nicht aus der Geschichte gerechnet. Eine Ampel, die für jeden Wert einzeln aus seiner Geschichte lernt, war in der Prüfung ohne Zukunftswissen nicht besser – dafür hat ein einzelner Wert zu wenige voneinander unabhängige 3-Jahres-Abschnitte. Bei schwachen Firmen kann der Kurs jahrelang unter der Linie bleiben, und die Linie sinkt mit; dann zeigt die Ampel „sehr günstig“, obwohl es weiter abwärts geht. In der Prüfung ohne Zukunftswissen hat keine Ampel-Variante zuverlässig besser vorhergesagt als „beliebiger Tag“.</p></div>
       <h4>Was die Prüfung zeigt</h4>
       <div id="lesehilfe-zahlen"><div class="lade" style="height:90px"></div></div>
       <h4>Wie du das Tool liest</h4>
@@ -2548,7 +2637,8 @@ function zeigeKarte(opt = {}){
   const stand = werte.reduce((a, w) => w.datum > a ? w.datum : a, "");
   const knopf = (k, v, t) => `<button data-k="${k}" data-v="${v}" aria-pressed="${KARTE[k] === v}">${t}</button>`;
   // Farbskala: 7 Stufen von stark fallend (rot) über unverändert (grau) bis stark steigend (grün) – Tokens --hm0 … --hm6
-  const SKALA = ["#c2410c", "#e0703a", "#a5705c", "#4a505e", "#3f8578", "#14a085", "#0b7a64"];
+  const SKALA = F().hm;
+  const hell = (h, t) => /^#[0-9a-f]{6}$/i.test(h) ? "#" + [1, 3, 5].map(i => Math.round(parseInt(h.slice(i, i + 2), 16) * (1 - t) + 255 * t).toString(16).padStart(2, "0")).join("") : "#ffffff";
   const stufePerf = v => { const x = v / (GRENZE[KARTE.farbe] / 3); return Math.max(-3, Math.min(3, Math.round(x))) + 3; };
   const f = F();
   const farbeVon = w => {
@@ -2559,9 +2649,9 @@ function zeigeKarte(opt = {}){
   const textVon = w => perfModus ? vz(w.perf[PI[KARTE.farbe]], KARTE.farbe === "t" ? 2 : 1, " %") : KARTE.farbe === "mp" ? (MP_KURZ[w.mp] ?? "–") : fmt(w.score, 0);
   const g3 = GRENZE[KARTE.farbe] / 3;
   const legende = perfModus
-    ? SKALA.map((c, i) => `<span class="hm-stufe" style="background:${c}">${i === 3 ? "0 %" : (i < 3 ? "−" : "+") + fmt(Math.abs(i - 3) * g3, g3 < 1 ? 1 : 0) + " %"}${i === 0 || i === 6 ? "+" : ""}</span>`).join("")
-    : KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"],[f.teuer,"↘ Abwärtstrend"]].map(([c, t]) => `<span><i style="background:${c}"></i>${t}</span>`).join("")
-    : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AF()[i]}"></i>${t}</span>`).join("");
+    ? SKALA.map((c, i) => `<span class="hm-stufe" style="--pf:${c}">${i === 3 ? "0 %" : (i < 3 ? "−" : "+") + fmt(Math.abs(i - 3) * g3, g3 < 1 ? 1 : 0) + " %"}${i === 0 || i === 6 ? "+" : ""}</span>`).join("")
+    : KARTE.farbe === "mp" ? [[f.cyan,"↗ Aufwärtstrend (20- über 50-Wochen-Linie)"],[f.teuer,"↘ Abwärtstrend"]].map(([c, t]) => `<span><i style="background:${c};color:${c}"></i>${t}</span>`).join("")
+    : [[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i, t]) => `<span><i style="background:${AF()[i]};color:${AF()[i]}"></i>${t}</span>`).join("");
   wurzel.innerHTML = `
     ${ziel ? "" : '<h1 class="seiten-titel">Heatmap</h1>'}
     <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
@@ -2572,7 +2662,7 @@ function zeigeKarte(opt = {}){
     </div>
     <div id="karte-legende" class="skala-legende">${legende}</div>
     ${aktien.length === 0 && (KARTE.titel === "n100" || KARTE.titel === "alle") ? `<p class="klein" style="margin:4px 0 8px">Die Nasdaq-100-Liste ist noch nicht geladen (läuft mit der nächsten Aktualisierung).</p>` : ""}
-    <div id="karte-box" style="position:relative;height:${ziel ? "min(560px, 75vh)" : "max(440px, calc(100vh - 250px))"};border-radius:10px;overflow:hidden;background:#11141b">
+    <div id="karte-box" style="position:relative;height:${ziel ? "min(560px, 75vh)" : "max(440px, calc(100vh - 250px))"};border-radius:12px;overflow:hidden;background:var(--hm-grund)">
       <canvas id="karte-cv" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer" role="img" aria-label="Heatmap aller gewählten Titel"></canvas>
       <div id="karte-tip" class="karte-tip" hidden></div>
     </div>
@@ -2605,8 +2695,12 @@ function zeigeKarte(opt = {}){
       const kr = quadrate(grp.liste.map(groesse), R.x + 1, R.y + kopf + 1, R.w - 2, R.h - kopf - 2);
       grp.liste.forEach((w, i) => {
         const k = kr[i]; if (!k || k.w < .5 || k.h < .5) return;
-        g.fillStyle = farbeVon(w); g.fillRect(k.x, k.y, k.w, k.h);
-        g.strokeStyle = "#11141b"; g.lineWidth = k.w > 6 && k.h > 6 ? 1 : .4; g.strokeRect(k.x, k.y, k.w, k.h);
+        const fa = farbeVon(w), gross = k.w > 9 && k.h > 9, sk = perfModus ? Math.abs(stufePerf(w.perf[PI[KARTE.farbe]]) - 3) : 2;   // dunkles Glas, farbig getönt (kräftiger bei großer Veränderung), mit Leuchtkante
+        g.fillStyle = f.hmGrund; g.fillRect(k.x, k.y, k.w, k.h);
+        const tn = g.createLinearGradient(0, k.y, 0, k.y + k.h); tn.addColorStop(0, fa + ["33", "55", "74", "94"][sk]); tn.addColorStop(1, fa + ["1c", "30", "44", "5c"][sk]);
+        g.fillStyle = tn; g.fillRect(k.x + .5, k.y + .5, Math.max(.5, k.w - 1), Math.max(.5, k.h - 1));
+        if (gross) { g.strokeStyle = fa + ["5a", "8c", "b8", "e6"][sk]; g.lineWidth = 1; g.strokeRect(k.x + 1.5, k.y + 1.5, k.w - 3, k.h - 3);
+          g.fillStyle = "rgba(255,255,255,.08)"; g.fillRect(k.x + 2.5, k.y + 2.5, k.w - 5, 1); }
         const name = istAktie(w) ? w.symbol : kurzname(w).replace(/ \(.*\)$/, "");
         if (k.w > 28 && k.h > 14) {
           g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
@@ -2614,7 +2708,7 @@ function zeigeKarte(opt = {}){
           const zwei = k.h > fs * 2.5;
           g.font = `600 ${fs.toFixed(0)}px system-ui, sans-serif`;
           g.fillText(name, k.x + k.w / 2, k.y + k.h / 2 - (zwei ? fs * .45 : 0), k.w - 4);
-          if (zwei) { g.font = `400 ${Math.max(9, fs * .72).toFixed(0)}px system-ui, sans-serif`; g.fillText(textVon(w), k.x + k.w / 2, k.y + k.h / 2 + fs * .6, k.w - 4); }
+          if (zwei) { g.fillStyle = hell(fa, .62); g.font = `500 ${Math.max(9, fs * .72).toFixed(0)}px system-ui, sans-serif`; g.fillText(textVon(w), k.x + k.w / 2, k.y + k.h / 2 + fs * .6, k.w - 4); }
         }
         KARTE_KACHELN.push({...k, w_:w});
       });
@@ -2709,7 +2803,7 @@ function zeigeUebersicht(){
     <div class="wetter">${wetter}</div>
     ${erfolgsbilanzHtml()}
     <h2 class="abschnitt-titel"><span data-e="heatmap">Heatmap nach Ampel</span><span class="klein">ETFs, Krypto, Rohstoffe · antippen für Details</span></h2>
-    <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AF()[i]}"></i>${t}</span>`).join("")}</div>
+    <div class="skala-legende">${[[4,"ab 80 historisch sehr günstig"],[3,"60–80 günstig"],[2,"40–60 neutral"],[1,"15–40 teuer"],[0,"bis 15 historisch sehr teuer"]].map(([i,t]) => `<span><i style="background:${AF()[i]};color:${AF()[i]}"></i>${t}</span>`).join("")}</div>
     ${gruppe("Index-ETFs", "ETF")}${gruppe("Krypto", "Krypto")}${gruppe("Rohstoffe", "Rohstoffe")}
     <h2 class="abschnitt-titel"><span data-e="karte">Heatmap: Kursveränderung</span><span class="klein">Nasdaq-100, Index-ETFs, Krypto, Rohstoffe · <button class="linkknopf" id="zu-karte">groß öffnen</button></span></h2>
     <div id="uebersicht-heatmap"></div>
@@ -3128,6 +3222,20 @@ function halbkreis(w){
     <circle cx="${cx}" cy="${cy}" r="11" fill="${zf}" opacity=".5" filter="url(#ot-glut)"/><circle cx="${cx}" cy="${cy}" r="5.5" fill="var(--panel)" stroke="${zf}" stroke-width="1.6"/><circle cx="${cx}" cy="${cy}" r="1.7" fill="#fff"/>` : ""}
     <text x="${cx}" y="${cy + 62}" text-anchor="middle" class="ot-b-wert" fill="${zf}"><tspan class="ot-b-gross">${hat ? fmt(s,0) : "–"}</tspan><tspan class="ot-b-trenn" dx="9" dy="-6"> · </tspan><tspan class="ot-b-stufe" dx="5">${hat ? STUFEN_GROSS[st] : (w.jung ? "NOCH ZU JUNG" : "NOCH KEINE AMPEL")}</tspan></text>
   </svg>`;
+}
+function bogenKlein(s, name){
+  const hat = s != null, F5 = AF(), cx = 110, cy = 104, R = 92, r = 70, N = 36, st = hat ? stufe(s) : -1, zf = hat ? F5[st] : "var(--muted)";
+  const P = (rad, grad) => { const a = (180 - grad) * Math.PI / 180; return (cx + rad * Math.cos(a)).toFixed(1) + "," + (cy - rad * Math.sin(a)).toFixed(1); };
+  let seg = "";
+  for (let i = 0; i < N; i++) { const a0 = i * 180 / N + .9, a1 = (i + 1) * 180 / N - .9; seg += `<polygon points="${P(r, a0)} ${P(R, a0)} ${P(R, a1)} ${P(r, a1)}" fill="${F5[stufe((i + .5) * 100 / N)]}"/>`; }
+  return `<svg class="ot-bogen-klein" viewBox="0 0 220 128" role="img" aria-label="${name}: ${hat ? fmt(s,0) + " von 100, " + zonenWort(s) : "kein Wert"}. Skala von 0 (sehr teuer) bis 100 (sehr günstig).">
+    <defs><filter id="ot-kb-bloom" x="-30%" y="-40%" width="160%" height="190%"><feGaussianBlur stdDeviation="6"/></filter><filter id="ot-kb-glut" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
+    <g filter="url(#ot-kb-bloom)" opacity="${hat ? .55 : 0}">${seg}</g><g opacity="${hat ? .92 : .3}">${seg}</g>
+    ${hat ? `<g style="transform-box:view-box;transform-origin:${cx}px ${cy}px;transform:rotate(${(Math.max(0, Math.min(100, s)) * 1.8).toFixed(1)}deg)"><polygon points="${cx + 5},${cy - 2} ${cx - r + 5},${cy - .5} ${cx - r + 5},${cy + .5} ${cx + 5},${cy + 2}" fill="${zf}"/>
+      <circle cx="${cx - r + 6}" cy="${cy}" r="5" fill="#fff" opacity=".8" filter="url(#ot-kb-glut)"/><circle cx="${cx - r + 6}" cy="${cy}" r="1.8" fill="#fff"/></g>
+    <circle cx="${cx}" cy="${cy}" r="4.2" fill="var(--panel)" stroke="${zf}" stroke-width="1.4"/>` : ""}
+    <text x="${cx - R}" y="${cy + 17}" class="ot-b-wort" fill="${F5[0]}">TEUER</text><text x="${cx + R}" y="${cy + 17}" text-anchor="end" class="ot-b-wort" fill="${F5[4]}">GÜNSTIG</text>
+    <text x="${cx}" y="${cy - 16}" text-anchor="middle" class="ot-kb-zahl" fill="${zf}">${hat ? fmt(s,0) : "–"}</text></svg>`;
 }
 function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel, Merken, Einfach/Profi – und der Ampel-Halbkreis
   const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
@@ -5479,6 +5587,11 @@ function zeigeDepot(){
   $("#haupt").innerHTML = `
     <h1 class="seiten-titel">Mein Depot</h1>
     <p class="seiten-unter">Lade deine Vermögensübersicht, ordne die Positionen zu und sieh, wie sich das Depot mit oder ohne Sparplan entwickeln <b>könnte</b> – als Simulation aus der Vergangenheit, nicht als Vorhersage.</p>
+    ${P.length ? `<section class="karte dp-kopf" id="d-kopf"><div class="dp-k-haupt"><span class="ot-k-titel">Depotwert</span><b>${geld(summe)} €</b>
+        <span class="klein">${P.some(q => q.basis) ? `mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : "Stand deines Imports"}</span></div>
+      <div class="dp-k-zahlen"><div><b>${P.length}</b><span>Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""}</span></div>
+        <div><b>${fmt(summe > 0 ? (summe - offenWert) / summe * 100 : 0, 0, " %")}</b><span>im Tool zugeordnet</span></div>
+        ${offen.length ? `<div><b class="neg">${geld(offenWert)} €</b><span>ohne Zuordnung</span></div>` : ""}</div></section>` : ""}
     <div class="kern" style="border-color:color-mix(in srgb,var(--guenstig) 45%,transparent)">
       <b>🔒 Datenschutz:</b> Deine Datei wird nur hier im Browser gelesen und <b>nie hochgeladen</b>. Es gibt keine Broker-Logins und keine Verbindung zu deinem Konto.
       Gespeichert wird nur, wenn du „In diesem Browser merken“ einschaltest – und „Depot vergessen“ löscht alles wieder.
@@ -6711,6 +6824,8 @@ function bewTeil(){
   const st = b.strategie || [];
   const r2t = x => x ? `R² ${vz(x.r2,1," %")}` : "–";
   return `<h3 id="bewertung-teil">${ek("b_cape","Bewertung S&amp;P 500 (Shiller-CAPE)")}: ${fmt(b.cape,1)} <span style="font-weight:400;color:var(--muted)">· ${b.stufe} · ${ek("b_score","Bewertung")} ${fmt(b.score,0)} von 100 · Stand ${monatDe(b.datum)}</span></h3>
+    <div class="cape-kopf">${bogenKlein(b.score, "CAPE-Bewertung")}<div class="cape-text"><div class="gross-zahl">${fmt(b.cape,1)}</div>
+      <div><b>${b.stufe}</b> · ${ek("b_score","Bewertung")} ${fmt(b.score,0)} von 100</div><div class="klein">teurer als in ${fmt(b.perzentil,0)} % der Monate seit 1881 · kein Kaufsignal, steht bewusst getrennt von der Ampel</div></div></div>
     <div class="mini" id="m-cape"></div>
     <div class="text">Das CAPE teilt den Kurs des S&amp;P 500 durch den Durchschnittsgewinn der letzten 10 Jahre (inflationsbereinigt). <b>Hoch heißt: Man bezahlt viel für die Gewinne.</b> Heute teurer als in ${fmt(b.perzentil,0)} % aller Monate seit 1881, seit 1990 teurer als in ${fmt(b.perzentil_ab1990,0)} %. Median seit 1881: ${fmt(b.median,1)}, seit 1990: ${fmt(b.median_ab1990,1)}; Höchstwert ${fmt(b.hoechst.wert,1)} (${monatDe(b.hoechst.datum)}).
       Anders als die Ampel schaut das CAPE auf die Gewinne: Fällt der Kurs, weil auch die Gewinne fallen, wird das CAPE nicht billiger. Für DAX, MSCI World und andere Indizes gibt es keine freie, so lange Reihe – dort gibt es diese Bewertung nicht.</div>
