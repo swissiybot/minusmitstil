@@ -1391,6 +1391,106 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
   .chips{padding:8px 10px;gap:6px}
   .ot-hud{min-width:150px;font-size:11px}
 }
+/* Werkzeugleiste: oben Zeitraum und die wichtigsten Linien, der Rest klappt über „Linien & Werkzeuge“ auf */
+.chart-leiste{align-items:center}
+.ot-chips-haupt{display:flex;flex-wrap:wrap;gap:6px;margin-left:auto}
+.ot-mehr{height:28px;padding:0 10px;gap:6px}
+.ot-mehr svg{width:15px;height:15px}
+.ot-mehr[aria-expanded="true"]{color:var(--text);border-color:color-mix(in srgb,var(--akzent) 60%,transparent);background:var(--akzent-weich);box-shadow:0 0 16px -6px var(--akzent)}
+.ot-werkzeug{border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 35%,transparent);animation:ot-auf 200ms var(--ruck)}
+.ot-werkzeug .chart-leiste{border-bottom:0;background:none;padding-bottom:4px}
+.ot-werkzeug .chips{border-bottom:0;padding-top:6px}
+@keyframes ot-auf{from{opacity:0;transform:translateY(-4px)}}
+@media (max-width:900px){.ot-chips-haupt{flex-wrap:nowrap;margin-left:0} .ot-werkzeug .chart-leiste{flex-wrap:wrap;overflow:visible}}
+/* ---- 6 Rechte Spalte: vier kompakte Karten; am PC als dritte Spalte neben Halbkreis und Chart */
+.ot-rail{display:grid;gap:12px;min-width:0;align-content:start;grid-template-columns:repeat(2,minmax(0,1fr))}
+@container haupt (max-width:620px){.ot-rail{grid-template-columns:minmax(0,1fr);gap:10px}}
+@container haupt (min-width:900px){
+  .ot-term{grid-template-columns:minmax(0,1fr) clamp(268px,26cqw,330px)}
+  .ot-rail{grid-template-columns:minmax(0,1fr);position:sticky;top:46px;align-self:start}
+}
+.ot-k{position:relative;padding:13px 14px 12px;min-width:0;overflow:hidden}
+.ot-k-kopf{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.ot-k-titel{font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--text2)}
+.ot-k-l{font-size:11.5px;font-weight:600;color:var(--muted);line-height:1.35}
+.ot-k-l[data-e]{display:inline-block;text-decoration:underline dotted color-mix(in srgb,var(--muted) 70%,transparent);text-underline-offset:3px}
+.ot-k-u{font-size:11.5px;line-height:1.4;color:var(--muted)}
+.ot-k-leer{margin:0 0 8px!important;font-size:12.5px;line-height:1.45;color:var(--text2)!important}
+.ot-k .linkknopf{display:inline-block;margin-top:9px;font-size:12px;font-weight:600;letter-spacing:.01em;text-align:left}
+.ot-k .kv{font-size:12.5px;padding:6px 0;border-bottom-color:var(--line)}
+.ot-k .kv b{font-family:var(--f-zahl);font-weight:650;letter-spacing:-.02em}
+.ot-k .kk-i{flex:none;margin:0}
+/* 1 Lohnt-sich-Check */
+.ot-c-name{display:flex;flex-wrap:wrap;align-items:center;gap:5px 8px;margin-top:2px;font-size:14.5px;line-height:1.3;color:var(--text)}
+.ot-c-name b{font-weight:650;letter-spacing:-.01em}
+.ot-c-name .weg-best{font-size:10.5px;padding:2px 8px;background:color-mix(in srgb,var(--wf) 16%,transparent);color:var(--wf);border:1px solid color-mix(in srgb,var(--wf) 55%,transparent)}
+.ot-c-haupt{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:8px}
+.ot-c-zahl{font-family:var(--f-zahl);font-size:30px;font-weight:700;letter-spacing:-.05em;line-height:1.05;color:var(--text)}
+.ot-c-zahl.pos{color:var(--pos);text-shadow:0 0 22px color-mix(in srgb,var(--pos) 55%,transparent)}
+.ot-c-spark{flex:0 1 46%;min-width:84px;max-width:150px;height:auto;overflow:visible}
+.ot-c-fuss{margin-top:8px}
+/* 2 Strategie-Vergleich */
+.ot-s-vs{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:8px;align-items:start;margin:7px 0 4px}
+.ot-s-vs>div{min-width:0}
+.ot-s-vs b{display:block;font-family:var(--f-zahl);font-size:26px;font-weight:700;letter-spacing:-.05em;line-height:1.1;color:var(--text)}
+.ot-s-vs b.pos{color:var(--pos);text-shadow:0 0 18px color-mix(in srgb,var(--pos) 50%,transparent)}
+.ot-s-vs b.neg{color:var(--neg);text-shadow:0 0 18px color-mix(in srgb,var(--neg) 50%,transparent)}
+.ot-s-vs small{display:block;font-size:11px;line-height:1.3;color:var(--muted)}
+.ot-s-vs>i{align-self:center;font-style:normal;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ot-s-b{height:3px;margin-top:6px;border-radius:3px;background:color-mix(in srgb,var(--text) 9%,transparent)}
+.ot-s-b i{display:block;height:100%;border-radius:3px;background:var(--neutral)}
+.ot-s-b i.gut{background:var(--pos);box-shadow:0 0 8px var(--pos)}
+.ot-s-b i.schlecht{background:var(--neg);box-shadow:0 0 8px var(--neg)}
+.ot-s-hinweis{margin:6px 0 2px;padding:5px 8px;border-radius:8px;font-size:11.5px;line-height:1.35;color:var(--text2);background:color-mix(in srgb,var(--gelb) 9%,transparent);border:1px solid color-mix(in srgb,var(--gelb) 35%,transparent)}
+/* 3 Fallen-Warnung: leuchtender Ring, Schild, radialer Innen-Schein in der Farbe des Zustands (--ff) */
+.ot-falle{padding-bottom:11px;border-color:color-mix(in srgb,var(--ff) 34%,var(--line));
+  background:
+    linear-gradient(90deg,transparent 6%,color-mix(in srgb,var(--ff) 75%,transparent) 50%,transparent 94%) top/100% 1px no-repeat,
+    radial-gradient(120% 86% at 50% 42%,color-mix(in srgb,var(--ff) 30%,transparent) 0,color-mix(in srgb,var(--ff) 11%,transparent) 44%,transparent 74%),
+    linear-gradient(180deg,color-mix(in srgb,var(--ff) 7%,transparent),color-mix(in srgb,var(--ff) 3%,transparent)),
+    var(--glas);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),inset 0 0 46px -18px var(--ff),0 0 0 1px rgba(0,0,0,.25),0 0 34px -18px var(--ff),var(--tiefe)}
+.ot-falle .ot-k-titel{color:color-mix(in srgb,var(--ff) 55%,var(--text))}
+.ot-f-buehne{position:relative;display:grid;place-items:center;min-height:132px;margin:-4px -14px 0}
+.ot-f-ring{position:absolute;left:50%;top:50%;width:232px;height:232px;margin:-116px 0 0 -116px;overflow:visible;pointer-events:none;
+  -webkit-mask-image:radial-gradient(closest-side,#000 82%,transparent 100%);mask-image:radial-gradient(closest-side,#000 82%,transparent 100%)}
+.ot-f-ring circle,.ot-f-ring path{fill:none}
+.ot-f-r1{stroke:var(--ff);stroke-width:1;opacity:.32}
+.ot-f-r2{stroke:var(--ff);stroke-width:.8;opacity:.16}
+.ot-f-striche{stroke:var(--ff);stroke-width:5;stroke-dasharray:.8 7.1;opacity:.3;transform-origin:100px 100px;animation:ot-dreh 90s linear infinite reverse}
+.ot-f-bogen{stroke:var(--ff);stroke-width:3.6;stroke-linecap:round}
+.ot-f-dreh{transform-origin:100px 100px;animation:ot-dreh 26s linear infinite}
+@keyframes ot-dreh{to{transform:rotate(360deg)}}
+.ot-f-mitte{position:relative;display:flex;align-items:center;justify-content:center;gap:11px;max-width:100%;padding:0 16px}
+.ot-f-schild{flex:none;width:44px;height:44px;fill:none;stroke:var(--ff);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;
+  filter:drop-shadow(0 0 7px var(--ff)) drop-shadow(0 0 16px color-mix(in srgb,var(--ff) 60%,transparent))}
+.ot-f-schild path:first-child{fill:color-mix(in srgb,var(--ff) 14%,transparent)}
+.ot-f-wort{min-width:0}
+.ot-f-wort b{display:block;font-size:19px;font-weight:750;letter-spacing:.045em;line-height:1.12;color:color-mix(in srgb,var(--ff) 82%,#fff);text-shadow:0 0 18px color-mix(in srgb,var(--ff) 65%,transparent)}
+.ot-f-wort span{display:block;margin-top:3px;font-size:12px;line-height:1.3;color:color-mix(in srgb,var(--ff) 45%,var(--text))}
+.ot-f-text{position:relative;margin:2px 0 0!important;font-size:12px;line-height:1.5;color:var(--text2)!important}
+.ot-f-text b{color:var(--text)}
+.ot-f-fuss{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 10px;margin-top:7px;padding-top:7px;border-top:1px solid color-mix(in srgb,var(--ff) 22%,var(--line));font-size:11px;color:var(--muted)}
+.ot-f-fuss .linkknopf{margin-top:0}
+.ot-falle[data-zustand="warn"] .ot-f-dreh{animation-duration:12s}
+.ot-falle[data-zustand="warn"] .ot-f-schild{animation:ot-warn 2.4s ease-in-out infinite}
+@keyframes ot-warn{50%{filter:drop-shadow(0 0 3px var(--ff)) drop-shadow(0 0 8px color-mix(in srgb,var(--ff) 40%,transparent))}}
+.ot-falle[data-zustand="aus"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 40px -22px var(--ff),0 0 0 1px rgba(0,0,0,.25),var(--tiefe)}
+.ot-falle[data-zustand="aus"] .ot-f-bogen{stroke-width:2.2;opacity:.75}
+:root[data-theme="light"] .ot-f-wort b{color:color-mix(in srgb,var(--ff) 88%,#000);text-shadow:none}
+:root[data-theme="light"] .ot-f-wort span{color:var(--text2)}
+:root[data-theme="light"] .ot-falle{box-shadow:inset 0 1px 0 #fff,0 0 30px -18px var(--ff),var(--tiefe)}
+/* 4 Legende */
+.ot-l{display:grid;gap:3px}
+.ot-l-z{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:9px;padding:4px 7px;margin:0 -7px;border-radius:8px;font-size:12.5px;color:color-mix(in srgb,var(--zf) 70%,var(--text))}
+.ot-l-z>i{width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 8%,var(--zf) 55%);box-shadow:0 0 0 3px color-mix(in srgb,var(--zf) 16%,transparent),0 0 12px var(--zf)}
+.ot-l-z b{font-weight:650}
+.ot-l-z em{font-family:var(--f-zahl);font-style:normal;font-size:11px;color:var(--muted);white-space:nowrap}
+.ot-l-z.heute{background:linear-gradient(90deg,color-mix(in srgb,var(--zf) 20%,transparent),color-mix(in srgb,var(--zf) 5%,transparent));box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--zf) 45%,transparent),0 0 18px -8px var(--zf);color:var(--text)}
+.ot-l-z.heute em{color:var(--text2)}
+.ot-l-fuss{margin-top:8px}
+@media (prefers-reduced-motion:reduce){.ot-f-striche,.ot-f-dreh,.ot-falle[data-zustand="warn"] .ot-f-schild{animation:none}}
+@media (max-width:900px){.ot-k{padding:12px 12px 11px} .ot-f-buehne{margin:-4px -12px 0}}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -2729,7 +2829,7 @@ async function lohntSichCheck(id){
   if (AKTIV !== id || !$("#check")) return;
   const name = INFO ? esc(kurzname(INFO)) : "diesem Wert";
   const kopfMit = unter => kk("rueck", `Welcher Weg zu kaufen war bei ${name} am besten?`, unter, "Lohnt-sich-Check", "check");
-  if (!s || s.fehler) { el.innerHTML = kopfMit("Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.") + `<p>Zu wenig Jahre mit Ampel für diesen Vergleich.</p>`; return; }
+  if (!s || s.fehler) { el.innerHTML = kopfMit("Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.") + `<p>Zu wenig Jahre mit Ampel für diesen Vergleich.</p>`; otCheck({leer:"Zu wenig Jahre mit Ampel für diesen Vergleich."}); return; }
   const steuerText = `nach Kosten und Abgeltungssteuer${s.pausch ? ` (mit Sparerpauschbetrag${s.teilfrei ? " und Teilfreistellung 30 %" : ""})` : ""}, in der Währung des Werts`;
   const zumVergleich = () => { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); $("#vertiefung").scrollIntoView({behavior:"smooth", block:"start"}); };
   const mehrKnopf = () => { $("#check-mehr").onclick = zumVergleich; const e2 = $("#check-einst"); if (e2) e2.onclick = zumVergleich; };
@@ -2740,6 +2840,8 @@ async function lohntSichCheck(id){
         <span data-e="s_staffel">Warten</span><div class="balken"><i style="width:${e.staffel.netto / mx * 100}%;background:${ja ? "var(--guenstig)" : "var(--neutral)"}"></i></div><b>${geld(e.staffel.netto)}</b></div>
       <p class="klein">${geld(s.betrag ?? 500)} je Monat, ${fmt(s.jahre,0)} Jahre, ${steuerText}. Der Vergleich aller vier Wege erscheint nach dem nächsten Daten-Lauf.</p>
       <button class="linkknopf" id="check-mehr">Strategie-Vergleich ansehen →</button>`;
+    otCheck({name:ja ? "Gestaffeltes Warten" : "Sparplan", zweiter:ja ? "Sparplan" : "Gestaffeltes Warten", vor:(Math.max(e.staffel.netto, e.spar.netto) / Math.min(e.staffel.netto, e.spar.netto) - 1) * 100,
+      knapp:(Math.max(e.staffel.netto, e.spar.netto) / Math.min(e.staffel.netto, e.spar.netto) - 1) * 100 < 3, von:s.von, jahre:s.jahre, geldText:`${geld(s.betrag ?? 500)} jeden Monat`});
     mehrKnopf(); return; }
   const eigen = !!s.plan?.t?.length;   // eigene Eingaben gehen, sobald die Daten den Monatsplan enthalten
   const zeichnen = () => {
@@ -2754,9 +2856,9 @@ async function lohntSichCheck(id){
       const lies = () => { KW = {...KW, betrag:Math.max(0, +$("#kw-betrag").value || 0), einmal:Math.max(0, +$("#kw-einmal").value || 0)}; sichere("kaufweg", KW); const fokus = document.activeElement?.id; zeichnen(); if (fokus && $("#" + fokus)) $("#" + fokus).focus();
         if (REITER === "strategie" && $("#st-betrag")) tabStrategie(INFO); };   // der offene Strategie-Vergleich rechnet mit denselben Beträgen mit
       $("#kw-betrag").onchange = lies; $("#kw-einmal").onchange = lies; };
-    if (!(betrag > 0) && !(einmal > 0)) { el.innerHTML = kopf + eingabe + `<p>Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</p><button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`; binden(); mehrKnopf(); return; }
+    if (!(betrag > 0) && !(einmal > 0)) { el.innerHTML = kopf + eingabe + `<p>Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</p><button class="linkknopf" id="check-mehr">Strategie-Vergleich im Einzelnen ansehen →</button>`; binden(); mehrKnopf(); otCheck({leer:"Bitte in der Kaufweg-Karte einen Betrag eintragen."}); return; }
     const r = eigen ? strategieRechnen(s, wd?.chart, o) : {ergebnis:s.ergebnis, eingezahlt:s.eingezahlt, von:s.von, jahre:s.jahre};
-    if (!r || r.fehler) { el.innerHTML = kopf + eingabe + `<p>Für die gewählte Dauer gibt es zu wenige Monate mit Ampel. Stell im Strategie-Vergleich eine längere Dauer ein.</p><button class="linkknopf" id="check-mehr">Zum Strategie-Vergleich →</button>`; binden(); mehrKnopf(); return; }
+    if (!r || r.fehler) { el.innerHTML = kopf + eingabe + `<p>Für die gewählte Dauer gibt es zu wenige Monate mit Ampel. Stell im Strategie-Vergleich eine längere Dauer ein.</p><button class="linkknopf" id="check-mehr">Zum Strategie-Vergleich →</button>`; binden(); mehrKnopf(); otCheck({leer:"Für die gewählte Dauer gibt es zu wenige Monate mit Ampel."}); return; }
     const e = r.ergebnis, nurEinmal = !(betrag > 0);   // nur ein Einmalbetrag: die Wege heißen dann anders
     const mitSt = r.steuer !== false, W = x => mitSt ? x.netto : x.brutto;   // Haken „Steuer abziehen“ im Strategie-Vergleich gilt auch hier
     const wegText = nurEinmal ? {spar:["Sofort kaufen", "den ganzen Betrag gleich zu Beginn kaufen, egal wie die Ampel steht"],
@@ -2782,6 +2884,7 @@ async function lohntSichCheck(id){
       ${nurEinmal ? `<p class="klein">Für einen einzelnen Einmalbetrag gibt es keine Gegenprobe mit Zufallsverläufen: Das Ergebnis hängt hier allein vom Startzeitpunkt ab.</p>`
         : `${einmal > 0 ? `<p class="klein">Die folgende Einordnung gilt für das monatliche Sparen mit gleichem Betrag, nicht für den Einmalbetrag.</p>` : ""}<p class="klein" id="weg-zufall" hidden></p>`}
       <button class="linkknopf" id="check-mehr">Strategie-Vergleich mit diesen Beträgen im Einzelnen ansehen →</button>`;
+    otCheck({name:sieger.n, zweiter:zweiter.n, vor, knapp, von:r.von, jahre:r.jahre, geldText, farbe:sieger.f, reihe:r.reihe?.[sieger.k], ein:r.reihe?.ein});   // dieselben Zahlen wie im Fazit oben
     binden(); mehrKnopf(); if (!nurEinmal) wegEinordnung(id);   // Zufalls-Gegenprobe (Warten ab 60 gegen Sparplan) gilt nur für monatliches Sparen
   };
   zeichnen();
@@ -2797,7 +2900,8 @@ const KQ_FARBEN = ["#e2583e", "#e2583e80", "transparent", "#14a08580", "#0b7a64"
 const VQ_FARBE = "#f59e0b";
 const kqFarbe = v => v == null ? null : v >= 80 ? KQ_FARBEN[4] : v >= 60 ? KQ_FARBEN[3] : v > 40 ? null : v > 20 ? KQ_FARBEN[1] : KQ_FARBEN[0];
 const vqFarbe = v => v == null ? null : v >= 80 ? VQ_FARBE : v >= 60 ? VQ_FARBE + "70" : null;
-const CHIPS_EINFACH = ["w200", "kaufzonen", "kegel", "ampel"];   // diese Linien-Knöpfe stehen auch in der Ansicht „Einfach“ am Chart
+const CHIPS_EINFACH = ["w200", "kaufzonen", "kegel", "ampel"];   // diese Linien-Knöpfe stehen immer oben am Chart (auch in der Ansicht „Einfach“)
+let CHART_MEHR = lade("chart_mehr", false);   // „Linien & Werkzeuge“ aufgeklappt? (wird in diesem Browser gemerkt)
 const CHIPS_WICHTIG = ["w200", "w100", "w300", "w400", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
 let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
@@ -2824,6 +2928,7 @@ function kk(kat, titel, unter, rechts, e){
     ${unter ? `<p class="kk-unter">${unter}</p>` : ""}</header>`;
 }
 const ERKLAERUNG_TITEL = {
+  chart_mehr: {titel:"Linien & Werkzeuge", text:"Klappt alles Weitere zum Chart auf: Zeitebene (Monat, Woche, Tag …), Linie oder Kerzen, Log oder Linear, Dollar oder Euro, das Lineal, den TradingView-Chart und alle zuschaltbaren Linien – zum Beispiel die 100-, 300- und 400-Wochen-Linie, Trendkanal, Tief- und Hochpunkte oder bei Bitcoin Pi Cycle. Ob das Feld offen ist, merkt sich dieser Browser."},
   chartart: {titel:"Linie oder Kerzen", text:"Linie: der Schlusskurs jeder Woche (bzw. jedes Tages oder Monats) als eine helle Linie – ruhig und gut zu lesen. Kerzen: zusätzlich Eröffnung, Hoch und Tief jeder Kerze. Die genauen Werte (E, H, T, S) stehen in beiden Darstellungen oben links, sobald du über den Chart fährst. Der helle Punkt markiert den letzten Kurs."},
   kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
   kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf besser oder schlechter ausgeht als in einer beliebigen Woche, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
@@ -3034,6 +3139,106 @@ function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel
       <div class="ot-unter">${w.score == null ? (w.jung ? "Für eine Ampel braucht es mehr Kursgeschichte." : "Für diesen Wert gibt es noch keine Ampel.")
         : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">vor 4 Wochen <b>${fmt(w.score_vor4w,0)}</b> ${w4Html(de)}</span>` : ""}`}</div>
     </section>`;
+}
+// ------------------------------------------------------------ Rechte Spalte des Terminals (24.11.2026): vier kompakte Karten – nur Werte, die das Tool ohnehin rechnet
+// 1 Lohnt-sich-Check: Ergebnis der Kaufweg-Karte (#check) in Kurzform · 2 Strategie-Vergleich: vorhandene Kennzahlen des Werts ·
+// 3 Fallen-Warnung: die vorhandene Regel (Ampel günstig UND Geschäft schwach, Zahlen der SEC) · 4 Legende der fünf Stufen mit den Kursgrenzen von heute.
+const SCHILD = {   // Schild-Zeichen der Fallen-Karte
+  ok: `<path d="M24 4 41 10v13c0 10.5-7.2 18.3-17 21C14.2 41.3 7 33.5 7 23V10z"/><path d="m16 24.5 5.8 5.800L32.5 18.8"/>`,
+  warn: `<path d="M24 4 41 10v13c0 10.5-7.2 18.3-17 21C14.2 41.3 7 33.5 7 23V10z"/><path d="M24 15v11.5"/><circle cx="24" cy="32.8" r="1.3" fill="currentColor"/>`,
+  aus: `<path d="M24 4 41 10v13c0 10.5-7.2 18.3-17 21C14.2 41.3 7 33.5 7 23V10z" stroke-dasharray="3.5 3.5"/><path d="M17 24h14"/>`,
+};
+function fallenKarte(w){
+  const f = w.f, sc = w.score, art = {ETF:"ein ETF", Krypto:"eine Kryptowährung", Rohstoffe:"ein Rohstoff"}[w.gruppe];
+  const stand = f?.stand ? `Zahlen der US-Börsenaufsicht SEC bis ${datumDe(f.stand)}` : "";
+  const zahlen = f ? [f.d_gewinn != null ? `Gewinn ${vz(f.d_gewinn,0," %")}` : f.verlust ? "macht Verlust" : "", f.d_umsatz != null ? `Umsatz ${vz(f.d_umsatz,0," %")}` : ""].filter(Boolean).join(" · ") : "";
+  let z, farbe, titel, kurz, text, fuss = stand;
+  if (!f) { z = "aus"; farbe = "var(--neutral)"; titel = "ENTFÄLLT";
+    kurz = art ? `${esc(kurzname(w))} ist ${art}` : "keine SEC-Zahlen";
+    text = art ? `Die Fallen-Warnung prüft Geschäftszahlen einzelner Firmen. ${art.charAt(0).toUpperCase() + art.slice(1)} hat keine – hier gibt es deshalb weder Warnung noch Entwarnung.`
+      : "Für diese Aktie liegen keine Zahlen der US-Börsenaufsicht SEC vor (zum Beispiel ausländische Firma). Die Fallen-Warnung kann hier nichts prüfen – das ist keine Entwarnung.";
+    fuss = "Geprüft werden nur Aktien mit SEC-Zahlen."; }
+  else if (f.falle) { z = "warn"; farbe = "var(--gelb)"; titel = "MÖGLICHE FALLE"; kurz = "Ampel günstig, Geschäft schwach";
+    text = `Die Ampel steht bei <b>${fmt(sc,0)}</b> (günstig), aber das Geschäft ist schwach: <b>${esc(f.gruende.join(", "))}</b>. Ein gefallener Kurs ist hier womöglich kein Schnäppchen, sondern die Antwort auf schlechtere Zahlen.`; }
+  else if (f.veraltet) { z = "aus"; farbe = "var(--neutral)"; titel = "NICHT PRÜFBAR"; kurz = "Zahlen zu alt";
+    text = "Die letzten Geschäftszahlen sind älter als anderthalb Jahre. Damit lässt sich nicht sagen, ob das Geschäft heute schwach ist – das ist keine Entwarnung."; }
+  else if (f.schwach) { z = "hinweis"; farbe = "var(--a2)"; titel = "KEINE WARNUNG"; kurz = "Geschäft schwach, Ampel nicht günstig";
+    text = `Das Geschäft ist schwach (<b>${esc((f.gruende || []).join(", ")) || "Verlust oder deutlicher Rückgang"}</b>). Die Warnung schlägt nur an, wenn zugleich die Ampel günstig steht (ab 60) – heute steht sie bei <b>${sc == null ? "–" : fmt(sc,0)}</b>.`; }
+  else { z = "ok"; farbe = "var(--a4)"; titel = "KEINE FALLE"; kurz = "Geschäft nicht schwach";
+    const g = f.d_gewinn != null, u = f.d_umsatz != null;
+    text = `Kein Verlust${g && u ? ` und kein deutlicher Rückgang von Gewinn oder Umsatz (${zahlen} zum Vorjahr)` : g || u ? ` und kein deutlicher Rückgang beim ${g ? "Gewinn" : "Umsatz"} (${zahlen} zum Vorjahr); für den ${g ? "Umsatz" : "Gewinn"} fehlt der Vergleich mit dem Vorjahr` : "; ein Vergleich mit dem Vorjahr liegt nicht vor"}. Die Warnung schlägt nicht an.`; }
+  const zeichen = SCHILD[z === "ok" ? "ok" : z === "warn" || z === "hinweis" ? "warn" : "aus"];
+  return `<section class="karte ot-k ot-falle" id="ot-falle" data-zustand="${z}" style="--ff:${farbe}">
+      <header class="ot-k-kopf"><span class="ot-k-titel">Fallen-Warnung</span><button type="button" class="kk-i" data-e="falle" aria-label="Erklärung zur Fallen-Warnung">i</button></header>
+      <div class="ot-f-buehne">
+        <svg class="ot-f-ring" viewBox="0 0 200 200" aria-hidden="true"><defs><filter id="ot-f-glut" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4.2"/></filter></defs>
+          <circle cx="100" cy="100" r="92" class="ot-f-r1"/><circle cx="100" cy="100" r="78" class="ot-f-r2"/>
+          <g class="ot-f-dreh"><path d="M19.7 55A92 92 0 0 1 55 19.7M180.3 145A92 92 0 0 1 145 180.3" class="ot-f-bogen" filter="url(#ot-f-glut)"/><path d="M19.7 55A92 92 0 0 1 55 19.7M180.3 145A92 92 0 0 1 145 180.3" class="ot-f-bogen"/></g>
+          <circle cx="100" cy="100" r="85" class="ot-f-striche"/></svg>
+        <div class="ot-f-mitte">
+          <svg class="ot-f-schild" viewBox="0 0 48 48" aria-hidden="true">${zeichen}</svg>
+          <div class="ot-f-wort"><b>${titel}</b><span>${kurz}</span></div>
+        </div>
+      </div>
+      <p class="ot-f-text">${text}</p>
+      <div class="ot-f-fuss"><span>${fuss}</span>${f && (f.falle || f.schwach) ? `<button type="button" class="linkknopf" data-ot="geschaeft">Geschäftszahlen ansehen →</button>` : ""}</div>
+    </section>`;
+}
+function otSpark(reihe, ein, farbe){   // kleiner Verlauf: Depotwert des besten Wegs (Fläche) und eingezahltes Geld (gestrichelt), beides aus der Kaufweg-Rechnung
+  if (!reihe || reihe.length < 3) return "";
+  const n = reihe.length, mx = Math.max(...reihe, ...(ein || [0])) || 1, x = i => (i / (n - 1) * 116 + 2).toFixed(1), y = v => (44 - v / mx * 40).toFixed(1), schritt = Math.max(1, Math.floor(n / 70));
+  let d = "", e = "";
+  for (let i = 0; i < n; i += schritt) { d += (d ? "L" : "M") + x(i) + " " + y(reihe[i]); if (ein) e += (e ? "L" : "M") + x(i) + " " + y(ein[i]); }
+  d += "L" + x(n - 1) + " " + y(reihe[n - 1]); if (ein) e += "L" + x(n - 1) + " " + y(ein[n - 1]);
+  return `<svg class="ot-c-spark" viewBox="0 0 120 46" role="img" aria-label="Verlauf des Depotwerts beim besten Weg; gestrichelt das eingezahlte Geld" style="color:${farbe}">
+    <defs><linearGradient id="ot-c-fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="currentColor" stop-opacity=".5"/><stop offset="1" stop-color="currentColor" stop-opacity="0"/></linearGradient>
+      <filter id="ot-c-glut" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="2"/></filter></defs>
+    <path d="${d}L118 45L2 45Z" fill="url(#ot-c-fl)"/>${ein ? `<path d="${e}" fill="none" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 2.5" opacity=".8"/>` : ""}
+    <path d="${d}" fill="none" stroke="currentColor" stroke-width="2.4" opacity=".55" filter="url(#ot-c-glut)"/><path d="${d}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="${x(n - 1)}" cy="${y(reihe[n - 1])}" r="2.2" fill="#fff"/></svg>`;
+}
+// Kurzfassung der Kaufweg-Karte; wird von lohntSichCheck() mit demselben Ergebnis gefüllt, das unten in der vollen Karte steht
+function otCheck(e){
+  const el = $("#ot-check-inhalt"); if (!el) return;
+  if (e.leer) { el.innerHTML = `<p class="ot-k-leer">${e.leer}</p><button type="button" class="linkknopf" data-ot="check">Zur Kaufweg-Karte →</button>`; return; }
+  el.innerHTML = `<div class="ot-k-l">Bester Kaufweg${e.von ? ` seit ${e.von.slice(0,4)}` : ""}</div>
+    <div class="ot-c-name"><b>${e.name}</b><span class="weg-best" style="--wf:${e.farbe || "var(--guenstig)"}">${e.knapp ? "knapp vorn" : "am besten"}</span></div>
+    <div class="ot-c-haupt"><div><div class="ot-c-zahl${e.knapp ? "" : " pos"}">+${fmt(e.vor, e.knapp ? 1 : 0)} %</div><div class="ot-k-u">Vorsprung vor „${e.zweiter}“</div></div>${otSpark(e.reihe, e.ein, e.knapp ? "var(--neutral)" : "var(--pos)")}</div>
+    <div class="ot-k-u ot-c-fuss">${e.geldText ? esc(e.geldText) + " · " : ""}Rückblick${e.jahre ? ` über ${fmt(e.jahre,0)} Jahre` : ""}, keine Vorhersage${e.reihe ? " · Kurve: Depotwert, gestrichelt: eingezahlt" : ""}</div>
+    <button type="button" class="linkknopf" data-ot="check">Alle vier Wege ansehen →</button>`;
+}
+function railKarten(w){
+  const p = p3(w), v = p ? p.quote - p.basis : null, nk = w.kurs >= 100 ? 0 : w.kurs >= 1 ? 2 : 4, k = x => fmt(x, nk), kz = w.kz, st = stufe(w.score), F5 = AF();
+  const ber = (lo, hi) => !kz ? "" : lo == null ? (hi == null ? "" : `unter ${k(hi)}`) : hi == null ? `über ${k(lo)}` : `${k(lo)}–${k(hi)}`;
+  const stufen = [[4, "ab 80", "sehr günstig", ber(null, kz?.["80"])], [3, "60 bis 80", "günstig", ber(kz?.["80"], kz?.["60"])], [2, "40 bis 60", "neutral", ber(kz?.["60"], kz?.["40"])],
+    [1, "15 bis 40", "teuer", ber(kz?.["40"], kz?.["15"])], [0, "bis 15", "sehr teuer", ber(kz?.["15"], null)]];
+  const balken = (wert, kl) => `<div class="ot-s-b"><i class="${kl}" style="width:${Math.max(2, Math.min(100, wert)).toFixed(0)}%"></i></div>`;
+  const strat = p || w.dd != null || w.p?.rueckschlag10 != null;
+  return `<aside class="ot-rail" id="ot-rail" aria-label="Kennzahlen auf einen Blick">
+    <section class="karte ot-k" id="ot-check-karte"><header class="ot-k-kopf"><span class="ot-k-titel">Lohnt-sich-Check</span><button type="button" class="kk-i" data-e="check" aria-label="Erklärung zum Lohnt-sich-Check">i</button></header>
+      <div id="ot-check-inhalt"><div class="lade" style="height:14px;width:60%"></div><div class="lade" style="height:40px;margin-top:10px"></div></div></section>
+    ${strat ? `<section class="karte ot-k" id="ot-strat"><header class="ot-k-kopf"><span class="ot-k-titel">Strategie-Vergleich</span></header>
+      ${p ? `<div class="ot-k-l" data-e="vorteil" tabindex="0">Kurs 3 Jahre später höher – von 100 Fällen</div>
+      <div class="ot-s-vs"><div><b class="${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${fmt(p.quote,0)}</b><small>in ähnlicher Lage</small>${balken(p.quote, v > 0 ? "gut" : v < 0 ? "schlecht" : "")}</div><i>vs</i>
+        <div><b>${fmt(p.basis,0)}</b><small>an beliebigem Tag</small>${balken(p.basis, "")}</div></div>
+      <div class="kv"><span data-e="vorteil" tabindex="0">Vorteil</span><b class="${v > 0 ? "pos" : v < 0 ? "neg" : ""}">${(v > 0 ? "+" : "") + fmt(v,0)} Punkte</b></div>
+      ${p.episoden != null && p.episoden < 3 ? `<div class="ot-s-hinweis">Nur ${p.episoden} ${p.episoden === 1 ? "Phase" : "Phasen"} – das ist meist Zufall.</div>` : ""}` : ""}
+      ${w.dd != null ? `<div class="kv"><span data-e="vom_hoch" tabindex="0">Abstand zum Hoch</span><b class="${w.dd > -0.5 ? "" : "neg"}">${w.dd > -0.5 ? "am Hoch" : fmt(w.dd,0," %")}</b></div>` : ""}
+      ${w.p?.rueckschlag10 != null ? `<div class="kv"><span data-e="rueckschlag" tabindex="0">Rückschlagrisiko</span><b>${fmt(w.p.rueckschlag10,0," %")}</b></div>` : ""}
+      <button type="button" class="linkknopf" data-ot="strat">Strategie-Vergleich öffnen →</button></section>` : ""}
+    ${fallenKarte(w)}
+    <section class="karte ot-k" id="ot-stufen"><header class="ot-k-kopf"><span class="ot-k-titel">Die 5 Ampel-Stufen</span><button type="button" class="kk-i" data-e="ampel" aria-label="Erklärung zur Ampel">i</button></header>
+      <div class="ot-l">${stufen.map(([i, zahl, wort, kurs]) => `<div class="ot-l-z${i === st ? " heute" : ""}" style="--zf:${F5[i]}"><i></i><span><b>${zahl}</b> ${wort}</span>${kurs ? `<em>${kurs}</em>` : ""}</div>`).join("")}</div>
+      ${kz && w.kurs != null ? `<div class="ot-k-u ot-l-fuss">rechts: Kursbereich der Stufe von heute · Kurs ${k(w.kurs)}</div>` : ""}</section>
+  </aside>`;
+}
+function railInit(){
+  const rail = $("#ot-rail"); if (!rail) return;
+  rail.onclick = ev => { const b = ev.target.closest("[data-ot]"); if (!b) return;
+    const hin = id => document.getElementById(id)?.scrollIntoView({behavior:"smooth", block:"start"});
+    if (b.dataset.ot === "check") hin("check");
+    else if (b.dataset.ot === "strat") { if (MODUS !== "profi") modusSetzen("profi"); reiter("strategie"); hin("vertiefung"); }
+    else if (b.dataset.ot === "geschaeft") { if (MODUS !== "profi") modusSetzen("profi"); hin("geschaeft-karte"); } };
 }
 function urteilBlock(w, c){   // ein Satz, die Ampelzahl als Ring, darunter der Vergleich mit der eigenen Geschichte
   if (w.score == null) return `<div class="urteil-zeile"><div><div class="urteil-satz">${w.jung ? "Noch zu jung für eine Ampel." : "Noch keine Ampel."}</div></div></div>`;
@@ -3818,7 +4023,7 @@ async function zeige(id, opt={}){
     ["vq", "Verkaufsqualität (Rückblick)", `<i class="flaeche" style="background:linear-gradient(90deg,transparent,${VQ_FARBE})"></i>`, "vq", eigen && !!c.vq],
     ["ampel", "Ampel-Verlauf (unten)", `<i class="flaeche" style="color:var(--guenstig)"></i>`, "c_ampel", true],
   ].filter(x => x[4]).sort((a, b) => (CHIPS_WICHTIG.includes(a[0]) ? CHIPS_WICHTIG.indexOf(a[0]) : 99) - (CHIPS_WICHTIG.includes(b[0]) ? CHIPS_WICHTIG.indexOf(b[0]) : 99));
-  const chipKnopf = ([k, t, ik, e]) => `<button class="chip${CHIPS_EINFACH.includes(k) ? "" : " nur-profi"}" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
+  const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
     <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
     <div class="ot-term" id="ot-term">
@@ -3826,17 +4031,23 @@ async function zeige(id, opt={}){
       ${instrumentKarte(w, id)}
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
-        <div class="segment nur-profi" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
-        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
-        <div class="segment nur-profi" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button></div>
-        <div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
-        ${eigen && waehrungVon(w) === "USD" ? `<div class="segment nur-profi" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein nur-profi" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
-        ${eigen ? `<button class="werkzeug nur-profi" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
-        ${eigen && w.tv ? `<div class="segment rechts nur-profi" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>` : ""}
+        <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien">${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
+        <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" aria-label="Linien und Werkzeuge" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Mehr</span></button>
       </div>
-      <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">
-        <div class="chip-zeile"><span class="chip-titel">Das Wichtigste</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div>
-        <div class="chip-zeile nur-profi"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
+      <div class="ot-werkzeug nur-profi" id="chart-werkzeug"${CHART_MEHR ? "" : " hidden"}>
+        <div class="chart-leiste">
+          <div class="segment nur-profi" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
+          ${eigen ? `<div class="segment nur-profi" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button></div>
+          <div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+          ${eigen && waehrungVon(w) === "USD" ? `<div class="segment nur-profi" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein nur-profi" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
+          ${eigen ? `<button class="werkzeug nur-profi" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
+          ${eigen && w.tv ? `<div class="segment rechts nur-profi" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
+        </div>
+        <div class="chips" id="chips" role="group" aria-label="Linien ein- und ausschalten">
+          <div class="chip-zeile"><span class="chip-titel">Mehr Linien</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0]) && !CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
+          <div class="chip-zeile"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
+      </div>
       <div class="chart-flaeche">
         <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div class="ot-hud" id="ot-hud" hidden></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
@@ -3847,6 +4058,7 @@ async function zeige(id, opt={}){
       <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
     </section>
       </div>
+      ${railKarten(w)}
     </div>
     <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
       ${steckbrief(w)}
@@ -3911,7 +4123,8 @@ async function zeige(id, opt={}){
   $$("#chart-karte [data-iv]").forEach(b => b.onclick = () => intervallSetzen(b.dataset.iv));
   if ($("#lineal-knopf")) $("#lineal-knopf").onclick = () => linealUmschalten();
   LINEAL = {an:false, a:null, b:null, fertig:false};
-  $$("#chips .chip").forEach(b => b.onclick = () => chipUmschalten(b.dataset.chip, b));
+  $$("#chart-karte .chip").forEach(b => b.onclick = () => chipUmschalten(b.dataset.chip, b));
+  if ($("#chart-mehr")) $("#chart-mehr").onclick = () => { CHART_MEHR = !CHART_MEHR; sichere("chart_mehr", CHART_MEHR); $("#chart-werkzeug").hidden = !CHART_MEHR; $("#chart-mehr").setAttribute("aria-expanded", String(CHART_MEHR)); };
   if (!w.tv && INTRADAY.includes(INTERVALL)) INTERVALL = "W";
   if (eigen) eigenNeu(); else zeichneOnline(w, c);
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
@@ -3919,7 +4132,7 @@ async function zeige(id, opt={}){
   $("#haupt").dataset.modus = MODUS;
   $$("#modus-wahl button").forEach(b => b.onclick = () => modusSetzen(b.dataset.m));
   zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w); vorhersageInit(id, w);
-  abschnittNavInit(); fragenInit();
+  abschnittNavInit(); fragenInit(); railInit();
   risikoVergleich(id, c);
   lohntSichCheck(id);
   if ($("#bew-mehr")) $("#bew-mehr").onclick = () => { zeigeUmfeld(); $("#bewertung-teil")?.scrollIntoView({block:"start"}); };
@@ -3951,7 +4164,7 @@ function chartQuelle(q){
   tv.hidden = q !== "tv"; $("#chart").style.visibility = q === "tv" ? "hidden" : ""; $("#fk").hidden = q === "tv";
   $("#tv-hinweis").hidden = q !== "tv";
   $("#tv-hinweis").innerHTML = tvHinweis();
-  $$("#chips .chip, #chart-karte [data-z], #chart-karte [data-sk], #chart-karte [data-ca]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
+  $$("#chart-karte .chip, #chart-karte [data-z], #chart-karte [data-sk], #chart-karte [data-ca]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
   if (q === "tv" && $("#ot-hud")) $("#ot-hud").hidden = true;
 }
 
