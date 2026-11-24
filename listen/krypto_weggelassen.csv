@@ -1,0 +1,120 @@
+rang,name,kuerzel,coingecko_id,grund,stand
+3,Tether,USDT,tether,Stablecoin (an eine Währung gebunden),2026-11-24
+5,USDC,USDC,usd-coin,Stablecoin (an eine Währung gebunden),2026-11-24
+9,Figure Heloc,FIGR_HELOC,figure-heloc,Kredit als Token (kein eigener Kryptowert),2026-11-24
+17,USDS,USDS,usds,Stablecoin (an eine Währung gebunden),2026-11-24
+19,Ethena USDe,USDE,ethena-usde,Stablecoin (an eine Währung gebunden),2026-11-24
+21,Dai,DAI,dai,Stablecoin (an eine Währung gebunden),2026-11-24
+27,Tether Gold,XAUT,tether-gold,an Gold gebunden (kein eigener Kryptowert),2026-11-24
+28,USD1,USD1,usd1-wlfi,Stablecoin (an eine Währung gebunden),2026-11-24
+30,Ripple USD,RLUSD,ripple-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+31,Gram (prev. Toncoin),GRAM,the-open-network,bei Yahoo nicht sicher zuzuordnen (GRAM-USD: Veränderung 1 Jahr 33981 % statt -35 %; TON11419-USD: keine Kurse),2026-11-24
+33,Global Dollar,USDG,global-dollar,Stablecoin (an eine Währung gebunden),2026-11-24
+34,Ondo US Dollar Yield,USDY,ondo-us-dollar-yield,Stablecoin mit Zinsen,2026-11-24
+35,PayPal USD,PYUSD,paypal-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+40,Shiba Inu,SHIB,shiba-inu,"bei Yahoo nicht sicher zuzuordnen (SHIB-USD: Kurse bei Yahoo zu grob gerundet (sechs Nachkommastellen bei einem Kurs unter etwa 0,0001 $) – keine Ampel möglich; SHIB31501-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 4e-06–0.000187, CoinGecko 5.64e-11–8.62e-05) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt; SHIB05-USD: keine Kurse; SHIB2027507-USD: keine Kurse; SHIB30105-USD: Kurs 1.10334e-05 statt 3.54e-06; SHIB37553-USD: keine Kurse; SHIBA28493-USD: Kurs 0.00520618 statt 3.54e-06; SHIBU28161-USD: keine Kurse; QOM-USD: keine Kurse; GINUX-USD: Kurs 2.27849e-08 statt 3.54e-06; SHIBAAI-USD: keine Kurse)",2026-11-24
+41,Spiko Amundi Overnight Swap Fund (EUR),EURSAFO,spiko-amundi-overnight-swap-fund-eur,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+43,Circle USYC,USYC,hashnote-usyc,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+45,Falcon USD,USDF,falcon-finance,Stablecoin (an eine Währung gebunden),2026-11-24
+47,PAX Gold,PAXG,pax-gold,an Gold gebunden (kein eigener Kryptowert),2026-11-24
+48,United Stables,U,united-stables,Stablecoin (an eine Währung gebunden),2026-11-24
+49,BlackRock USD Institutional Digital Liquidity Fund,BUIDL,blackrock-usd-institutional-digital-liquidity-fund,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+50,USDD,USDD,usdd,Stablecoin (an eine Währung gebunden),2026-11-24
+52,Pepe,PEPE,pepe,"bei Yahoo nicht sicher zuzuordnen (PEPE-USD: keine Kurse; PEPE32982-USD: Kurs 0.000167272 statt 3.37e-06; PEPE24549-USD: Kurse bei Yahoo zu grob gerundet (sechs Nachkommastellen bei einem Kurs unter etwa 0,0001 $) – keine Ampel möglich; PEPE23450-USD: Kurs 0.000156587 statt 3.37e-06; PEPE31616-USD: Kurs 0.000429454 statt 3.37e-06; PEPE25359-USD: Kurs 1.1615e-10 statt 3.37e-06; PEPE29084-USD: Kurs 4.60229e-05 statt 3.37e-06; PEPE30890-USD: keine Kurse; PEPE2027276-USD: keine Kurse; PEPE29783-USD: Kurs 4.32317e-07 statt 3.37e-06; PEPE36548-USD: keine Kurse)",2026-11-24
+55,BFUSD,BFUSD,bfusd,Stablecoin (an eine Währung gebunden),2026-11-24
+56,HTX DAO,HTX,htx-dao,bei Yahoo nicht sicher zuzuordnen (HTX-USD: Veränderung 30 Tage -27 % statt -9 %),2026-11-24
+67,Open USD,OUSD,open-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+68,USDGO,USDGO,usdgo,Stablecoin (an eine Währung gebunden),2026-11-24
+71,Worldcoin,WLD,worldcoin-wld,"bei Yahoo nicht sicher zuzuordnen (WLD-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 0.00604–8.74, CoinGecko 0.211–11.7) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt)",2026-11-24
+83,GHO,GHO,gho,Stablecoin (an eine Währung gebunden),2026-11-24
+84,Invesco Short Duration US Government Securities Fund,USTB,superstate-short-duration-us-government-securities-fund-ustb,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+89,Janus Henderson Anemoy AAA CLO Fund,JAAA,janus-henderson-anemoy-aaa-clo-fund,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+93,Usual USD,USD0,usual-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+95,EURC,EURC,euro-coin,Stablecoin (an eine Währung gebunden),2026-11-24
+96,TrueUSD,TUSD,true-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+99,Spiko EU T-Bills Money Market Fund,EUTBL,eutbl,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+101,币安人生 (BinanceLife),币安人生,bianrensheng,bei Yahoo nicht sicher zuzuordnen (kein Kürzel gefunden),2026-11-24
+108,Provenance Blockchain,HASH,hash-2,bei Yahoo nicht sicher zuzuordnen (HASH-USD: keine Kurse; HASH19960-USD: Kurs 0.007 statt 0.00649475),2026-11-24
+109,SoFiUSD,SOFID,sofiusd,Stablecoin (an eine Währung gebunden),2026-11-24
+111,YLDS,YLDS,ylds,Stablecoin (an eine Währung gebunden),2026-11-24
+115,Re Protocol reUSD,REUSD,re-protocol-reusd,Stablecoin (an eine Währung gebunden),2026-11-24
+118,Celestia,TIA,celestia,"bei Yahoo nicht sicher zuzuordnen (TIA-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 0.00185–3.6, CoinGecko 0.279–20.9) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt)",2026-11-24
+119,Ondo Short-Term U.S. Government Bond Fund,OUSG,ousg,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+120,Aero,AERO,aero,bei Yahoo nicht sicher zuzuordnen (AERO-USD: Kurs 1.75604e-05 statt 0.404934; AERO29270-USD: Yahoo-Reihe (seit 2024-02-02) ist älter als die Münze – vorn hängt eine andere Münze gleichen Kürzels; GEX42807-USD: Kurs 316.959 statt 0.404934; ITAON-USD: Kurs 204.03 statt 0.404934; AEROBUD-USD: Kurs 0.000391603 statt 0.404934),2026-11-24
+121,Kinesis Gold,KAU,kinesis-gold,an Gold gebunden (kein eigener Kryptowert),2026-11-24
+122,Ape and Pepe,APEPE,ape-and-pepe,bei Yahoo nicht sicher zuzuordnen (APEPE-USD: keine Kurse; APEPE27048-USD: Veränderung 30 Tage 40 % statt 19 %),2026-11-24
+123,BitTorrent,BTT,bittorrent,bei Yahoo nicht sicher zuzuordnen (BTT-USD: Veränderung 30 Tage -70 % statt -20 %; BTTOLD-USD: Kurs 0.000300946 statt 3.0057e-07),2026-11-24
+127,First Digital USD,FDUSD,first-digital-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+128,apxUSD,APXUSD,apxusd,Stablecoin (an eine Währung gebunden),2026-11-24
+131,Spiko Amundi Overnight Swap Fund,SAFO,safo,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+133,SPX6900,SPX,spx6900,gebrückte Münze (gibt es schon als Original),2026-11-24
+134,Terra Luna Classic,LUNC,terra-luna,bei Yahoo nicht sicher zuzuordnen (LUNC-USD: Yahoo-Reihe mit Wochensprung um das 19789-Fache (zwei Münzen unter einem Kürzel?); LUNC39117-USD: Kurs 4.71176e-06 statt 4.531e-05),2026-11-24
+141,Tradable NA Rent Financing Platform SSTN,PC0000031,tradable-na-rent-financing-platform-sstn,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+143,Olympus,OHM,olympus,verpackte Münze (durch eine andere Münze gedeckt),2026-11-24
+146,Legacy Frax Dollar,FRAX,frax,Stablecoin (an eine Währung gebunden),2026-11-24
+148,USX,USX,usx,Stablecoin (an eine Währung gebunden),2026-11-24
+150,Midas Fasanara Global Open,MGLO,midas-fasanara-global-open,"Name deutet auf Stablecoin/verpackte Münze (nicht aufgenommen, im Zweifel weglassen)",2026-11-24
+151,NVIDIA (bStocks Tokenized Stock),NVDAB,nvidia-bstocks,Aktie als Token (kein eigener Kryptowert),2026-11-24
+153,USAT,USAT,usa,Stablecoin (an eine Währung gebunden),2026-11-24
+154,Bonk,BONK,bonk,"bei Yahoo nicht sicher zuzuordnen (BONK-USD: Kurse bei Yahoo zu grob gerundet (sechs Nachkommastellen bei einem Kurs unter etwa 0,0001 $) – keine Ampel möglich; BONK30674-USD: keine Kurse; BONK20-USD: keine Kurse; BONK29975-USD: keine Kurse; BABYBONK28801-USD: keine Kurse; LETSBONK-USD: Kurs 0.00215762 statt 2.13e-06; BONKEY-USD: letzter Kurs 2026-11-05 (veraltet); BAG38199-USD: Kurs 0.000205884 statt 2.13e-06; CRAZYBONK-USD: Kurs 0.00115152 statt 2.13e-06; BNBBONK-USD: keine Kurse)",2026-11-24
+155,EUR CoinVertible,EURCV,societe-generale-forge-eurcv,Stablecoin (an eine Währung gebunden),2026-11-24
+159,AINFT,NFT,apenft,bei Yahoo nicht sicher zuzuordnen (NFT-USD: keine Kurse; NFT9816-USD: Veränderung 30 Tage -82 % statt -23 %),2026-11-24
+161,Spiko US T-Bills Money Market Fund,USTBL,spiko-us-t-bills-money-market-fund,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+169,Tradable APAC Diversified Finance Provider SSTN,PC0000033,tradable-apac-diversified-finance-provider-sstn,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+171,USDai,USDAI,usdai,Stablecoin mit Zinsen,2026-11-24
+172,Optimism,OP,optimism,"bei Yahoo nicht sicher zuzuordnen (OP-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 0.000334–4.27, CoinGecko 0.0646–4.84) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt; OPENX-USD: Kurs 0.0115029 statt 0.068963; OPTIMUS41955-USD: Kurs 0.0010605 statt 0.068963)",2026-11-24
+173,FLOKI,FLOKI,floki,"bei Yahoo nicht sicher zuzuordnen (FLOKI-USD: Kurse bei Yahoo zu grob gerundet (sechs Nachkommastellen bei einem Kurs unter etwa 0,0001 $) – keine Ampel möglich; FLOKI29860-USD: keine Kurse; FLOKI13074-USD: keine Kurse; FLOKI30253-USD: keine Kurse; BABYFLOKI-USD: keine Kurse; FLOKIX-USD: Kurs 0.0027831 statt 1.615e-05; ASTEROIDFLOKI-USD: keine Kurse; DOFI-USD: keine Kurse; FLOKICASH-USD: Kurs 2.48639e-09 statt 1.615e-05; FLOKITA-USD: Kurs 2.06121e-07 statt 1.615e-05; BNBFLOKI-USD: keine Kurse)",2026-11-24
+176,Kinesis Silver,KAG,kinesis-silver,an einen Rohstoff gebunden (kein eigener Kryptowert),2026-11-24
+177,GUSD,GUSD,gusd,Stablecoin (an eine Währung gebunden),2026-11-24
+178,AUSD,AUSD,agora-dollar,Stablecoin (an eine Währung gebunden),2026-11-24
+187,crvUSD,CRVUSD,crvusd,Stablecoin (an eine Währung gebunden),2026-11-24
+190,NVIDIA xStock,NVDAX,nvidia-xstock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+191,Tradable LatAm Fintech SSTN,PC0000097,tradable-latam-fintech-sstn,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+192,CASH,CASH,cash-4,Stablecoin (an eine Währung gebunden),2026-11-24
+193,apyUSD,APYUSD,apyusd,Stablecoin mit Zinsen,2026-11-24
+194,Quack AI,Q,quack-ai,bei Yahoo nicht sicher zuzuordnen (Q-USD: keine Kurse; Q38236-USD: Veränderung 30 Tage -54 % statt -67 %),2026-11-24
+199,JPYSC,JPYSC,jpysc,Stablecoin (an eine Währung gebunden),2026-11-24
+203,Fluid,FLUID,instadapp,"bei Yahoo nicht sicher zuzuordnen (FLUID-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 0.0108–7.44, CoinGecko 0.367–24.4) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt; FUSDC26744-USD: Kurs 0.830603 statt 1.48; FLDT-USD: Kurs 0.0218053 statt 1.48)",2026-11-24
+209,Aster USDF,USDF,astherus-usdf,Stablecoin (an eine Währung gebunden),2026-11-24
+210,Theo Short Duration US Treasury Fund,THBILL,theo-short-duration-us-treasury-fund,an Staatsanleihen gebunden (kein eigener Kryptowert),2026-11-24
+213,3Jane USD3,USD3,3jane-usd3,Zins-Token auf eine andere Münze,2026-11-24
+214,Hastra AUTO,AUTO,hastra-auto,bei Yahoo nicht sicher zuzuordnen (AUTO-USD: Kurs 1.66157 statt 1.037; GTAVI40799-USD: keine Kurse; VFSON-USD: Kurs 2.6956 statt 1.037; LION39241-USD: Kurs 9.35384 statt 1.037; LIC-USD: Kurs 10.8007 statt 1.037),2026-11-24
+220,Circle Internet Group (bStocks Tokenized Stock),CRCLB,circle-internet-group-bstock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+218,Tradable Singapore Fintech SSL,PC0000023,tradable-singapore-fintech-ssl-2,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+219,Alpha Bulgaria Warrants,ALFW,alpha-bulgaria-warrants,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+223,Tradable LatAm Middle-Market Lender SSTL,PC0000085,tradable-latam-middle-market-lender-sstl,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+227,Nest BlackOpal LiquidStone II Vault,NOPAL,nest-blackopal-liquidstone-ii-vault,Zins-Token auf eine andere Münze,2026-11-24
+229,Securitize Tokenized AAA CLO Fund,STAC,securitize-tokenized-aaa-clo-fund,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+230,Tradable NA Third Party Online Merchant SSTN,PC0000015,tradable-na-third-party-online-merchant-sstn,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+232,SpaceX (bStocks Tokenized Stock),SPCXB,spacex-bstocks-tokenized-stock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+234,Strategy PP Variable xStock,STRCX,strategy-pp-variable-xstock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+235,eCash,XEC,ecash,"bei Yahoo nicht sicher zuzuordnen (XEC-USD: Kurse bei Yahoo zu grob gerundet (sechs Nachkommastellen bei einem Kurs unter etwa 0,0001 $) – keine Ampel möglich; ECX-USD: Kurs 42.5818 statt 4.97e-06)",2026-11-24
+236,Tradable Singapore Fintech SSL,PC0000077,tradable-singapore-fintech-ssl,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+237,Unity USD,UUSD,unity-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+240,OnRe Tokenized Reinsurance,ONYC,onyc,Stablecoin mit Zinsen,2026-11-24
+241,Rollbit Coin,RLB,rollbit-coin,"bei Yahoo nicht sicher zuzuordnen (RLB-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 2.13e-05–0.229, CoinGecko 0.000935–0.264) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt)",2026-11-24
+244,Circle xStock,CRCLX,circle-xstock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+251,BUILDon,B,build-on,"bei Yahoo nicht sicher zuzuordnen (B-USD: Yahoo-Reihe passt nicht zur Geschichte der Münze (Yahoo 0.035–0.682, CoinGecko 0.0824–0.763) – vermutlich mit einer anderen Münze gleichen Kürzels vermischt)",2026-11-24
+254,Semicon Bull 3X ETF (bStocks Tokenized ETF),SOXLB,semicon-bull-3x-etf-bstocks-tokenized-stock,ETF als Token (kein eigener Kryptowert),2026-11-24
+255,Avant USD,AVUSD,avant-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+256,Frax USD,FRXUSD,frax-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+258,Saturn Dollar,USDAT,saturn-dollar,Stablecoin (an eine Währung gebunden),2026-11-24
+261,USD.infra,USD.INFRA,usd-infra,Stablecoin (an eine Währung gebunden),2026-11-24
+267,Bitget Wrapped BTC,BGBTC,bitget-wrapped-btc,verpackte Münze (gibt es schon als Original),2026-11-24
+269,MicroStrategy xStock,MSTRX,microstrategy-xstock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+271,JPY Coin,JPYC,jpycoin,Stablecoin (an eine Währung gebunden),2026-11-24
+274,Alphabet (bStocks Tokenized Stock),GOOGLB,alphabet-bstocks-tokenized-stock,Aktie als Token (kein eigener Kryptowert),2026-11-24
+275,Tradable North America PoS Lender SSTN,PC0000019,tradable-north-america-pos-lender-sstn,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+278,Ozapay,OZA,ozapay,bei Yahoo nicht sicher zuzuordnen (OZA-USD: keine Kurse),2026-11-24
+280,Nasdaq xStock,QQQX,nasdaq-xstock,ETF als Token (kein eigener Kryptowert),2026-11-24
+281,Tradable NA Post-Settlement Legal Financing Receivables,PC0000101,na-post-settlement-legal-financing-receivables,an einen anderen Wert gebunden (Tokenized Asset),2026-11-24
+283,Apollo Diversified Credit Securitize Fund,ACRED,apollo-diversified-credit-securitize-fund,"Name deutet auf Stablecoin/verpackte Münze (nicht aufgenommen, im Zweifel weglassen)",2026-11-24
+284,SP500 xStock,SPYX,sp500-xstock,ETF als Token (kein eigener Kryptowert),2026-11-24
+282,USDA,USDA,usda-3,Stablecoin (an eine Währung gebunden),2026-11-24
+285,Cygnus Finance Global USD,CGUSD,cygnus-finance-global-usd,Stablecoin (an eine Währung gebunden),2026-11-24
+287,Felix feUSD,FEUSD,felix-feusd,Stablecoin (an eine Währung gebunden),2026-11-24
+288,NUMA-X,CRX,numa-x,bei Yahoo nicht sicher zuzuordnen (CRX-USD: keine Kurse),2026-11-24
+289,Tori trUSD,TRUSD,tori-trusd,Stablecoin (an eine Währung gebunden),2026-11-24
+290,Lista USD,LISUSD,helio-protocol-hay,Stablecoin (an eine Währung gebunden),2026-11-24
+292,Goldfish Gold,GGBR,goldfish-gold,an Gold gebunden (kein eigener Kryptowert),2026-11-24
+293,Midas mTBILL,MTBILL,midas-mtbill,Stablecoin mit Zinsen,2026-11-24

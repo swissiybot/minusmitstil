@@ -8,8 +8,10 @@ Geheime Einstellungen (GitHub-Secrets, nie im Repo):
 Optional: NTFY_SERVER (Standard https://ntfy.sh).
 
 Damit das Handy nicht ueberlaeuft:
-  - ETFs, Krypto, Rohstoffe und Werte aus ALARM_WERTE: je Wechsel eine eigene Meldung, sofort (hoechstens 8 je Lauf).
-  - Aktien im Modus „alle“: gesammelt hoechstens einmal am Tag als Zusammenfassung (die bekanntesten zuerst, nach Handelsumsatz).
+  - ETFs, Rohstoffe, die fuenf Krypto-Kernwerte (Bitcoin, Ethereum, Solana, Chainlink, Stellar) und Werte aus ALARM_WERTE:
+    je Wechsel eine eigene Meldung, sofort (hoechstens 8 je Lauf).
+  - Aktien und die uebrigen Kryptowerte der Top-200-Liste im Modus „alle“: gesammelt hoechstens einmal am Tag als
+    Zusammenfassung (Aktien zuerst, die bekanntesten nach Handelsumsatz).
 Stufe je Wert = sehr guenstig (>= 80), sehr teuer (<= 15) oder normal; mit Puffer gegen Hin-und-her-Springen
 (sehr guenstig endet erst unter 75, sehr teuer erst ueber 20). Gemeldet wird nur ein Wechsel IN eine der beiden Stufen.
 Beim allerersten Lauf kommt eine Startmeldung mit dem aktuellen Stand.
@@ -43,6 +45,14 @@ TEUER_AB, TEUER_BIS = 15, 20           # Stufe beginnt ab 15 abwaerts, endet ers
 MAX_MELDUNGEN = 8
 VERALTET_TAGE = 3                      # Kurse älter als 3 Tage -> Ausfall-Alarm (höchstens einmal am Tag)
 SONDER = ("ETF", "Krypto", "Rohstoffe")
+
+
+def meldet_einzeln(w: dict) -> bool:
+    """Eigene Meldung je Wechsel: ETFs, Rohstoffe und die fünf Krypto-Kernwerte. Die übrigen Kryptowerte der Top-200-Liste
+    (seit 24.11.2026) kommen wie Aktien gesammelt einmal am Tag – sonst liefe das Handy über."""
+    if w.get("gruppe") == "Krypto":
+        return w.get("id") in E.KRYPTO_KERN_IDS
+    return w.get("gruppe") in SONDER
 
 
 def stufe(score, alt: str) -> str:
@@ -85,7 +95,7 @@ def meldung(w: dict, neu: str, vorher) -> dict:
 
 
 def aktien_text(ws: list[dict], n: int = 12) -> str:
-    ws = sorted(ws, key=lambda w: -(w.get("umsatz_usd") or 0))
+    ws = sorted(ws, key=lambda w: (w.get("gruppe") == "Krypto", -(w.get("umsatz_usd") or 0)))   # Aktien zuerst; Krypto-Umsätze sind nicht vergleichbar
     teile = [f"{name(w)} ({w['score']:.0f}{', Geschäft schwach' if (w.get('f') or {}).get('schwach') else ''})" for w in ws[:n]]
     return ", ".join(teile) + (f" und {len(ws) - n} weitere" if len(ws) > n else "")
 
@@ -139,7 +149,7 @@ def main(argv):
         ids = werte_lesen(liste)
         beobachtet = [werte.get(i) or nach_symbol.get(i) for i in ids if i in werte or i in nach_symbol]
         unbekannt = [i for i in ids if i not in werte and i not in nach_symbol]
-    einzeln = lambda w: not alle_modus or w.get("gruppe") in SONDER
+    einzeln = lambda w: not alle_modus or meldet_einzeln(w)
     stand = json.loads(STAND.read_text()) if STAND.exists() and not probe else {}
     if stand.get("modus") != ("alle" if alle_modus else "liste"):
         stand = {}                                   # Modus gewechselt: neu anfangen (mit Startmeldung)
@@ -179,7 +189,7 @@ def main(argv):
             text = ((f"Neu historisch sehr günstig (Ampel ab 80): {len(g)} – {aktien_text(g)}.\n" if g else "")
                     + (f"Neu historisch sehr teuer (Ampel bis 15): {len(t)} – {aktien_text(t)}.\n" if t else "")
                     + "Bei Einzelaktien heißt sehr günstig oft: Die Firma steckt in Schwierigkeiten. Keine Kaufempfehlung.")
-            sammel = {"title": f"Aktien heute: {len(g)} neu sehr günstig, {len(t)} neu sehr teuer", "message": text, "tags": ["bar_chart"], "click": SEITE}
+            sammel = {"title": f"Aktien und weitere Kryptowerte heute: {len(g)} neu sehr günstig, {len(t)} neu sehr teuer", "message": text, "tags": ["bar_chart"], "click": SEITE}
     try:
         if veraltet:
             senden(server, thema, veraltet, probe)
@@ -188,12 +198,12 @@ def main(argv):
             ts = [w for w in beobachtet if neu_werte[schluessel(thema, w['id'])]["s"] == "teuer"]
             kurz = lambda ws: ", ".join(f"{name(w)} ({w['score']:.0f})" for w in ws) or "keiner"
             if alle_modus:
-                gs_s, ts_s = [w for w in gs if w.get("gruppe") in SONDER], [w for w in ts if w.get("gruppe") in SONDER]
+                gs_s, ts_s = [w for w in gs if meldet_einzeln(w)], [w for w in ts if meldet_einzeln(w)]
                 text = (f"Alarme sind eingerichtet: alle {len(beobachtet):,} Werte mit Ampel werden beobachtet.".replace(",", ".")
-                        + " ETFs, Krypto und Rohstoffe melden sich einzeln, sobald einer neu historisch sehr günstig (ab 80) oder sehr teuer (bis 15) wird; "
-                        + "Aktien kommen gesammelt einmal am Tag.\n"
-                        + f"ETFs/Krypto/Rohstoffe gerade sehr günstig: {kurz(gs_s)}.\nGerade sehr teuer: {kurz(ts_s)}.\n"
-                        + f"Aktien gerade sehr günstig: {len(gs) - len(gs_s)}, sehr teuer: {len(ts) - len(ts_s)}.")
+                        + " ETFs, Rohstoffe und die fünf großen Kryptowerte melden sich einzeln, sobald einer neu historisch sehr günstig (ab 80) oder sehr teuer (bis 15) wird; "
+                        + "Aktien und die übrigen Kryptowerte kommen gesammelt einmal am Tag.\n"
+                        + f"ETFs/Rohstoffe/große Kryptowerte gerade sehr günstig: {kurz(gs_s)}.\nGerade sehr teuer: {kurz(ts_s)}.\n"
+                        + f"Aktien und übrige Kryptowerte gerade sehr günstig: {len(gs) - len(gs_s)}, sehr teuer: {len(ts) - len(ts_s)}.")
             else:
                 text = (f"Alarme sind eingerichtet: {len(beobachtet)} Werte werden beobachtet. Du bekommst eine Meldung, wenn einer "
                         f"historisch sehr günstig (Ampel ab 80) oder sehr teuer (bis 15) wird.\n"

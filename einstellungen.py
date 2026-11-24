@@ -67,15 +67,41 @@ THEMEN_ETFS = [
 ]
 ETFS = ETFS + THEMEN_ETFS
 
-# Kryptowaehrungen (Yahoo, Kurse in USD). Pi Cycle ist nur fuer Bitcoin geeicht und wird nur dort berechnet.
+# Kryptowaehrungen (Yahoo, Kurse in USD). Pi Cycle und MVRV sind nur fuer Bitcoin geeicht und werden nur dort berechnet.
 # Daten bei Yahoo: BTC ab 2014, ETH/LINK/XLM ab 11/2017, SOL ab 04/2020 (Ampel braucht 5 Jahre Vorlauf).
-KRYPTO = [
+# Die fünf Kernwerte stehen fest hier: Ihre Kennung ändert sich nie (Signal-Tagebuch, Alarme, gemerkte Werte), sie melden sich
+# einzeln aufs Handy und gehen als „Krypto“ in Trendstudie, Kegelprüfung und Gegenprobe der Vorhersage ein.
+KRYPTO_KERN = [
     {"id": "BTC", "name": "Bitcoin", "symbol": "BTC-USD"},
     {"id": "ETH-USD", "name": "Ethereum", "symbol": "ETH-USD"},
     {"id": "SOL-USD", "name": "Solana", "symbol": "SOL-USD"},
     {"id": "LINK-USD", "name": "Chainlink", "symbol": "LINK-USD"},   # Kuerzel LINK ist bei der Nasdaq schon vergeben
     {"id": "XLM-USD", "name": "Stellar", "symbol": "XLM-USD"},
 ]
+KRYPTO_KERN_IDS = {k["id"] for k in KRYPTO_KERN}
+
+
+def _krypto_liste() -> list[dict]:
+    """Kernwerte plus die feste, eingecheckte Liste der 200 größten Kryptowerte (listen/krypto.csv; Wunsch Marc 24.11.2026).
+    Die Liste baut krypto_liste.py von Hand neu (Quelle, Ausschlüsse und Prüfung der Yahoo-Kürzel stehen dort) – bewusst
+    nicht bei jedem Lauf, damit keine Werte kommen und gehen. Kennung „KÜRZEL-USD“: kann mit keinem Aktienkürzel kollidieren."""
+    import csv
+    aus, symbole, ids = [dict(k) for k in KRYPTO_KERN], {k["symbol"] for k in KRYPTO_KERN}, set(KRYPTO_KERN_IDS)
+    datei = BASIS / "listen" / "krypto.csv"
+    if datei.exists():
+        with open(datei, newline="", encoding="utf-8") as f:
+            for z in csv.DictReader(f):
+                if z["symbol"] in symbole or z["id"] in ids:
+                    for k in aus[:len(KRYPTO_KERN)]:   # Kernwert: Kennung und Name bleiben, nur der Rang kommt aus der Liste
+                        if k["symbol"] == z["symbol"]:
+                            k.update(rang=int(z["rang"]), stand=z["stand"])
+                    continue
+                symbole.add(z["symbol"]); ids.add(z["id"])
+                aus.append({"id": z["id"], "name": z["name"], "symbol": z["symbol"], "rang": int(z["rang"]), "stand": z["stand"]})
+    return aus
+
+
+KRYPTO = _krypto_liste()
 BITCOIN = KRYPTO[0]
 
 # Rohstoffe: Endlos-Futures von Yahoo (Spruenge beim Kontraktwechsel, keine Anlegerrendite) und ein breiter Korb-ETF.

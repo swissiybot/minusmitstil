@@ -824,7 +824,8 @@ def tagebuch(zeilen):
         | ({"falle": z["f"]["falle"]} if z.get("f") else {})
         | {f"p{h}": (z["p"].get(h) or {}).get("quote") if z.get("p") else None for h in ("1", "3", "5")}
         for z in zeilen
-        if z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15))
+        if (z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or (z["score"] is not None and (z["score"] >= 80 or z["score"] <= 15)))
+        and not (z["gruppe"] == "Krypto" and z["score"] is None and z["id"] not in E.KRYPTO_KERN_IDS)   # Top-200-Münzen ohne Ampel: nichts festzuhalten
     ]
     datei.write_text(json.dumps({"erstellt": dt.datetime.now().isoformat(timespec="seconds"), "ampel": "anker200s", "signale": eintraege}, ensure_ascii=False, indent=0))
 
@@ -835,6 +836,16 @@ def _etfs():
 
 def _rohstoff_art():
     return {r["id"]: r["art"] for r in E.ROHSTOFFE}
+
+
+_KRYPTO = None
+
+
+def _krypto():
+    global _KRYPTO
+    if _KRYPTO is None:
+        _KRYPTO = {k["id"]: k for k in E.KRYPTO}
+    return _KRYPTO
 
 
 TAGE_JAHRE = 15   # Tageskerzen: so viele Jahre zurück (ältere Zeit zeigt der Wochen- bzw. Monatschart)
@@ -896,7 +907,7 @@ def werte_eines(z: dict):
         tag, seg = btc_alt.verlaengern(tag, seg)
     tag = tag[tag["Close"] > 0]
     erg = analysiere(z, tag, seg)
-    if erg is None and z["gruppe"] not in ("Krypto", "Rohstoffe"):
+    if erg is None and z["gruppe"] != "Rohstoffe":   # seit 24.11.2026 auch Krypto: junge Münzen der Top-200-Liste erscheinen als „noch zu jung“
         try:
             erg = jung_wert(z, tag, seg)   # junge Werte (z. B. SpaceX): eigene Seite mit Chart, ohne Ampel
         except Exception as ex:            # brandneue Werte mit lückenhaften Kursen dürfen den Lauf (und die Regelprüfung) nicht stoppen
@@ -913,6 +924,12 @@ def werte_eines(z: dict):
 def zusatzdaten(z: dict, zeile: dict) -> dict:
     """Felder fuer die Titelseite aus eigenen Dateien (Wunsch Marc 23.11.2026); fehlt eine Quelle, fehlt das Feld."""
     out = {}
+    if z["gruppe"] == "Krypto":   # Rang in der festen Top-200-Liste; „kern“ = die fünf Werte, die Übersicht und Alarme wie bisher zeigen
+        k = _krypto().get(z["id"]) or {}
+        if k.get("rang"):
+            out["rang"], out["rang_stand"] = k["rang"], k["stand"]
+        if z["id"] in E.KRYPTO_KERN_IDS:
+            out["kern"] = True
     if z["gruppe"] not in ("Krypto", "Rohstoffe"):
         try:
             import dividenden
@@ -963,7 +980,10 @@ def jung_wert(z: dict, tag: pd.DataFrame, segmente: list):
         "cagr20": None, "cagr_jahre": None, "cagr_max": None, "qualitaet": False, "p": {}, "kz": None, "sv": [],
         "perf": [r((jetzt / float(c_tag.iloc[-2]) - 1) * 100, 2), seit(pd.Timedelta(days=7)), seit(pd.DateOffset(months=1)), seit(pd.DateOffset(years=1))],
         "umsatz_usd": r(float((tag["Close"] * tag["Volume"]).tail(63).mean()), 0) if "Volume" in tag else 0.0,
-        "grund": (f"brandneu: erst {len(c_tag)} Handelstage an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')})" if neu else
+        "grund": ((f"brandneu: erst {len(c_tag)} Tage Kurse bei Yahoo (seit {c_tag.index[0].strftime('%d.%m.%Y')})" if neu else
+                   f"erst {len(w)} Wochen Kurse bei Yahoo (seit {c_tag.index[0].strftime('%d.%m.%Y')}) · {abs((jetzt / hoch - 1) * 100):.0f} % unter dem Hoch dieser Zeit")
+                  if z.get("gruppe") == "Krypto" else   # Münzen haben keinen Börsengang; die Yahoo-Reihe kann später beginnen als die Münze
+                  f"brandneu: erst {len(c_tag)} Handelstage an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')})" if neu else
                   f"erst {len(w)} Wochen an der Börse (seit {c_tag.index[0].strftime('%d.%m.%Y')}) · {abs((jetzt / hoch - 1) * 100):.0f} % unter dem Hoch seit Börsengang"),
         "segmente": [{"ab": s.strftime("%Y-%m-%d"), "art": QUELLEN_TEXT.get(a, (a,))[0], "symbol": sym} for s, a, sym in segmente],
     }
@@ -1005,7 +1025,7 @@ def jung_zeile(z: dict, tag: pd.DataFrame | None) -> dict | None:
     """Junge Aktien (unter 3 Jahren Kurse, aktuell gehandelt, z. B. SpaceX seit 06/2026): keine Ampel, aber Wochenkurse fuer die
     Depot-Prognose (eigene Schwankung statt Ersatz). Unter 13 Wochen ("neu", z. B. Anthropic kurz nach dem Boersengang) reicht es nur fuer
     Kurs und Zuordnung – die Prognose rechnet solche Werte mit einem gekennzeichneten Ersatz."""
-    if tag is None or tag.empty or z["gruppe"] in ("Krypto", "Rohstoffe"):
+    if tag is None or tag.empty or z["gruppe"] == "Rohstoffe":
         return None
     c = tag["Close"][tag["Close"] > 0]
     w = c.resample("W-FRI").last().dropna()
@@ -1079,6 +1099,8 @@ class Stufe2:
             return
         for g in gruppen:
             self.sammler[g].add(c, score, w.index.year.values)
+        if z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS:
+            return   # Sparplan-Vergleich je Wert nur für die fünf Kernwerte in der Tabelle (jeder Wert zeigt seinen eigenen auf der Titelseite)
         st = strategie.vergleich(w, score, self.zins, reihe=False)
         if st is None:
             return

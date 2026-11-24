@@ -29,7 +29,7 @@ import requests
 import einstellungen as E
 
 ZIEL = E.DATEN / "beschreibung.json"
-VERSION = 3   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen
+VERSION = 4   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200)
 WIKIDATA = "https://query.wikidata.org/sparql"
 KOPF = {"User-Agent": "minusmitstil-kaufplan/1.0 (Lernprojekt, GitHub swissiybot/minusmitstil)", "Accept": "application/sparql-results+json"}
 BOERSE = {"Q82059": "Nasdaq", "Q13677": "NYSE"}
@@ -371,6 +371,7 @@ def main():
         print(f"SEC-Stammdaten nicht lesbar: {ex.__class__.__name__}: {ex}", file=sys.stderr)
         sec = {}
     wp_url = lambda titel_: "https://de.wikipedia.org/wiki/" + requests.utils.quote(titel_.replace(" ", "_"))
+    krypto_rang = {k["id"]: k for k in E.KRYPTO if k.get("rang")}
     out = {}
     for z in uni.to_dict("records"):
         wid, sym, g = z["id"], z["symbol"], z["gruppe"]
@@ -411,6 +412,10 @@ def main():
             e["sitz"] = LAND_KURZ.get(b.get("landLabel"), b.get("landLabel"))
         if wid in TEXTE:
             e["text"], e["text_quelle"], e["text_url"] = TEXTE[wid], None, None
+        elif g == "Krypto" and krypto_rang.get(wid):   # Top-200-Liste (24.11.2026): kein eigener Text – nur, was die Liste sicher sagt
+            k = krypto_rang[wid]
+            e["text"] = (f"Kryptowert, am {'.'.join(reversed(k['stand'].split('-')))} auf Rang {k['rang']} nach Marktwert "
+                         "(Rangliste: CoinGecko). Eine Kurzbeschreibung liegt für diesen Wert noch nicht vor.")
         e["wkn"] = e["wkn"] or wkn_aus(e["isin"])
         if any(e.values()):
             out[wid] = e

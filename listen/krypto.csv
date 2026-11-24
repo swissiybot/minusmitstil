@@ -1,0 +1,177 @@
+rang,id,symbol,name,coingecko_id,yahoo_name,kurse_seit,stand
+1,BTC,BTC-USD,Bitcoin,bitcoin,Bitcoin,2014-09-17,2026-11-24
+2,ETH-USD,ETH-USD,Ethereum,ethereum,Ethereum,2017-11-09,2026-11-24
+4,BNB-USD,BNB-USD,BNB,binancecoin,BNB,2017-11-09,2026-11-24
+6,XRP-USD,XRP-USD,XRP,ripple,XRP,2017-11-09,2026-11-24
+7,SOL-USD,SOL-USD,Solana,solana,Solana,2020-04-10,2026-11-24
+8,TRX-USD,TRX-USD,TRON,tron,TRON,2017-11-09,2026-11-24
+10,HYPE-USD,HYPE32196-USD,Hyperliquid,hyperliquid,Hyperliquid,2024-11-29,2026-11-24
+11,ZEC-USD,ZEC-USD,Zcash,zcash,Zcash,2017-11-09,2026-11-24
+12,XMR-USD,XMR-USD,Monero,monero,Monero,2017-11-09,2026-11-24
+13,DOGE-USD,DOGE-USD,Dogecoin,dogecoin,Dogecoin,2017-11-09,2026-11-24
+14,LEO-USD,LEO-USD,LEO Token,leo-token,UNUS SED LEO,2019-05-21,2026-11-24
+15,LINK-USD,LINK-USD,Chainlink,chainlink,Chainlink,2017-11-09,2026-11-24
+16,WBT-USD,WBT-USD,WhiteBIT Coin,whitebit,WhiteBIT Coin,2022-08-26,2026-11-24
+18,ADA-USD,ADA-USD,Cardano,cardano,Cardano,2017-11-09,2026-11-24
+20,XLM-USD,XLM-USD,Stellar,stellar,Stellar,2017-11-09,2026-11-24
+22,BCH-USD,BCH-USD,Bitcoin Cash,bitcoin-cash,Bitcoin Cash,2017-11-09,2026-11-24
+23,NEAR-USD,NEAR-USD,NEAR Protocol,near,NEAR Protocol,2020-10-14,2026-11-24
+24,LTC-USD,LTC-USD,Litecoin,litecoin,Litecoin,2014-09-17,2026-11-24
+25,CC-USD,CC37263-USD,Canton,canton-network,Canton,2025-11-10,2026-11-24
+26,AVAX-USD,AVAX-USD,Avalanche,avalanche-2,Avalanche,2020-07-13,2026-11-24
+29,UNI-USD,UNI7083-USD,Uniswap,uniswap,Uniswap,2020-09-18,2026-11-24
+32,SUI-USD,SUI20947-USD,Sui,sui,Sui,2023-05-03,2026-11-24
+36,HBAR-USD,HBAR-USD,Hedera,hedera-hashgraph,Hedera,2019-09-17,2026-11-24
+37,RAIN-USD,RAIN38341-USD,Rain,rain,Rain,2025-09-10,2026-11-24
+38,TAO-USD,TAO22974-USD,Bittensor,bittensor,Bittensor,2023-03-05,2026-11-24
+39,QNT-USD,QNT-USD,Quant,quant-network,Quant,2018-08-10,2026-11-24
+42,CRO-USD,CRO-USD,Cronos,crypto-com-chain,Cronos,2018-12-14,2026-11-24
+44,M-USD,M35491-USD,MemeCore,memecore,MemeCore,2025-07-03,2026-11-24
+46,OKB-USD,OKB-USD,OKB,okb,OKB,2019-04-30,2026-11-24
+51,AAVE-USD,AAVE-USD,Aave,aave,Aave,2020-10-02,2026-11-24
+53,ONDO-USD,ONDO-USD,Ondo,ondo-finance,Ondo,2024-01-18,2026-11-24
+54,ENA-USD,ENA-USD,Ethena,ethena,Ethena,2024-04-02,2026-11-24
+57,WLFI-USD,WLFI33251-USD,World Liberty Financial,world-liberty-financial,World Liberty Financial,2025-09-01,2026-11-24
+58,ASTER-USD,ASTER36341-USD,Aster,aster-2,Aster,2025-09-17,2026-11-24
+59,MNT-USD,MNT27075-USD,Mantle,mantle,Mantle,2023-07-17,2026-11-24
+60,VVV-USD,VVV35509-USD,Venice Token,venice-token,Venice Token,2025-03-16,2026-11-24
+61,JST-USD,JST-USD,JUST,just,JUST,2020-05-07,2026-11-24
+62,ICP-USD,ICP-USD,Internet Computer,internet-computer,Internet Computer,2021-05-10,2026-11-24
+63,DOT-USD,DOT-USD,Polkadot,polkadot,Polkadot,2020-08-20,2026-11-24
+64,MORPHO-USD,MORPHO34104-USD,Morpho,morpho,Morpho,2024-11-30,2026-11-24
+65,BTW-USD,BTW39158-USD,Bitway,bitway,Bitway,2026-03-02,2026-11-24
+66,BGB-USD,BGB-USD,Bitget Token,bitget-token,Bitget Token,2021-07-29,2026-11-24
+69,ETC-USD,ETC-USD,Ethereum Classic,ethereum-classic,Ethereum Classic,2017-11-09,2026-11-24
+70,SKY-USD,SKY33038-USD,Sky,sky,Sky,2024-09-24,2026-11-24
+72,PUMP-USD,PUMP36507-USD,Pump.fun,pump-fun,Pump.fun,2025-07-12,2026-11-24
+73,KCS-USD,KCS-USD,KuCoin,kucoin-shares,KuCoin Token,2017-11-09,2026-11-24
+74,PIEVERSE-USD,PIEVERSE-USD,Pieverse,pieverse,Pieverse,2025-11-14,2026-11-24
+75,POL-USD,POL28321-USD,POL (ex-MATIC),polygon-ecosystem-token,Polygon (prev. MATIC),2023-10-30,2026-11-24
+76,NIGHT-USD,NIGHT39064-USD,Midnight,midnight-3,Midnight,2025-12-09,2026-11-24
+77,PEARL-USD,PEARL41876-USD,Pearl,pearl-2,Pearl (pearlresearch.ai),2026-10-15,2026-11-24
+78,ARB-USD,ARB11841-USD,Arbitrum,arbitrum,Arbitrum,2023-03-23,2026-11-24
+79,JUP-USD,JUP29210-USD,Jupiter,jupiter-exchange-solana,Jupiter,2024-01-31,2026-11-24
+80,KAS-USD,KAS-USD,Kaspa,kaspa,Kaspa,2022-06-01,2026-11-24
+81,ALGO-USD,ALGO-USD,Algorand,algorand,Algorand,2019-06-21,2026-11-24
+82,RENDER-USD,RENDER-USD,Render,render-token,Render,2020-06-11,2026-11-24
+85,ATOM-USD,ATOM-USD,Cosmos Hub,cosmos,Cosmos,2019-03-14,2026-11-24
+86,GT-USD,GT-USD,Gate,gatechain-token,GateToken,2019-08-26,2026-11-24
+87,NEXO-USD,NEXO-USD,NEXO,nexo,Nexo,2018-05-01,2026-11-24
+88,PI-USD,PI35697-USD,Pi Network,pi-network,Pi,2025-03-28,2026-11-24
+90,LIT-USD,LIT39125-USD,Lighter,lighter,Lighter,2025-12-23,2026-11-24
+91,INJ-USD,INJ-USD,Injective,injective-protocol,Injective,2020-10-21,2026-11-24
+92,BDX-USD,BDX-USD,Beldex,beldex,Beldex,2019-06-07,2026-11-24
+94,XDC-USD,XDC-USD,XDC Network,xdce-crowd-sale,XDC Network,2018-04-13,2026-11-24
+97,CAKE-USD,CAKE-USD,PancakeSwap,pancakeswap-token,PancakeSwap,2020-09-29,2026-11-24
+98,STX-USD,STX4847-USD,Stacks,blockstack,Stacks,2019-10-29,2026-11-24
+100,ETHFI-USD,ETHFI-USD,Ether.fi,ether-fi,ether.fi,2024-03-18,2026-11-24
+102,FIL-USD,FIL-USD,Filecoin,filecoin,Filecoin,2017-12-13,2026-11-24
+103,FLR-USD,FLR-USD,Flare,flare-networks,Flare,2023-01-10,2026-11-24
+104,DASH-USD,DASH-USD,Dash,dash,Dash,2017-11-09,2026-11-24
+106,STABLE-USD,STABLE38892-USD,Stable,stable-2,Stable,2025-12-07,2026-11-24
+105,ZRO-USD,ZRO26997-USD,LayerZero,layerzero,LayerZero,2024-06-20,2026-11-24
+107,VET-USD,VET-USD,VeChain,vechain,VeChain,2018-08-03,2026-11-24
+110,PYTH-USD,PYTH-USD,Pyth Network,pyth-network,Pyth Network,2023-11-20,2026-11-24
+112,FF-USD,FF38482-USD,Falcon Finance,falcon-finance-ff,Falcon Finance,2025-09-29,2026-11-24
+113,RAY-USD,RAY-USD,Raydium,raydium,Raydium,2021-02-21,2026-11-24
+114,KITE-USD,KITE-USD,Kite,kite-2,Kite,2025-11-03,2026-11-24
+116,DRV-USD,DRV35014-USD,Derive,derive,Derive,2025-02-27,2026-11-24
+117,APT-USD,APT21794-USD,Aptos,aptos,Aptos,2022-10-19,2026-11-24
+124,SUN-USD,SUN-USD,Sun Token,sun-token,Sun [New],2021-06-21,2026-11-24
+125,BSV-USD,BSV-USD,Bitcoin SV,bitcoin-cash-sv,Bitcoin SV,2018-11-09,2026-11-24
+126,CRV-USD,CRV-USD,Curve DAO,curve-dao-token,Curve DAO Token,2020-08-14,2026-11-24
+129,PENGU-USD,PENGU34466-USD,Pudgy Penguins,pudgy-penguins,Pudgy Penguins,2025-01-04,2026-11-24
+130,GRASS-USD,GRASS32956-USD,Grass,grass,Grass,2024-10-28,2026-11-24
+132,UB-USD,UB38339-USD,Unibase,unibase,Unibase,2025-09-12,2026-11-24
+135,FET-USD,FET-USD,Artificial Superintelligence Alliance,fetch-ai,Artificial Superintelligence Alliance,2019-03-02,2026-11-24
+136,VIRTUAL-USD,VIRTUAL-USD,Virtuals Protocol,virtual-protocol,Virtuals Protocol,2024-02-15,2026-11-24
+137,STRK-USD,STRK22691-USD,Starknet,starknet,Starknet,2024-02-20,2026-11-24
+138,TRUMP-USD,TRUMP35336-USD,Official Trump,official-trump,OFFICIAL TRUMP,2025-01-18,2026-11-24
+139,XTZ-USD,XTZ-USD,Tezos,tezos,Tezos,2017-11-09,2026-11-24
+140,OZO-USD,OZO-USD,Ozone Chain,ozone-chain,Ozone Chain,2023-09-25,2026-11-24
+142,GNO-USD,GNO-USD,Gnosis,gnosis,Gnosis,2017-11-09,2026-11-24
+144,SEI-USD,SEI-USD,Sei,sei-network,Sei,2023-08-15,2026-11-24
+145,PENDLE-USD,PENDLE-USD,Pendle,pendle,Pendle,2021-04-29,2026-11-24
+147,XPL-USD,XPL-USD,Plasma,plasma,Plasma,2025-07-15,2026-11-24
+149,BP-USD,BP39686-USD,Backpack,backpack,Backpack,2026-03-23,2026-11-24
+152,LDO-USD,LDO-USD,Lido DAO,lido-dao,Lido DAO,2021-01-05,2026-11-24
+156,BTSE-USD,BTSE-USD,BTSE Token,btse-token,BTSE Token,2020-03-12,2026-11-24
+157,DCR-USD,DCR-USD,Decred,decred,Decred,2017-11-09,2026-11-24
+158,KAIA-USD,KAIA-USD,Kaia,kaia,Kaia,2024-10-29,2026-11-24
+160,GRT-USD,GRT6719-USD,The Graph,the-graph,The Graph,2020-12-18,2026-11-24
+162,SHFL-USD,SHFL-USD,Shuffle,shuffle-2,Shuffle,2024-03-19,2026-11-24
+163,COMP-USD,COMP5692-USD,Compound,compound-governance-token,Compound,2020-06-17,2026-11-24
+164,ZBCN-USD,ZBCN-USD,Zebec Network,zebec-network,Zebec Network,2024-04-06,2026-11-24
+165,KOGE-USD,KOGE-USD,KOGE,bnb48-club-token,48 Club Token,2023-02-07,2026-11-24
+166,BEAM-USD,BEAM28298-USD,Beam,beam-2,Beam,2023-10-27,2026-11-24
+167,CFX-USD,CFX-USD,Conflux,conflux-token,Conflux,2020-11-11,2026-11-24
+168,RUNE-USD,RUNE-USD,THORChain,thorchain,THORChain,2019-07-23,2026-11-24
+170,DGAI-USD,DGAI-USD,DGrid AI,dgrid-ai,DGrid AI,2026-08-24,2026-11-24
+174,JASMY-USD,JASMY-USD,JasmyCoin,jasmycoin,JasmyCoin,2021-02-11,2026-11-24
+175,AR-USD,AR-USD,Arweave,arweave,Arweave,2020-05-27,2026-11-24
+179,ENS-USD,ENS-USD,Ethereum Name Service,ethereum-name-service,Ethereum Name Service,2021-11-09,2026-11-24
+180,GOMINING-USD,GOMINING-USD,GoMining Token,gmt-token,GoМining,2024-04-28,2026-11-24
+181,IOTA-USD,IOTA-USD,IOTA,iota,IOTA,2023-09-30,2026-11-24
+182,SENT-USD,SENT38868-USD,Sentient,sentient,Sentient,2025-12-16,2026-11-24
+184,CAP-USD,CAP40531-USD,Cap,cap-4,Cap,2026-06-26,2026-11-24
+183,ZAMA-USD,ZAMA-USD,Zama,zama,Zama,2026-01-09,2026-11-24
+185,AKT-USD,AKT-USD,Akash Network,akash-network,Akash Network,2020-10-20,2026-11-24
+186,CARDS-USD,CARDS38283-USD,Collector Crypt,collector-crypt,Collector Crypt,2025-09-04,2026-11-24
+188,KMNO-USD,KMNO-USD,Kamino,kamino,Kamino,2024-04-30,2026-11-24
+189,GEOD-USD,GEOD-USD,Geodnet,geodnet,GEODNET,2022-08-11,2026-11-24
+195,MX-USD,MX-USD,MX,mx-token,MX Token,2019-09-24,2026-11-24
+197,THETA-USD,THETA-USD,Theta Network,theta-token,Theta Network,2018-01-17,2026-11-24
+196,BORG-USD,BORG-USD,SwissBorg,swissborg,SwissBorg,2023-10-26,2026-11-24
+198,JTO-USD,JTO-USD,Jito,jito-governance-token,Jito,2023-12-07,2026-11-24
+200,TWT-USD,TWT-USD,Trust Wallet,trust-wallet-token,Trust Wallet Token,2020-07-30,2026-11-24
+201,MON-USD,MON30495-USD,Monad,monad,Monad,2025-11-24,2026-11-24
+202,COCO-USD,COCO39131-USD,coco,coco-2,coco,2025-12-08,2026-11-24
+204,BR-USD,BR36063-USD,Bedrock,bedrock-token,Bedrock,2025-04-01,2026-11-24
+205,S-USD,S32684-USD,Sonic,sonic-3,Sonic,2025-01-03,2026-11-24
+206,WIF-USD,WIF-USD,dogwifhat,dogwifcoin,dogwifhat,2023-12-19,2026-11-24
+207,MET-USD,MET38353-USD,Meteora,meteora,Meteora,2025-10-23,2026-11-24
+208,VSN-USD,VSN37322-USD,Vision,vision-3,Vision,2025-07-16,2026-11-24
+212,BC-USD,BC35067-USD,BCGame Coin,bc-token,BCGame Coin,2025-03-02,2026-11-24
+211,TRAC-USD,TRAC-USD,OriginTrail,origintrail,OriginTrail,2018-01-25,2026-11-24
+215,XCN-USD,XCN18679-USD,Onyxcoin,chain-2,Onyxcoin,2022-03-16,2026-11-24
+216,SN51-USD,SN51-USD,lium,celium,Lium,2025-06-20,2026-11-24
+217,BAT-USD,BAT-USD,Basic Attention,basic-attention-token,Basic Attention Token,2017-11-09,2026-11-24
+222,EIGEN-USD,EIGEN-USD,EigenCloud (prev. EigenLayer),eigenlayer,EigenCloud,2024-10-01,2026-11-24
+221,A-USD,A36462-USD,Vaulta,vaulta,Vaulta,2025-05-28,2026-11-24
+224,AXS-USD,AXS-USD,Axie Infinity,axie-infinity,Axie Infinity,2020-11-04,2026-11-24
+225,MANA-USD,MANA-USD,Decentraland,decentraland,Decentraland,2017-11-09,2026-11-24
+226,NEO-USD,NEO-USD,NEO,neo,Neo,2017-11-09,2026-11-24
+228,ANVL-USD,ANVL-USD,Anvil,anvil,Anvil,2025-10-14,2026-11-24
+231,CVX-USD,CVX-USD,Convex Finance,convex-finance,Convex Finance,2021-05-18,2026-11-24
+233,AWE-USD,AWE-USD,AWE Network,stp-network,AWE,2025-05-16,2026-11-24
+239,O-USD,O40092-USD,o1.exchange,o1-exchange,o1.exchange,2026-06-17,2026-11-24
+238,GENIUS-USD,GENIUS-USD,Genius,genius-3,Genius Terminal,2026-04-13,2026-11-24
+242,SOSO-USD,SOSO-USD,SoSoValue,sosovalue,SoSoValue,2025-04-01,2026-11-24
+243,AERO-USD,AERO29270-USD,Aerodrome Finance,aerodrome-finance,Aero,2024-02-02,2026-11-24
+245,RAIL-USD,RAIL-USD,Railgun,railgun,Railgun,2021-07-12,2026-11-24
+246,SAND-USD,SAND-USD,The Sandbox,the-sandbox,The Sandbox,2020-08-14,2026-11-24
+248,CHZ-USD,CHZ-USD,Chiliz,chiliz,Chiliz,2019-07-01,2026-11-24
+247,PROS-USD,PROS39682-USD,Pharos,pharos-network,Pharos,2026-04-28,2026-11-24
+250,DBR-USD,DBR31528-USD,deBridge,debridge,deBridge,2024-10-17,2026-11-24
+249,AIOZ-USD,AIOZ-USD,AIOZ Network,aioz-network,AIOZ Network,2021-04-02,2026-11-24
+252,GLM-USD,GLM-USD,Golem,golem,Golem,2017-11-09,2026-11-24
+253,EDGE-USD,EDGE39720-USD,edgeX,edgex,edgeX,2026-03-19,2026-11-24
+259,YZY-USD,YZY-USD,YZY,yzy,YZY MONEY,2025-08-21,2026-11-24
+257,SYRUP-USD,SYRUP-USD,Maple Finance,syrup,Maple Finance,2024-11-13,2026-11-24
+260,2Z-USD,2Z-USD,DoubleZero,doublezero,DoubleZero,2025-10-02,2026-11-24
+262,PROM-USD,PROM-USD,Prom,prometeus,Prom,2019-07-17,2026-11-24
+264,SNX-USD,SNX-USD,Synthetix,havven,Synthetix,2018-03-14,2026-11-24
+263,ULTIMA-USD,ULTIMA-USD,Ultima,ultima,Ultima,2023-10-26,2026-11-24
+265,SOON-USD,SOON36542-USD,SOON,soon-2,SOON,2025-05-23,2026-11-24
+266,NPC-USD,NPC27960-USD,Non-Playable Coin,non-playable-coin,Non-Playable Coin,2023-08-31,2026-11-24
+268,GMX-USD,GMX11857-USD,GMX,gmx,GMX,2021-09-14,2026-11-24
+270,1INCH-USD,1INCH-USD,1INCH,1inch,1inch,2020-12-25,2026-11-24
+272,ICNT-USD,ICNT-USD,Impossible Cloud Network Token,impossible-cloud-network-token,Impossible Cloud Network,2025-07-03,2026-11-24
+273,SFP-USD,SFP-USD,SafePal,safepal,SafePal,2021-02-08,2026-11-24
+276,IMX-USD,IMX10603-USD,Immutable,immutable-x,Immutable,2021-11-06,2026-11-24
+277,FARTCOIN-USD,FARTCOIN-USD,Fartcoin,fartcoin,Fartcoin,2024-10-23,2026-11-24
+279,RSR-USD,RSR-USD,Reserve Rights,reserve-rights-token,Reserve Rights,2019-05-24,2026-11-24
+286,MWC-USD,MWC-USD,MimbleWimbleCoin,mimblewimblecoin,MimbleWimbleCoin,2020-02-23,2026-11-24
+291,PLUME-USD,PLUME-USD,Plume,plume,Plume,2025-03-10,2026-11-24
+294,ORCA-USD,ORCA-USD,Orca,orca,Orca,2021-08-10,2026-11-24
+296,SUPER-USD,SUPER8290-USD,SuperVerse,superfarm,SuperVerse,2021-02-23,2026-11-24

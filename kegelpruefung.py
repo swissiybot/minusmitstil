@@ -49,7 +49,8 @@ def werte():
         if z["gruppe"] == "ETF" and z.get("branche", "Index") in ("Index", "", None):
             gruppen["etf"].append(z)
         elif z["gruppe"] == "Krypto":
-            gruppen["krypto"].append(z)
+            if z["id"] in E.KRYPTO_KERN_IDS:   # wie bisher die fünf Kernwerte; die Top-200-Liste würde die Prüfung um ein Vielfaches verlängern
+                gruppen["krypto"].append(z)
         elif z["gruppe"] == "Rohstoffe":
             gruppen["rohstoffe"].append(z)
         elif z["symbol"] in n100:

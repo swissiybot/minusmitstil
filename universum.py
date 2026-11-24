@@ -1,5 +1,7 @@
 """Baut die Liste aller Werte: Nasdaq- und NYSE-Aktien, wichtige Auslandsaktien (welt.py), FTSE All-World (aus Vanguard-Excel), ETFs, Krypto, Rohstoffe.
 
+Krypto: die fünf Kernwerte plus die feste Top-200-Liste listen/krypto.csv (krypto_liste.py baut sie von Hand neu).
+
 Ergebnis: daten/universum.csv mit Spalten
     id, symbol, name, gruppe, land, branche
 """
