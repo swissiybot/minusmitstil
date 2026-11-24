@@ -1629,6 +1629,29 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 :root[data-theme="light"] .lt-heute{box-shadow:none}
 :root[data-theme="light"] .ot-l-z>i{box-shadow:0 0 0 3px color-mix(in srgb,var(--zf) 16%,transparent)}
 :root[data-theme="light"] .marke svg{filter:none}
+/* ==== Ordnung und Ruhe (24.11.2026, Marc: „alles muss geordnet, passend und stimmig wirken“) ==== */
+/* ---- O1 Chart: die Zeile mit Datum, Kursen, 200-Wochen-Linie und Ampel steht über dem Chart – auf den Kerzen liegt nichts mehr */
+.fk{position:static;max-width:none;margin:0;padding:7px 12px 6px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;
+  font-size:12px;line-height:1.55;color:var(--text2);pointer-events:auto;min-height:calc(2 * 1.55em + 13px)}
+.fk:empty{display:none}
+.fk .r{gap:1px 14px}
+.fk .r+.r{margin-top:1px}
+.fk b{font-family:var(--f-zahl);font-weight:650}
+.fk .r>b:first-child{font-family:var(--f-ui);color:var(--text)}
+.fk-kurs{display:none}
+#haupt[data-modus="einfach"] .fk-ohl,#haupt[data-modus="einfach"] .fk-s{display:none}
+#haupt[data-modus="einfach"] .fk-kurs{display:inline}
+.fk-kz,.fk-rang{color:var(--muted)}
+.ampel-titel{left:12px;top:5px;font-size:10.5px;letter-spacing:.04em;color:var(--muted)}
+.fk small{font-size:11px;color:var(--muted)}
+.fk-heute b{font-weight:700}
+.fk .fk-ampel b{color:inherit}
+.fk-ampel{border-radius:6px;padding:1px 7px}
+@media (max-width:900px){
+  .fk{left:auto;top:auto;padding:6px 10px 5px;font-size:11.5px;line-height:1.5;max-width:none;min-height:calc(1.5em + 11px)}
+  .fk .r:nth-child(2){display:flex}
+  .fk .fk-rang{display:none}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -3047,6 +3070,8 @@ const VQ_FARBE = "#f59e0b";
 const kqFarbe = v => v == null ? null : v >= 80 ? KQ_FARBEN[4] : v >= 60 ? KQ_FARBEN[3] : v > 40 ? null : v > 20 ? KQ_FARBEN[1] : KQ_FARBEN[0];
 const vqFarbe = v => v == null ? null : v >= 80 ? VQ_FARBE : v >= 60 ? VQ_FARBE + "70" : null;
 const CHIPS_EINFACH = ["w200", "kaufzonen", "kegel", "ampel"];   // diese Linien-Knöpfe stehen immer oben am Chart (auch in der Ansicht „Einfach“)
+const CHIPS_WAHL = {...CHIPS};   // was eingeschaltet ist (Start und Wahl des Nutzers); CHIPS selbst ist das, was gerade gezeichnet wird
+function chipsAnwenden(){ for (const k in CHIPS_WAHL) CHIPS[k] = !!CHIPS_WAHL[k] && (MODUS === "profi" || CHIPS_EINFACH.includes(k)); }
 let CHART_MEHR = lade("chart_mehr", false);   // „Linien & Werkzeuge“ aufgeklappt? (wird in diesem Browser gemerkt)
 const CHIPS_WICHTIG = ["w200", "w100", "w300", "w400", "kaufzonen", "ampel", "kq", "vq", "tiefhoch", "kegel", "phasen", "ergebnis"];
 let LINEAL = {an:false, a:null, b:null, fertig:false}, FIB_LINIEN = [], GP_BAND = null;
@@ -3155,6 +3180,11 @@ let MODUS = lade("modus", "einfach");
 const URTEIL_SATZ = ["Historisch sehr teuer.", "Eher teuer.", "Weder günstig noch teuer.", "Günstig.", "Historisch sehr günstig."];
 function modusSetzen(m){
   MODUS = m; sichere("modus", m); $("#haupt").dataset.modus = m;
+  if ($("#chart-karte")) {   // Chart passend zur Ansicht: „Einfach“ zeichnet nur die Linien, die dort einen Knopf haben
+    chipsAnwenden(); $$("#chart-karte .chip").forEach(b => b.setAttribute("aria-pressed", String(!!CHIPS[b.dataset.chip])));
+    $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel);
+    if (HAUPT && CD) eigenNeu();
+  }
   $$("#modus-wahl button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === m)));
   abschnittNavInit(); fragenInit();
 }
@@ -4185,6 +4215,7 @@ async function zeige(id, opt={}){
   const btc = !!w.pi, krypto = w.gruppe === "Krypto", eigen = !!c.c;
   if (!eigen || !w.tv) CHARTQUELLE = "eigen";
   const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
+  chipsAnwenden();
   const chips = [
     ["w200", "200-Wochen-Linie", `<i style="color:var(--gelb)"></i>`, "l_200w", eigen],
     ["w100", "100-Wochen-Linie", `<i style="color:var(--cyan)"></i>`, "l_wma", eigen && !!c.wma100],
@@ -4233,10 +4264,11 @@ async function zeige(id, opt={}){
           <div class="chip-zeile"><span class="chip-titel">Mehr Linien</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0]) && !CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
           <div class="chip-zeile"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
       </div>
+      <div class="fk" id="fk" aria-live="off"></div>
       <div class="chart-flaeche">
-        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div class="ot-hud" id="ot-hud" hidden></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
+        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="ot-hud" id="ot-hud" hidden></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
-        <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
+        <div id="chart2"><span class="ampel-titel">Ampel im Verlauf (0 bis 100)${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
       </div>
       <div class="tv-hinweis" id="tv-hinweis" hidden></div><div class="tv-hinweis" id="chart-meldung" hidden></div>
       ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
@@ -4331,7 +4363,7 @@ async function prognoseOnline(id){   // reduzierter Export ohne Kurse: Prognose 
   prognoseKarte({...m, kurs:1, kegel:m.kegel, verlust_wahrsch:Math.round(anteilBis(m.ende, 1) * 1000) / 10});
 }
 function chipUmschalten(k, b){
-  CHIPS[k] = !CHIPS[k]; sichere("chips", CHIPS); b.setAttribute("aria-pressed", String(CHIPS[k]));
+  CHIPS[k] = !CHIPS[k]; CHIPS_WAHL[k] = CHIPS[k]; sichere("chips", CHIPS_WAHL); b.setAttribute("aria-pressed", String(CHIPS[k]));
   if (k === "ampel") { $("#chart-karte").classList.toggle("ohne-ampel", !CHIPS.ampel); return; }
   if (k === "pfeile" || k === "pi" || k === "pitop" || k === "ergebnis" || k === "tiefhoch") markenSetzen();
   if (k === "fib" || k === "gp") fibAktualisieren();
@@ -4517,7 +4549,8 @@ function danachText(c, i){
   if (r1 == null) {
     const kz = INFO?.kz; if (!kz || i < c.t.length - 2) return "";
     const p = x => x == null ? "–" : fmt(x * fxFaktor(), x * fxFaktor() >= 100 ? 0 : 2);
-    return `<span class="fk-kz">Heute${euroAktiv() ? " (in €)" : ""}: sehr günstig unter <b>${p(kz["80"])}</b> · günstig unter <b>${p(kz["60"])}</b> · teuer über <b>${p(kz["40"])}</b> · sehr teuer über <b>${p(kz["15"])}</b></span>`;
+    const zf = AF();   // Zahlen in der Farbe ihrer Linie: so erklärt diese Zeile die farbigen Kurs-Schilder rechts am Chart
+    return `<span class="fk-kz fk-heute">Grenzen heute${euroAktiv() ? " (in €)" : ""}: sehr günstig unter <b style="color:${zf[4]}">${p(kz["80"])}</b> · günstig unter <b style="color:${zf[3]}">${p(kz["60"])}</b> · teuer über <b style="color:${zf[1]}">${p(kz["40"])}</b> · sehr teuer über <b style="color:${zf[0]}">${p(kz["15"])}</b></span>`;
   }
   const kq = c.kq?.[i], vq = c.vq?.[i];
   return `<span>danach: 1 J. <b class="${klasse(r1)}">${vz(r1,0," %")}</b>${r3 != null ? ` · 3 J. <b class="${klasse(r3)}">${vz(r3,0," %")}</b>` : ""}</span>`
@@ -4772,7 +4805,7 @@ const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deck
 function zonenFlaechen(ch, serie, c, f){
   if (!c.kz80 && !c.kz15) return;
   const farbe = i => i === 5 ? f.gut : AF()[i];
-  let sichtbar = CHIPS.kaufzonen, neu = null;
+  let sichtbar = CHIPS.kaufzonen, neu = null, worte = [];
   const zeichnen = ({context:x, mediaSize:gr}) => {
     if (!sichtbar) return;
     const ts = ch.timeScale(), lr = ts.getVisibleLogicalRange(); if (!lr) return;
@@ -4782,7 +4815,7 @@ function zonenFlaechen(ch, serie, c, f){
     BEW_ZONEN.forEach(([ob, un, fi, deck, name]) => {
       if ((ob && !c[ob]) || (un && !c[un])) return;
       x.fillStyle = farbe(fi) + deck;
-      let lauf = [], letzte = null;
+      let lauf = [], letzte = null, erste = null;
       const fuellen = () => { if (lauf.length > 1) { x.beginPath();
           lauf.forEach(([px, yo], j) => j ? x.lineTo(px, yo) : x.moveTo(px, yo));
           for (let j = lauf.length - 1; j >= 0; j--) x.lineTo(lauf[j][0], lauf[j][2]);
@@ -4791,22 +4824,29 @@ function zonenFlaechen(ch, serie, c, f){
         const yo = y(ob, i), yu = y(un, i), px = ts.logicalToCoordinate(i);
         if (yo === undefined || yu === undefined || yo === null && yu === null || px == null) { fuellen(); continue; }
         const a = yo ?? -2, b = yu ?? gr.height + 2;
-        lauf.push([px, a, b]); letzte = [px, a, b];
+        lauf.push([px, a, b]); letzte = [px, a, b]; if (!erste && px >= 0) erste = [px, a, b];
       }
       fuellen();
-      if (letzte) marken.push([name, farbe(fi), letzte]);
+      if (erste) marken.push([name.replace("historisch ", ""), farbe(fi), erste]);
     });
-    x.font = "600 11px system-ui, sans-serif"; x.textAlign = "right"; x.textBaseline = "middle";
-    marken.forEach(([name, fa, [px, a, b]]) => {   // Name rechts am letzten Wochenwert, mitten in der Fläche (nur wenn sie hoch genug ist)
-      const o = Math.max(a, 4), u = Math.min(b, gr.height - 4); if (u - o < 16) return;
-      const xr = Math.min(px, gr.width - 120) - 6, ym = (o + u) / 2, br = x.measureText(name).width;   // links der Linien-Schilder am rechten Rand
-      x.fillStyle = f.panel + "d9"; x.beginPath(); x.roundRect ? x.roundRect(xr - br - 5, ym - 8, br + 10, 16, 4) : x.rect(xr - br - 5, ym - 8, br + 10, 16); x.fill();
-      x.fillStyle = fa; x.fillText(name, xr, ym);
+    worte = marken;
+  };
+  const beschriften = ({context:x, mediaSize:gr}) => {   // Namen der Zonen: links am Anfang der Fläche, kurzes Wort auf ruhigem Grund, zuoberst – der Kurs überdeckt sie nie
+    if (!sichtbar || !worte.length || gr.width < 560) return;   // schmaler Chart (Handy): keine Wörter im Bild – die Zeile „Grenzen heute“ darüber erklärt die farbigen Schilder
+    x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "left"; x.textBaseline = "middle";
+    let zuletzt = -99;
+    [...worte].sort((p, q) => (p[2][1] + p[2][2]) - (q[2][1] + q[2][2])).forEach(([name, fa, [px, a, b]]) => {
+      const o = Math.max(a, 3), u = Math.min(b, gr.height - 3); if (u - o < 17) return;
+      const ym = Math.max(o + 9, Math.min(u - 9, (o + u) / 2)); if (ym - zuletzt < 18) return;
+      const xl = Math.max(ym > gr.height - 46 ? 82 : 6, Math.min(px + 6, gr.width * .25)), br = x.measureText(name).width;   // unten links steht das Zeichen der Chart-Bibliothek
+      x.fillStyle = f.panel + "e6"; x.beginPath(); if (x.roundRect) x.roundRect(xl, ym - 8.5, br + 12, 17, 5); else x.rect(xl, ym - 8.5, br + 12, 17); x.fill();
+      x.fillStyle = fa; x.fillText(name, xl + 6, ym + .5); zuletzt = ym;
     });
   };
   serie.attachPrimitive({
     attached: p => { neu = p.requestUpdate; }, detached: () => { neu = null; }, updateAllViews(){},
-    paneViews: () => [{zOrder: () => "bottom", renderer: () => ({draw(){}, drawBackground: z => z.useMediaCoordinateSpace(zeichnen)})}],
+    paneViews: () => [{zOrder: () => "bottom", renderer: () => ({draw(){}, drawBackground: z => z.useMediaCoordinateSpace(zeichnen)})},
+      {zOrder: () => "top", renderer: () => ({draw: z => z.useMediaCoordinateSpace(beschriften)})}],
   });
   SERIEN.kaufzonen.push({applyOptions: o => { sichtbar = o.visible; neu?.(); }});   // Chip „Kaufzonen“ schaltet Linien und Flächen
 }
@@ -4881,9 +4921,7 @@ function hudZeigen(c, p){
   let i = null, x = null, y = null, zukunft = null;
   if (p && p.time != null && p.point) { i = ZEIT_I.get(p.time); x = p.point.x; y = p.point.y;
     if (i == null) { const m = KEGEL_D, k = m ? m.t.indexOf(p.time) : -1; if (k < 0 || !CHIPS.kegel) { hud.hidden = true; return; } zukunft = [m, k]; } }
-  else { if (breit < 520 || $("#tvchart") && !$("#tvchart").hidden) { hud.hidden = true; return; }   // schmaler Chart (Handy): Karte nur beim Antippen
-    i = li; x = ts.logicalToCoordinate(li); y = c.c[li] == null ? null : KERZEN.priceToCoordinate(c.c[li]);
-    if (x == null || y == null || x < 0 || x > breit - 60) { hud.hidden = true; return; } }
+  else { hud.hidden = true; return; }   // ohne Zeiger oder Finger im Chart bleibt der Kurs frei – die Werte von heute stehen in der Zeile über dem Chart
   const zeile = (l, v) => `<span>${l}</span><b>${v}</b>`;
   if (zukunft) { const [m, k] = zukunft, n = m.kurs >= 100 ? 0 : 2, fx = fxFaktor();
     hud.innerHTML = `<div class="hud-t">${tDe(m.t[k])} · Simulation</div><div class="hud-g">${zeile("Median", fmt(m.kegel.q50[k] * fx, n))}${zeile("50 % der Wege", fmt(m.kegel.q25[k] * fx, n) + " – " + fmt(m.kegel.q75[k] * fx, n))}${zeile("90 % der Wege", fmt(m.kegel.q5[k] * fx, n) + " – " + fmt(m.kegel.q95[k] * fx, n))}</div>`;
@@ -4944,7 +4982,7 @@ function zeichne(c, w){
   w200.applyOptions({lastValueVisible:true, title:"200W"});
   if (c.kz80 || c.kz15) {   // Kaufzonen je Woche: wandern mit (Kurs, bei dem die Ampel in der Woche 80/60/40/15 gezeigt hätte)
     [["kz80", 4, "sehr günstig darunter", 2, 0], ["kz60", 3, "günstig darunter", 1, 1], ["kz40", 1, "teuer darüber", 1, 1], ["kz15", 0, "sehr teuer darüber", 2, 0]].forEach(([k, st, t, b, stil]) => {
-      const s = linie("kaufzonen", c[k], AF()[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:$("#chart").clientWidth < 560 ? "" : t});   // schmaler Chart (Handy): nur die Kurs-Marke, die Namen stehen in den Flächen
+      const s = linie("kaufzonen", c[k], AF()[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:""});   // nur die Kurs-Marke; die Namen der Zonen stehen links in den Flächen (t bleibt als Beschreibung im Quelltext)
     });
     zonenFlaechen(ch, kerzen, c, f);
   }
@@ -4977,7 +5015,7 @@ function zeichne(c, w){
   kursLicht(ch, kerzen, c, f);
   KERZEN = kerzen; HAUPT = ch; TK_INFO = null;
   // Ampel-Leiste unten (mit Mayer Multiple bei Krypto auf der linken Skala)
-  const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, layout:{...basis.layout, attributionLogo:false}, timeScale:{...basis.timeScale, visible:false}, rightPriceScale:{...basis.rightPriceScale, scaleMargins:{top:0.18, bottom:0.02}},
+  const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, ...(c.mayer || c.mvrv ? {} : {localization:{...basis.localization, priceFormatter:q => Math.round(q).toLocaleString("de-DE")}}), layout:{...basis.layout, attributionLogo:false}, timeScale:{...basis.timeScale, visible:false}, rightPriceScale:{...basis.rightPriceScale, scaleMargins:{top:0.18, bottom:0.02}},
     leftPriceScale:{...basis.leftPriceScale, visible:!!c.mayer && CHIPS.mayer, scaleMargins:{top:0.18, bottom:0.02}}, handleScale:false, handleScroll:false});
   if (c.pi_zone) {
     const z2 = ch2.addHistogramSeries({priceScaleId:"pizone", color:f.lila + "2e", priceLineVisible:false, lastValueVisible:false, visible:CHIPS.pi});
@@ -5025,13 +5063,13 @@ function zeichne(c, w){
     }
     const nk = c.c[i] >= 100 ? 2 : 4, v = i > 0 && c.c[i-1] ? (c.c[i] / c.c[i-1] - 1) * 100 : null;
     const sc_ = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null;
-    fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span>E ${fmt(c.o[i],nk)}</span><span>H ${fmt(c.h[i],nk)}</span><span>T ${fmt(c.l[i],nk)}</span><span>S <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span>` : ""}</div>
+    fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span class="fk-ohl" title="Eröffnungskurs">E ${fmt(c.o[i],nk)}</span><span class="fk-ohl" title="höchster Kurs">H ${fmt(c.h[i],nk)}</span><span class="fk-ohl" title="tiefster Kurs">T ${fmt(c.l[i],nk)}</span><span title="Schlusskurs"><span class="fk-s">S</span><span class="fk-kurs">Kurs</span> <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span><span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span> <small>${({D:"zum Vortag", M:"zum Vormonat"})[INTERVALL] || "zur Vorwoche"}</small></span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200W ${fmt(c.sma200w[i],nk)}</span>` : ""}
       <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>
       ${c.score[i] != null && rangZuZeit(c.t[i]) ? `<span class="fk-rang">${rangText(rangZuZeit(c.t[i]))}</span>` : ""}
       ${danachText(c, i)}
       ${CHIPS.trend && TK_INFO ? `<span class="fk-tk" data-e="l_trend"><i class="sw" style="background:var(--akzent)"></i>Trendkanal (sichtbar, ${fmt(TK_INFO.jahre, TK_INFO.jahre < 2 ? 1 : 0)} J.): ${TK_INFO.pa == null ? "–" : vz(TK_INFO.pa,1," %")} pro Jahr · Kurs ${TK_INFO.z > 2 ? "über dem Kanal" : TK_INFO.z > 1 ? "im oberen Teil" : TK_INFO.z < -2 ? "unter dem Kanal" : TK_INFO.z < -1 ? "im unteren Teil" : "nahe der Mitte"}</span>` : ""}
-      ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: ${c.kz90?.[i] != null ? `Ausverkauf unter ${fmt(c.kz90[i],nk)} · ` : ""}sehr günstig unter <b>${fmt(c.kz80[i],nk)}</b> · günstig unter ${fmt(c.kz60[i],nk)} · teuer über ${fmt(c.kz40[i],nk)} · sehr teuer über <b>${fmt(c.kz15[i],nk)}</b></span>` : ""}
+      ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: ${c.kz90?.[i] != null ? `Ausverkauf unter ${fmt(c.kz90[i],nk)} · ` : ""}sehr günstig unter <b style="color:${AF()[4]}">${fmt(c.kz80[i],nk)}</b> · günstig unter <b style="color:${AF()[3]}">${fmt(c.kz60[i],nk)}</b> · teuer über <b style="color:${AF()[1]}">${fmt(c.kz40[i],nk)}</b> · sehr teuer über <b style="color:${AF()[0]}">${fmt(c.kz15[i],nk)}</b></span>` : ""}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
