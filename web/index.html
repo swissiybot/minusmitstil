@@ -1141,27 +1141,86 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 /* Die Kugeln (100 simulierte Wege) behalten ihre bisherigen Farben (Marc, 23.11.2026) */
 .p100{--teuer:#ff8a3d;--guenstig:#2ec4a6;--text:#e7eaf0;--boden:rgba(0,0,0,.42)}
 :root[data-theme="light"] .p100{--teuer:#d9600f;--guenstig:#0f9d84;--text:#121722;--boden:rgba(30,45,90,.14)}
+/* ---- 2 Kopfzeile: 56 px, durchscheinend, Reiter mit leuchtender Unterstreichung, Suche als schwebende Leiste */
+.kopf{position:relative;gap:14px;padding:0 16px;height:56px;min-height:56px;background:color-mix(in srgb,var(--bg2) 74%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--line);box-shadow:inset 0 1px 0 var(--kante),0 10px 30px -18px rgba(0,0,0,.8)}
+.kopf::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,var(--rim) 18%,transparent 46%,transparent 62%,color-mix(in srgb,var(--rim) 60%,transparent) 86%,transparent)}
+.marke{gap:9px;font-weight:600;font-size:15px;letter-spacing:-.02em;padding:4px 2px}
+.marke svg{filter:drop-shadow(0 0 8px color-mix(in srgb,var(--akzent) 55%,transparent))}
+.marke b{font-weight:600;color:var(--text2)}
+.marke-punkt{width:6px;height:6px;border-radius:50%;margin-left:1px;background:var(--akzent);box-shadow:0 0 0 3px color-mix(in srgb,var(--akzent) 18%,transparent),0 0 12px var(--akzent);animation:ot-puls 2.6s ease-in-out infinite}
+@keyframes ot-puls{50%{opacity:.45}}
+.kopf-nav{display:flex;align-self:stretch;gap:2px;margin-left:6px;flex:none}
+.kopf-nav button{position:relative;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border:0;background:none;color:var(--muted);font-size:13.5px;font-weight:550;letter-spacing:-.005em;white-space:nowrap;
+  transition:color var(--tempo) var(--ruck)}
+.kopf-nav button:hover{color:var(--text)}
+.kopf-nav button::after{content:"";position:absolute;left:10px;right:10px;bottom:-1px;height:2px;border-radius:2px 2px 0 0;background:var(--akzent);box-shadow:0 0 14px var(--akzent),0 -6px 18px -2px color-mix(in srgb,var(--akzent) 60%,transparent);
+  opacity:0;transform:scaleX(.4);transition:opacity var(--tempo) var(--ruck),transform 220ms var(--ruck)}
+.kopf-nav button[aria-current="page"],.kopf-nav button[aria-pressed="true"]{color:var(--text)}
+.kopf-nav button[aria-current="page"]::after,.kopf-nav button[aria-pressed="true"]::after{opacity:1;transform:none}
+.kopf-nav button[aria-current="page"]{background:linear-gradient(180deg,transparent 40%,color-mix(in srgb,var(--akzent) 9%,transparent))}
+.kn-wert{font-family:var(--f-zahl);font-size:11px;font-weight:650;letter-spacing:.02em;padding:2px 6px;border-radius:6px;color:var(--akzent);background:var(--akzent-weich);border:1px solid color-mix(in srgb,var(--akzent) 35%,transparent)}
+.kn-wert:empty{display:none}
+.suchfeld{flex:1 1 240px;max-width:520px;margin-left:auto;height:36px;gap:9px;padding:0 10px 0 12px;border-radius:11px;background:var(--glas-leicht);border:1px solid var(--line2);font-size:13px;
+  box-shadow:inset 0 1px 0 var(--kante),0 8px 22px -14px rgba(0,0,0,.9);transition:border-color var(--tempo) var(--ruck),box-shadow var(--tempo) var(--ruck)}
+.suchfeld:hover{border-color:color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:inset 0 1px 0 var(--kante),0 0 0 3px var(--akzent-weich),0 0 22px -8px var(--akzent)}
+.suchfeld kbd{flex:none}
+.kopf-rechts{margin-left:0;gap:8px;flex:none}
+.plakette{height:30px;padding:0 10px;font-size:11.5px;background:var(--glas-leicht);border-color:var(--line);color:var(--text2)}
+.plakette i{width:7px;height:7px;box-shadow:0 0 0 3px color-mix(in srgb,var(--guenstig) 20%,transparent),0 0 10px var(--guenstig)}
+.plakette.alt i{box-shadow:0 0 0 3px color-mix(in srgb,var(--gelb) 20%,transparent),0 0 10px var(--gelb)}
+.kopf .knopf-ikon{height:34px;padding:0 10px;font-size:13px}
+/* Suche: Glas-Fenster, klappt am PC direkt unter der Suchleiste auf */
+#suche-dlg::backdrop{background:rgba(2,5,10,.5);backdrop-filter:none}
+.suche-box{background:var(--glas-stark);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--line2);border-radius:13px;
+  box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.35),0 0 0 4px var(--akzent-weich),0 30px 70px -20px rgba(0,0,0,.9),0 0 40px -14px var(--akzent)}
+.suche-feld{border-bottom-color:var(--line);color:var(--muted)}
+.suche-feld input{font-size:15px;color:var(--text)}
+#suche-dlg.unter-leiste{position:fixed;inset:auto;left:var(--sx);top:var(--sy);width:var(--sb);max-width:none;margin:0}
+#suche-dlg.unter-leiste .suche-feld{padding:0 12px}
+#suche-dlg.unter-leiste .suche-feld input{height:38px;font-size:14px}
+.suche-treffer{padding:6px}
+.treffer{padding:8px 10px;border-radius:9px;transition:background 120ms}
+.treffer[aria-selected="true"]{background:linear-gradient(90deg,color-mix(in srgb,var(--akzent) 20%,transparent),color-mix(in srgb,var(--akzent) 5%,transparent));box-shadow:inset 2px 0 0 var(--akzent)}
+.treffer .t-n span{font-size:11.5px}
+.treffer .t-ikon{background:var(--glas-leicht);border:1px solid var(--line)}
+.suche-gruppe{letter-spacing:.09em;font-size:10.5px}
+.suche-fuss{border-top-color:var(--line);font-size:11.5px}
+@media (max-width:1420px){.kopf .knopf-ikon .txt{display:none}}
+@media (max-width:1240px){.plakette .lang,.suchfeld kbd:last-of-type{display:none} .kopf-nav button{padding:0 8px;font-size:13px}}
+@media (max-width:1060px){.suchfeld kbd,.kn-wert{display:none} .marke span{display:none}}
+@media (max-width:900px){
+  .kopf{gap:8px;padding:0 10px;height:52px;min-height:52px}
+  .kopf-nav{display:none}
+  .marke span,.marke-punkt{display:none}
+  .suchfeld{height:36px;margin-left:0}
+  .kopf .knopf-ikon{padding:0 9px}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
 <a class="skip" href="#haupt">Zum Inhalt springen</a>
 <header class="kopf">
   <button class="marke" id="k-start" aria-label="Zur Übersicht">
-    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true"><rect width="28" height="28" rx="8" fill="var(--akzent)"/><path d="M6 17.5 11 12l4 4 7-8" fill="none" stroke="var(--auf-akzent)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 21h14" stroke="var(--auf-akzent)" stroke-width="2.4" stroke-linecap="round" opacity=".55"/></svg>
-    <span>minus <b>mit stil</b></span>
+    <svg width="26" height="26" viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="8" fill="var(--akzent-weich)" stroke="var(--akzent)" stroke-width="1.4"/><path d="M6 17.5 11 12l4 4 7-8" fill="none" stroke="var(--akzent)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 21.5h14" stroke="var(--akzent)" stroke-width="2.3" stroke-linecap="round" opacity=".5"/></svg>
+    <span>minus <b>mit stil</b></span><i class="marke-punkt" aria-hidden="true"></i>
   </button>
+  <nav class="kopf-nav" id="kopf-nav" aria-label="Bereiche">
+    <button type="button" data-nav="uebersicht">Übersicht</button>
+    <button type="button" id="k-karte" data-nav="karte" aria-label="Heatmap: Nasdaq-100, Index-ETFs, Krypto und Rohstoffe nach Kursveränderung">Heatmap</button>
+    <button type="button" data-nav="liste" title="Zur Werteliste links">Liste</button>
+    <button type="button" data-nav="wert" id="k-wert" title="Zuletzt geöffneter Wert">Wert<span class="kn-wert" id="k-wert-n"></span></button>
+    <button type="button" id="k-depot" data-nav="depot" aria-label="Mein Depot">Depot</button>
+    <button type="button" id="k-lesen" data-nav="lesen" aria-pressed="false" aria-controls="lese-bereich" aria-label="So liest du das Tool">Lesen</button>
+  </nav>
   <button class="suchfeld" id="such-knopf" aria-label="Wert suchen (Taste / oder Strg+K)" aria-haspopup="dialog">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <span>Wert suchen – Name oder Kürzel, Tippfehler erlaubt</span><kbd>/</kbd><kbd>Strg K</kbd>
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <span>Wert suchen – Name oder Kürzel, Tippfehler erlaubt</span><kbd>Strg K</kbd><kbd>/</kbd>
   </button>
   <div class="kopf-rechts">
     <span id="stand" class="plakette" data-e="datenstand" tabindex="0"><i></i><span>lädt …</span></span>
-    <button class="knopf-ikon" id="k-karte" aria-label="Heatmap: Nasdaq-100, Index-ETFs, Krypto und Rohstoffe nach Kursveränderung">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="10" height="11" rx="1"/><rect x="15" y="3" width="6" height="6" rx="1"/><rect x="15" y="11" width="6" height="10" rx="1"/><rect x="3" y="16" width="10" height="5" rx="1"/></svg><span class="txt">Heatmap</span></button>
-    <button class="knopf-ikon" id="k-depot" aria-label="Mein Depot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M3 13h18"/></svg><span class="txt">Mein Depot</span></button>
-    <button class="knopf-ikon" id="k-lesen" aria-pressed="false" aria-controls="lese-bereich">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16"/></svg><span class="txt">So liest du das Tool</span></button>
+    <button class="knopf-ikon" id="k-umfeld" aria-label="Marktumfeld mit Bewertung des US-Markts (CAPE)" title="Marktumfeld (CAPE)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9S14.6 18.3 12 21c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg><span class="txt">Marktumfeld</span></button>
     <button class="knopf-ikon" id="k-thema" aria-label="Hell oder dunkel umschalten" title="Hell/Dunkel">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" id="thema-ikon"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   </div>
@@ -1807,8 +1866,17 @@ function ansicht(name){
   $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", (b.dataset.ansicht === name && name !== "haupt") || (name === "haupt" && b.dataset.ansicht === (AKTIV ? "haupt" : SEITE === "depot" ? "depot" : SEITE === "karte" ? "karte" : "uebersicht")) ? "page" : "false"));
   if (name === "lesen") leseLaden();
   if (name === "liste") listeZeichnen();
+  kopfNavAn();
 }
 $$(".unten-nav button").forEach(b => b.onclick = () => ansicht(b.dataset.ansicht));
+let LETZTER_WERT = null;
+function kopfNavAn(){
+  const k = AKTIV ? "wert" : SEITE;
+  $$("#kopf-nav [data-nav]").forEach(b => { if (b.dataset.nav !== "lesen") b.setAttribute("aria-current", b.dataset.nav === k ? "page" : "false"); });
+  $("#k-umfeld")?.setAttribute("aria-pressed", String(!AKTIV && SEITE === "umfeld"));
+  const id = AKTIV || LETZTER_WERT, w = id && ALLE.find(x => x.id === id), n = $("#k-wert-n");
+  if (n) n.textContent = id ? (w?.symbol || id) : "";
+}
 
 // ------------------------------------------------------------ Seitenleiste „So liest du das Tool“
 let LESE_OFFEN = false;
@@ -1984,7 +2052,14 @@ function suchPunkte(w, q, qw){
 }
 const SEITEN = [["uebersicht","Übersicht","Marktwetter, Heatmap, Heute auffällig"],["karte","Heatmap","Tag, Woche, Monat, Jahr – Nasdaq-100, ETFs, Krypto, Rohstoffe"],["depot","Mein Depot","Vermögensübersicht laden, Sparplan, Prognose"],["umfeld","Marktumfeld","Marktbreite, VIX, Zinskurve"],["pruefung","Prüfung der Ampel","Walk-forward, Strategie, Signal-Tagebuch"],["lesen","So liest du das Tool","Erklärung und Prüfergebnisse"]];
 let TREFFER = [], TREFFER_I = 0, ERSATZ_FUER = null;
-function sucheOeffnen(){ const d = $("#suche-dlg"); if (d.open) return; d.showModal(); $("#suche-eingabe").value = ""; sucheRechnen(); $("#suche-eingabe").focus(); }
+function suchePlatz(){
+  const d = $("#suche-dlg"), r = $("#such-knopf").getBoundingClientRect();
+  if (istHandy() || r.width < 40) { ["--sx", "--sy", "--sb"].forEach(k => d.style.removeProperty(k)); d.classList.remove("unter-leiste"); return; }
+  const br = Math.max(r.width, 540), li = Math.max(12, Math.min(r.left, innerWidth - br - 12));
+  d.style.setProperty("--sx", li + "px"); d.style.setProperty("--sy", Math.round(r.top - 1) + "px"); d.style.setProperty("--sb", br + "px"); d.classList.add("unter-leiste");
+}
+addEventListener("resize", () => { if ($("#suche-dlg").open) suchePlatz(); });
+function sucheOeffnen(){ const d = $("#suche-dlg"); if (d.open) return; suchePlatz(); d.showModal(); $("#suche-eingabe").value = ""; sucheRechnen(); $("#suche-eingabe").focus(); }
 function sucheRechnen(){
   const q = norm($("#suche-eingabe").value), qw = q.split(" ").filter(Boolean);
   let werte = [];
@@ -2042,6 +2117,12 @@ document.addEventListener("keydown", ev => {
 $("#k-start").onclick = () => { zeigeUebersicht(); ansicht("haupt"); };
 $("#k-depot").onclick = () => { zeigeDepot(); ansicht("haupt"); };
 $("#k-karte").onclick = () => { zeigeKarte(); ansicht("haupt"); };
+$("#k-umfeld").onclick = () => { zeigeUmfeld(); ansicht("haupt"); };
+$('#kopf-nav [data-nav="uebersicht"]').onclick = () => { zeigeUebersicht(); ansicht("haupt"); };
+$('#kopf-nav [data-nav="liste"]').onclick = () => {   // die Liste steht am PC immer links: Filterfeld ansteuern und die Spalte kurz aufleuchten lassen
+  if (istHandy()) { ansicht("liste"); return; }
+  const l = $("#liste-bereich"); l.classList.remove("blitz"); void l.offsetWidth; l.classList.add("blitz"); $("#listen-filter").focus(); };
+$("#k-wert").onclick = () => { const id = AKTIV || LETZTER_WERT || GEFILTERT[0]?.id || ALLE[0]?.id; if (id) zeige(id); };
 
 // ------------------------------------------------------------ Start
 async function start(){
@@ -2107,7 +2188,7 @@ function route(){
   if (!h.get("w")) ansicht(istHandy() && !s ? "haupt" : "haupt");
 }
 function seiteAnfang(name){
-  SEITE = name; AKTIV = null; alleChartsWeg(); listeMarkieren();
+  SEITE = name; AKTIV = null; alleChartsWeg(); listeMarkieren(); kopfNavAn();
   $("#haupt").scrollTop = 0;
   $$(".unten-nav button").forEach(b => b.setAttribute("aria-current", String(b.dataset.ansicht === "uebersicht" && name === "uebersicht" ? "page" : false)));
 }
@@ -3432,8 +3513,8 @@ function prognoseKarte(m){
 }
 
 async function zeige(id, opt={}){
-  AKTIV = id; SEITE = "wert"; hashSetzen("w=" + encodeURIComponent(id));
-  listeMarkieren();
+  AKTIV = id; SEITE = "wert"; LETZTER_WERT = id; hashSetzen("w=" + encodeURIComponent(id));
+  listeMarkieren(); kopfNavAn();
   if (!opt.ohneAnsicht) ansicht("haupt");
   const vorher = ALLE.find(w => w.id === id);
   if (!opt.ohneScroll || !$("#wert-kopf")) {   // Ladezustand
