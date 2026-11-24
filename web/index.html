@@ -887,6 +887,9 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
 .sv-eingabe input:not([type=checkbox]):not([type=range]):not([type=file]),.sv-eingabe select{width:100%;height:48px;font-size:19px;font-weight:720;letter-spacing:-.02em}
 .sv-eingabe select{font-size:15px;letter-spacing:0}
 .sv-eingabe button{height:48px;font-size:15px}
+.sv-eingabe label.sv-haken{flex-direction:row;align-items:center;gap:9px;height:48px;font-size:14px;color:var(--text);cursor:pointer}
+.sv-haken input{width:22px;height:22px;flex:none;accent-color:var(--akzent);cursor:pointer}
+.sv-basis{margin:8px 16px 0!important}
 #st-hinweis{padding:0 16px;line-height:1.5}
 #st-erg .bl-t{margin:16px 16px 8px}
 .sv-rang{display:grid;gap:9px;margin:0 14px 16px}
@@ -1388,8 +1391,9 @@ const ERKLAERUNG = {
   s_warten80: {titel:"Warten auf sehr günstig", text:"Wie „Warten auf günstig“, aber gekauft wird erst ab Ampel 80 (historisch sehr günstig). Das kommt selten vor – oft wartet das Geld jahrelang."},
   s_staffel_vk: {titel:"Staffelkauf + Teilverkauf", text:"Wie Staffelkauf, zusätzlich: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase). Jeder Verkauf löst Abgeltungssteuer auf den Gewinn aus; das kostet oft mehr, als das Ausweichen bringt."},
   s_brutto: {titel:"Endvermögen", text:"Wert von Depot plus wartendem Bargeld am Ende, noch ohne Steuer auf nicht verkaufte Gewinne."},
+  s_steuer_haken: {titel:"Steuer abziehen", text:"Haken gesetzt: Auf Zinsen und Verkaufsgewinne werden 26,375 % Abgeltungssteuer abgezogen. Die Balken zeigen dann, was übrig bliebe, wenn am Ende alles verkauft würde. Haken weg: Es wird ganz ohne Steuer gerechnet – Balken, Tabelle und Kurvenbild zeigen dann dieselben Beträge. In Wirklichkeit fällt die Steuer an, sobald mit Gewinn verkauft wird. Die Einstellung gilt auch für die Karte „Welcher Weg zu kaufen war am besten?“."},
   s_netto: {titel:"Nach Steuer, alles verkauft", text:"Was übrig bliebe, wenn am Ende alles verkauft und 26,375 % Abgeltungssteuer (25 % + Soli) auf den Gewinn bezahlt würde. Die fairste Vergleichszahl zwischen den Strategien."},
-  s_irr: {titel:"Interner Zinsfuß", text:"Die jährliche Verzinsung, die alle Einzahlungen zusammen nach Kosten und Steuern erreicht haben. Berücksichtigt, dass spätere Einzahlungen kürzer arbeiten. Gut vergleichbar mit einem Sparzins."},
+  s_irr: {titel:"Interner Zinsfuß", text:"Die jährliche Verzinsung, die alle Einzahlungen zusammen nach Kosten und Steuern erreicht haben (ohne Haken bei „Steuer abziehen“: nach Kosten, ohne Steuern). Berücksichtigt, dass spätere Einzahlungen kürzer arbeiten. Gut vergleichbar mit einem Sparzins."},
   s_rueckgang: {titel:"Größter Rückgang", text:"Stärkster Fall des Vermögens (Depot + Bargeld) vom bisherigen Höchststand, in Prozent. Zeigt, welchen Einbruch man aushalten musste."},
   s_unter: {titel:"Zeitweise unter Einzahlungen", text:"Wie weit das Vermögen schlimmstenfalls unter der Summe des bis dahin eingezahlten Geldes lag. „Nie“ = man war zu keinem Zeitpunkt im Minus."},
   s_steuer: {titel:"Steuern", text:"Unterwegs: Abgeltungssteuer auf Zinsen und auf Gewinne aus Teilverkäufen (zuerst gekaufte Stücke zuerst, Verluste werden verrechnet). Am Ende: Steuer beim gedachten Verkauf von allem. Für den einzelnen Wert mit Sparerpauschbetrag 1.000 je Kalenderjahr (auf Gewinne und Zinsen) und bei Aktien-ETFs Teilfreistellung 30 % (nur 70 % der Gewinne und Verluste zählen). Laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."},
@@ -2222,12 +2226,13 @@ const WEGE = [["spar", "Sparplan", "jeden Monat kaufen, egal wie die Ampel steht
 // Sparerpauschbetrag je Kalenderjahr, Verlusttopf, Teilfreistellung, Teilverkauf nach Reihenfolge des Kaufs, am Ende alles verkauft, interner
 // Zinsfuß). Die Entscheidungen je Monat (Kurs, Ampel-Grenzen, Zins) kommen fertig aus s.plan – geprüft: gleiche Ergebnisse wie die Python-Rechnung.
 // Einmalbetrag = zusätzliche Einzahlung im ersten Monat, für die dieselben Regeln gelten (Sparplan: sofort kaufen; Warten: bis die Ampel passt).
-const KW_STD = {betrag:500, einmal:10000, jahre:20, kfix:1, kproz:0, zins:"echt"};   // Startwerte; jede Eingabe wird im Browser gemerkt
+const KW_STD = {betrag:500, einmal:10000, jahre:20, kfix:1, kproz:0, zins:"echt", steuer:true};   // Startwerte; jede Eingabe wird im Browser gemerkt
 let KW = {...KW_STD, ...lade("kaufweg", {})};
-const kwOptionen = () => ({betrag:Math.max(0, +KW.betrag || 0), einmal:Math.max(0, +KW.einmal || 0), jahre:Math.max(2, Math.round(+KW.jahre || 20)), kfix:Math.max(0, +KW.kfix || 0), kproz:Math.max(0, +KW.kproz || 0) / 100, zins:KW.zins === "echt" || KW.zins == null ? "echt" : +KW.zins || 0});
+const kwOptionen = () => ({betrag:Math.max(0, +KW.betrag || 0), einmal:Math.max(0, +KW.einmal || 0), jahre:Math.max(2, Math.round(+KW.jahre || 20)), kfix:Math.max(0, +KW.kfix || 0), kproz:Math.max(0, +KW.kproz || 0) / 100, zins:KW.zins === "echt" || KW.zins == null ? "echt" : +KW.zins || 0, steuer:KW.steuer !== false});
 function strategieRechnen(s, chart, o){
   const P = s.plan; if (!P?.t?.length) return null;
-  const ST = 0.26375, kfix = o.kfix ?? s.kfix ?? 1, kproz = o.kproz ?? s.kproz ?? 0, pausch = s.pausch || 0, teilfrei = s.teilfrei || 0, betrag = o.betrag, einmal = o.einmal || 0;
+  // o.steuer === false (Haken „Steuer abziehen“ aus, Wunsch Marc 24.11.2026): es fällt nirgends Steuer an – Zinsen, Teilverkäufe, Schlussverkauf
+  const ST = o.steuer === false ? 0 : 0.26375, kfix = o.kfix ?? s.kfix ?? 1, kproz = o.kproz ?? s.kproz ?? 0, pausch = s.pausch || 0, teilfrei = s.teilfrei || 0, betrag = o.betrag, einmal = o.einmal || 0;
   const voll = !!(P.g75 && P.g90 && P.l15 && P.g40), n = P.t.length, endeT = P.ende_t ?? chart?.t?.at(-1) ?? P.t[n - 1];
   let j0 = 0;   // Zeitraum: höchstens o.jahre Kalenderjahre zurück ab dem letzten Kurs (wie start_soll in strategie.py)
   if (o.jahre) { const d = new Date(endeT * 1000); d.setUTCFullYear(d.getUTCFullYear() - o.jahre); const ab = d.getTime() / 1000; while (j0 < n && P.t[j0] < ab) j0++; }
@@ -2294,7 +2299,7 @@ function strategieRechnen(s, chart, o){
       steuer_laufend:Math.round(steuerVorher), steuer_ende:Math.round(d.steuer - steuerVorher), kosten:Math.round(d.kosten), kaeufe:d.kaeufe, verkaeufe:d.verkaeufe, bar_anteil_ende:barAnteil};
   }
   const tag = t => new Date(t * 1000).toISOString().slice(0, 10);
-  return {von:tag(t0), bis:tag(Math.min(endeT, Date.now() / 1000)), jahre:Math.round(jahreIst * 10) / 10, monate:n - j0, eingezahlt:Math.round(eingezahlt), betrag, einmal, kfix, kproz, pausch:s.pausch, teilfrei:s.teilfrei,
+  return {von:tag(t0), bis:tag(Math.min(endeT, Date.now() / 1000)), jahre:Math.round(jahreIst * 10) / 10, monate:n - j0, eingezahlt:Math.round(eingezahlt), betrag, einmal, kfix, kproz, steuer:o.steuer !== false, pausch:s.pausch, teilfrei:s.teilfrei,
     zins:o.zins === "echt" || o.zins == null ? s.zins : `fest ${String(o.zins).replace(".", ",")} % p.a.`, voll, ergebnis:erg, reihe:mitVerlauf ? reihe : null, hoechstJahre:Math.floor((endeT - P.t[0]) / 86400 / 365.25 + 0.2)};
 }
 async function lohntSichCheck(id){
@@ -2332,26 +2337,27 @@ async function lohntSichCheck(id){
     const r = eigen ? strategieRechnen(s, wd?.chart, o) : {ergebnis:s.ergebnis, eingezahlt:s.eingezahlt, von:s.von, jahre:s.jahre};
     if (!r || r.fehler) { el.innerHTML = kopf + eingabe + `<p>Für die gewählte Dauer gibt es zu wenige Monate mit Ampel. Stell im Strategie-Vergleich eine längere Dauer ein.</p><button class="linkknopf" id="check-mehr">Zum Strategie-Vergleich →</button>`; binden(); mehrKnopf(); return; }
     const e = r.ergebnis, nurEinmal = !(betrag > 0);   // nur ein Einmalbetrag: die Wege heißen dann anders
+    const mitSt = r.steuer !== false, W = x => mitSt ? x.netto : x.brutto;   // Haken „Steuer abziehen“ im Strategie-Vergleich gilt auch hier
     const wegText = nurEinmal ? {spar:["Sofort kaufen", "den ganzen Betrag gleich zu Beginn kaufen, egal wie die Ampel steht"],
       misch:["Mischung", "die Hälfte sofort kaufen, die andere Hälfte erst bei günstiger Ampel (ab 60)"],
       warten60:["Warten auf günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel günstig zeigt (ab 60)"],
       warten80:["Warten auf sehr günstig", "das Geld liegen lassen und erst kaufen, wenn die Ampel historisch sehr günstig zeigt (ab 80)"]} : {};
-    const L = WEGE.filter(([k]) => e[k]).map(([k, n, was, f]) => ({k, n:wegText[k]?.[0] || n, was:wegText[k]?.[1] || was, f, x:e[k]})), rang = [...L].sort((p, q) => q.x.netto - p.x.netto), sieger = rang[0], zweiter = rang[1];
-    const vor = (sieger.x.netto / zweiter.x.netto - 1) * 100, knapp = vor < 3, mx = sieger.x.netto || 1;
+    const L = WEGE.filter(([k]) => e[k]).map(([k, n, was, f]) => ({k, n:wegText[k]?.[0] || n, was:wegText[k]?.[1] || was, f, x:e[k]})), rang = [...L].sort((p, q) => W(q.x) - W(p.x)), sieger = rang[0], zweiter = rang[1];
+    const vor = (W(sieger.x) / W(zweiter.x) - 1) * 100, knapp = vor < 3, mx = W(sieger.x) || 1;
     // Der beste Weg ist immer markiert (Wunsch Marc 23.11.2026); bei unter 3 % Vorsprung steht „knapp vorn“ mit dem genauen Abstand dabei
     const fazit = knapp ? `<b>Knapp vorn bei ${name}: ${sieger.n}</b> – nur ${fmt(vor, 1)} % vor ${zweiter.n}. Die beiden lagen praktisch gleichauf.`
       : `<b>Am meisten brachte bei ${name}: ${sieger.n}</b> – ${sieger.was}. Vorsprung vor dem zweitbesten Weg (${zweiter.n}): <b>${fmt(vor,0)} %</b>.`;
-    const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger, zuSpar = z.k === "spar" ? "" : ` · ${vz((z.x.netto / e.spar.netto - 1) * 100, 0, " %")} gegenüber ${nurEinmal ? "„Sofort kaufen“" : "dem Sparplan"}`;
+    const zeile = z => { const platz = rang.indexOf(z) + 1, best = z === sieger, zuSpar = z.k === "spar" ? "" : ` · ${vz((W(z.x) / W(e.spar) - 1) * 100, 0, " %")} gegenüber ${nurEinmal ? "„Sofort kaufen“" : "dem Sparplan"}`;
       const kaeufe = z.x.kaeufe === 0 ? "kam nie zum Zug – die Ampel stand nie so günstig" : `${z.x.kaeufe} ${z.x.kaeufe === 1 ? "Kauf" : "Käufe"}${z.x.bar_anteil_ende >= 1 ? `, am Ende ${fmt(z.x.bar_anteil_ende,0)} % noch nicht angelegt` : ""}`;
-      return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">${knapp ? "knapp vorn" : "am besten"}</span>` : ""}<span class="weg-geld">${geld(z.x.netto)}</span></div>
-        <div class="balken"><i style="width:${Math.max(1, z.x.netto / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
+      return `<div class="weg${best ? " sieger" : ""}" style="--wf:${z.f}"><div class="weg-kopf"><span class="weg-platz">${platz}.</span><b>${z.n}</b>${best ? `<span class="weg-best">${knapp ? "knapp vorn" : "am besten"}</span>` : ""}<span class="weg-geld">${geld(W(z.x))}</span></div>
+        <div class="balken"><i style="width:${Math.max(1, W(z.x) / mx * 100).toFixed(1)}%;background:var(--wf)"></i></div>
         <div class="klein">${z.was.charAt(0).toUpperCase() + z.was.slice(1)}. ${kaeufe}${zuSpar}.</div></div>`; };
     const rueck = L.every(z => z.x.max_verlust != null) ? ` Größter zwischenzeitlicher Rückgang: ${L.map(z => `${z.n} ${fmt(z.x.max_verlust,0," %")}`).join(", ")}.` : "";
     const abweichend = eigen && (o.kfix !== 1 || o.kproz !== 0 || o.zins !== "echt") ? ` Gerechnet mit ${fmt(o.kfix, o.kfix % 1 ? 2 : 0)} je Kauf${o.kproz ? ` plus ${fmt(o.kproz * 100, 2)} %` : ""}${o.zins === "echt" ? "" : `, Zins fest ${fmt(o.zins, o.zins % 1 ? 1 : 0)} %`} (im Strategie-Vergleich eingestellt).` : "";
     el.innerHTML = kopf + eingabe + `<div class="fazit${knapp ? "" : " gut"}">${fazit}</div>
       <p style="margin:0 0 4px">Eingezahlt wurden bei jedem Weg <b>${geld(r.eingezahlt)}</b> – ${geldText || `${geld(s.betrag ?? 500)} jeden Monat`} seit ${r.von.slice(0,4)} (${fmt(r.jahre,0)} Jahre). <b>Alle vier Wege zahlen genau dasselbe zur selben Zeit ein</b> – der Unterschied ist nur, wann gekauft wird. So viel wäre daraus geworden:</p>
       <div class="wege">${L.map(zeile).join("")}</div>
-      <p class="klein">Beträge ${steuerText}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck}${abweichend} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Eigene Beträge lassen sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
+      <p class="klein">Beträge ${mitSt ? steuerText : "nach Kosten, ohne Steuer gerechnet (der Haken „Steuer abziehen“ im Strategie-Vergleich ist aus), in der Währung des Werts"}. Geld, das auf günstige Kurse wartet, wird in der Zwischenzeit verzinst.${rueck}${abweichend} Das ist ein Rückblick auf einen einzigen Verlauf der Geschichte – beim nächsten Mal kann ein anderer Weg vorn liegen. Keine Anlageberatung.${eigen ? "" : " Eigene Beträge lassen sich hier nach dem nächsten Daten-Lauf eintragen."}</p>
       ${nurEinmal ? `<p class="klein">Für einen einzelnen Einmalbetrag gibt es keine Gegenprobe mit Zufallsverläufen: Das Ergebnis hängt hier allein vom Startzeitpunkt ab.</p>`
         : `${einmal > 0 ? `<p class="klein">Die folgende Einordnung gilt für das monatliche Sparen mit gleichem Betrag, nicht für den Einmalbetrag.</p>` : ""}<p class="klein" id="weg-zufall" hidden></p>`}
       <button class="linkknopf" id="check-mehr">Strategie-Vergleich mit diesen Beträgen im Einzelnen ansehen →</button>`;
@@ -5711,6 +5717,7 @@ function tabStrategie(w){
       <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="${o0.kfix}" min="0"></label>
       <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="${+(o0.kproz * 100).toFixed(4)}" min="0"></label>
       <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins">${[["echt", "echt (US-Geldmarkt)"], ["0", "0 %"], ["2", "fest 2 %"], ["3", "fest 3 %"]].map(([v, t]) => `<option value="${v}" ${String(o0.zins) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
+      <label class="sv-haken"><input id="st-steuer" type="checkbox" ${o0.steuer ? "checked" : ""}><span>${ek("s_steuer_haken","Steuer abziehen")}</span></label>
       <button id="st-los">Berechnen</button>
     </div>
     <p class="klein" id="st-hinweis" style="margin:0 0 10px">Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit. <button class="linkknopf" id="st-zur-karte">↑ Zur Kaufweg-Karte</button></p>
@@ -5718,35 +5725,38 @@ function tabStrategie(w){
   const zeigen = (d, alle) => {   // d wie aus strategie.vergleich(); alle = auch die drei Warte-Wege der Kaufweg-Karte
     const e = d.ergebnis, kurz = {spar:"Sparplan", staffel:"Staffelkauf 60/75/90", staffel_vk:"Staffelkauf + Teilverkauf ≤ 15", misch:"Mischung", warten60:"Warten auf günstig", warten80:"Warten auf sehr günstig"};
     const ks = ["spar", "staffel", "staffel_vk", ...(alle ? ["misch", "warten60", "warten80"] : [])].filter(k => e[k]);
-    const best = ks.reduce((a, b) => (e[b].netto > e[a].netto ? b : a), "spar");
+    const mitSt = d.steuer !== false, W = x => mitSt ? x.netto : x.brutto;   // ohne Steuer zählt das Endvermögen – dann zeigen Balken, Tabelle und Kurvenbild dasselbe
+    const best = ks.reduce((a, b) => (W(e[b]) > W(e[a]) ? b : a), "spar");
     const zeile = (t, f, key="") => `<tr><td style="text-align:left">${key ? ek(key, t) : t}</td>${ks.map(k => `<td${k === best ? ' class="best"' : ""}>${f(e[k])}</td>`).join("")}</tr>`;
-    const hoechst = Math.max(...ks.map(k => e[k].netto)) || 1, folge = [...ks].sort((a, b) => e[b].netto - e[a].netto);   // Rangliste nach Steuer als Röhren
+    const hoechst = Math.max(...ks.map(k => W(e[k]))) || 1, folge = [...ks].sort((a, b) => W(e[b]) - W(e[a]));   // Rangliste nach Steuer als Röhren
     const farben = {ein:"#868993", spar:"#2962ff", staffel:F().guenstig, staffel_vk:"#ff9800", misch:F().kegel, warten60:"#14b8a6", warten80:F().cyan};
     tabCharts.forEach(ch => { try { ch.remove(); } catch(x){} }); tabCharts = [];
     $("#st-erg").innerHTML = `
       <div class="merke ${best==="spar"?"":"gut"}">Zeitraum ${d.von.split("-").reverse().join(".")} bis ${d.bis.split("-").reverse().join(".")} (${fmt(d.jahre,1)} Jahre, ${d.monate} Monate, eingezahlt ${geld(d.eingezahlt)}${d.einmal > 0 ? `, davon ${geld(d.einmal)} einmalig zu Beginn` : ""}).
-        Am meisten nach Steuer: <b>${kurz[best] || e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
-      <div class="bl-t">${ek("s_netto", "Nach Steuer, alles verkauft")}</div>
-      <div class="sv-rang">${folge.map((k, i) => `<div class="sv-r${k === best ? " sieger" : ""}" style="--wf:${farben[k]}"><span class="weg-platz">${i + 1}.</span><b>${kurz[k] || e[k].name}</b><span class="sv-geld">${geld(e[k].netto)}</span>
-        <div class="balken"><i style="width:${Math.max(1, e[k].netto / hoechst * 100).toFixed(1)}%;background:var(--wf)"></i></div></div>`).join("")}</div>
+        Am meisten ${mitSt ? "nach Steuer" : "ohne Steuer gerechnet"}: <b>${kurz[best] || e[best].name}</b>${best==="spar"?" – Warten auf günstige Kurse hat sich hier nicht gelohnt.":"."}</div>
+      <div class="bl-t">${mitSt ? ek("s_netto", "Nach Steuer, alles verkauft") : ek("s_brutto", "Ohne Steuer gerechnet · Endvermögen")}</div>
+      <div class="sv-rang">${folge.map((k, i) => `<div class="sv-r${k === best ? " sieger" : ""}" style="--wf:${farben[k]}"><span class="weg-platz">${i + 1}.</span><b>${kurz[k] || e[k].name}</b><span class="sv-geld">${geld(W(e[k]))}</span>
+        <div class="balken"><i style="width:${Math.max(1, W(e[k]) / hoechst * 100).toFixed(1)}%;background:var(--wf)"></i></div></div>`).join("")}</div>
       <div class="tab-scroll"><table class="wtab sv-tab"><thead><tr><th style="text-align:left"></th>${ks.map(k => `<th data-e="s_${k}"${k === best ? ' class="best"' : ""} style="--wf:${farben[k]}"><i class="sv-dot"></i>${kurz[k] || e[k].name}</th>`).join("")}</tr></thead><tbody>
-        ${zeile("Endvermögen (Depot + Bargeld)", x => geld(x.brutto), "s_brutto")}
-        ${zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")}
+        ${mitSt ? zeile("Endvermögen vor Steuer (Depot + Bargeld)", x => geld(x.brutto), "s_brutto") + zeile("<b>nach Steuer, alles verkauft</b>", x => `<b>${geld(x.netto)}</b>`, "s_netto")
+          : zeile("<b>Endvermögen (Depot + Bargeld)</b>", x => `<b>${geld(x.brutto)}</b>`, "s_brutto")}
         ${zeile("Interner Zinsfuß p.a.", x => `<b>${fmt(x.irr,2,"%")}</b>`, "s_irr")}
         ${zeile("Größter Rückgang des Vermögens", x => x.max_verlust == null ? "–" : `<span class="neg">${fmt(x.max_verlust,0,"%")}</span>`, "s_rueckgang")}
         ${zeile("Zeitweise unter Einzahlungen", x => x.max_unter_einzahlung == null ? "–" : x.max_unter_einzahlung<0 ? `<span class="neg">${geld(x.max_unter_einzahlung)}</span>` : "nie", "s_unter")}
-        ${zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "s_steuer")}
+        ${mitSt ? zeile("Steuern unterwegs / am Ende", x => `${geld(x.steuer_laufend)} / ${geld(x.steuer_ende)}`, "s_steuer") : ""}
         ${zeile("Kosten gesamt", x => geld(x.kosten), "s_kosten")}
         ${zeile("Käufe / Verkäufe", x => `${x.kaeufe} / ${x.verkaeufe}`)}
         ${zeile("Bargeld am Ende", x => fmt(x.bar_anteil_ende,0,"%"), "s_bar")}
       </tbody></table></div>
       <div id="chart3"></div>
       <div class="legende" style="border:none"><span><i style="background:${farben.ein}"></i>eingezahlt</span>${ks.map(k => `<span><i style="background:${farben[k]}"></i>${kurz[k]}</span>`).join("")}</div>
-      <div class="text sv-regeln">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}, versteuert) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
+      <p class="klein sv-basis">${mitSt ? "Das Kurvenbild und die Zeile „Endvermögen vor Steuer“ zeigen Depot + Bargeld, solange nichts verkauft ist. Die Balken oben zeigen, was nach dem Verkauf von allem und nach der Steuer übrig bliebe – deshalb sind sie kleiner. Nimm den Haken „Steuer abziehen“ heraus, dann zeigen alle drei dieselben Beträge."
+        : "Ohne Steuer gerechnet: Balken, Tabelle und Kurvenbild zeigen dieselben Beträge. In Wirklichkeit fällt Abgeltungssteuer an, sobald mit Gewinn verkauft wird – mit Haken bei „Steuer abziehen“ ist sie eingerechnet."}</p>
+      <div class="text sv-regeln">Regeln: <b>Sparplan</b> kauft jeden Monat. <b>Staffelkauf</b> legt den Betrag aufs Tagesgeld (Zins: ${d.zins}${mitSt ? ", versteuert" : ""}) und kauft nach der Ampel der Vorwoche: unter 60 nichts, 60–75 ein Drittel des wartenden Geldes, 75–90 zwei Drittel, ab 90 alles.
       <b>Teilverkauf</b>: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase; die nächste erst, wenn die Ampel wieder über 40 war); der Erlös wartet wieder auf dem Tagesgeld.
       ${alle ? `<b>Mischung</b>: die Hälfte jeden Monat, die andere Hälfte erst bei Ampel ab 60. <b>Warten auf günstig / sehr günstig</b>: Geld sammeln und alles kaufen, sobald die Ampel 60 bzw. 80 erreicht. Ein <b>Einmalbetrag</b> wird im ersten Monat eingezahlt und folgt denselben Regeln.` : ""}
-      Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
-      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."}
+      Ausführung zum Eröffnungskurs der ersten Woche jedes Monats. ${!mitSt ? "Steuer: ausgeschaltet – gerechnet wird, als fiele weder auf Zinsen noch auf Verkäufe Steuer an. Nicht berücksichtigt: Wechselkurse (Beträge in der Währung des Werts)." : `Steuer: Abgeltungssteuer 26,375 % auf Gewinne (zuerst gekaufte Stücke zuerst verkauft, Verluste werden verrechnet) und Zinsen.
+      ${d.pausch != null ? `Sparerpauschbetrag ${geld(d.pausch)} je Kalenderjahr${d.teilfrei ? ", Teilfreistellung 30 % (Aktien-ETF: nur 70 % der Gewinne und Verluste zählen)" : " (keine Teilfreistellung – gilt nur für Aktien-ETFs)"}; laufende Fondskosten (TER) stecken schon im ETF-Kurs. Nicht berücksichtigt: Kirchensteuer, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts).` : "Nicht berücksichtigt: Sparerpauschbetrag, Kirchensteuer, Teilfreistellung für Aktien-ETFs, Vorabpauschale, Wechselkurse (Beträge in der Währung des Werts)."}`}
       Das ist ein Rückblick auf einen einzigen Weg der Geschichte, keine Vorhersage.</div>`;
     if (!d.reihe) return;
     const ch = LightweightCharts.createChart($("#chart3"), {...chartBasis(), rightPriceScale:{borderColor:F().line}, localization:{locale:"de-DE",priceFormatter:p => Math.round(p).toLocaleString("de-DE")}});
@@ -5767,7 +5777,7 @@ function tabStrategie(w){
     if (voll) {   // eigene Eingaben: im Browser gerechnet (online wie lokal), gemeinsam mit der Kaufweg-Karte gemerkt
       const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, +$(sel).value || 0)), hoechst = Math.max(2, Math.floor((P.ende_t - P.t[0]) / 86400 / 365.25 + 0.2));
       const jahre = Math.round(z("#st-jahre", 2, 60)), zinsWahl = $("#st-zins").value;
-      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre:Math.min(jahre, hoechst), kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl};
+      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre:Math.min(jahre, hoechst), kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl, steuer:$("#st-steuer").checked};
       sichere("kaufweg", KW); if (jahre > hoechst) $("#st-jahre").value = hoechst;
       const o = kwOptionen();
       if (!(o.betrag > 0) && !(o.einmal > 0)) { $("#st-erg").innerHTML = '<div class="text">Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</div>'; return; }
@@ -5779,6 +5789,7 @@ function tabStrategie(w){
       return;
     }
     // ältere Daten ohne Monatsplan: lokal rechnet der Server, online gibt es nur die vorab gerechneten Standardwerte
+    $("#st-steuer").checked = true; $("#st-steuer").disabled = true;   // hier gibt es nur die Rechnung mit Steuer
     const q = ["betrag","jahre","kfix","kproz","zins"].map(k => k + "=" + encodeURIComponent($("#st-"+k).value)).join("&");
     const d = STATISCH ? s : await apiStrategie(id, q);
     if (AKTIV !== id || REITER !== "strategie" || !$("#st-erg")) return;
@@ -5787,7 +5798,7 @@ function tabStrategie(w){
       $("#st-hinweis").textContent = "Eigene Eingaben gehen hier nach dem nächsten Daten-Lauf. Bis dahin: 500 je Monat, bis 20 Jahre, 1 je Order, echter Zins."; }
     zeigen(d, false);
   };
-  $("#st-los").onclick = los;
+  $("#st-los").onclick = los; $("#st-steuer").onchange = los;   // der Haken rechnet sofort neu
   document.querySelectorAll("#tab .eingabe input, #tab .eingabe select").forEach(e => e.onchange = los);
   $("#st-zur-karte").onclick = () => $("#check")?.scrollIntoView({behavior:"smooth", block:"start"});
   los();

@@ -69,6 +69,14 @@ Wunsch Marc: in der Kaufweg-Karte den Monatsbetrag oder einen Einmalbetrag selbs
 ### Regler in Monatsschritten (23.11.2026 spät)
 Wunsch Marc: bei „Gestern, heute, mögliche Zukunft“ und „Was wird aus meinem Geld?“ in Monaten weiterschieben. Zeitachse: ein Reglerschritt = ein Monat (10 Jahre zurück, 5 Jahre vor), die Wochen für Kurs und Simulation werden daraus abgeleitet; Beschriftung „in einem Jahr und 6 Monaten“, „vor 7 Monaten“. Rechner: Dauer als Jahre + Monate (zwei Felder), Regler 1 bis 360 Monate; gespeichert wird zusätzlich `monate`.
 
+### Strategie-Vergleich: Haken „Steuer abziehen“ (24.11.2026)
+Marc fragte, warum die Balken (570.106) andere Zahlen zeigen als die erste Tabellenzeile (692.079): Die Balken waren „nach Steuer, alles verkauft“, die erste Zeile und das Kurvenbild das Vermögen vor Steuer. Sein Vorschlag: „vielleicht Haken für Steuer an und aus“.
+- **Haken „Steuer abziehen“** neben „Berechnen“ (Standard: an), rechnet beim Anklicken sofort neu und wird mit den übrigen Eingaben gemerkt (`KW.steuer`).
+- **An:** wie bisher. Die erste Tabellenzeile heißt jetzt „Endvermögen vor Steuer (Depot + Bargeld)“, unter dem Kurvenbild steht, warum die Balken kleiner sind.
+- **Aus:** `strategieRechnen` rechnet mit Steuersatz 0 – weder auf Zinsen noch auf Teilverkäufe noch auf den Schlussverkauf. Balken, Tabelle und Kurvenbild zeigen dann dieselben Beträge (Endvermögen); die Zeilen „nach Steuer“ und „Steuern“ entfallen. Hinweis im Text: In Wirklichkeit fällt die Steuer an, sobald mit Gewinn verkauft wird.
+- **Kaufweg-Karte** rechnet mit derselben Einstellung und sagt es im Kleingedruckten.
+- Geprüft: mit Haken unverändert (360 Vergleichsfälle gegen `strategie.py` wie zuvor: alle Geldbeträge gleich); ohne Haken endet das Kurvenbild bei QQQ, SPY und VWRL für alle sechs Wege genau auf dem Balkenwert. `strategie.py` selbst rechnet weiter nur mit Steuer.
+
 ### Gemeinsamer Upload 24.11.2026: Optik, bester Kaufweg, Wochen-Linien
 Marc wollte alle offenen Änderungen auf einmal online („nicht in Schüben“). Zusätzlich zu den Abschnitten darunter:
 - **Fünfte Gestaltungsrunde** (Design-Sitzung, 23.11.2026 nachts, Marc: „sieht nicht aus wie cyberfuture“): Marktphase als Bühne mit Leuchtröhre, Strategie-Vergleich mit Rangliste, Depot-Positionen als Karten; nur Aussehen, Stil-Schicht „Fünfte Runde“ am Ende des Stylesheets. Dabei behoben: Das Diagramm im Reiter „Prüfung“ (svgKal) war seit 96fbf14 leer (ein `<line>` wurde nie geschlossen).
