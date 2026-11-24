@@ -1341,6 +1341,56 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
   .ot-gauge{margin-top:6px}
   .wert-kopf{padding:14px 12px}
 }
+/* ---- 5 Chart: dunkles Feld, Werkzeugleiste aus Glas, Linien-Knöpfe mit Leuchtpunkt, schwebende Wertekarte */
+:root{--kurs-schein:rgba(255,255,255,.95);--kegel-text:#d8c4ff;--chart-marke:#1a2a45}
+:root[data-theme="light"]{--kurs-schein:rgba(12,20,34,.22);--kegel-text:#5b21b6;--chart-marke:#33405a}
+.chart-karte{background:
+    linear-gradient(90deg,transparent 4%,var(--rim) 30%,color-mix(in srgb,var(--rim) 45%,transparent) 62%,transparent 96%) top/100% 1px no-repeat,
+    var(--glas)}
+.chart-leiste{gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,color-mix(in srgb,var(--text) 3%,transparent),transparent)}
+.chart-leiste .segment button{padding:5px 10px;font-size:12px;font-weight:600;letter-spacing:.01em}
+.chart-leiste [data-z],.chart-leiste [data-wg]{font-family:var(--f-zahl);font-size:11.5px}
+.werkzeug{background:var(--glas-leicht);border-color:var(--line);border-radius:10px;font-size:12px}
+.werkzeug[aria-pressed="true"]{border-color:color-mix(in srgb,var(--akzent) 60%,transparent);box-shadow:0 0 16px -6px var(--akzent)}
+.chips{gap:7px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.chip-titel{font-size:10.5px;letter-spacing:.09em;min-width:108px}
+.chip{height:27px;padding:0 10px 0 9px;gap:7px;border-color:var(--line);background:transparent;font-size:12px;color:var(--muted);transition:color var(--tempo) var(--ruck),border-color var(--tempo) var(--ruck),background var(--tempo) var(--ruck)}
+.chip i,.chip i.flaeche{width:8px;height:8px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.chip i.pfeil{box-shadow:none}
+.chip[aria-pressed="true"]{color:var(--text);background:var(--glas-leicht);border-color:var(--line2);box-shadow:inset 0 1px 0 var(--kante)}
+.chip[aria-pressed="false"]{text-decoration:none;opacity:.72}
+.chip[aria-pressed="false"] i{opacity:.3;box-shadow:none}
+.chip:hover{border-color:color-mix(in srgb,var(--akzent) 55%,transparent);color:var(--text)}
+.chart-flaeche{background:var(--chart-bg)}
+.chart-oben{box-shadow:inset 0 14px 30px -24px rgba(0,0,0,.9)}
+.fk{left:10px;top:8px;background:var(--glas-stark);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:10px;box-shadow:inset 0 1px 0 var(--kante);font-size:11.5px;color:var(--text2)}
+.fk b{color:var(--text)}
+.fk:empty{display:none}
+.fk-ampel{color:#06101c;font-weight:600}
+.ampel-titel{font-size:10.5px;letter-spacing:.05em}
+.tv-hinweis,.chart-fuss{border-top-color:var(--line)}
+/* Wertekarte am Fadenkreuz */
+.ot-hud{position:absolute;left:0;top:0;z-index:5;pointer-events:none;min-width:168px;padding:8px 11px 9px;border-radius:11px;font-size:11.5px;line-height:1.5;color:var(--text2);
+  background:linear-gradient(180deg,color-mix(in srgb,var(--hf,var(--akzent)) 9%,transparent),transparent 70%),var(--glas-stark);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid color-mix(in srgb,var(--hf,var(--akzent)) 30%,var(--line2));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 0 0 1px rgba(0,0,0,.3),0 14px 34px -12px rgba(0,0,0,.85),0 0 26px -12px var(--hf,var(--akzent));
+  transition:transform 90ms linear;will-change:transform}
+.ot-hud::before{content:"";position:absolute;left:10px;right:10px;top:-1px;height:1px;background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--hf,var(--akzent)) 80%,#fff),transparent)}
+.hud-t{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.hud-g{display:grid;grid-template-columns:auto 1fr;gap:1px 12px;align-items:baseline}
+.hud-g b{font-family:var(--f-zahl);font-weight:650;color:var(--text);text-align:right;white-space:nowrap}
+.hud-g b i{font-style:normal}
+.hud-g small{font-family:var(--f-ui);font-size:10px;font-weight:500;color:var(--muted)}
+:root[data-theme="light"] .ot-hud{box-shadow:inset 0 1px 0 #fff,0 12px 30px -12px rgba(24,44,90,.35)}
+#chart3,.mini{border-color:var(--line);background:var(--chart-bg)}
+@media (max-width:900px){
+  .chart-leiste{padding:8px 10px;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .chart-leiste::-webkit-scrollbar{display:none}
+  .chart-leiste>*{flex:none}
+  .chart-leiste .rechts{margin-left:0}
+  .chips{padding:8px 10px;gap:6px}
+  .ot-hud{min-width:150px;font-size:11px}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1501,7 +1551,7 @@ let _F = null;
 const F = () => _F || (_F = (() => { const s = getComputedStyle(document.documentElement); const g = k => s.getPropertyValue("--" + k).trim();
   return {bg:g("chart-bg"), grid:g("chart-grid"), text:g("chart-text"), line:g("line2"), guenstig:g("guenstig"), teuer:g("teuer"), auf:g("kerze-auf"), ab:g("kerze-ab"),
     gelb:g("gelb"), lila:g("lila"), cyan:g("cyan"), kegel:g("kegel"), akzent:g("akzent"), muted:g("muted"), neutral:g("neutral"), pitop1:g("pitop1"), pitop2:g("pitop2"), mayer:g("mayer"), mvrv:g("mvrv"), panel:g("panel"), bb:g("bb"), fib:g("fib"), neu:g("neu"), ema20:g("ema20"), ema50:g("ema50"), ema100:g("ema100"), ema200:g("ema200"), gut:g("marke-gut"),
-    ampel:[0, 1, 2, 3, 4].map(i => g("a" + i)), kurs:g("kurs"), hm:[0, 1, 2, 3, 4, 5, 6].map(i => g("hm" + i)), hmGrund:g("hm-grund"), fzahl:g("f-zahl"), fui:g("f-ui")}; })());
+    ampel:[0, 1, 2, 3, 4].map(i => g("a" + i)), kurs:g("kurs"), hm:[0, 1, 2, 3, 4, 5, 6].map(i => g("hm" + i)), hmGrund:g("hm-grund"), fzahl:g("f-zahl"), fui:g("f-ui"), kursSchein:g("kurs-schein"), kegelText:g("kegel-text"), marke:g("chart-marke")}; })());
 let UMFELD = null, PRUEF = null, TAGEBUCH = null, BEWERTUNG = null;
 const holeJson = async url => { try { const r = await fetch(url, {cache:"no-store"}); return r.ok ? await r.json() : null; } catch(e) { return null; } };
 
@@ -2755,10 +2805,10 @@ let ZEITRAUM = "10", SKALA = lade("skala", 1), CHARTQUELLE = "eigen";
 let INTERVALL = "W", CD = null, KEGEL_D = null;
 const INTRADAY = ["60", "30", "15"], TAG_CACHE = new Map();
 const INTERVALLE = [["M","Monat"],["W","Woche"],["D","Tag"],["60","1 Std"],["30","30 Min"],["15","15 Min"]];
-const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:f.fzahl || getComputedStyle(document.body).fontFamily, fontSize:11},
+const chartBasis = () => { const f = F(); return {autoSize:true, layout:{background:{type:"solid", color:f.bg}, textColor:f.text, fontFamily:f.fui || getComputedStyle(document.body).fontFamily, fontSize:11},
   grid:{vertLines:{color:f.grid}, horzLines:{color:f.grid}},
   timeScale:{borderColor:f.line, minBarSpacing:0.02, rightOffset:4}, rightPriceScale:{borderColor:f.line}, leftPriceScale:{borderColor:f.line},
-  crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.akzent}},
+  crosshair:{mode:0, vertLine:{color:f.muted, labelBackgroundColor:f.marke || f.akzent}, horzLine:{color:f.muted, labelBackgroundColor:f.marke || f.akzent}},
   localization:{locale:"de-DE", dateFormat:"dd.MM.yyyy", priceFormatter:p => Math.abs(p)>=100 ? Math.round(p).toLocaleString("de-DE") : p.toLocaleString("de-DE",{maximumSignificantDigits:4})}}; };
 function alleChartsWeg(){ KZ_LINIEN = []; charts.concat(tabCharts).forEach(ch => { try { ch.remove(); } catch(e){} }); charts = []; tabCharts = []; KEGEL = []; KEGEL_M = null; KEGEL_D = null; CD = null; LIMITLINIEN = []; KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; }
 
@@ -2774,6 +2824,7 @@ function kk(kat, titel, unter, rechts, e){
     ${unter ? `<p class="kk-unter">${unter}</p>` : ""}</header>`;
 }
 const ERKLAERUNG_TITEL = {
+  chartart: {titel:"Linie oder Kerzen", text:"Linie: der Schlusskurs jeder Woche (bzw. jedes Tages oder Monats) als eine helle Linie – ruhig und gut zu lesen. Kerzen: zusätzlich Eröffnung, Hoch und Tief jeder Kerze. Die genauen Werte (E, H, T, S) stehen in beiden Darstellungen oben links, sobald du über den Chart fährst. Der helle Punkt markiert den letzten Kurs."},
   kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
   kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf besser oder schlechter ausgeht als in einer beliebigen Woche, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
   cagr_aus: {titel:"Aus 10.000 wurden …", text:"Die Ø Jahresrendite als Betrag: Was aus einer einmaligen Anlage von 10.000 über den genannten Zeitraum geworden wäre (mit Zinseszins, vor Steuern und Kosten, in der Währung des Werts). Reine Umrechnung der Jahresrendite – kein Versprechen für die Zukunft."},
@@ -3776,7 +3827,8 @@ async function zeige(id, opt={}){
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
         <div class="segment nur-profi" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
-        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        <div class="segment nur-profi" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button></div>
         <div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
         ${eigen && waehrungVon(w) === "USD" ? `<div class="segment nur-profi" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein nur-profi" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
         ${eigen ? `<button class="werkzeug nur-profi" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
@@ -3786,7 +3838,7 @@ async function zeige(id, opt={}){
         <div class="chip-zeile"><span class="chip-titel">Das Wichtigste</span>${chips.filter(x => CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div>
         <div class="chip-zeile nur-profi"><span class="chip-titel">Weitere Linien</span>${chips.filter(x => !CHIPS_WICHTIG.includes(x[0])).map(chipKnopf).join("")}</div></div>
       <div class="chart-flaeche">
-        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
+        <div class="chart-oben"><div id="chart"></div><div id="tvchart" hidden></div><div class="fk" id="fk"></div><div class="ot-hud" id="ot-hud" hidden></div><div id="lineal-box" hidden></div><div id="lineal-text" hidden></div></div>
         <div class="trenner waagerecht" data-trenner="ampel" role="separator" aria-orientation="horizontal" aria-label="Höhe der Ampel-Leiste verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
         <div id="chart2"><span class="ampel-titel">Ampel 0–100${c.mayer ? " · Mayer (links)" : ""}${c.mvrv ? " · MVRV-Z (blau)" : ""}</span></div>
       </div>
@@ -3854,6 +3906,7 @@ async function zeige(id, opt={}){
   $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); trendkanalAktualisieren(); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
+  $$("#chart-karte [data-ca]").forEach(b => b.onclick = () => { CHARTART = b.dataset.ca; sichere("chartart", CHARTART); $$("#chart-karte [data-ca]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); eigenNeu(); });
   $$("#chart-karte [data-wg]").forEach(b => b.onclick = () => waehrungSetzen(b.dataset.wg));
   $$("#chart-karte [data-iv]").forEach(b => b.onclick = () => intervallSetzen(b.dataset.iv));
   if ($("#lineal-knopf")) $("#lineal-knopf").onclick = () => linealUmschalten();
@@ -3898,7 +3951,8 @@ function chartQuelle(q){
   tv.hidden = q !== "tv"; $("#chart").style.visibility = q === "tv" ? "hidden" : ""; $("#fk").hidden = q === "tv";
   $("#tv-hinweis").hidden = q !== "tv";
   $("#tv-hinweis").innerHTML = tvHinweis();
-  $$("#chips .chip, #chart-karte [data-z], #chart-karte [data-sk]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
+  $$("#chips .chip, #chart-karte [data-z], #chart-karte [data-sk], #chart-karte [data-ca]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
+  if (q === "tv" && $("#ot-hud")) $("#ot-hud").hidden = true;
 }
 
 function tvHinweis(){
@@ -4311,15 +4365,15 @@ function phasenKarte(c){
 // Bewertungszonen (Wunsch Marc 22.11.2026): Flächen zwischen den mitwandernden Kaufzonen-Linien, Woche für Woche.
 // Grenzen = Kurs, bei dem die Ampel in der Woche 90/80/60/40/15 gezeigt hätte (aus der eigenen Geschichte des Werts, nichts geschätzt).
 const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deckkraft hex, Name]
-  [null,   "kz15", 0, "30", "historisch sehr teuer"],
-  ["kz15", "kz40", 1, "1f", "teuer"],
-  ["kz40", "kz60", 2, "12", "neutral"],
-  ["kz60", "kz80", 3, "1f", "günstig"],
-  ["kz80", "kz90", 4, "2e", "historisch sehr günstig"],
-  ["kz90", null,   5, "30", "Ausverkauf"]];
+  [null,   "kz15", 0, "17", "historisch sehr teuer"],
+  ["kz15", "kz40", 1, "10", "teuer"],
+  ["kz40", "kz60", 2, "0b", "neutral"],
+  ["kz60", "kz80", 3, "10", "günstig"],
+  ["kz80", "kz90", 4, "17", "historisch sehr günstig"],
+  ["kz90", null,   5, "20", "Ausverkauf"]];
 function zonenFlaechen(ch, serie, c, f){
   if (!c.kz80 && !c.kz15) return;
-  const farbe = i => i === 5 ? f.cyan : AF()[i];
+  const farbe = i => i === 5 ? f.gut : AF()[i];
   let sichtbar = CHIPS.kaufzonen, neu = null;
   const zeichnen = ({context:x, mediaSize:gr}) => {
     if (!sichtbar) return;
@@ -4358,6 +4412,99 @@ function zonenFlaechen(ch, serie, c, f){
   });
   SERIEN.kaufzonen.push({applyOptions: o => { sichtbar = o.visible; neu?.(); }});   // Chip „Kaufzonen“ schaltet Linien und Flächen
 }
+// ------------------------------------------------------------ Chart im Terminal-Stil (24.11.2026): Kurslinie mit Schein, Lichtpunkt am letzten Kurs,
+// Prognose-Kegel mit zwei Helligkeitsstufen und feinem Gitter, schwebende Wertekarte am Fadenkreuz. Nur Darstellung – dieselben Daten wie bisher.
+let CHARTART = lade("chartart", "linie");   // „linie“ (Schlusskurse als Linie) oder „kerzen“ (wie bisher)
+let LICHT_NEU = null, HUD_FEST = null;
+function kursLicht(ch, serie, c, f){
+  const zeichnen = oben => ({context:x, mediaSize:gr}) => {
+    const ts = ch.timeScale(), lr = ts.getVisibleLogicalRange(); if (!lr) return;
+    const von = Math.max(0, Math.floor(lr.from) - 1), bis = Math.min(c.t.length - 1, Math.ceil(lr.to) + 1), li = c.t.length - 1;
+    if (!oben && CHARTART === "linie") {   // Schein unter der Kurslinie (die Linie selbst zeichnet die Chart-Bibliothek)
+      x.save(); x.lineJoin = "round"; x.lineCap = "round"; x.strokeStyle = f.kursSchein; x.shadowColor = f.kursSchein;
+      const pfad = () => { x.beginPath(); let offen = false;
+        for (let i = von; i <= bis; i++) { const v = c.c[i], px = ts.logicalToCoordinate(i), py = v == null ? null : serie.priceToCoordinate(v);
+          if (px == null || py == null) { offen = false; continue; } if (offen) x.lineTo(px, py); else x.moveTo(px, py); offen = true; } };
+      x.globalAlpha = .22; x.lineWidth = 5; x.shadowBlur = 16; pfad(); x.stroke();
+      x.globalAlpha = .5; x.lineWidth = 2.4; x.shadowBlur = 7; pfad(); x.stroke();
+      x.restore();
+    }
+    if (oben && li >= von && li <= bis && c.c[li] != null) {   // Lichtpunkt am letzten Kurs, senkrechte Strichellinie
+      const px = ts.logicalToCoordinate(li), py = serie.priceToCoordinate(c.c[li]); if (px == null || py == null) return;
+      x.save();
+      x.strokeStyle = f.kursSchein; x.globalAlpha = .55; x.lineWidth = 1; x.setLineDash([3, 4]); x.beginPath(); x.moveTo(Math.round(px) + .5, 0); x.lineTo(Math.round(px) + .5, gr.height); x.stroke(); x.setLineDash([]);
+      x.globalAlpha = 1;
+      const g = x.createRadialGradient(px, py, 0, px, py, 26); g.addColorStop(0, f.kursSchein); g.addColorStop(.18, f.kursSchein); g.addColorStop(1, "rgba(127,127,127,0)");
+      x.globalAlpha = .5; x.fillStyle = g; x.beginPath(); x.arc(px, py, 26, 0, 7); x.fill();
+      x.globalAlpha = .9; x.strokeStyle = f.kurs; x.lineWidth = 1; x.beginPath(); x.arc(px, py, 8.5, 0, 7); x.stroke();
+      x.globalAlpha = 1; x.shadowColor = f.kursSchein; x.shadowBlur = 14; x.fillStyle = f.kurs; x.beginPath(); x.arc(px, py, 3.4, 0, 7); x.fill();
+      x.restore();
+    }
+  };
+  serie.attachPrimitive({
+    attached: p => { LICHT_NEU = p.requestUpdate; }, detached: () => { LICHT_NEU = null; }, updateAllViews(){},
+    paneViews: () => [{zOrder: () => "bottom", renderer: () => ({draw: z => z.useMediaCoordinateSpace(zeichnen(false))})},
+      {zOrder: () => "top", renderer: () => ({draw: z => z.useMediaCoordinateSpace(zeichnen(true))})}],
+  });
+}
+// Prognose-Kegel: äußeres Band (90 % der Wege) weich, inneres Band (50 %) heller, darüber ein feines Gitter, das dem Kegel folgt; Prozent-Marken am rechten Rand
+function kegelLicht(m, fx, f){
+  let neu = null;
+  const zeichnen = ({context:x, mediaSize:gr}) => {
+    if (!CHIPS.kegel || !HAUPT || !KERZEN) return;
+    const ts = HAUPT.timeScale();
+    const P = k => m.t.map((t, i) => { const px = ts.timeToCoordinate(t), py = KERZEN.priceToCoordinate(m.kegel[k][i] * fx); return px == null || py == null ? null : [px, py]; });
+    const o9 = P("q95"), u9 = P("q5"), o5 = P("q75"), u5 = P("q25");
+    const ok = o9.map((p, i) => p && u9[i] && o5[i] && u5[i] ? i : -1).filter(i => i >= 0); if (ok.length < 2) return;
+    const band = (o, u) => { const pf = new Path2D(); ok.forEach((i, j) => j ? pf.lineTo(o[i][0], o[i][1]) : pf.moveTo(o[i][0], o[i][1])); for (let j = ok.length - 1; j >= 0; j--) pf.lineTo(u[ok[j]][0], u[ok[j]][1]); pf.closePath(); return pf; };
+    const aussen = band(o9, u9), kern = band(o5, u5), x0 = o9[ok[0]][0], x1 = o9[ok[ok.length - 1]][0];
+    x.save();
+    let g = x.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, f.kegel + "66"); g.addColorStop(1, f.kegel + "26"); x.fillStyle = g; x.fill(aussen);
+    g = x.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, f.kegel + "8c"); g.addColorStop(1, f.kegel + "40"); x.fillStyle = g; x.fill(kern);
+    x.clip(aussen); x.lineWidth = .6; x.strokeStyle = f.kegel + "55"; x.beginPath();   // Gitter: senkrechte Striche und Fächerlinien zwischen unterem und oberem Rand
+    for (let gx = Math.ceil(x0 / 9) * 9; gx <= x1; gx += 9) { x.moveTo(gx + .5, 0); x.lineTo(gx + .5, gr.height); }
+    for (let k = 1; k < 14; k++) ok.forEach((i, j) => { const a = k / 14, px = o9[i][0], py = u9[i][1] + (o9[i][1] - u9[i][1]) * a; if (j) x.lineTo(px, py); else x.moveTo(px, py); });
+    x.stroke(); x.restore();
+    const xm = x0 + (Math.min(x1, gr.width) - x0) * .46, bei = arr => { for (let j = 1; j < ok.length; j++) { const a = arr[ok[j - 1]], b = arr[ok[j]]; if (b[0] >= xm) { const t = (xm - a[0]) / Math.max(1e-6, b[0] - a[0]); return [xm, a[1] + (b[1] - a[1]) * t]; } } return null; };   // Marken im Kegel (rechts am Rand stehen die Achsen-Schilder)
+    x.save(); x.font = "600 10px " + (f.fzahl || "monospace"); x.textAlign = "center"; x.textBaseline = "middle"; x.fillStyle = f.kegelText;
+    const po = bei(o9), pk = bei(o5), pu = bei(u5);
+    if (po && pk && pu && xm - x0 > 50) { if (pk[1] - po[1] > 13) x.fillText("90 %", xm, (po[1] + pk[1]) / 2); if (pu[1] - pk[1] > 13) x.fillText("50 %", xm, pk[1] + Math.min(9, (pu[1] - pk[1]) / 2)); }
+    x.restore();
+  };
+  const prim = {attached: p => { neu = p.requestUpdate; }, detached: () => { neu = null; }, updateAllViews(){},
+    paneViews: () => [{zOrder: () => "bottom", renderer: () => ({draw: z => z.useMediaCoordinateSpace(zeichnen)})}]};
+  const serie = KERZEN; serie.attachPrimitive(prim);
+  return {applyOptions: () => neu?.(), _weg: () => { try { serie.detachPrimitive(prim); } catch(e) {} }};
+}
+// Schwebende Wertekarte: am Fadenkreuz (oder, ohne Maus, am Lichtpunkt des letzten Kurses) Datum, Kurs, Abstand zur 200-Wochen-Linie und Ampel
+function hudZeigen(c, p){
+  const hud = $("#ot-hud"), feld = $("#chart"); if (!hud || !feld || !HAUPT || !KERZEN) return;
+  const ts = HAUPT.timeScale(), li = c.t.length - 1, breit = feld.clientWidth, hoch = feld.clientHeight;
+  let i = null, x = null, y = null, zukunft = null;
+  if (p && p.time != null && p.point) { i = ZEIT_I.get(p.time); x = p.point.x; y = p.point.y;
+    if (i == null) { const m = KEGEL_D, k = m ? m.t.indexOf(p.time) : -1; if (k < 0 || !CHIPS.kegel) { hud.hidden = true; return; } zukunft = [m, k]; } }
+  else { if (breit < 520 || $("#tvchart") && !$("#tvchart").hidden) { hud.hidden = true; return; }   // schmaler Chart (Handy): Karte nur beim Antippen
+    i = li; x = ts.logicalToCoordinate(li); y = c.c[li] == null ? null : KERZEN.priceToCoordinate(c.c[li]);
+    if (x == null || y == null || x < 0 || x > breit - 60) { hud.hidden = true; return; } }
+  const zeile = (l, v) => `<span>${l}</span><b>${v}</b>`;
+  if (zukunft) { const [m, k] = zukunft, n = m.kurs >= 100 ? 0 : 2, fx = fxFaktor();
+    hud.innerHTML = `<div class="hud-t">${tDe(m.t[k])} · Simulation</div><div class="hud-g">${zeile("Median", fmt(m.kegel.q50[k] * fx, n))}${zeile("50 % der Wege", fmt(m.kegel.q25[k] * fx, n) + " – " + fmt(m.kegel.q75[k] * fx, n))}${zeile("90 % der Wege", fmt(m.kegel.q5[k] * fx, n) + " – " + fmt(m.kegel.q95[k] * fx, n))}</div>`;
+    hud.style.setProperty("--hf", "var(--kegel)");
+  } else {
+    const nk = c.c[i] >= 100 ? 2 : 4, sc = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null, l2 = c.sma200w?.[i];
+    const ab = l2 > 0 && c.c[i] != null ? (c.c[i] / l2 - 1) * 100 : null;
+    hud.innerHTML = `<div class="hud-t">${tDe(c.t[i])}${i === li ? " · letzter Kurs" : ""}</div><div class="hud-g">${zeile("Kurs", fmt(c.c[i], nk))}
+      ${zeile("Abstand", ab == null ? "–" : `<i style="color:var(--gelb)">${vz(ab, Math.abs(ab) < 10 ? 1 : 0, " %")}</i> <small>zur 200W-Linie</small>`)}
+      ${zeile("Ampel", sc == null ? "–" : `<i style="color:${farbe(sc)}">${fmt(sc,0)} · ${STATUS_KURZ[stufe(sc)]}</i>${vorl ? " <small>vorläufig</small>" : ""}`)}</div>`;
+    hud.style.setProperty("--hf", sc == null ? "var(--akzent)" : farbe(sc));
+  }
+  hud.hidden = false;
+  const b = hud.offsetWidth, h = hud.offsetHeight, grenze = breit - 66;
+  let lx = p ? x + 16 : x - b - 18, ly = y + 16;   // Ruhezustand: links unter dem Lichtpunkt (rechts stehen Kegel und Achsen-Marken)
+  if (lx + b > grenze - 130) lx = x - b - 16; if (lx < 6) lx = 6;
+  if (ly + h > hoch - 30) ly = y - h - 16; if (ly < 6) ly = 6;
+  hud.style.transform = `translate(${Math.round(lx)}px,${Math.round(ly)}px)`;
+}
 function zeichne(c, w){
   const f = F(), basis = chartBasis();
   ZEIT_I = new Map(c.t.map((t, i) => [t, i]));
@@ -4386,7 +4533,9 @@ function zeichne(c, w){
       return s >= 80 ? {time:t, value:1, color:f.guenstig + (v ? "18" : "2e")} : s >= 60 ? {time:t, value:1, color:f.guenstig + (v ? "0c" : "14")} : s <= 15 ? {time:t, value:1, color:f.teuer + (v ? "10" : "1f")} : {time:t}; }));
     SERIEN.phasen.push(ph);
   }
-  const kerzen = ch.addCandlestickSeries({upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
+  const alsLinie = CHARTART === "linie", durch = "rgba(0,0,0,0)";   // Linie: die Kerzen bleiben als unsichtbarer Träger (Marken, Zonen, Preislinien hängen daran)
+  const kerzen = ch.addCandlestickSeries(alsLinie ? {upColor:durch, downColor:durch, borderVisible:false, wickUpColor:durch, wickDownColor:durch, priceLineVisible:false, lastValueVisible:false}
+    : {upColor:f.auf, downColor:f.ab, borderVisible:false, wickUpColor:f.auf, wickDownColor:f.ab, priceLineColor:f.muted});
   kerzen.setData(c.t.map((t,i) => ({time:t, open:c.o[i] ?? c.c[i], high:c.h[i] ?? c.c[i], low:c.l[i] ?? c.c[i], close:c.c[i]})));
   {   // Trendkanal: drei Linien, die trendkanalAktualisieren() auf den sichtbaren Ausschnitt legt (Regressionskanal wie in Charting-Programmen)
     const tk = (farbe, stil, breite) => { const s = ch.addLineSeries({color:farbe, lineWidth:breite, lineStyle:stil, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.trend, autoscaleInfoProvider:() => null}); SERIEN.trend.push(s); return s; };
@@ -4397,7 +4546,7 @@ function zeichne(c, w){
   w200.applyOptions({lastValueVisible:true, title:"200W"});
   if (c.kz80 || c.kz15) {   // Kaufzonen je Woche: wandern mit (Kurs, bei dem die Ampel in der Woche 80/60/40/15 gezeigt hätte)
     [["kz80", 4, "sehr günstig darunter", 2, 0], ["kz60", 3, "günstig darunter", 1, 1], ["kz40", 1, "teuer darüber", 1, 1], ["kz15", 0, "sehr teuer darüber", 2, 0]].forEach(([k, st, t, b, stil]) => {
-      const s = linie("kaufzonen", c[k], AF()[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:t});
+      const s = linie("kaufzonen", c[k], AF()[st], b, stil, true); if (s) s.applyOptions({lastValueVisible:true, title:$("#chart").clientWidth < 560 ? "" : t});   // schmaler Chart (Handy): nur die Kurs-Marke, die Namen stehen in den Flächen
     });
     zonenFlaechen(ch, kerzen, c, f);
   }
@@ -4423,6 +4572,11 @@ function zeichne(c, w){
   }
   if (c.pi_ema150) { linie("pi", c.pi_ema150, f.lila, 2); linie("pi", c.pi_sma471, f.cyan, 2); }
   if (c.pi_top111) { linie("pitop", c.pi_top111, f.pitop1, 1, 2, true); linie("pitop", c.pi_top350x2, f.pitop2, 1, 2, true); }
+  if (alsLinie) {   // Schlusskurse als helle Linie, zuoberst
+    const kl = ch.addLineSeries({color:f.kurs, lineWidth:2, priceLineVisible:true, priceLineColor:f.muted, priceLineStyle:2, lastValueVisible:true, crosshairMarkerVisible:true, crosshairMarkerRadius:4, crosshairMarkerBorderColor:f.kurs, crosshairMarkerBackgroundColor:f.bg});
+    kl.setData(c.t.map((t,i) => ({time:t, value:c.c[i]})).filter(q => q.value != null));
+  }
+  kursLicht(ch, kerzen, c, f);
   KERZEN = kerzen; HAUPT = ch; TK_INFO = null;
   // Ampel-Leiste unten (mit Mayer Multiple bei Krypto auf der linken Skala)
   const ch2 = LightweightCharts.createChart($("#chart2"), {...basis, layout:{...basis.layout, attributionLogo:false}, timeScale:{...basis.timeScale, visible:false}, rightPriceScale:{...basis.rightPriceScale, scaleMargins:{top:0.18, bottom:0.02}},
@@ -4458,7 +4612,7 @@ function zeichne(c, w){
   sync(ch, ch2); sync(ch2, ch);
   // Fibonacci neu, wenn sich der sichtbare Ausschnitt ändert; Lineal folgt Zoom und Verschieben
   let fibZeit = 0;
-  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(() => { fibAktualisieren(); trendkanalAktualisieren(); if (eng() !== MARKEN_ENG) markenSetzen(); }, 120); linealZeichnen(); });
+  ch.timeScale().subscribeVisibleLogicalRangeChange(() => { clearTimeout(fibZeit); fibZeit = setTimeout(() => { fibAktualisieren(); trendkanalAktualisieren(); if (eng() !== MARKEN_ENG) markenSetzen(); }, 120); linealZeichnen(); hudZeigen(c, HUD_FEST); });
   ch.subscribeClick(p => linealKlick(p));
   // Fadenkreuz mit Werten
   const fk = $("#fk");
@@ -4488,7 +4642,8 @@ function zeichne(c, w){
       ${CHIPS.bb && c._bb?.mitte[i] != null ? `<span><i class="sw" style="background:var(--bb)"></i>Bollinger ${c._bb.unten[i] == null ? "–" : fmt(c._bb.unten[i],nk)} – ${fmt(c._bb.oben[i],nk)}</span>` : ""}</div>`;
   };
   fkZeigen(null);
-  ch.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null); linealZiehen(p); });
+  ch.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null); linealZiehen(p); HUD_FEST = p && p.time != null && p.point ? p : null; hudZeigen(c, HUD_FEST); });
+  HUD_FEST = null; setTimeout(() => { if (HAUPT === ch) hudZeigen(c, null); }, 160);
   ch2.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null);
     if (p?.time != null && p.point && ch.setCrosshairPosition) { const i = ZEIT_I.get(p.time); if (i != null) try { ch.setCrosshairPosition(c.c[i], p.time, kerzen); } catch(e){} }
     else if (ch.clearCrosshairPosition) try { ch.clearCrosshairPosition(); } catch(e){} });
@@ -6029,12 +6184,9 @@ async function ladeKegel(wochen, jahre, preise, erst=false, kegel=wochen){
 function kegelZeichnen(){
   if (!HAUPT || !KEGEL_M) return;
   const f = F(), m = KEGEL_D = kegelAnzeige(KEGEL_M);
-  KEGEL.forEach(s => { try { HAUPT.removeSeries(s); } catch(e){} }); KEGEL = [];
+  KEGEL.forEach(s => { try { if (s._weg) s._weg(); else HAUPT.removeSeries(s); } catch(e){} }); KEGEL = [];
   const fx = fxFaktor(), daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i] * fx}));
-  // 90-%-Band als Fläche: oben getönt, darunter mit Hintergrundfarbe abgedeckt (ab dem ersten Zukunftsschritt)
-  const flaeche = (k, farbe) => { const s = HAUPT.addAreaSeries({lineColor:"rgba(0,0,0,0)", topColor:farbe, bottomColor:farbe, lineWidth:1, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false, visible:CHIPS.kegel});
-    s.setData(daten(k).slice(1)); KEGEL.push(s); };
-  flaeche("q95", f.kegel + "30"); flaeche("q5", f.bg);
+  KEGEL.push(kegelLicht(m, fx, f));   // Flächen (90 % weich, 50 % heller) mit feinem Gitter; die Linien darüber wie bisher
   [["q5",f.kegel+"aa",2,1],["q25",f.kegel,0,1],["q50",f.kegel,0,2],["q75",f.kegel,0,1],["q95",f.kegel+"aa",2,1]].forEach(([k,col,st,br]) => {
     const s = HAUPT.addLineSeries({color:col, lineWidth:br, lineStyle:st, priceLineVisible:false, lastValueVisible:k==="q50", crosshairMarkerVisible:false, title:k==="q50"?"Median":"", visible:CHIPS.kegel});
     s.setData(daten(k)); KEGEL.push(s);
