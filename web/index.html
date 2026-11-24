@@ -1310,13 +1310,6 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-vor4 b{font-family:var(--f-zahl);color:var(--text2)}
 .ot-laedt{display:grid;gap:14px}
 .ot-lade-bogen{width:min(72%,400px);aspect-ratio:2/1;margin:0 auto;border-radius:999px 999px 14px 14px}
-/* breite Karte: Titel und Umschalter liegen oben links und rechts, der Halbkreis rückt dazwischen nach oben */
-.ot-mitte{container-type:inline-size;container-name:mitte}
-@container mitte (min-width:800px){
-  .ot-instr .wk-titel{position:absolute;left:18px;right:18px;top:14px}
-  .ot-instr .wk-titel h1{max-width:calc(50% - 240px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ot-gauge{width:min(100%,500px);margin-top:0}
-}
 /* schmale Karte (Handy): Beschriftung im Halbkreis größer, damit sie lesbar bleibt */
 @container haupt (max-width:520px){
   .ot-b-wort{font-size:13px;letter-spacing:.06em}
@@ -1652,6 +1645,30 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
   .fk .r:nth-child(2){display:flex}
   .fk .fk-rang{display:none}
 }
+/* ---- O2 Leisten und Titel */
+/* Name des Werts: immer ganz, eigene Zeile über dem Halbkreis, bricht bei Bedarf um */
+.ot-instr .wk-titel{position:static;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.ot-instr .wk-titel h1{flex:0 1 auto;min-width:0;max-width:100%;margin:0;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;font-size:22px;line-height:1.2}
+.ot-instr .modus-wahl{margin-left:auto}
+.ot-gauge{margin-top:2px}
+/* Werkzeugleiste des Charts: Zeile 1 Zeitraum und Kerzen/Linie (rechts „Weitere Linien & Werkzeuge“), Zeile 2 geschlossen die Linien-Knöpfe */
+.chart-leiste{flex-wrap:wrap;gap:8px 10px;overflow:visible}
+.chart-leiste>*{flex:none}
+.ot-mehr{margin-left:auto;height:30px;padding:0 11px}
+.ot-chips-haupt{order:9;flex:1 0 100%;display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:6px;margin:0;min-width:0}
+.ot-chips-haupt .chip-titel{min-width:0;margin-right:4px}
+.ot-chips-haupt .chip{font-size:12px;padding:0 10px 0 9px;gap:7px}
+.ot-werkzeug .chart-leiste{padding-top:10px}
+@media (max-width:900px){
+  .chart-leiste{flex-wrap:wrap;overflow:visible;padding:8px 10px;gap:8px}
+  .chart-leiste .segment button{padding:5px 9px}
+  .ot-chips-haupt{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .ot-chips-haupt .chip-titel{display:none}
+  .ot-chips-haupt .chip{justify-content:flex-start;min-width:0;overflow:hidden}
+  .ot-mehr{order:10;margin-left:0;flex:1 0 100%;justify-content:center}
+  .ot-instr .wk-titel h1{font-size:20px}
+}
+@media (max-width:380px){.chart-leiste .segment button{padding:5px 7px}}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1701,10 +1718,10 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
       <label><span data-e="f_umsatz" tabindex="0">Umsatz/Tag</span><select id="minu"><option value="0">egal</option><option value="1e6">ab 1 Mio $</option><option value="1e7" selected>ab 10 Mio $</option><option value="1e8">ab 100 Mio $</option></select></label>
     </div>
     <div class="liste-kopf" id="liste-kopf">
-      <button data-s="name">Ticker</button><button data-s="score" data-e="ampel">Score</button><button data-s="score" data-e="sparkline">1 Jahr</button>
+      <button data-s="name">Wert</button><button data-s="score" data-e="ampel">Ampel</button><button data-s="score" data-e="sparkline">1 Jahr</button>
       <button data-s="cagr20" class="c-cagr" data-e="cagr20">Ø Jahr</button><button data-s="vorteil" class="c-vorteil" data-e="vorteil">Vorteil</button>
       <button data-s="rueck" class="c-rueck" data-e="rueckschlag">Rückschl.</button><button data-s="dd" class="c-dd" data-e="vom_hoch">vom Hoch</button>
-      <span class="lk-status"><button data-s="score" data-e="ampel">Status</button><button data-s="delta" data-e="w4">4W</button></span>
+      <span class="lk-status"><button data-s="score" data-e="ampel">Status</button><button data-s="delta" data-e="w4">4 Wo.</button></span>
     </div>
     <div id="liste" tabindex="0" role="listbox" aria-label="Werte"><div id="liste-innen"></div></div>
     <div class="liste-fuss" id="anzahl"></div>
@@ -4249,8 +4266,8 @@ async function zeige(id, opt={}){
       <div class="chart-leiste">
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
         <div class="segment ot-chartart" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button></div>` : ""}
-        <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" aria-label="Linien und Werkzeuge" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Mehr</span></button>
-        <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien">${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
+        <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Weitere Linien &amp; Werkzeuge</span></button>
+        <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien"><span class="chip-titel">Im Chart</span>${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
       </div>
       <div class="ot-werkzeug nur-profi" id="chart-werkzeug"${CHART_MEHR ? "" : " hidden"}>
         <div class="chart-leiste">
