@@ -5272,7 +5272,10 @@ function zeichne(c, w){
       ${c.score[i] != null && rangZuZeit(c.t[i]) ? `<span class="fk-rang">${rangText(rangZuZeit(c.t[i]))}</span>` : ""}
       ${danachText(c, i)}
       ${CHIPS.trend && TK_INFO ? `<span class="fk-tk" data-e="l_trend"><i class="sw" style="background:var(--akzent)"></i>Trendkanal (sichtbar, ${fmt(TK_INFO.jahre, TK_INFO.jahre < 2 ? 1 : 0)} J.): ${TK_INFO.pa == null ? "–" : vz(TK_INFO.pa,1," %")} pro Jahr · Kurs ${TK_INFO.z > 2 ? "über dem Kanal" : TK_INFO.z > 1 ? "im oberen Teil" : TK_INFO.z < -2 ? "unter dem Kanal" : TK_INFO.z < -1 ? "im unteren Teil" : "nahe der Mitte"}</span>` : ""}
-      ${CHIPS.kaufzonen && i < c.t.length - 2 && (c.kz80?.[i] != null || c.kz15?.[i] != null) ? `<span class="fk-kz">Grenzen damals: ${c.kz90?.[i] != null ? `Ausverkauf unter ${fmt(c.kz90[i],nk)} · ` : ""}sehr günstig unter <b style="color:${AF()[4]}">${fmt(c.kz80[i],nk)}</b> · günstig unter <b style="color:${AF()[3]}">${fmt(c.kz60[i],nk)}</b> · teuer über <b style="color:${AF()[1]}">${fmt(c.kz40[i],nk)}</b> · sehr teuer über <b style="color:${AF()[0]}">${fmt(c.kz15[i],nk)}</b></span>` : ""}
+      ${(() => { if (!CHIPS.kaufzonen || i >= c.t.length - 2) return "";   // jede Grenze nur, wenn es ihre Reihe gibt (manche Werte haben nur 80/90)
+        const g = (reihe, text, f) => reihe?.[i] != null ? (f == null ? `${text} ${fmt(reihe[i],nk)}` : `${text} <b style="color:${AF()[f]}">${fmt(reihe[i],nk)}</b>`) : "";
+        const teile = [g(c.kz90, "Ausverkauf unter"), g(c.kz80, "sehr günstig unter", 4), g(c.kz60, "günstig unter", 3), g(c.kz40, "teuer über", 1), g(c.kz15, "sehr teuer über", 0)].filter(Boolean);
+        return teile.length > (c.kz90?.[i] != null ? 1 : 0) ? `<span class="fk-kz">Grenzen damals: ${teile.join(" · ")}</span>` : ""; })()}
       ${c.pi_ema150 && CHIPS.pi ? `<span><i class="sw" style="background:var(--lila)"></i>EMA150 ${fmt(c.pi_ema150[i],0)}</span><span><i class="sw" style="background:var(--cyan)"></i>SMA471×0,745 ${fmt(c.pi_sma471[i],0)}</span>` : ""}
       ${c.pi_top111 && CHIPS.pitop ? `<span><i class="sw" style="background:var(--pitop1)"></i>111T ${fmt(c.pi_top111[i],0)}</span><span><i class="sw" style="background:var(--pitop2)"></i>350T×2 ${fmt(c.pi_top350x2[i],0)}</span>` : ""}
       ${c.mayer && CHIPS.mayer ? `<span><i class="sw" style="background:var(--mayer)"></i>Mayer ${fmt(c.mayer[i],2)}</span>` : ""}
@@ -5289,7 +5292,7 @@ function zeichne(c, w){
   const fkZeigen = t => { fkFuellen(t); fkFest(); };
   fk.dataset.h = 0; fk.dataset.b = ""; fk.style.minHeight = "";
   if (window.ResizeObserver) { if (fk._ro) fk._ro.disconnect(); fk._ro = new ResizeObserver(() => { if (+fk.dataset.b !== fk.offsetWidth) fkFest(); }); fk._ro.observe(fk); }
-  if (c.t.length > 80) { fkFuellen(c.t[c.t.length - 60]); fkFest(); }   // einmal eine ältere Woche messen: dort steht die längste Zeile
+  if (c.t.length > 80) { try { fkFuellen(c.t[c.t.length - 60]); fkFest(); } catch (ex) { console.warn("Zeile über dem Chart nicht messbar:", ex); } }   // einmal eine ältere Woche messen: dort steht die längste Zeile – ein Fehler hier darf das Zeichnen des Charts nie abbrechen
   fkZeigen(null);
   ch.subscribeCrosshairMove(p => { fkZeigen(p && p.time != null && p.point ? p.time : null); linealZiehen(p); HUD_FEST = p && p.time != null && p.point ? p : null; hudZeigen(c, HUD_FEST); });
   HUD_FEST = null; setTimeout(() => { if (HAUPT === ch) hudZeigen(c, null); }, 160);
