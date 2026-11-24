@@ -1726,6 +1726,59 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 .suche-box{box-shadow:inset 0 1px 0 var(--kante),0 0 0 1px rgba(0,0,0,.35),0 30px 70px -20px rgba(0,0,0,.9)}
 .ot-b-schein{animation:none}
 @media (min-width:901px){.ot-gauge{width:min(100%,480px)}}
+/* ---- O4 Lesereihenfolge: Halbkreis → Warum (Satz, vier Zeilen, Rechteck-Stapel) → Chart → Jahresrendite → vier Karten; am PC bleibt die Mitte Halbkreis + Chart */
+:root{--abst:12px}
+.ot-term{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--abst);margin-bottom:var(--abst)}
+.ot-rail{gap:var(--abst)}
+@container haupt (min-width:800px){
+  .ot-term{grid-template-columns:minmax(0,1fr) clamp(250px,26cqw,330px);grid-template-rows:auto 1fr auto;grid-template-areas:"instr rail" "chart rail" "lage rend";align-items:start}
+  .ot-term.ohne-rendite{grid-template-areas:"instr rail" "chart rail" "lage lage"}
+  .ot-instr{grid-area:instr}
+  .ot-lage{grid-area:lage;align-self:stretch}
+  #chart-karte{grid-area:chart;align-self:stretch}
+  .ot-rendite{grid-area:rend;align-self:stretch}
+  .ot-rail{grid-area:rail}
+  #chart-karte .chart-flaeche{flex:1 0 auto;height:auto;min-height:max(240px,var(--g-chart,540px))}
+}
+/* „Warum?“-Karte: Satz und vier Lage-Zeilen, daneben (schmal: darunter) der Rechteck-Stapel. Die Ampel-Zahl steht groß im Halbkreis – der zweite Ring entfällt hier. */
+.ot-lage{padding:14px 16px 16px;background:var(--glas)}
+.ot-lage .wk-haupt{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"u" "f" "s";gap:10px 24px;align-items:start;margin-top:0}
+.ot-lage .wk-saeule{justify-self:center;align-self:center;width:100%;max-width:380px;min-width:0;flex:none}
+.ot-lage .wk-text{flex:none;min-width:0}
+@container haupt (min-width:620px) and (max-width:799.98px){.ot-lage .wk-haupt{grid-template-columns:minmax(0,1fr) minmax(260px,340px);grid-template-areas:"u s" "f s"}}
+@container haupt (min-width:1000px){.ot-lage .wk-haupt{grid-template-columns:minmax(0,1fr) minmax(280px,360px);grid-template-areas:"u s" "f s"}}
+.ot-lage .ampel-marke,.ot-lage .urteil-unter{display:none}
+.ot-lage .urteil-zeile{margin:0 0 2px}
+.ot-lage .urteil-satz{font-size:24px;line-height:1.15;letter-spacing:-.03em}
+.ot-lage .fakten{gap:8px}
+/* Jahresrendite als eigene Karte: am Handy direkt nach dem Chart, am PC unter den vier Karten neben „Warum?“ */
+.ot-rendite{padding:14px 16px}
+.ot-rendite .wk-rendite{flex:none;min-width:0;width:auto;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
+/* Fragen als Brücke zu den Abschnitten */
+.fragen{align-items:center;gap:8px;margin:0 0 var(--abst)}
+.fragen::before{content:"Weiter mit deiner Frage:";flex:0 0 100%;font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--muted)}
+.fragen:empty{display:none}
+.frage{padding:7px 12px;font-size:13px;border-radius:999px}
+/* Vorhersage als Karte im Abschnitt „Ausblick“; Nachkauf- und Positions-Karte in voller Breite im Abschnitt „Kaufen“; Fallen-Hinweis im Abschnitt „Risiko“ */
+.karte.vh{margin:0;padding:16px 18px;border-radius:var(--r)}
+.raster>.nk-karte,.raster>#position-karte,.raster>#nachkauf-karte{grid-column:1/-1}
+.raster>.falle-box{margin:0;padding:11px 14px;border-radius:12px;font-size:13.5px}
+.ot-steck{padding:16px 18px}
+.ot-steck .wk-steck{margin:0 0 8px}
+.ot-steck .beschreibung{margin:0 0 4px;font-size:14px;max-width:920px}
+.ot-steck .wk-kpis{margin-top:12px}
+.ot-art{font-size:12px;color:var(--muted);white-space:nowrap}
+@media (max-width:900px){
+  .ot-lage{padding:12px}
+  .ot-lage .urteil-satz{font-size:22px}
+  .ot-rendite,.ot-steck,.karte.vh{padding:12px}
+}
+/* PC: rechte Spalte endet bündig mit dem Chart – die Fallen-Karte nimmt den übrigen Platz auf (keine Lücke über der Jahresrendite) */
+@container haupt (min-width:800px){
+  .ot-rail{position:static;align-self:stretch;display:flex;flex-direction:column}
+  .ot-rail>.ot-falle{flex:1 0 auto;display:flex;flex-direction:column}
+  .ot-rail>.ot-falle .ot-f-buehne{flex:1 0 auto}
+}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -3421,7 +3474,7 @@ function bogenKlein(s, name){
 function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel, Merken, Einfach/Profi – und der Ampel-Halbkreis
   const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
   return `<section class="karte ot-instr" id="ot-instr"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
-      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span>
+      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span><span class="ot-art">${w.gruppe === "ETF" ? "ETF (Fonds)" : w.gruppe === "Krypto" ? "Kryptowährung" : w.gruppe === "Rohstoffe" ? "Rohstoff" : "Aktie"}</span>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
       <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
@@ -3564,7 +3617,7 @@ function saeule(w){
 function fragenInit(){
   const el = $("#fragen"); if (!el) return;
   const da = id => { const e = document.getElementById(id); return e && e.offsetParent !== null; };
-  const F = [["nachkauf-karte", "Soll ich mit dem Kauf warten?"], ["zeitachse-karte", "War das früher ein guter Zeitpunkt?"], ["rechner-karte", "Was wird aus meinem Geld?"], ["check", "Monatlich kaufen oder auf günstige Kurse warten?"], ["risiko-karte", "Wie tief kann es fallen?"], ["etf-karte", "Was steckt drin und was kostet es?"], ["dividenden-karte", "Was wird ausgeschüttet?"], ["position-karte", "Wie steht meine Position?"]].filter(([id]) => da(id));
+  const F = [["zeitachse-karte", "War das früher ein guter Zeitpunkt?"], ["rechner-karte", "Was wird aus meinem Geld?"], ["nachkauf-karte", "Soll ich mit dem Kauf warten?"], ["position-karte", "Wie steht meine Position?"], ["check", "Monatlich kaufen oder auf günstige Kurse warten?"], ["risiko-karte", "Wie tief kann es fallen?"], ["etf-karte", "Was steckt drin und was kostet es?"], ["dividenden-karte", "Was wird ausgeschüttet?"]].filter(([id]) => da(id));
   el.innerHTML = F.map(([id, t]) => `<button type="button" class="frage" data-ziel="${id}"><i></i>${t}</button>`).join("") + `<button type="button" class="frage" id="vgl-knopf" data-e="vergleich"><i></i>Mit einem anderen Titel vergleichen</button>`;
   el.onclick = ev => { const b = ev.target.closest("button"); if (!b) return; if (b.id === "vgl-knopf") vergleichWaehlen(); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
 }
@@ -3946,8 +3999,10 @@ function abschnittNavSpur(){
 }
 function abschnittNavInit(){
   const nav = $("#abschnitt-nav"); if (!nav) return;
-  const Z = [["ot-term","Überblick"],["chart-karte","Chart"],["wert-kopf","Lage"],["nachkauf-karte","Nachkaufen"],["position-karte","Meine Position"],["s-zeit","Zeitachse"],["s-weg","Kaufweg"],["s-inhalt","Inhalt"],["s-preis","Preis"],["s-rueck","Rückblick"],["s-risiko","Risiko"],["vertiefung","Details"]]
-    .filter(([id]) => { const e = document.getElementById(id); return e && e.offsetParent !== null; });   // nur, was in der gewählten Ansicht (Einfach/Profi) sichtbar ist
+  const oben = id => document.getElementById(id).getBoundingClientRect().top;
+  const Z = [["ot-term","Überblick"],["wert-kopf","Warum"],["chart-karte","Chart"],["s-zeit","Ausblick"],["s-weg","Kaufen"],["s-risiko","Risiko"],["s-steck","Steckbrief"],["s-inhalt","Inhalt"],["s-preis","Preis"],["s-rueck","Rückblick"],["vertiefung","Details"]]
+    .filter(([id]) => { const e = document.getElementById(id); return e && e.offsetParent !== null; })
+    .map((x, i) => [x, i ? oben(x[0]) : -1e9]).sort((a, b) => a[1] - b[1]).map(x => x[0]);   // nur, was in der gewählten Ansicht (Einfach/Profi) sichtbar ist
   nav.innerHTML = Z.map(([id, t], i) => `<button type="button" data-ziel="${id}" aria-current="${i === 0}">${t}</button>`).join("");
   nav.onclick = ev => { const b = ev.target.closest("button[data-ziel]"); if (!b) return;
     if (b.dataset.ziel === "ot-term") $("#haupt").scrollTo({top:0, behavior:"smooth"}); else document.getElementById(b.dataset.ziel)?.scrollIntoView({behavior:"smooth", block:"start"}); };
@@ -4275,8 +4330,8 @@ async function zeige(id, opt={}){
   const vorher = ALLE.find(w => w.id === id);
   if (!opt.ohneScroll || !$("#ot-term") || !$("#wert-kopf")) {   // Ladezustand
     alleChartsWeg();
-    $("#haupt").innerHTML = `<div class="ot-term"><div class="ot-mitte"><div class="karte ot-instr ot-laedt"><div class="lade" style="height:26px;width:42%"></div><div class="lade ot-lade-bogen"></div><div class="lade" style="height:12px;width:60%;margin:0 auto"></div></div>
-      <div class="karte lade" style="height:var(--g-chart,540px)"></div></div></div>`;
+    $("#haupt").innerHTML = `<div class="ot-term"><div class="karte ot-instr ot-laedt"><div class="lade" style="height:26px;width:42%"></div><div class="lade ot-lade-bogen"></div><div class="lade" style="height:12px;width:60%;margin:0 auto"></div></div>
+      <div class="karte lade" style="height:var(--g-chart,540px)"></div></div>`;
     if (!opt.ohneScroll) $("#haupt").scrollTop = 0;
   }
   const daten = await apiWert(id);
@@ -4316,9 +4371,20 @@ async function zeige(id, opt={}){
   const chipKnopf = ([k, t, ik, e]) => `<button class="chip" data-chip="${k}" aria-pressed="${!!CHIPS[k]}" data-e="${e}">${ik}${t}</button>`;
   $("#haupt").innerHTML = `
     <nav class="abschnitt-nav" id="abschnitt-nav" aria-label="Abschnitte dieser Seite"></nav>
-    <div class="ot-term" id="ot-term">
-      <div class="ot-mitte">
+    <div class="ot-term${w.cagr20 == null ? " ohne-rendite" : ""}" id="ot-term">
       ${instrumentKarte(w, id)}
+      <section class="karte wert-kopf ot-lage" id="wert-kopf"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
+        <header class="ot-k-kopf"><span class="ot-k-titel">${w.score != null ? "Warum steht die Ampel so?" : "Die Lage in Kürze"}</span></header>
+        <div class="wk-haupt">
+          <div class="wk-urteil">${urteilBlock(w, c)}</div>
+          ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
+          <div class="wk-text">
+            ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
+            ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
+            ${grundRest(w)}
+          </div>
+        </div>
+      </section>
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
         ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
@@ -4348,40 +4414,30 @@ async function zeige(id, opt={}){
       ${!eigen ? `<div class="chart-fuss">${legendeOnline(w)}</div>` : ""}
       <div class="trenner waagerecht" data-trenner="chart" role="separator" aria-orientation="horizontal" aria-label="Höhe des Charts verstellen" tabindex="0" title="Ziehen zum Verstellen · Doppelklick setzt zurück"></div>
     </section>
-      </div>
+      ${w.cagr20 == null ? "" : `<section class="karte ot-rendite" id="rendite-karte">${renditePanel(w, c)}</section>`}
       ${railKarten(w)}
     </div>
-    <section class="karte wert-kopf" id="wert-kopf"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
-      ${steckbrief(w)}
-      ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}${w.beschreibung_quelle ? ` <span class="klein">Quelle: ${/^https:\/\//.test(w.beschreibung_url || "") ? `<a href="${esc(w.beschreibung_url)}" target="_blank" rel="noopener">${esc(w.beschreibung_quelle)}</a>` : esc(w.beschreibung_quelle)}</span>` : ""}</p>` : ""}
-      <div class="wk-haupt">
-        <div class="wk-urteil">${urteilBlock(w, c)}</div>
-        ${saeule(w) ? `<div class="wk-saeule" data-e="saeule" tabindex="0">${saeule(w)}</div>` : ""}
-        <div class="wk-text">
-          ${faktenListe(w, c) ? `${faktenListe(w, c)}<details class="mehr"><summary>Die Lage ausführlich in Sätzen</summary><p class="klartext" data-e="klartext" style="margin-top:8px">${klartext(w, c)}</p></details>` : `<p class="klartext" data-e="klartext">${klartext(w, c)}</p>`}
-          ${geschaeftSaetze(w) ? `<p class="klartext" data-e="f_laie" style="margin-top:6px">${geschaeftSaetze(w)}</p>` : ""}
-          ${grundRest(w)}
-        </div>
-        ${renditePanel(w, c)}
-      </div>
-      ${w.kurs != null ? `<div class="vh" id="vh" hidden></div>` : ""}
-      <div class="fragen" id="fragen"></div>
-      ${kpiLeiste(w, c)}
-    </section>
+    <div class="fragen" id="fragen"></div>
     <div id="vergleich"></div>
-    ${nachkaufKarte(w) ? `<div class="abstand"></div>${nachkaufKarte(w)}` : ""}
-    ${positionKarte(w) ? `<div class="abstand"></div>${positionKarte(w)}` : ""}
-    <div class="abstand"></div>
-    ${w.f?.falle ? `<div class="falle-box" style="margin:0 0 14px">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : ""}
     <div id="hinweise"></div>
     ${(() => {
       const teil = (sid, titel, unter, karten, kl = "") => { const k = karten.filter(Boolean); return k.length ? `<div class="sekt${kl}" id="${sid}"><span class="nr"></span><h2>${titel}</h2><p>${unter}</p></div><div class="raster${kl}">${k.join("")}</div>` : ""; };
       const P = " nur-profi";
-      const rk = risikoKarte(w, c);
+      const rk = risikoKarte(w, c), falle = w.f?.falle ? `<div class="falle-box breit-voll">⚠ <b>${ek("falle","Fallen-Warnung")}:</b> Die Ampel steht günstig, aber das Geschäft ist schwach (${esc(w.f.gruende.join(", "))}). Ein gefallener Kurs ist hier womöglich kein Schnäppchen – siehe Karte „Geschäft“.</div>` : "";
+      // Reihenfolge wie die Fragen eines Menschen: Was könnte kommen? → Was tun? → Was kann schiefgehen? → Was ist das, und die Zahlen dazu
       return teil("s-jung", "Seit dem Börsengang", "Was sich bei so kurzer Geschichte schon sagen lässt", [jungKarte(w)])
-        + teil("s-zeit", "Zeit", "Was war – und was könnte kommen?", [zeitachseKarte(w, c), rechnerKarte(w, c)])
-        + teil("s-weg", "Kaufweg", "Monatlich kaufen, auf günstige Kurse warten – oder beides?", [
+        + teil("s-zeit", "Ausblick", "Was könnte kommen? Geprüfte Vorhersage, mögliche Wege – und was aus deinem Geld würde", [
+          w.kurs != null ? `<div class="karte vh breit-voll" id="vh" hidden></div>` : "", zeitachseKarte(w, c), rechnerKarte(w, c),
+          `<section class="karte nur-profi" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
+          `<section class="karte nur-profi" id="wahr">${wahrKarte(w)}</section>`])
+        + teil("s-weg", "Kaufen", "Jetzt, später oder regelmäßig? Was früher besser war", [nachkaufKarte(w), positionKarte(w),
           `<section class="karte breit-voll" id="check">${kk("rueck", `Welcher Weg zu kaufen war bei ${esc(kurzname(w))} am besten?`, "Vier Wege mit demselben Geld, nachgerechnet mit den echten Kursen.", "Lohnt-sich-Check", "check")}<div class="lade" style="height:44px"></div><div class="lade" style="height:150px;margin-top:12px"></div></section>`])
+        + teil("s-risiko", "Risiko", "Was kann schiefgehen – und wie stark schwankt es?", [falle, rk,
+          marktphaseKarte(w, c).replace('class="karte breit-voll"', 'class="karte breit-voll nur-profi"')], rk || falle ? "" : P)
+        + teil("s-steck", "Steckbrief und Zahlen", "Was ist das für ein Wert – und die wichtigsten Zahlen auf einen Blick", [`<section class="karte breit-voll ot-steck" id="wert-mehr">
+            ${steckbrief(w)}
+            ${w.beschreibung ? `<p class="beschreibung" data-e="beschreibung">${esc(w.beschreibung)}${w.beschreibung_quelle ? ` <span class="klein">Quelle: ${/^https:\/\//.test(w.beschreibung_url || "") ? `<a href="${esc(w.beschreibung_url)}" target="_blank" rel="noopener">${esc(w.beschreibung_quelle)}</a>` : esc(w.beschreibung_quelle)}</span>` : ""}</p>` : ""}
+            ${kpiLeiste(w, c)}</section>`])
         + teil("s-inhalt", "Inhalt und Ertrag", "Was steckt drin, was kostet es, was wird ausgeschüttet?", [etfKarte(w), dividendenKarte(w)])
         + teil("s-preis", "Preis", "Ist es gerade günstig oder teuer?", [
           kaufzonenKarte(w),
@@ -4389,11 +4445,7 @@ async function zeige(id, opt={}){
           geschaeftKarte(w), id === "SPY" ? bewKarte() : "", mvrvKarte(c)], P)
         + teil("s-rueck", "Rückblick", "Was passierte früher in ähnlicher Lage?", [
           kvKarte(w),
-          phasenKarte(c), schwellenKarte(c)], P)
-        + teil("s-risiko", "Ausblick und Risiko", "Wie könnte es weitergehen – und was kann schiefgehen?", [
-          `<section class="karte nur-profi" id="prognose">${kk("ausblick", "Wo könnte der Kurs in 12 Monaten stehen?", "10.000 mögliche Wege aus echten Wochen der Vergangenheit – eine Spanne, keine Vorhersage.", "Simulation", "prognose")}<div class="lade" style="height:34px;width:90px"></div><div class="lade" style="height:70px;margin-top:12px"></div></section>`,
-          `<section class="karte nur-profi" id="wahr">${wahrKarte(w)}</section>`,
-          rk, marktphaseKarte(w, c).replace('class="karte breit-voll"', 'class="karte breit-voll nur-profi"')], rk ? "" : P);
+          phasenKarte(c), schwellenKarte(c)], P);
     })()}
     <div class="abstand nur-profi"></div>
     <section class="karte vertiefung nur-profi" id="vertiefung">
