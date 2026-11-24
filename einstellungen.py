@@ -86,6 +86,15 @@ ETFS = ETFS + THEMEN_ETFS
 #     10.10.2023; Xetra (18MF) nur bis 31.12.2012 falsch skaliert -> Xetra ab 02.01.2013
 #   - Xtrackers S&P 500 2x: Xetra (DBPG) mit 16 Fehlkursen 2010/2011 -> Mailand (XS2L), dort keine
 #   - WisdomTree-ETCs in Mailand: bis 05/2009 in Dollar statt Euro, Fehlkurse im Juni 2009 und am 18.07.2011 -> ab 19.07.2011
+# Ausbau am 24.11.2026 abends auf 62 Produkte (Wunsch Marc: „viel mehr, 50 oder so“), gleiche Prüfung:
+#   - 7 weitere WisdomTree-ETCs (Erdgas, Weizen, Mais, Kaffee, Zucker, Kakao, Platin): ISIN, WKN und Kürzel bei justETF; die
+#     Yahoo-Suche führt dieselbe ISIN unter dem Produktnamen. In Mailand bis Ende 2014 viele Fehlkurse (einzelne Tage in
+#     Dollar statt Euro) -> ab 02.01.2015; die Sprünge danach erklärt der Markt (Kakao 2024, Erdgas, Weizen 03/2022,
+#     Edelmetall-Einbruch 30.01.2026). Agrarrohstoffe 2x bleibt draußen: Kurs an 39 % der Tage unverändert (kaum Handel)
+#   - 27 weitere US-Produkte: ISIN aus der amtlichen Kennnummer (CUSIP, SEC-Liste) berechnet und von der Yahoo-Suche bestätigt;
+#     Name bei Yahoo „ProShares Ultra …“ (Ultra = 2-fach; „UltraPro“ = 3-fach und „UltraShort“ bleiben draußen) bzw.
+#     „Direxion Daily … Bull 2X“. Nur Direxion-Fonds, die seit Auflage 2-fach sind (Gold-Minen, Energie, Brasilien, Indien u. a.
+#     waren bis 2020 3-fach – ihre Kursreihe mischt beides und bleibt draußen)
 HEBEL_BRANCHE = "Hebel 2x"
 
 
@@ -114,7 +123,14 @@ HEBEL_ETFS = [
     _H("LSIL", "LSIL.MI", "WisdomTree", "WisdomTree Silver 2x Daily Leveraged", "JE00B2NFTS64", "A0V5BA", "Silber", art="ETC", xetra="4RUE", ab="2011-07-19"),
     _H("LOIL", "LOIL.MI", "WisdomTree", "WisdomTree WTI Crude Oil 2x Daily Leveraged", "JE00BDD9Q840", "A2BC41", "Rohöl WTI", art="ETC", xetra="4RT6", ab="2011-07-19"),
     _H("LCOP", "LCOP.MI", "WisdomTree", "WisdomTree Copper 2x Daily Leveraged", "JE00B2NFTF36", "A0V6ZW", "Kupfer", art="ETC", xetra="4RT3", ab="2011-07-19"),
-    # USA (NYSE Arca, Kurse in Dollar) – für Privatanleger in der EU meist nicht kaufbar
+    _H("LPLA.MI", "LPLA.MI", "WisdomTree", "WisdomTree Platinum 2x Daily Leveraged", "JE00B2NFV134", "A0V60A", "Platin", art="ETC", xetra="4RUM", ab="2015-01-02"),   # Kennung mit Endung: LPLA ist eine Nasdaq-Aktie
+    _H("LNGA", "LNGA.MI", "WisdomTree", "WisdomTree Natural Gas 2x Daily Leveraged", "JE00BDD9Q956", "A2BC4J", "Erdgas", art="ETC", xetra="4RUC", ab="2015-01-02"),
+    _H("LWEA", "LWEA.MI", "WisdomTree", "WisdomTree Wheat 2x Daily Leveraged", "JE00BDD9QC84", "A2BC84", "Weizen", art="ETC", xetra="4RUJ", ab="2015-01-02"),
+    _H("LCOR", "LCOR.MI", "WisdomTree", "WisdomTree Corn 2x Daily Leveraged", "JE00B2NFTG43", "A0V6ZX", "Mais", art="ETC", xetra="4RT4", ab="2015-01-02"),
+    _H("LCFE", "LCFE.MI", "WisdomTree", "WisdomTree Coffee 2x Daily Leveraged", "JE00B2NFTD12", "A0V5V4", "Kaffee", art="ETC", xetra="4RT2", ab="2015-01-02"),
+    _H("LSUG", "LSUG.MI", "WisdomTree", "WisdomTree Sugar 2x Daily Leveraged", "JE00B2NFTW01", "A0V5V2", "Zucker", art="ETC", xetra="4RUH", ab="2015-01-02"),
+    _H("LCOC", "LCOC.MI", "WisdomTree", "WisdomTree Cocoa 2x Daily Leveraged", "JE00B2NFV803", "A0V607", "Kakao", art="ETC", xetra="4RUP", ab="2015-01-02"),
+    # USA (NYSE Arca oder Nasdaq, Kurse in Dollar) – für Privatanleger in der EU meist nicht kaufbar
     _H("SSO", "SSO", "ProShares Ultra, USA", "ProShares Ultra S&P500", "US74347R1077", None, "S&P 500", eu=False),
     _H("QLD", "QLD", "ProShares Ultra, USA", "ProShares Ultra QQQ", "US74347R2067", None, "Nasdaq-100", eu=False),
     _H("DDM", "DDM", "ProShares Ultra, USA", "ProShares Ultra Dow30", "US74347R3057", None, "Dow Jones", eu=False),
@@ -128,6 +144,35 @@ HEBEL_ETFS = [
     _H("AGQ", "AGQ", "ProShares Ultra, USA", "ProShares Ultra Silver", "US74347W3530", None, "Silber", eu=False),
     _H("UCO", "UCO", "ProShares Ultra, USA", "ProShares Ultra Bloomberg Crude Oil", "US74347Y8883", None, "Rohöl WTI", eu=False),
     _H("UBT", "UBT", "ProShares Ultra, USA", "ProShares Ultra 20+ Year Treasury", "US74347R1721", None, "US-Staatsanleihen 20+ Jahre", eu=False),
+    # Ausbau 24.11.2026 abends: Größenklassen, Regionen, Branchen
+    _H("SAA", "SAA", "ProShares Ultra, USA", "ProShares Ultra SmallCap600", "US74347R8189", None, "S&P SmallCap 600", eu=False),
+    _H("EZJ", "EZJ", "ProShares Ultra, USA", "ProShares Ultra MSCI Japan", "US74347X7084", None, "MSCI Japan", eu=False),
+    _H("UPV", "UPV", "ProShares Ultra, USA", "ProShares Ultra FTSE Europe", "US74347X5260", None, "FTSE Europa", eu=False),
+    _H("UBR", "UBR", "ProShares Ultra, USA", "ProShares Ultra MSCI Brazil Capped", "US74347B4905", None, "MSCI Brasilien", eu=False),
+    _H("CHAU", "CHAU", "Direxion, USA", "Direxion Daily CSI 300 China A Share Bull 2X Shares", "US25490K8696", None, "China A-Aktien (CSI 300)", eu=False),
+    _H("CWEB", "CWEB", "Direxion, USA", "Direxion Daily CSI China Internet Bull 2X Shares", "US25460G1875", None, "China-Internetaktien", eu=False),
+    _H("USD_PROSHARES", "USD", "ProShares Ultra, USA", "ProShares Ultra Semiconductors", "US74347R6696", None, "US-Halbleiteraktien", eu=False),   # Kürzel USD: Kennung anders, damit nichts mit der Währung verwechselt
+    _H("RXL", "RXL", "ProShares Ultra, USA", "ProShares Ultra Health Care", "US74347R7355", None, "US-Gesundheitsaktien", eu=False),
+    _H("BIB", "BIB", "ProShares Ultra, USA", "ProShares Ultra Nasdaq Biotechnology", "US74347R2141", None, "Nasdaq Biotechnologie", eu=False),
+    _H("URE", "URE", "ProShares Ultra, USA", "ProShares Ultra Real Estate", "US74347X6250", None, "US-Immobilienaktien", eu=False),
+    _H("UPW", "UPW", "ProShares Ultra, USA", "ProShares Ultra Utilities", "US74347R6852", None, "US-Versorgeraktien", eu=False),
+    _H("UYM", "UYM", "ProShares Ultra, USA", "ProShares Ultra Materials", "US74347R7769", None, "US-Grundstoffaktien", eu=False),
+    _H("UCC", "UCC", "ProShares Ultra, USA", "ProShares Ultra Consumer Discretionary", "US74347R7504", None, "US-Konsumaktien (zyklisch)", eu=False),
+    _H("UGE", "UGE", "ProShares Ultra, USA", "ProShares Ultra Consumer Staples", "US74347R7686", None, "US-Basiskonsumaktien", eu=False),
+    _H("LTL", "LTL", "ProShares Ultra, USA", "ProShares Ultra Communication Services", "US74347R2638", None, "US-Kommunikationsaktien", eu=False),
+    _H("SKYU", "SKYU", "ProShares Ultra, USA", "ProShares Ultra Cloud Computing", "US74347G7887", None, "Cloud-Computing-Aktien", eu=False),
+    _H("FNGG", "FNGG", "Direxion, USA", "Direxion Daily NYSE FANG+ Bull 2X Shares", "US25460G1610", None, "NYSE FANG+", eu=False),
+    _H("QQQU", "QQQU", "Direxion, USA", "Direxion Daily Magnificent 7 Bull 2X Shares", "US25461A6507", None, "Magnificent 7", eu=False),
+    _H("AIBU", "AIBU", "Direxion, USA", "Direxion Daily AI And Big Data Bull 2X Shares", "US25461A7182", None, "KI- und Big-Data-Aktien", eu=False),
+    _H("URAA", "URAA", "Direxion, USA", "Direxion Daily Uranium Bull 2X ETF", "US25461A6432", None, "Uran-Aktien", eu=False),
+    # Anleihen, Rohstoff, Währungen, Krypto
+    _H("UST", "UST", "ProShares Ultra, USA", "ProShares Ultra 7-10 Year Treasury", "US74347R1804", None, "US-Staatsanleihen 7–10 Jahre", eu=False),
+    _H("UJB", "UJB", "ProShares Ultra, USA", "ProShares Ultra High Yield", "US74348A7072", None, "US-Hochzinsanleihen", eu=False),
+    _H("BOIL", "BOIL", "ProShares Ultra, USA", "ProShares Ultra Bloomberg Natural Gas", "US74347Y6648", None, "Erdgas", eu=False),
+    _H("ULE", "ULE", "ProShares Ultra, USA", "ProShares Ultra Euro", "US74347W8745", None, "Euro gegen Dollar", eu=False),
+    _H("YCL", "YCL", "ProShares Ultra, USA", "ProShares Ultra Yen", "US74347W2706", None, "Yen gegen Dollar", eu=False),
+    _H("BITU", "BITU", "ProShares Ultra, USA", "ProShares Ultra Bitcoin ETF", "US74349Y7040", None, "Bitcoin", eu=False),
+    _H("ETHT", "ETHT", "ProShares Ultra, USA", "ProShares Ultra Ether ETF", "US74349Y5713", None, "Ether", eu=False),
 ]
 ETFS = ETFS + HEBEL_ETFS
 

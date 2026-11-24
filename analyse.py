@@ -1067,7 +1067,7 @@ NAMEN_ALIAS = {"SPCX": "SpaceX (Space Exploration Technologies)"}   # bekannter 
 
 
 def universum() -> pd.DataFrame:
-    u = pd.read_csv(E.DATEN / "universum.csv").fillna("")
+    u = pd.read_csv(E.DATEN / "universum.csv", dtype={"ftse": str}).fillna("")   # ftse als Text: eine leere Spalte wäre sonst eine Zahlenspalte
     for sym, name in NAMEN_ALIAS.items():
         u.loc[u["symbol"] == sym, "name"] = name
     return u

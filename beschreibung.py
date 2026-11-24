@@ -160,7 +160,7 @@ LAND_KURZ = {"Vereinigte Staaten": "USA", "Volksrepublik China": "China", "Repub
 def hebel_text(e: dict) -> str:
     """Kurzbeschreibung eines Hebel-Produkts aus der geprüften Liste (einstellungen.HEBEL_ETFS) – keine Empfehlung."""
     h = e["hebel"]
-    platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra"}.get(e["etf"][-3:] if "." in e["etf"] else "", "New York (NYSE Arca)")
+    platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra"}.get(e["etf"][-3:] if "." in e["etf"] else "", "in den USA (NYSE Arca oder Nasdaq)")
     was = ("Besicherte Schuldverschreibung (ETC, kein Fonds)" if h["art"] == "ETC" else "Börsengehandelter Fonds (ETF)" if h["eu"] else "US-ETF")
     text = (f"{was} mit täglichem 2-fachem Hebel auf {h['basis']}: Ziel ist das Doppelte der Veränderung an EINEM Tag – über Wochen und Jahre "
             f"ist das nicht das Doppelte. Kein Knock-out. Voller Name: {e['produkt']}. Kurse hier von der Börse {platz}")
