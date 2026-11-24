@@ -6,6 +6,12 @@ Wikidata fuehrt fuer bekannte Firmen die ISIN (P946) und die Boersennotierungen 
 Auswahl "wichtig": Firmen mit mindestens MIN_LINKS Wikipedia-Artikeln (Sprachen) – ein grobes, aber offenes Mass
 fuer Bekanntheit. Delistete Firmen fallen spaeter von selbst heraus, weil Yahoo keine Kurse liefert.
 
+Seit 24.11.2026 (Wunsch Marc: „noch mehr von den wichtigeren Aktien“) kommen Firmen mit MIN_LINKS_ROH bis MIN_LINKS-1
+Sprachen dazu – aber nur, wenn ISIN und Kuerzel bei Yahoo nachweislich zusammengehoeren. Das prueft welt_pruefen.py von
+Hand (Yahoo-Suche nach der ISIN muss genau unser Kuerzel nennen); das Ergebnis liegt eingecheckt in
+listen/welt_geprueft.csv. Grund: Bei weniger bekannten Firmen sind die Kuerzel in Wikidata oefter falsch oder veraltet,
+und unter einem falschen Kuerzel stuende eine fremde Firma. Die bisherigen Werte (ab MIN_LINKS Sprachen) bleiben unveraendert.
+
 Je Firma eine Heimatboerse: bevorzugt die Boerse des ISIN-Landes (bei chinesischen H-Aktien Hongkong), sonst die
 erste grosse Boerse ausserhalb der USA. Zusaetzlich wird ein US-Kuerzel (ADR, z. B. NVO fuer Novo Nordisk)
 gemerkt, damit eine Heimat-ISIN auch auf das ADR im Tool passt.
@@ -27,7 +33,9 @@ import einstellungen as E
 ORDNER = E.DATEN / "welt"
 ROH = ORDNER / "wikidata.csv"
 ZIEL = E.DATEN / "welt.csv"
-MIN_LINKS = 10
+MIN_LINKS = 10          # ab so vielen Sprachen wie bisher ohne Einzelpruefung
+MIN_LINKS_ROH = 2       # Rohdaten ab 2 Sprachen; darunter-liegende (2 bis 9) nur mit Eintrag in GEPRUEFT
+GEPRUEFT = E.BASIS / "listen" / "welt_geprueft.csv"
 UA = {"User-Agent": "minusmitstil/1.0 (https://github.com/swissiybot/minusmitstil)", "Accept": "text/csv"}
 
 ABFRAGE = """
@@ -56,6 +64,9 @@ BOERSEN = [
     ("Singapore", ".SI", "SG"), ("Tel Aviv", ".TA", "IL"), ("Thailand", ".BK", "TH"), ("Malaysia", ".KL", "MY"),
     ("Indonesia", ".JK", "ID"), ("Istanbul", ".IS", "TR"), ("Saudi", ".SR", "SA"), ("New Zealand", ".NZ", "NZ"),
 ]
+ENDUNG_NR = {}
+for _nr, (_teil, _endung, _land) in enumerate(BOERSEN):
+    ENDUNG_NR.setdefault(_endung, _nr)
 US_BOERSEN = {"new york stock exchange", "nasdaq", "nyse american", "nyse arca", "nasdaq stock market"}   # genaue Namen (nicht „Nasdaq Copenhagen“)
 # ISIN-Land -> bevorzugte Laender der Boerse (sonst gleiches Land)
 BEVORZUGT = {"CN": ["HK", "CN"], "KY": ["HK", "CN", "TW"], "BM": ["HK", "GB"], "JE": ["GB"], "GG": ["GB"], "IM": ["GB"],
@@ -65,9 +76,13 @@ BEVORZUGT = {"CN": ["HK", "CN"], "KY": ["HK", "CN", "TW"], "BM": ["HK", "GB"], "
 def laden() -> bool:
     ORDNER.mkdir(parents=True, exist_ok=True)
     if ROH.exists() and (time.time() - ROH.stat().st_mtime) < 6.5 * 86400:
-        return False
+        try:   # eine frische Datei aus der Zeit vor dem 24.11.2026 enthaelt nur Firmen ab MIN_LINKS -> trotzdem neu laden
+            if pd.to_numeric(pd.read_csv(ROH, usecols=["links"])["links"], errors="coerce").min() < MIN_LINKS:
+                return False
+        except Exception:
+            pass
     try:
-        r = requests.get("https://query.wikidata.org/sparql", params={"query": ABFRAGE % MIN_LINKS}, headers=UA, timeout=180)
+        r = requests.get("https://query.wikidata.org/sparql", params={"query": ABFRAGE % MIN_LINKS_ROH}, headers=UA, timeout=180)
         r.raise_for_status()
         d = pd.read_csv(io.StringIO(r.text), dtype=str)
         if len(d) < 500:
@@ -107,7 +122,8 @@ def _yahoo(ticker: str, endung: str) -> str | None:
     return t + endung
 
 
-def bauen() -> pd.DataFrame:
+def kandidaten_alle() -> pd.DataFrame:
+    """Alle Firmen der Rohdatei mit Heimatkuerzel, ungefiltert (Spalten wie welt.csv). Grundlage fuer bauen() und welt_pruefen.py."""
     if not ROH.exists():
         print("Welt: keine Wikidata-Datei – keine Auslandsaktien.")
         return pd.DataFrame()
@@ -134,13 +150,31 @@ def bauen() -> pd.DataFrame:
         if not kandidaten and not us:
             continue
         reihenfolge = BEVORZUGT.get(land_isin, [land_isin])
-        kandidaten.sort(key=lambda k: reihenfolge.index(k[0]) if k[0] in reihenfolge else 99)
+        # Fest geregelte Reihenfolge statt „wie Wikidata gerade liefert“ (24.11.2026): Sonst wechselte dieselbe Firma von Lauf zu
+        # Lauf das Kuerzel (Reliance mal Bombay, mal NSE) – und damit ihre Kennung im Tool. Bei gleichem Rang entscheidet die
+        # Reihenfolge der Boersen in BOERSEN (NSE vor Bombay, Paris vor Lissabon), danach das Alphabet.
+        kandidaten = sorted(set(kandidaten), key=lambda k: (reihenfolge.index(k[0]) if k[0] in reihenfolge else 99,
+                                                             ENDUNG_NR.get("." + k[1].rsplit(".", 1)[-1], 99), k[1]))
         name = str(g["itemLabel"].iloc[0])
         if re.fullmatch(r"Q\d+", name):
             name = kandidaten[0][1] if kandidaten else us
         zeilen.append({"symbol": kandidaten[0][1] if kandidaten else "", "name": name, "land": kandidaten[0][0] if kandidaten else land_isin,
                        "isin": isin, "us": us or "", "links": int(g["links"].max())})
-    out = pd.DataFrame(zeilen)
+    return pd.DataFrame(zeilen)
+
+
+def bauen() -> pd.DataFrame:
+    out = kandidaten_alle()
+    if out.empty:
+        return out
+    gepr = set()
+    if GEPRUEFT.exists():
+        g = pd.read_csv(GEPRUEFT, dtype=str)
+        gepr = set(zip(g["isin"], g["symbol"]))
+    behalten = [l >= MIN_LINKS or (i, sy) in gepr for l, i, sy in zip(out["links"], out["isin"], out["symbol"])]
+    neu = int(sum(b and l < MIN_LINKS for b, l in zip(behalten, out["links"])))
+    out = out[behalten].reset_index(drop=True)
+    print(f"Welt: {neu} zusätzliche, einzeln geprüfte Firmen (unter {MIN_LINKS} Wikipedia-Sprachen, {GEPRUEFT.name})")
     # Eine Firma kann mehrere ISINs haben (Aktiengattungen) – je Yahoo-Kuerzel eine Zeile fuer die Werteliste,
     # die ISIN-Zuordnung behaelt alle (isin.py liest welt.csv vollstaendig)
     out.to_csv(ZIEL, index=False)
