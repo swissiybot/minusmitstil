@@ -1094,6 +1094,11 @@ class Stufe2:
         import strategie
         if z.get("branche") == E.HEBEL_BRANCHE:
             return   # Hebel-Produkte bleiben aus der Prüfung „ETFs / Indizes“ und den Sparplan-Tabellen heraus (anderes Verhalten als ungehebelte ETFs)
+        if z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS:
+            # Prüfung der Ampel, Marktphase und Sparplan-Tabelle „Krypto“ wie bisher nur mit den fünf Kernwerten (wie Trendstudie,
+            # Kegelprüfung, Vorhersage): Die Top-200-Liste enthält nur Münzen, die HEUTE groß sind – ein Rückblick auf lauter
+            # Gewinner würde die Ampel schönrechnen. Jeder Wert zeigt seinen eigenen Rückblick auf der Titelseite.
+            return
         w, score = roh["w"], roh["score"]
         c = w["Close"].values.astype(float)
         aktie = z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe")
@@ -1108,8 +1113,6 @@ class Stufe2:
             return
         for g in gruppen:
             self.sammler[g].add(c, score, w.index.year.values)
-        if z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS:
-            return   # Sparplan-Vergleich je Wert nur für die fünf Kernwerte in der Tabelle (jeder Wert zeigt seinen eigenen auf der Titelseite)
         st = strategie.vergleich(w, score, self.zins, reihe=False)
         if st is None:
             return

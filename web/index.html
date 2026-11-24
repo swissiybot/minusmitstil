@@ -1768,6 +1768,9 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 .ot-steck .beschreibung{margin:0 0 4px;font-size:14px;max-width:920px}
 .ot-steck .wk-kpis{margin-top:12px}
 .ot-art{font-size:12px;color:var(--muted);white-space:nowrap}
+.listen-hinweis{flex-shrink:0;padding:7px 12px;font-size:11.5px;line-height:1.45;color:var(--text);background:color-mix(in srgb,var(--gelb) 9%,transparent);border-top:1px solid color-mix(in srgb,var(--gelb) 30%,transparent);border-bottom:1px solid color-mix(in srgb,var(--gelb) 30%,transparent)}
+.listen-hinweis[hidden]{display:none}
+.ot-hebel{position:relative;z-index:2;margin:10px 0 4px;padding:8px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--gelb) 45%,transparent);background:color-mix(in srgb,var(--gelb) 10%,transparent);font-size:12.5px;line-height:1.5;color:var(--text)}
 @media (max-width:900px){
   .ot-lage{padding:12px}
   .ot-lage .urteil-satz{font-size:22px}
@@ -1883,6 +1886,7 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
       <label><input id="nurf" type="checkbox"><span data-e="f_nurf" tabindex="0">ohne Fallen-Warnung</span></label>
       <label><span data-e="f_umsatz" tabindex="0">Umsatz/Tag</span><select id="minu"><option value="0">egal</option><option value="1e6">ab 1 Mio $</option><option value="1e7" selected>ab 10 Mio $</option><option value="1e8">ab 100 Mio $</option></select></label>
     </div>
+    <div class="listen-hinweis" id="listen-hinweis" role="note" hidden></div>
     <div class="liste-kopf" id="liste-kopf">
       <button data-s="name">Wert</button><button data-s="score" data-e="ampel">Ampel</button><button data-s="score" data-e="sparkline">1 Jahr</button>
       <button data-s="cagr20" class="c-cagr" data-e="cagr20">Ø Jahr</button><button data-s="vorteil" class="c-vorteil" data-e="vorteil">Vorteil</button>
@@ -2233,6 +2237,7 @@ const ERKLAERUNG = {
   s_warten80: {titel:"Warten auf sehr günstig", text:"Wie „Warten auf günstig“, aber gekauft wird erst ab Ampel 80 (historisch sehr günstig). Das kommt selten vor – oft wartet das Geld jahrelang."},
   s_staffel_vk: {titel:"Staffelkauf + Teilverkauf", text:"Wie Staffelkauf, zusätzlich: fällt die Ampel auf 15 oder tiefer, wird ein Viertel des Bestands verkauft (einmal je teurer Phase). Jeder Verkauf löst Abgeltungssteuer auf den Gewinn aus; das kostet oft mehr, als das Ausweichen bringt."},
   s_brutto: {titel:"Endvermögen", text:"Wert von Depot plus wartendem Bargeld am Ende, noch ohne Steuer auf nicht verkaufte Gewinne."},
+  hebel_warn: {titel:"Hebel-Produkt (2-fach, täglich)", text:"Dieses Papier soll an jedem einzelnen Tag das Doppelte der Tagesveränderung seines Basiswerts bringen – nach oben wie nach unten. Über Wochen und Jahre ist das nicht das Doppelte: Schwankt der Markt hin und her, verliert das Papier an Wert, auch wenn der Basiswert am Ende wieder dort steht, wo er vorher stand. Nach einem starken Einbruch braucht es viel mehr als die doppelte Erholung, um wieder auf den alten Stand zu kommen. Kein Knock-out heißt: Es gibt keine Kursschwelle, bei der das Papier verfällt – stark verlieren kann es trotzdem. Die Ampel misst hier nur, wo der Kurs dieses Papiers gemessen an seiner eigenen Geschichte steht; sie sagt nichts darüber, ob sich der Hebel lohnt. Keine Empfehlung, keine Anlageberatung."},
   s_steuer_haken: {titel:"Steuer abziehen", text:"Haken gesetzt: Auf Zinsen und Verkaufsgewinne werden 26,375 % Abgeltungssteuer abgezogen. Die Balken zeigen dann, was übrig bliebe, wenn am Ende alles verkauft würde. Haken weg: Es wird ganz ohne Steuer gerechnet – Balken, Tabelle und Kurvenbild zeigen dann dieselben Beträge. In Wirklichkeit fällt die Steuer an, sobald mit Gewinn verkauft wird. Die Einstellung gilt auch für die Karte „Welcher Weg zu kaufen war am besten?“."},
   s_netto: {titel:"Nach Steuer, alles verkauft", text:"Was übrig bliebe, wenn am Ende alles verkauft und 26,375 % Abgeltungssteuer (25 % + Soli) auf den Gewinn bezahlt würde. Die fairste Vergleichszahl zwischen den Strategien."},
   s_irr: {titel:"Interner Zinsfuß", text:"Die jährliche Verzinsung, die alle Einzahlungen zusammen nach Kosten und Steuern erreicht haben (ohne Haken bei „Steuer abziehen“: nach Kosten, ohne Steuern). Berücksichtigt, dass spätere Einzahlungen kürzer arbeiten. Gut vergleichbar mit einem Sparzins."},
@@ -2555,6 +2560,11 @@ const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
 // Mehr Titel (24.11.2026): Hebel-Produkte (täglich 2-fach, Gruppe ETF mit Art „Hebel 2x“) haben einen eigenen Reiter und einen Warnhinweis;
 // die Übersicht zeigt wie bisher ETFs, Rohstoffe und die fünf Krypto-Kernwerte (alte Daten ohne Rang: alle Kryptowerte sind Kernwerte).
 const istHebel = w => w.gruppe === "ETF" && w.branche === "Hebel 2x";
+// Kurzer Hinweis über der Liste (Nachprüfung 24.11.2026): In diesen beiden Reitern liest ein Laie „sehr günstig“ sonst leicht als Kaufsignal.
+const LISTEN_HINWEIS = {
+  krypto: "„Sehr günstig“ heißt hier nur: weit unter dem eigenen Durchschnitt. Bei kleinen Münzen ist das oft ein Zeichen von Schwäche – kein Kaufsignal.",
+  hebel: "Hebel-Produkte: täglich 2-fach, ohne Knock-out. Auf Dauer ist das nicht das Doppelte – sie können auch verlieren, wenn der Markt am Ende gleich steht.",
+};
 const hebelArt = w => w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : "Hebel-ETF 2x";
 const UEBERSICHT_WERT = w => SONDERGRUPPE(w) && !istHebel(w) && (w.gruppe !== "Krypto" || !!w.kern || w.rang == null);
 // EMA-Band (Ribbon): Länge und Farbe, kurz = grün, lang = rot
@@ -2590,6 +2600,7 @@ function listeNeu(){
   const alleImReiter = ALLE.filter(w => imReiter(w, LISTE_REITER)).length;
   $("#anzahl").textContent = LISTE_REITER === "meine" && !FAV.size ? "Noch keine Favoriten – im Detail eines Werts auf „Merken“ tippen."
     : `${GEFILTERT.length.toLocaleString("de-DE")} von ${alleImReiter.toLocaleString("de-DE")} Werten` + (LISTE_REITER === "aktien" ? " (nach Filter)" : "");
+  { const lh = $("#listen-hinweis"), lt = LISTEN_HINWEIS[LISTE_REITER]; if (lh) { lh.hidden = !lt; lh.textContent = lt || ""; } }
   $$("#liste-kopf button").forEach(b => b.classList.toggle("an", b.dataset.s === (k === "score_auf" ? "score" : k)));
   FOKUS_I = GEFILTERT.findIndex(w => w.id === AKTIV);
   listeZeichnen();
@@ -2965,7 +2976,8 @@ function zeigeKarte(opt = {}){
         g.fillStyle = tn; g.fillRect(k.x + .5, k.y + .5, Math.max(.5, k.w - 1), Math.max(.5, k.h - 1));
         if (gross) { g.strokeStyle = fa + ["5a", "8c", "b8", "e6"][sk]; g.lineWidth = 1; g.strokeRect(k.x + 1.5, k.y + 1.5, k.w - 3, k.h - 3);
           g.fillStyle = "rgba(255,255,255,.08)"; g.fillRect(k.x + 2.5, k.y + 2.5, k.w - 5, 1); }
-        const name = istAktie(w) ? w.symbol : kurzname(w).replace(/ \(.*\)$/, "");
+        const name = istAktie(w) ? w.symbol : istHebel(w) ? kurzname(w).replace(/ \(ETC\)$/, "").replace(/ \(([^ ,)]+)[^)]*\)$/, " · $1")   // Hebel: Anbieter dazu, sonst stehen drei gleiche „DAX 2x“ nebeneinander
+          : kurzname(w).replace(/ \(.*\)$/, "");
         if (k.w > 28 && k.h > 14) {
           g.fillStyle = "#ffffff"; g.textAlign = "center"; g.textBaseline = "middle";
           const fs = Math.max(9, Math.min(26, Math.min(k.w / (name.length * .6 + 1), k.h / 2.6)));
@@ -3539,6 +3551,7 @@ function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel
       <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span><span class="ot-art">${istHebel(w) ? hebelArt(w) : w.gruppe === "ETF" ? "ETF (Fonds)" : w.gruppe === "Krypto" ? "Kryptowährung" : w.gruppe === "Rohstoffe" ? "Rohstoff" : "Aktie"}</span>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
+      ${istHebel(w) ? `<div class="ot-hebel" role="note" data-e="hebel_warn" tabindex="0"><b>⚠ Hebel-Produkt (2-fach, täglich):</b> bewegt sich an jedem Tag doppelt so stark wie sein Basiswert${w.hebel?.basis ? " (" + esc(w.hebel.basis) + ")" : ""} – nach oben und nach unten. Auf Dauer ist das nicht das Doppelte; es kann auch verlieren, wenn der Basiswert am Ende wieder gleich steht.${w.hebel && w.hebel.eu === false ? " US-Produkt: in der EU für Privatanleger meist nicht kaufbar." : ""}</div>` : ""}
       <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
       <div class="ot-unter">${w.score == null ? (w.jung ? "Für eine Ampel braucht es mehr Kursgeschichte." : "Für diesen Wert gibt es noch keine Ampel.")
         : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">Vor 4 Wochen stand die Ampel bei <b>${fmt(w.score_vor4w,0)}</b>${de == null || Math.round(de) === 0 ? "" : de > 0 ? " – seither günstiger geworden" : " – seither teurer geworden"}.</span>` : ""}${w.ampel_art === "anker200s" ? `<span class="ot-anker-satz" data-e="l_200w" tabindex="0">70er Ankerlinie: Bei Ampel 70 steht der Kurs genau auf seinem Durchschnitt der letzten 200 Wochen.</span>` : ""}`}</div>
@@ -6792,6 +6805,7 @@ function tabKennzahlen(w){
     ? `<b>Noch keine Ampel:</b> erst ${w.neu ? `${w.handelstage ?? "wenige"} ${krypto ? "Tage" : "Handelstage"}` : `${w.wochen} Wochen`} ${krypto ? "Kurse in unserer Datenquelle" : "an der Börse"} – dafür ist die Kursgeschichte noch zu kurz. Deshalb keine Einstufung und keine Vergleichsfälle.`
     : `<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
   else if ((w.jahre_daten||0) < 10) hinweise.push(`<b>Kurze Historie:</b> nur ${fmt(w.jahre_daten,1)} Jahre Daten. Ampel und Vergleichsfälle beruhen auf sehr wenigen Phasen und sind entsprechend unsicher.`);
+  if (krypto && !w.kern && w.rang != null) hinweise.push(`<b>Kryptowert aus der Liste der 200 größten</b> (Rang ${w.rang} nach Marktwert${w.rang_stand ? " am " + datumDe(w.rang_stand) : ""}): In der Liste stehen nur Münzen, die heute groß sind. Die Ampel vergleicht den Kurs nur mit der eigenen Geschichte dieser Münze. Steht sie auf günstig, liegt der Kurs weit unter seinem langjährigen Durchschnitt – bei Kryptowerten kann das auch heißen, dass die Münze dauerhaft an Bedeutung verliert. Keine Empfehlung, keine Anlageberatung.`);
   if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");
   $("#hinweise").innerHTML = hinweise.length ? `<div class="merke" style="margin:0 0 14px">${hinweise.join("<br>")}</div>` : "";
   $("#tab").innerHTML = `<h3>Ähnliche Lagen früher</h3>
