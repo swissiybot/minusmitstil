@@ -780,8 +780,12 @@ def analysiere(zeile: dict, tag: pd.DataFrame, segmente: list):
         zeile_out["kv"] = kv_info
     except Exception as ex:
         print(f"Kauf-/Verkaufsqualität nicht berechenbar ({zeile['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    # Die vier Kaufzonen-Reihen gehen gemeinsam hinaus, sobald eine davon Werte hat: Die Oberfläche liest sie zusammen. Fehlten
+    # einzelne (Werte, die nie lange genug über der 200-Wochen-Linie standen – z. B. Erdgas 2x –, haben nur 80 und 90), brach die
+    # Kopfzeile des Charts mit einem Skriptfehler ab (24.11.2026: rund 650 Werte betroffen).
+    kz_da = any(z in KZ_STUFEN and not np.all(np.isnan(arr)) for z, arr in (kzv or {}).items())
     for z, arr in (kzv or {}).items():   # Kaufzonen je Woche (mitwandernde Linien im Chart)
-        if (z in KZ_STUFEN or z == 90) and not np.all(np.isnan(arr)):   # 90 nur im Chart (Fläche „Ausverkauf“)
+        if (z in KZ_STUFEN and kz_da) or (z == 90 and not np.all(np.isnan(arr))):   # 90 nur im Chart (Fläche „Ausverkauf“)
             chart[f"kz{z}"] = rund(arr)
     if not np.all(np.isnan(score_v)):
         chart["score_v"] = rund(score_v, 3)   # vorläufige Ampel (Anfangsjahre)
