@@ -154,8 +154,8 @@ def main():
     zins = umfeld.zins_monatlich()
     gruppen = {"etf": [], "krypto": [], "rohstoffe": [], "aktien": []}
     for z in uni.to_dict("records"):
-        if z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS:
-            continue   # Studie wie bisher mit den fünf Kernwerten; die Top-200-Liste (24.11.2026) würde Aussage und Laufzeit je Lauf verändern
+        if (z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS) or z.get("branche") == E.HEBEL_BRANCHE:
+            continue   # Studie wie bisher: fünf Krypto-Kernwerte, ETFs ohne Hebel-Produkte; Top-200-Liste und Hebel 2x (24.11.2026) würden Aussage und Laufzeit verändern
         g = {"ETF": "etf", "Krypto": "krypto", "Rohstoffe": "rohstoffe"}.get(z["gruppe"], "aktien")
         gruppen[g].append(z)
     aktien = [z for z in gruppen["aktien"]]

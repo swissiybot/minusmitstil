@@ -78,6 +78,31 @@ Wunsch Marc: „Kryptowerte Top 200“. Die Gruppe Krypto besteht jetzt aus den 
 - **Kennungen:** `KÜRZEL-USD` (kann mit keinem Aktienkürzel kollidieren); Bitcoin bleibt `BTC`, die bisherigen vier behalten ihre Kennung.
 - **Unverändert nur mit den fünf Kernwerten:** Einzel-Alarme aufs Handy (die übrigen kommen gesammelt wie Aktien), Übersicht, Trendstudie, Kegelprüfung, Gegenprobe der Vorhersage und die Sparplan-Tabelle der Prüfung. Die Prüfung der Ampel („Krypto“) rechnet mit allen Kryptowerten, die eine Ampel haben. Pi Cycle und MVRV bleiben nur bei Bitcoin.
 
+### Mehr Titel: Hebel 2x ohne Knock-out (24.11.2026)
+Wunsch Marc: „2x … ohne Knockout, z. B. Amundi NASDAQ 100 ETF 2x“. Neue, feste Liste `HEBEL_ETFS` in `einstellungen.py`: 28 Produkte mit **täglichem 2-fachem Hebel** – nur 2x und nur „long“, keine 3x/5x, keine Short-Produkte, keine Knock-out-Zertifikate, keine Hebel-Produkte auf einzelne Aktien. In den Daten Gruppe ETF mit der Art „Hebel 2x“, in der Liste ein eigener Reiter. **Keine Empfehlung, keine Anlageberatung.**
+
+| Kennung | Yahoo-Kürzel | Produkt | ISIN | WKN |
+|---|---|---|---|---|
+| LQQ | LQQ.PA (Xetra: L8I7) | Amundi Nasdaq-100 Daily (2x) Leveraged | FR0010342592 | A0LC12 |
+| 18MF | 18MF.DE | Amundi MSCI USA Daily (2x) Leveraged | FR0010755611 | A0X8ZS |
+| DBPG | XS2L.MI (Xetra: DBPG) | Xtrackers S&P 500 2x Leveraged Daily Swap | LU0411078552 | DBX0B5 |
+| LVWC | LVWC.DE | Amundi MSCI World (2x) Leveraged (seit 10/2025, noch ohne Ampel) | FR0014010HV4 | ETF888 |
+| DBPE | DBPE.DE | Xtrackers LevDAX Daily Swap | LU0411075376 | DBX0BZ |
+| LYY8 | LYY8.DE | Amundi LevDax Daily (2x) leveraged | LU0252634307 | LYX0AD |
+| DEL2 | DEL2.DE | L&G DAX Daily 2x Long | IE00B4QNHH68 | A0X895 |
+| LVE | LVE.PA (Xetra: LYMZ) | Amundi EURO STOXX 50 Daily (2x) Leveraged | FR0010468983 | LYX0BZ |
+| LVC | LVC.PA | Amundi CAC 40 Daily (2x) Leveraged | FR0010592014 | LYX0C6 |
+| LEVMIB | LEVMIB.MI | Amundi FTSE MIB Daily (2x) Leveraged | FR0010446658 | A0NEUQ |
+| IBEXA | IBEXA.MC | Amundi IBEX 35 Doble Apalancado Diario (2x) | FR0011042753 | LYX0M1 |
+| LBUL · LSIL · LOIL · LCOP | LBUL.MI · LSIL.MI · LOIL.MI · LCOP.MI | WisdomTree Gold / Silver / WTI Crude Oil / Copper 2x Daily Leveraged (ETCs, keine Fonds) | JE00B2NFTL95 · JE00B2NFTS64 · JE00BDD9Q840 · JE00B2NFTF36 | A0V6Z0 · A0V5BA · A2BC41 · A0V6ZW |
+| SSO · QLD · DDM · UWM · MVV · SPUU | gleich | ProShares Ultra S&P500 / QQQ / Dow30 / Russell2000 / MidCap400, Direxion Daily S&P 500 Bull 2X | US74347R1077 · US74347R2067 · US74347R3057 · US74347R8429 · US74347R4048 · US25459Y1652 | – |
+| ROM · UYG · DIG · UGL · AGQ · UCO · UBT | gleich | ProShares Ultra Technology / Financials / Energy / Gold / Silver / Bloomberg Crude Oil / 20+ Year Treasury | US74347R6936 · US74347X6334 · US74347R7199 · US74347W6012 · US74347W3530 · US74347Y8883 · US74347R1721 | – |
+
+- **US-Produkte** (untere zwei Zeilen) sind für Privatanleger in der EU meist nicht kaufbar (es fehlt das EU-Basisinformationsblatt); sie stehen mit diesem Hinweis in der Liste.
+- **Geprüft am 24.11.2026:** die europäischen alle bei justETF (Name, ISIN, WKN, Börsenkürzel), dazu jede ISIN über die Yahoo-Suche (ISIN → genau dieses Produkt; nur bei Amundi LevDAX und IBEX kennt Yahoo die ISIN nicht); jedes Kürzel gegen Yahoo (Name, Währung, Kurse bis heute); jede Kursreihe auf Fehlkurse. Dabei gefunden und umgangen: Amundi Nasdaq-100 2x in Paris bis Ende 2014 um den Faktor 200 falsch skaliert (Kurse erst ab 02.01.2015), auf Xetra und in Mailand fehlt der Split vom 09.07.2026; Amundi MSCI USA 2x in Paris mit 19 Fehlkursen (deshalb Xetra ab 02.01.2013); Xtrackers S&P 500 2x auf Xetra mit 16 Fehlkursen 2010/2011 (deshalb Mailand); WisdomTree-ETCs in Mailand bis 05/2009 in Dollar und mit Fehlkursen bis 18.07.2011 (Kurse erst ab 19.07.2011). Das Feld `ab` in der Liste schneidet solche Abschnitte ab.
+- **Nicht aufgenommen:** L&G FTSE 100 Leveraged (Daily 2x) – bei Yahoo nur in Pence in London; ProShares Ultra Semiconductors (Kürzel `USD`, Verwechslungsgefahr mit der Währung).
+- **Behandlung im Tool:** Ampel wie bei jedem Wert (Kurs gemessen an der eigenen Geschichte). Hebel-Produkte bleiben aus der Prüfung „ETFs / Indizes“, der Trendstudie, der Gegenprobe der Vorhersage und den Sparplan-Tabellen heraus; kein „ETF-Inhalt“ (Swap-ETFs halten einen Ersatzkorb); Sparplan-Vergleich vorsichtig **ohne** Teilfreistellung (steuerliche Einstufung nicht geprüft); Alarme gesammelt wie Aktien.
+
 ### Ordnung, Ruhe und Verständlichkeit im Terminal (24.11.2026 mittags)
 Marc nach der sechsten Gestaltungsrunde: „Sortiere es so, wie es visuell für Menschen am besten ist. Alles muss geordnet, passend und stimmig wirken“ – und: verständlich für einen Laien. Kein neuer Effekt, sondern Rangfolge, Reihenfolge und Wörter; nur `web/index.html` (Stil-Schicht „Ordnung und Ruhe“ am Ende des Stylesheets), keine Rechnung berührt (Rückprobe 360 Fälle: alle Geldbeträge gleich). Wo dieser Abschnitt dem folgenden widerspricht, gilt dieser.
 - **Eine Rangfolge des Leuchtens:** nur der Halbkreis mit Nadel leuchtet; sparsam dazu die aktive Listenzeile, der Zustand der Fallen-Warnung und der Lichtpunkt am letzten Kurs. Alles andere zeigt Farbe ohne Schein. Die Bedienung trägt ein eigenes Blau (`--akzent`), damit sie nicht mit der Stufe „günstig“ (Cyan) verwechselt wird; Karten-Etiketten tragen keine Stufenfarben mehr.

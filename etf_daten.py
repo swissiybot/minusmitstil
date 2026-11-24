@@ -32,7 +32,8 @@ _CACHE: dict | None = None
 
 def etf_symbole() -> list[str]:
     alle = list(E.ETFS) + list(getattr(E, "THEMEN_ETFS", []))
-    return list(dict.fromkeys(e["etf"] for e in alle if e.get("etf")))
+    # ohne Hebel-Produkte: Swap-ETFs halten einen Ersatzkorb, die „größten Positionen“ wären irreführend
+    return list(dict.fromkeys(e["etf"] for e in alle if e.get("etf") and not e.get("hebel")))
 
 
 def _zahl(x):

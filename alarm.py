@@ -10,7 +10,7 @@ Optional: NTFY_SERVER (Standard https://ntfy.sh).
 Damit das Handy nicht ueberlaeuft:
   - ETFs, Rohstoffe, die fuenf Krypto-Kernwerte (Bitcoin, Ethereum, Solana, Chainlink, Stellar) und Werte aus ALARM_WERTE:
     je Wechsel eine eigene Meldung, sofort (hoechstens 8 je Lauf).
-  - Aktien und die uebrigen Kryptowerte der Top-200-Liste im Modus „alle“: gesammelt hoechstens einmal am Tag als
+  - Aktien, die uebrigen Kryptowerte der Top-200-Liste und Hebel-Produkte (2x) im Modus „alle“: gesammelt hoechstens einmal am Tag als
     Zusammenfassung (Aktien zuerst, die bekanntesten nach Handelsumsatz).
 Stufe je Wert = sehr guenstig (>= 80), sehr teuer (<= 15) oder normal; mit Puffer gegen Hin-und-her-Springen
 (sehr guenstig endet erst unter 75, sehr teuer erst ueber 20). Gemeldet wird nur ein Wechsel IN eine der beiden Stufen.
@@ -52,6 +52,8 @@ def meldet_einzeln(w: dict) -> bool:
     (seit 24.11.2026) kommen wie Aktien gesammelt einmal am Tag – sonst liefe das Handy über."""
     if w.get("gruppe") == "Krypto":
         return w.get("id") in E.KRYPTO_KERN_IDS
+    if w.get("branche") == E.HEBEL_BRANCHE:
+        return False   # Hebel-Produkte: gesammelt wie Aktien
     return w.get("gruppe") in SONDER
 
 
@@ -95,7 +97,7 @@ def meldung(w: dict, neu: str, vorher) -> dict:
 
 
 def aktien_text(ws: list[dict], n: int = 12) -> str:
-    ws = sorted(ws, key=lambda w: (w.get("gruppe") == "Krypto", -(w.get("umsatz_usd") or 0)))   # Aktien zuerst; Krypto-Umsätze sind nicht vergleichbar
+    ws = sorted(ws, key=lambda w: (w.get("gruppe") in SONDER, -(w.get("umsatz_usd") or 0)))   # Aktien zuerst; Krypto-Umsätze sind nicht vergleichbar
     teile = [f"{name(w)} ({w['score']:.0f}{', Geschäft schwach' if (w.get('f') or {}).get('schwach') else ''})" for w in ws[:n]]
     return ", ".join(teile) + (f" und {len(ws) - n} weitere" if len(ws) > n else "")
 
@@ -189,7 +191,7 @@ def main(argv):
             text = ((f"Neu historisch sehr günstig (Ampel ab 80): {len(g)} – {aktien_text(g)}.\n" if g else "")
                     + (f"Neu historisch sehr teuer (Ampel bis 15): {len(t)} – {aktien_text(t)}.\n" if t else "")
                     + "Bei Einzelaktien heißt sehr günstig oft: Die Firma steckt in Schwierigkeiten. Keine Kaufempfehlung.")
-            sammel = {"title": f"Aktien und weitere Kryptowerte heute: {len(g)} neu sehr günstig, {len(t)} neu sehr teuer", "message": text, "tags": ["bar_chart"], "click": SEITE}
+            sammel = {"title": f"Aktien, weitere Kryptowerte, Hebel-Produkte heute: {len(g)} neu sehr günstig, {len(t)} neu sehr teuer", "message": text, "tags": ["bar_chart"], "click": SEITE}
     try:
         if veraltet:
             senden(server, thema, veraltet, probe)

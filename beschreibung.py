@@ -29,7 +29,7 @@ import requests
 import einstellungen as E
 
 ZIEL = E.DATEN / "beschreibung.json"
-VERSION = 4   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200)
+VERSION = 5   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200, 5: Hebel 2x)
 WIKIDATA = "https://query.wikidata.org/sparql"
 KOPF = {"User-Agent": "minusmitstil-kaufplan/1.0 (Lernprojekt, GitHub swissiybot/minusmitstil)", "Accept": "application/sparql-results+json"}
 BOERSE = {"Q82059": "Nasdaq", "Q13677": "NYSE"}
@@ -155,6 +155,25 @@ TEXTE = {
 LAND = {"Vereinigte Staaten": "den USA", "Vereinigtes Königreich": "Großbritannien", "Niederlande": "den Niederlanden",
         "Schweiz": "der Schweiz", "Volksrepublik China": "China", "Republik China": "Taiwan", "Türkei": "der Türkei"}
 LAND_KURZ = {"Vereinigte Staaten": "USA", "Volksrepublik China": "China", "Republik China": "Taiwan"}
+
+
+def hebel_text(e: dict) -> str:
+    """Kurzbeschreibung eines Hebel-Produkts aus der geprüften Liste (einstellungen.HEBEL_ETFS) – keine Empfehlung."""
+    h = e["hebel"]
+    platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra"}.get(e["etf"][-3:] if "." in e["etf"] else "", "New York (NYSE Arca)")
+    was = ("Besicherte Schuldverschreibung (ETC, kein Fonds)" if h["art"] == "ETC" else "Börsengehandelter Fonds (ETF)" if h["eu"] else "US-ETF")
+    text = (f"{was} mit täglichem 2-fachem Hebel auf {h['basis']}: Ziel ist das Doppelte der Veränderung an EINEM Tag – über Wochen und Jahre "
+            f"ist das nicht das Doppelte. Kein Knock-out. Voller Name: {e['name']}. Kurse hier von der Börse {platz}")
+    text += f"; auf Xetra dieselben Anteile unter dem Kürzel {h['xetra']}." if h.get("xetra") else "."
+    if not h["eu"]:
+        text += " Für Privatanleger in der EU meist nicht kaufbar (es fehlt das vorgeschriebene EU-Basisinformationsblatt)."
+    if e.get("ab"):
+        text += f" Kurse vor dem {'.'.join(reversed(e['ab'].split('-')))} bleiben weg: Sie sind bei Yahoo fehlerhaft."
+    return text
+
+
+FEST_ISIN.update({e["id"]: (e["isin"], e["wkn"]) for e in E.HEBEL_ETFS})   # geprüfte ISIN/WKN der Hebel-Produkte (einstellungen.py)
+TEXTE.update({e["id"]: hebel_text(e) for e in E.HEBEL_ETFS})
 
 
 def wkn_aus(isin: str | None) -> str | None:

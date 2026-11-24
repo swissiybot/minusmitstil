@@ -39,6 +39,7 @@ QUELLEN_TEXT = {
     "index_tr": ("Index mit Dividenden", True),
     "vorlauf_etf": ("aehnlicher ETF als Vorlauf", True),
     "etf": ("ETF", True),
+    "hebel": ("Hebel-Produkt (täglich 2-fach, Kosten des Hebels im Kurs enthalten)", True),
     "etc": ("ETC (Wertpapier auf Rohstoff-Futures, Rollkosten enthalten)", False),
     "aktie": ("Aktie", True),
     "krypto": ("Krypto", False),
@@ -51,11 +52,13 @@ QUELLEN_TEXT = {
 # ----------------------------------------------------------------- Daten zusammensetzen
 def verketten(etf: dict):
     """Index-Historie vor den ETF haengen (skaliert). Gibt Tagesdaten + Segmentliste zurueck."""
-    kette = [(k, etf.get(k)) for k in ("index", "index_tr", "vorlauf_etf")] + [("etf", etf["etf"])]
+    kette = [(k, etf.get(k)) for k in ("index", "index_tr", "vorlauf_etf")] + [("hebel" if etf.get("hebel") else "etf", etf["etf"])]
     kette = [(k, s) for k, s in kette if s]
     akt, segmente = None, []
     for art, sym in reversed(kette):
         d = lade_lokal(sym)
+        if d is not None and etf.get("ab") and art in ("etf", "hebel"):
+            d = d[d.index >= pd.Timestamp(etf["ab"])]   # Kurse davor sind bei Yahoo fehlerhaft (einstellungen.HEBEL_ETFS)
         if d is None or d.empty:
             continue
         if akt is None:
@@ -938,6 +941,8 @@ def zusatzdaten(z: dict, zeile: dict) -> dict:
                 out["div"] = d
         except Exception as ex:
             print(f"Dividenden-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
+    if z["gruppe"] == "ETF" and _etfs().get(z["id"], {}).get("hebel"):
+        out["hebel"] = _etfs()[z["id"]]["hebel"]   # täglicher 2-facher Hebel: Art (ETF/ETC), Basiswert, in der EU handelbar? -> Warnhinweis der Titelseite
     if z["gruppe"] == "ETF":
         try:
             import etf_daten
@@ -1085,6 +1090,8 @@ class Stufe2:
 
     def add(self, z: dict, zeile: dict, roh: dict):
         import strategie
+        if z.get("branche") == E.HEBEL_BRANCHE:
+            return   # Hebel-Produkte bleiben aus der Prüfung „ETFs / Indizes“ und den Sparplan-Tabellen heraus (anderes Verhalten als ungehebelte ETFs)
         w, score = roh["w"], roh["score"]
         c = w["Close"].values.astype(float)
         aktie = z["gruppe"] not in ("ETF", "Krypto", "Rohstoffe")

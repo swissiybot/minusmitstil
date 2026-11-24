@@ -1,6 +1,7 @@
 """Baut die Liste aller Werte: Nasdaq- und NYSE-Aktien, wichtige Auslandsaktien (welt.py), FTSE All-World (aus Vanguard-Excel), ETFs, Krypto, Rohstoffe.
 
 Krypto: die fünf Kernwerte plus die feste Top-200-Liste listen/krypto.csv (krypto_liste.py baut sie von Hand neu).
+Hebel 2x: feste, geprüfte Liste in einstellungen.HEBEL_ETFS (Gruppe ETF, Art „Hebel 2x“).
 
 Ergebnis: daten/universum.csv mit Spalten
     id, symbol, name, gruppe, land, branche
@@ -117,7 +118,9 @@ def ftse_all_world() -> pd.DataFrame:
 
 
 def etfs_und_bitcoin() -> pd.DataFrame:
-    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + " (ETF)", "gruppe": "ETF", "land": "", "branche": e.get("branche", "Index")} for e in E.ETFS]
+    # Hebel-Produkte (einstellungen.HEBEL_ETFS): Gruppe ETF, Art „Hebel 2x“; ETCs heißen auch so
+    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + (" (ETC)" if (e.get("hebel") or {}).get("art") == "ETC" else " (ETF)"),
+               "gruppe": "ETF", "land": "", "branche": e.get("branche", "Index")} for e in E.ETFS]
     for k in E.KRYPTO:
         zeilen.append({"id": k["id"], "symbol": k["symbol"], "name": k["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
     for r in E.ROHSTOFFE:

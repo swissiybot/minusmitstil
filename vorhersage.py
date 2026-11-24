@@ -348,8 +348,9 @@ def gegenprobe(zeilen: list[dict], D: dict) -> dict:
     wahl = set(np.random.default_rng(7).choice(akt, min(AKTIEN_SIM, len(akt)), replace=False).tolist()) if akt else set()
     for i, z in enumerate(Z):
         # Gegenprobe wie bisher: alle ETFs, Rohstoffe, die fünf Krypto-Kernwerte und eine Stichprobe Aktien. Die Krypto-Top-200
-        # (24.11.2026) bleiben außen vor, sonst reicht die Zeitgrenze des Online-Laufs nicht.
-        z["_sim"] = (gruppe_nr(z) != 4 and not (z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS)) or i in wahl
+        # und die Hebel-Produkte (24.11.2026) bleiben außen vor, sonst reicht die Zeitgrenze des Online-Laufs nicht.
+        z["_sim"] = (gruppe_nr(z) != 4 and not (z["gruppe"] == "Krypto" and z["id"] not in E.KRYPTO_KERN_IDS)
+                     and z.get("branche") != E.HEBEL_BRANCHE) or i in wahl
     Z = [z for z in Z if z["_sim"]]                                   # nur die Stichprobe (Online-Lauf: Zeitgrenze)
     GP.clear()
     for g in range(len(GRUPPEN)):

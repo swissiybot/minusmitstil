@@ -35,7 +35,8 @@ TEILFREI_AKTIENFONDS = 0.30
 
 def teilfreistellung(zeile: dict) -> float:
     """30 % fuer Aktien-ETFs (Index-, Themen-, Branchen-, Faktor-, Laender-ETFs), sonst 0."""
-    return TEILFREI_AKTIENFONDS if zeile.get("gruppe") == "ETF" and zeile.get("branche") not in ("Anleihen", "Rohstoff") else 0.0
+    # Hebel 2x: steuerliche Einstufung nicht geprüft (Swap-ETFs, ETCs, US-Fonds) – vorsichtig ohne Teilfreistellung gerechnet
+    return TEILFREI_AKTIENFONDS if zeile.get("gruppe") == "ETF" and zeile.get("branche") not in ("Anleihen", "Rohstoff", "Hebel 2x") else 0.0
 
 
 NAMEN = {"spar": "Sparplan", "staffel": "Staffelkauf 60/75/90", "staffel_vk": "Staffelkauf + Teilverkauf ≤ 15",
