@@ -1012,7 +1012,7 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   --text:#eaf2ff; --text2:#b6c3d9; --muted:#8190aa;
   --akzent:#22d3ee; --akzent-stark:#06b6d4; --akzent-weich:rgba(34,211,238,.12); --auf-akzent:#02131a;
   /* Ampel 0 = teuer … 100 = günstig: fünf Stufen (bis 15 · 15–40 · 40–60 · 60–80 · ab 80) */
-  --a0:#ff2e54; --a1:#ff7a2f; --a2:#d4a853; --a3:#22d3ee; --a4:#00f59b;
+  --a0:#ff2e54; --a1:#ff7a2f; --a2:#ffc93c; --a3:#1fe0ff; --a4:#00f59b;
   --guenstig:#00f59b; --teuer:#ff7a2f; --neutral:#94a3b8;
   --pos:#1ff0a0; --neg:#ff5271;
   --gelb:#f59e0b; --lila:#c084fc; --cyan:#22d3ee; --kegel:#a855f7; --pitop1:#fbbf24; --pitop2:#ff5c8a; --mayer:#e2b8ff; --mvrv:#93c5fd;
@@ -1293,7 +1293,7 @@ kbd{background:var(--glas-leicht);border-color:var(--line2);color:var(--text2);b
 .ot-gauge{position:relative;z-index:1;width:min(100%,540px);margin:-4px auto 0;outline-offset:-2px;border-radius:14px}
 .ot-bogen{display:block;width:100%;height:auto;overflow:visible}
 .ot-b-zahl{font-family:var(--f-zahl);font-size:8.5px;fill:var(--muted)}
-.ot-b-wort{font-family:var(--f-ui);font-size:10.5px;font-weight:650;letter-spacing:.09em;opacity:.78}
+.ot-b-wort{font-family:var(--f-ui);font-size:10.5px;font-weight:650;letter-spacing:.09em;opacity:.9}
 .ot-b-wort.an{opacity:1;filter:drop-shadow(0 0 5px currentColor)}
 .ot-b-ankertext{font-family:var(--f-ui);font-size:10px;font-weight:650;letter-spacing:.02em}
 .ot-b-ankerunter{font-family:var(--f-ui);font-size:9px;fill:var(--muted)}
@@ -3229,17 +3229,38 @@ async function wegEinordnung(id){   // Kaufweg-Karte: Wie oft gewinnt „Warten 
 // (Grenzen 15 · 40 · 60 · 80 liegen genau auf Segmentgrenzen). Darunter ein weichgezeichneter Schein, darüber die Licht-Nadel auf der
 // heutigen Ampel-Zahl. Die 70er-Marke (Kurs genau auf der 200-Wochen-Linie) erscheint nur bei Werten mit dieser Ampel-Art.
 const STUFEN_GROSS = ["SEHR TEUER", "TEUER", "NEUTRAL", "GÜNSTIG", "SEHR GÜNSTIG"];
+// Weicher Farbverlauf über den Bogen (Marc 24.11.2026: „kann man die nicht schöner machen“, Vorbild sein Referenzbild): die fünf Stufenfarben
+// sitzen in der Mitte ihrer Stufe, dazwischen wird in linearem Licht gemischt. Nur Anzeige – Stufe und Grenzen (15 · 40 · 60 · 80) bleiben.
+const hexRgb = h => { const m = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(h).trim()); if (!m) return null; let x = m[1]; if (x.length === 3) x = x.replace(/./g, "$&$&"); return [0, 2, 4].map(i => parseInt(x.slice(i, i + 2), 16)); };
+function verlaufFarbe(F5, t){
+  // Mischen über den Farbkreis (Farbton auf dem kürzesten Weg, Sättigung und Helligkeit linear): so bleibt der Übergang kräftig –
+  // Gold läuft über Gelbgrün nach Cyan statt über ein blasses Grau.
+  const P = [[0, 0], [7.5, 0], [27.5, 1], [50, 2], [70, 3], [90, 4], [100, 4]];
+  let i = 1; while (i < P.length - 1 && t > P[i][0]) i++;
+  const t0 = P[i - 1][0], t1 = P[i][0], A = hexRgb(F5[P[i - 1][1]]), B = hexRgb(F5[P[i][1]]);
+  if (!A || !B) return F5[Math.max(0, stufe(t))];
+  const hsl = c => { const r = c[0] / 255, g = c[1] / 255, b = c[2] / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    if (!d) return [0, 0, l];
+    const sa = d / (1 - Math.abs(2 * l - 1)), h = mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [h * 60, sa, l]; };
+  const k = t1 > t0 ? Math.max(0, Math.min(1, (t - t0) / (t1 - t0))) : 0, a = hsl(A), b = hsl(B);
+  let dh = b[0] - a[0]; if (dh > 180) dh -= 360; if (dh < -180) dh += 360;
+  const h = ((a[0] + dh * k) % 360 + 360) % 360, sa = a[1] + (b[1] - a[1]) * k, l = a[2] + (b[2] - a[2]) * k;
+  return "hsl(" + h.toFixed(1) + "," + (sa * 100).toFixed(1) + "%," + (l * 100).toFixed(1) + "%)";
+}
 let NADEL_VORHER = null;   // Winkel der Nadel beim zuletzt gezeigten Wert: von dort schwenkt sie zum neuen
 function halbkreis(w){
   const s = w.score, hat = s != null, F5 = AF(), cx = 200, cy = 176, R = 148, r = 112, N = 60, luecke = 0.62;
   const pkt = (rad, grad) => { const a = (180 - grad) * Math.PI / 180; return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)]; };   // grad: 0 = links (Ampel 0), 180 = rechts (Ampel 100)
   const P = (rad, grad) => pkt(rad, grad).map(v => v.toFixed(1)).join(",");
   const st = hat ? stufe(s) : -1, zf = hat ? F5[st] : "var(--muted)", sg = hat ? Math.max(0, Math.min(100, s)) : null, jetzt = hat ? Math.min(N - 1, Math.floor(sg / 100 * N)) : -1;
-  let seg = "", schein = "";
+  let seg = "", schein = "", band = "", rand = "";
   for (let i = 0; i < N; i++) {
-    const a0 = i * 180 / N + luecke, a1 = (i + 1) * 180 / N - luecke, f = F5[stufe((i + 0.5) * 100 / N)], an = i === jetzt, ra = an ? R + 5 : R, ri = an ? r - 3 : r;
-    const form = `${P(ri, a0)} ${P(ra, a0)} ${P(ra, a1)} ${P(ri, a1)}`;
-    seg += `<polygon points="${form}" fill="${f}" opacity="${!hat ? .28 : an ? 1 : stufe((i + 0.5) * 100 / N) === st ? .96 : .78}"/>`;
+    const a0 = i * 180 / N + luecke, a1 = (i + 1) * 180 / N - luecke, f = verlaufFarbe(F5, (i + 0.5) * 100 / N), an = i === jetzt, ra = an ? R + 5 : R, ri = an ? r - 3 : r;
+    const form = `${P(ri, a0)} ${P(ra, a0)} ${P(ra, a1)} ${P(ri, a1)}`, b0 = i * 180 / N - .15, b1 = (i + 1) * 180 / N + .15;
+    band += `<polygon points="${P(r, b0)} ${P(R, b0)} ${P(R, b1)} ${P(r, b1)}" fill="${f}"/>`;
+    rand += `<polygon points="${P(R + 1.4, b0)} ${P(R + 3.3, b0)} ${P(R + 3.3, b1)} ${P(R + 1.4, b1)}" fill="${f}"/>`;
+    seg += `<polygon points="${form}" fill="${f}" opacity="${!hat ? .28 : an ? 1 : stufe((i + 0.5) * 100 / N) === st ? 1 : .92}"/>`;
     if (hat) schein += `<polygon points="${form}" fill="${f}"/>`;
     if (an) seg += `<polygon points="${form}" fill="#fff" opacity=".55"/>`;
   }
@@ -3252,13 +3273,17 @@ function halbkreis(w){
   return `<svg class="ot-bogen" id="ot-bogen" viewBox="0 0 420 248" role="img" aria-label="${hat ? `Ampel ${fmt(s,0)} von 100: ${zonenWort(s)}. Skala von 0 (sehr teuer) bis 100 (sehr günstig).` : "Noch keine Ampel"}">
     <defs>
       <filter id="ot-bloom" x="-30%" y="-40%" width="160%" height="190%"><feGaussianBlur stdDeviation="9"/></filter>
+      <filter id="ot-bloom2" x="-40%" y="-60%" width="180%" height="230%"><feGaussianBlur stdDeviation="20"/></filter>
       <filter id="ot-glut" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="3.2"/></filter>
       <linearGradient id="ot-nadel-v" x1="${cx}" y1="${cy}" x2="${cx - r}" y2="${cy}" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="${zf}" stop-opacity=".15"/><stop offset=".55" stop-color="${zf}" stop-opacity=".9"/><stop offset="1" stop-color="#fff"/></linearGradient>
       <radialGradient id="ot-boden" cx="50%" cy="100%" r="75%"><stop offset="0" stop-color="${zf}" stop-opacity=".2"/><stop offset="1" stop-color="${zf}" stop-opacity="0"/></radialGradient>
     </defs>
     <path d="M${P(r - 20, 0)}A${r - 20} ${r - 20} 0 0 1 ${P(r - 20, 180)}Z" fill="url(#ot-boden)"/>
-    <g filter="url(#ot-bloom)" opacity=".62" class="ot-b-schein">${schein}</g>
+    <g filter="url(#ot-bloom2)" opacity=".42" class="ot-b-schein ot-b-schein2">${schein}</g>
+    <g filter="url(#ot-bloom)" opacity=".8" class="ot-b-schein">${schein}</g>
+    <g opacity="${hat ? .3 : .1}">${band}</g>
     <g>${seg}</g>
+    <g opacity="${hat ? .95 : .25}">${rand}</g>
     <path d="M${P(R + 4.5, 0)}A${R + 4.5} ${R + 4.5} 0 0 1 ${P(R + 4.5, 180)}" fill="none" stroke="var(--line2)" stroke-width=".8"/>
     <path d="M${P(r - 4, 0)}A${r - 4} ${r - 4} 0 0 1 ${P(r - 4, 180)}" fill="none" stroke="var(--line2)" stroke-width=".8" stroke-dasharray="1 4.2"/>
     ${marke(0, "0")}${marke(15, "15")}${marke(40, "40")}${marke(60, "60")}${marke(80, "80")}${marke(100, "100")}
@@ -3279,7 +3304,7 @@ function bogenKlein(s, name){
   const hat = s != null, F5 = AF(), cx = 110, cy = 104, R = 92, r = 70, N = 36, st = hat ? stufe(s) : -1, zf = hat ? F5[st] : "var(--muted)";
   const P = (rad, grad) => { const a = (180 - grad) * Math.PI / 180; return (cx + rad * Math.cos(a)).toFixed(1) + "," + (cy - rad * Math.sin(a)).toFixed(1); };
   let seg = "";
-  for (let i = 0; i < N; i++) { const a0 = i * 180 / N + .9, a1 = (i + 1) * 180 / N - .9; seg += `<polygon points="${P(r, a0)} ${P(R, a0)} ${P(R, a1)} ${P(r, a1)}" fill="${F5[stufe((i + .5) * 100 / N)]}"/>`; }
+  for (let i = 0; i < N; i++) { const a0 = i * 180 / N + .9, a1 = (i + 1) * 180 / N - .9; seg += `<polygon points="${P(r, a0)} ${P(R, a0)} ${P(R, a1)} ${P(r, a1)}" fill="${verlaufFarbe(F5, (i + .5) * 100 / N)}"/>`; }
   return `<svg class="ot-bogen-klein" viewBox="0 0 220 128" role="img" aria-label="${name}: ${hat ? fmt(s,0) + " von 100, " + zonenWort(s) : "kein Wert"}. Skala von 0 (sehr teuer) bis 100 (sehr günstig).">
     <defs><filter id="ot-kb-bloom" x="-30%" y="-40%" width="160%" height="190%"><feGaussianBlur stdDeviation="6"/></filter><filter id="ot-kb-glut" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="2.4"/></filter></defs>
     <g filter="url(#ot-kb-bloom)" opacity="${hat ? .55 : 0}">${seg}</g><g opacity="${hat ? .92 : .3}">${seg}</g>
