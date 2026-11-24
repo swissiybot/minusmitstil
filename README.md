@@ -80,6 +80,9 @@ Marc schickte einen ausführlichen Entwurf mit Referenzbild („sieht nicht aus 
 - **Übrige Ansichten:** Heatmap-Kacheln als dunkles Glas mit farbiger Tönung und Leuchtkante, Depot-Kopf mit großem Depotwert (Summe, Positionen, Anteil der Zuordnung), Lesehilfe mit Stufen-Leiste und hervorgehobenem Kasten „Was die Ampel nicht kann“. Heller Modus schlichter (kein Neon auf Weiß).
 - **Bewusst weggelassen**, weil das Tool dafür nichts rechnet: Depot-Ampel und Depot-Verlaufskurve; die Beispielzahlen des Referenzbilds. Glas-Unschärfe (`backdrop-filter`) nur an Kopfzeile, Leisten und schwebenden Fenstern, nicht an jeder Karte (Akku am Handy).
 
+### Chart: Kerzen wieder Standard, Umschalter sichtbar (24.11.2026)
+Marc zum neuen Aussehen: „ich hoffe, dass man da auch auf Balken umstellen kann … mit ner Linie ist schwierig … die Professionalität muss erhalten bleiben“. Die sechste Gestaltungsrunde hatte den Kurs standardmäßig als Linie gezeigt und den Umschalter hinter „Mehr“ nur im Profi-Modus angeboten. Jetzt: Kerzen sind wieder der Standard (`CHARTART`, gemerkt als `chartart`), und der Umschalter „Kerzen / Linie“ steht direkt neben den Zeitraum-Knöpfen – in „Einfach“ und „Profi“, am PC und am Handy.
+
 ### Strategie-Vergleich: Haken „Steuer abziehen“ (24.11.2026)
 Marc fragte, warum die Balken (570.106) andere Zahlen zeigen als die erste Tabellenzeile (692.079): Die Balken waren „nach Steuer, alles verkauft“, die erste Zeile und das Kurvenbild das Vermögen vor Steuer. Sein Vorschlag: „vielleicht Haken für Steuer an und aus“.
 - **Haken „Steuer abziehen“** neben „Berechnen“ (Standard: an), rechnet beim Anklicken sofort neu und wird mit den übrigen Eingaben gemerkt (`KW.steuer`).

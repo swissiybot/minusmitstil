@@ -3074,7 +3074,7 @@ function kk(kat, titel, unter, rechts, e){
     ${unter ? `<p class="kk-unter">${unter}</p>` : ""}</header>`;
 }
 const ERKLAERUNG_TITEL = {
-  chart_mehr: {titel:"Linien & Werkzeuge", text:"Klappt alles Weitere zum Chart auf: Zeitebene (Monat, Woche, Tag …), Linie oder Kerzen, Log oder Linear, Dollar oder Euro, das Lineal, den TradingView-Chart und alle zuschaltbaren Linien – zum Beispiel die 100-, 300- und 400-Wochen-Linie, Trendkanal, Tief- und Hochpunkte oder bei Bitcoin Pi Cycle. Ob das Feld offen ist, merkt sich dieser Browser."},
+  chart_mehr: {titel:"Linien & Werkzeuge", text:"Klappt alles Weitere zum Chart auf: Zeitebene (Monat, Woche, Tag …), Log oder Linear, Dollar oder Euro, das Lineal, den TradingView-Chart und alle zuschaltbaren Linien – zum Beispiel die 100-, 300- und 400-Wochen-Linie, Trendkanal, Tief- und Hochpunkte oder bei Bitcoin Pi Cycle. Ob das Feld offen ist, merkt sich dieser Browser."},
   chartart: {titel:"Linie oder Kerzen", text:"Linie: der Schlusskurs jeder Woche (bzw. jedes Tages oder Monats) als eine helle Linie – ruhig und gut zu lesen. Kerzen: zusätzlich Eröffnung, Hoch und Tief jeder Kerze. Die genauen Werte (E, H, T, S) stehen in beiden Darstellungen oben links, sobald du über den Chart fährst. Der helle Punkt markiert den letzten Kurs."},
   kv_heute: {titel:"Was passierte früher in ähnlicher Lage?", text:"Das Tool sucht alle früheren Wochen dieses Titels, in denen der Kurs ähnlich weit von der 200-Wochen-Linie entfernt war wie heute (die 10 % ähnlichsten Wochen), und zählt nach, wie es danach weiterging. Kaufen: Wie viele von 100 solchen Käufen waren 3 Jahre später im Plus, und wie viel brachten sie pro Jahr (typisch = Median, der mittlere Fall)? Verkaufen: In wie vielen von 100 Fällen stand der Kurs ein Jahr später tiefer – nur dann war ein Verkauf im Rückblick richtig. Daneben steht jeweils derselbe Wert für „jede beliebige Woche“. Erst der Unterschied zwischen beiden sagt etwas: Ist er klein, war die heutige Lage früher nichts Besonderes. Aufeinanderfolgende Wochen hängen zusammen; wichtig ist deshalb auch die Zahl der getrennten Phasen."},
   kv_probe: {titel:"Gegenprobe: Wie verlässlich bei diesem Titel?", text:"Die Gegenprobe tut so, als stünde man an früheren Zeitpunkten (alle 13 Wochen) und kennt nur die Ergebnisse, die damals schon feststanden. Dann sagt die Methode voraus, ob ein Kauf besser oder schlechter ausgeht als in einer beliebigen Woche, und es wird nachgeschaut, ob das stimmte. Eine geworfene Münze läge in 50 von 100 Fällen richtig. Liegt die Methode darunter oder nur knapp darüber, sollte man dieser Karte bei diesem Titel wenig Gewicht geben."},
@@ -4191,15 +4191,15 @@ async function zeige(id, opt={}){
       ${instrumentKarte(w, id)}
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="chart-leiste">
-        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>` : ""}
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        <div class="segment ot-chartart" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button></div>` : ""}
         <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" aria-label="Linien und Werkzeuge" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Mehr</span></button>
         <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien">${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
       </div>
       <div class="ot-werkzeug nur-profi" id="chart-werkzeug"${CHART_MEHR ? "" : " hidden"}>
         <div class="chart-leiste">
           <div class="segment nur-profi" role="group" aria-label="Zeitebene" data-e="intervall">${INTERVALLE.filter(([k]) => eigen ? (w.tv || !INTRADAY.includes(k)) : !!w.tv).map(([k, t]) => `<button data-iv="${k}" aria-pressed="${INTERVALL === k}" ${INTRADAY.includes(k) ? 'title="über TradingView"' : ""}>${t}</button>`).join("")}</div>
-          ${eigen ? `<div class="segment nur-profi" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button></div>
-          <div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
+          ${eigen ? `<div class="segment nur-profi" role="group" aria-label="Skala" data-e="skala"><button data-sk="1" aria-pressed="${SKALA === 1}">Log</button><button data-sk="0" aria-pressed="${SKALA === 0}">Linear</button></div>` : ""}
           ${eigen && waehrungVon(w) === "USD" ? `<div class="segment nur-profi" role="group" aria-label="Währung" data-e="waehrung"><button data-wg="USD" aria-pressed="${WAEHRUNG !== "EUR"}">$</button><button data-wg="EUR" aria-pressed="${WAEHRUNG === "EUR"}">€</button></div>` : eigen && waehrungVon(w) === "EUR" ? `<span class="klein nur-profi" data-e="waehrung" style="align-self:center">Kurse in €</span>` : ""}
           ${eigen ? `<button class="werkzeug nur-profi" id="lineal-knopf" aria-pressed="false" data-e="lineal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 17 17 3l4 4L7 21z"/><path d="m7 13 2 2M10 10l2 2M13 7l2 2"/></svg>Lineal</button>` : ""}
           ${eigen && w.tv ? `<div class="segment rechts nur-profi" role="group" aria-label="Chart-Quelle" data-e="quelle_chart"><button data-q="eigen" aria-pressed="${CHARTQUELLE === "eigen"}">Eigener Chart</button><button data-q="tv" aria-pressed="${CHARTQUELLE === "tv"}">TradingView</button></div>` : ""}
@@ -4787,7 +4787,7 @@ function zonenFlaechen(ch, serie, c, f){
 }
 // ------------------------------------------------------------ Chart im Terminal-Stil (24.11.2026): Kurslinie mit Schein, Lichtpunkt am letzten Kurs,
 // Prognose-Kegel mit zwei Helligkeitsstufen und feinem Gitter, schwebende Wertekarte am Fadenkreuz. Nur Darstellung – dieselben Daten wie bisher.
-let CHARTART = lade("chartart", "linie");   // „linie“ (Schlusskurse als Linie) oder „kerzen“ (wie bisher)
+let CHARTART = lade("chartart", "kerzen");   // „linie“ (Schlusskurse als Linie) oder „kerzen“ (wie bisher)
 let LICHT_NEU = null, HUD_FEST = null;
 function kursLicht(ch, serie, c, f){
   const zeichnen = oben => ({context:x, mediaSize:gr}) => {
