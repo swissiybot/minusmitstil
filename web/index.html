@@ -2175,7 +2175,7 @@ const ERKLAERUNG = {
   f_minj: {titel:"min. Jahre", text:"Zeigt nur Werte mit mindestens so vielen Jahren Kursdaten. Je länger die Historie, desto mehr Vergleichsphasen hat die Ampel. Unter 10 Jahren sind die Quoten sehr unsicher."},
   f_stabil: {titel:"Nur stabiler Aufwärtstrend", text:"Zeigt nur Aktien mit Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahren Daten. Achtung: Dieser Filter nutzt den ganzen Kursverlauf bis heute, er kennt also die Zukunft der Vergangenheit. ETFs, Krypto und Rohstoffe sind ausgenommen."},
   f_umsatz: {titel:"min. Umsatz pro Tag", text:"Durchschnittlicher Handelsumsatz der letzten 3 Monate in US-Dollar. Kleine, wenig gehandelte Aktien haben große Kurssprünge und hohe Handelskosten. ETFs, Krypto und Rohstoffe sind ausgenommen."},
-  f_gruppe: {titel:"Gruppe", text:"Nasdaq: alle an der Nasdaq gelisteten Aktien. ETF: große Index-ETFs mit Index-Historie davor. Krypto: Bitcoin, Ethereum, Solana, Chainlink, Stellar. Rohstoffe: Endlos-Futures und ein Rohstoff-Korb. FTSE All-World erscheint, sobald die Vanguard-Liste da ist."},
+  f_gruppe: {titel:"Gruppe", text:"Nasdaq: alle an der Nasdaq gelisteten Aktien. ETF: große Index-ETFs mit Index-Historie davor. Krypto: die größten Kryptowerte nach Marktwert (feste Liste, ohne Stablecoins). Hebel 2x: ETFs und ETCs mit täglichem 2-fachem Hebel, ohne Knock-out. Rohstoffe: Endlos-Futures und ein Rohstoff-Korb. FTSE All-World erscheint, sobald die Vanguard-Liste da ist."},
   // --- Detail
   grund: {titel:"Die Zahlen dahinter", text:"Die erste Zahl ist die Grundlage der Ampel: der Abstand zur 200-Wochen-Linie. Liegt der Kurs darüber, steht dabei, wie selten dieser Abstand war – „weiter darüber als in 80 % der früheren Wochen über der Linie“ heißt: nur in 1 von 5 solchen Wochen lag der Kurs noch weiter darüber, es ist also teuer. Der Abstand zum Allzeithoch und bei Krypto Mayer Multiple und Pi Cycle stehen nur zur Information da und fließen nicht in die Ampel ein."},
   zu200w: {titel:"Kurs zur 200-Wochen-Linie", text:"Die 200-Wochen-Linie ist der Durchschnitt der Schlusskurse der letzten 200 Wochen, also knapp 4 Jahre – der „normale Preis“, der sich nur langsam bewegt. +20 % heißt: der Kurs liegt 20 % über diesem Durchschnitt, −10 %: 10 % darunter. Das ist die Grundlage der Ampel: an der Linie 70 (günstig), darunter schnell sehr günstig, darüber je nach eigener Geschichte teuer. Vorsicht: Bei schwachen Firmen kann der Kurs jahrelang unter der Linie bleiben, und die Linie sinkt dann mit."},
@@ -2549,20 +2549,26 @@ function favUmschalten(id){
 }
 
 // ------------------------------------------------------------ Liste links (virtuell: flüssig auch bei 3.000 Zeilen)
-const LISTEN_REITER = [["uebersicht","Übersicht"],["etf","ETFs"],["krypto","Krypto"],["rohstoffe","Rohstoffe"],["aktien","Aktien"],["meine","★ Meine"]];
+const LISTEN_REITER = [["uebersicht","Übersicht"],["etf","ETFs"],["krypto","Krypto"],["rohstoffe","Rohstoffe"],["hebel","Hebel 2x"],["aktien","Aktien"],["meine","★ Meine"]];
 let LISTE_REITER = lade("liste_reiter", "uebersicht"), GEFILTERT = [], ZEILE_H = 54, FOKUS_I = -1;
 const SONDERGRUPPE = w => ["ETF","Krypto","Rohstoffe"].includes(w.gruppe);
+// Mehr Titel (24.11.2026): Hebel-Produkte (täglich 2-fach, Gruppe ETF mit Art „Hebel 2x“) haben einen eigenen Reiter und einen Warnhinweis;
+// die Übersicht zeigt wie bisher ETFs, Rohstoffe und die fünf Krypto-Kernwerte (alte Daten ohne Rang: alle Kryptowerte sind Kernwerte).
+const istHebel = w => w.gruppe === "ETF" && w.branche === "Hebel 2x";
+const hebelArt = w => w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : "Hebel-ETF 2x";
+const UEBERSICHT_WERT = w => SONDERGRUPPE(w) && !istHebel(w) && (w.gruppe !== "Krypto" || !!w.kern || w.rang == null);
 // EMA-Band (Ribbon): Länge und Farbe, kurz = grün, lang = rot
 const EMA_BAND = [[20,"#43a047"],[25,"#7cb342"],[30,"#c0ca33"],[35,"#fdd835"],[40,"#ffb300"],[45,"#fb8c00"],[50,"#f4511e"],[55,"#e53935"]];
 const istIndexEtf = w => w.gruppe === "ETF" && (!w.branche || w.branche === "Index");   // breite Index-ETFs (ohne Themen-/Branchen-ETFs)
 function imReiter(w, r){
-  return r === "uebersicht" ? SONDERGRUPPE(w) : r === "etf" ? w.gruppe === "ETF" : r === "krypto" ? w.gruppe === "Krypto"
-    : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
+  return r === "uebersicht" ? UEBERSICHT_WERT(w) : r === "etf" ? w.gruppe === "ETF" && !istHebel(w) : r === "krypto" ? w.gruppe === "Krypto"
+    : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "hebel" ? istHebel(w) : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
 }
 function reiterZahlen(){
   $("#listen-reiter").innerHTML = LISTEN_REITER.map(([k, t]) => `<button role="tab" data-r="${k}" aria-selected="${k === LISTE_REITER}">${t}<span class="zahl">${
     k === "aktien" ? "" : ALLE.filter(w => imReiter(w, k)).length || ""}</span></button>`).join("");
   $$("#listen-reiter button").forEach(b => b.onclick = () => { LISTE_REITER = b.dataset.r; sichere("liste_reiter", LISTE_REITER); reiterZahlen(); listeNeu(); $("#liste").scrollTop = 0;
+    $('#listen-reiter [aria-selected="true"]')?.scrollIntoView({block:"nearest", inline:"nearest"});   // gewählter Reiter bleibt sichtbar (die Leiste ist breiter als die Spalte)
     if (LISTE_REITER === "uebersicht" && !istHandy()) zeigeUebersicht(); });
 }
 function gefiltert(){
@@ -2716,7 +2722,7 @@ function sucheRechnen(){
       const jt = Object.values(JUNG).filter(j => norm(j.name + " " + j.symbol).includes(q)).slice(0, 4);
       werte = [...werte, ...jt.filter(j => !werte.includes(j))];
     }
-    if (istIsin(roh)) { const id = ISIN_TABELLE[roh]?.[0] || ISIN_SEC?.[roh]; const w = id && wertVon(id); if (w) werte = [w, ...werte.filter(x => x !== w)]; else if (!ISIN_SEC) isinListeLaden().then(() => { if ($("#suche-dlg").open) sucheRechnen(); }); }
+    if (istIsin(roh)) { const id = ISIN_TABELLE[roh]?.[0] || ISIN_SEC?.[roh] || ALLE.find(x => x.isin === roh)?.id; const w = id && wertVon(id); if (w) werte = [w, ...werte.filter(x => x !== w)]; else if (!ISIN_SEC) isinListeLaden().then(() => { if ($("#suche-dlg").open) sucheRechnen(); }); }
   }
   const seiten = ERSATZ_FUER != null ? [] : SEITEN.filter(([, t, u]) => !q || norm(t + " " + u).includes(q) || qw.some(s => norm(t).split(" ").some(x => x.startsWith(s))));
   TREFFER = [...werte.map(w => ({art:"wert", w})), ...seiten.map(s => ({art:"seite", s}))]; TREFFER_I = 0;
@@ -2725,7 +2731,7 @@ function sucheRechnen(){
   TREFFER.forEach((t, i) => {
     if (t.art === "seite" && (i === 0 || TREFFER[i-1].art !== "seite")) html.push(`<div class="suche-gruppe">Seiten</div>`);
     html.push(t.art === "wert"
-      ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${["Nasdaq","NYSE"].includes(t.w.gruppe) ? "Aktie (" + t.w.gruppe + ")" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
+      ? `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><div class="t-n"><b>${esc(kurzname(t.w))}</b><span>${esc(t.w.symbol)} · ${["Nasdaq","NYSE"].includes(t.w.gruppe) ? "Aktie (" + t.w.gruppe + ")" : istHebel(t.w) ? "Hebel 2x" : t.w.gruppe} · ${zonenWort(t.w.score)}</span></div>${pille(t.w.score)}</div>`
       : `<div class="treffer" role="option" data-i="${i}" aria-selected="${i === 0}"><span class="t-ikon">→</span><div class="t-n"><b>${t.s[1]}</b><span>${t.s[2]}</span></div></div>`);
   });
   $("#suche-treffer").innerHTML = html.join("") || `<div class="leer" style="padding:30px">Nichts gefunden. Kürzel, ISIN oder einen Teil des Namens probieren.${ERSATZ_FUER != null ? " Ist der Wert nicht im Tool, wähle einen ähnlichen (z. B. den Markt seines Landes oder ein ETF auf das Thema)." : ""}</div>`;
@@ -2850,7 +2856,7 @@ function miniSpark(reihe, farbeLinie, wochen=156){
 }
 function mpKachel(){
   const w = ALLE.find(x => x.id === "SPY"); if (!w || w.mp == null) return "";
-  const andere = ALLE.filter(x => SONDERGRUPPE(x) && x.mp != null), n = k => andere.filter(x => x.mp === k).length;
+  const andere = ALLE.filter(x => UEBERSICHT_WERT(x) && x.mp != null), n = k => andere.filter(x => x.mp === k).length;
   return `<div class="karte" id="w-mp" tabindex="0" role="button"><div class="karte-kopf"><span data-e="mp_karte">Marktphase · S&amp;P 500</span><span>Trend</span></div>
     <div class="wk-wert" style="color:${MP_FARBE[w.mp]}">${MP_PFEIL[w.mp]} ${MP_KURZ[w.mp]}</div>
     <div class="wk-wort" style="font-weight:400;color:var(--text2)">ETFs, Krypto, Rohstoffe: ${n(2)} aufwärts${n(1) ? ` · ${n(1)} gemischt` : ""} · ${n(0)} abwärts</div>
@@ -2881,14 +2887,14 @@ function zeigeKarte(opt = {}){
   if (!ziel) { seiteAnfang("karte"); hashSetzen("seite=karte"); }
   const wurzel = ziel || $("#haupt");
   if (!["t","w","m","j","ampel","mp"].includes(KARTE.farbe)) KARTE.farbe = "t";
-  if (!["n100","ETF","Krypto","Rohstoffe","alle"].includes(KARTE.titel)) KARTE.titel = "alle";
+  if (!["n100","ETF","Krypto","Rohstoffe","Hebel","alle"].includes(KARTE.titel)) KARTE.titel = "alle";
   if (!["branche","zone","keine"].includes(KARTE.gruppe)) KARTE.gruppe = "branche";
   const PI = {t:0, w:1, m:2, j:3}, GRENZE = {t:3, w:6, m:10, j:30}, ZEIT = {t:"Tag", w:"Woche", m:"Monat", j:"Jahr"};
   const perfModus = KARTE.farbe in PI;
   const istAktie = w => !SONDERGRUPPE(w);
   // Nur Nasdaq-100 (Mitglieder laut Wikipedia-Liste), Index-ETFs, Krypto und Rohstoffe
   // „Index-ETFs“ = nur die breiten Index-ETFs (Themen-, Branchen-, Anleihen-ETFs aus der Welt-Erweiterung bleiben draußen)
-  const titelOk = w => KARTE.titel === "alle" ? (w.n100 || (SONDERGRUPPE(w) && (w.gruppe !== "ETF" || istIndexEtf(w)))) : KARTE.titel === "n100" ? !!w.n100 : KARTE.titel === "ETF" ? istIndexEtf(w) : w.gruppe === KARTE.titel;
+  const titelOk = w => KARTE.titel === "alle" ? (w.n100 || (UEBERSICHT_WERT(w) && (w.gruppe !== "ETF" || istIndexEtf(w)))) : KARTE.titel === "n100" ? !!w.n100 : KARTE.titel === "ETF" ? istIndexEtf(w) : KARTE.titel === "Hebel" ? istHebel(w) : w.gruppe === KARTE.titel;
   const werte = [...ALLE, ...HEATMAP_EXTRA].filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
   const aktien = werte.filter(istAktie), mitMw = aktien.filter(w => w.f?.mw > 0).length, nachMw = mitMw >= aktien.length * 0.5 && mitMw > 0;
   const mitBranche = aktien.filter(w => w.branche).length;
@@ -2915,7 +2921,7 @@ function zeigeKarte(opt = {}){
     <p class="seiten-unter"><span data-e="karte" tabindex="0">${werte.length.toLocaleString("de-DE")} Titel</span>${perfModus ? ` · Kursveränderung ${ZEIT[KARTE.farbe] === "Tag" ? "am letzten Handelstag" : "über 1 " + ZEIT[KARTE.farbe]}` : ""} · Stand ${datumDe(stand)}${aktien.length ? ` · Aktien-Kacheln nach ${nachMw ? "Börsenwert" : "Handelsumsatz"}` : ""}. Antippen öffnet den Titel.</p>
     <div class="chart-leiste hm-leiste" style="margin-bottom:8px">
       <div class="segment" role="group" aria-label="Zeitraum">${knopf("farbe","t","Tag")}${knopf("farbe","w","Woche")}${knopf("farbe","m","Monat")}${knopf("farbe","j","Jahr")}${knopf("farbe","ampel","Ampel")}${knopf("farbe","mp","Trend")}</div>
-      <div class="segment" role="group" aria-label="Titel">${knopf("titel","n100","Nasdaq-100")}${knopf("titel","ETF","Index-ETFs")}${knopf("titel","Krypto","Krypto")}${knopf("titel","Rohstoffe","Rohstoffe")}${knopf("titel","alle","Alle")}</div>
+      <div class="segment" role="group" aria-label="Titel">${knopf("titel","n100","Nasdaq-100")}${knopf("titel","ETF","Index-ETFs")}${knopf("titel","Krypto","Krypto")}${knopf("titel","Rohstoffe","Rohstoffe")}${knopf("titel","Hebel","Hebel 2x")}${knopf("titel","alle","Alle")}</div>
       ${KARTE.titel === "n100" || KARTE.titel === "alle" ? `<div class="segment" role="group" aria-label="Gruppen">${knopf("gruppe","branche","nach Branche")}${knopf("gruppe","zone","nach Ampel")}${knopf("gruppe","keine","ohne Gruppen")}</div>` : ""}
     </div>
     <div id="karte-legende" class="skala-legende">${legende}</div>
@@ -2929,7 +2935,7 @@ function zeigeKarte(opt = {}){
   const groesse = w => istAktie(w) ? Math.max(nachMw && w.f?.mw > 0 ? w.f.mw * 1e6 : (w.umsatz_usd || 0) * 250, 1) : 1;
   // Gruppen: Aktien nach Branche / Ampel-Zone, die anderen nach ihrer Gruppe; bei „Alle“ feste Flächenanteile
   const ZONEN_N = ["historisch sehr teuer","teuer","neutral","günstig","historisch sehr günstig"];
-  const gruppenName = w => !istAktie(w) ? ({ETF:"Index-ETFs", Krypto:"Krypto", Rohstoffe:"Rohstoffe"})[w.gruppe]
+  const gruppenName = w => !istAktie(w) ? (istHebel(w) ? "Hebel 2x" : ({ETF:"Index-ETFs", Krypto:"Krypto", Rohstoffe:"Rohstoffe"})[w.gruppe])
     : KARTE.gruppe === "branche" ? (w.branche || "Nasdaq-100") : KARTE.gruppe === "zone" ? (w.score == null ? "keine Ampel" : ZONEN_N[stufe(w.score)]) : "Nasdaq-100";
   const karteGruppen = () => {
     const m = new Map(); werte.forEach(w => { const n = gruppenName(w); if (!m.has(n)) m.set(n, []); m.get(n).push(w); });
@@ -3020,7 +3026,7 @@ function erfolgsbilanzHtml(){   // Signal-Tagebuch auf der Übersicht: seit wann
 function zeigeUebersicht(){
   seiteAnfang("uebersicht"); hashSetzen("seite=uebersicht");
   const f = F(), u = UMFELD, b = u?.breite, v = u?.vix, z = u?.zinskurve;
-  const sonder = ALLE.filter(SONDERGRUPPE);
+  const sonder = ALLE.filter(UEBERSICHT_WERT);
   const e = PRUEF?.kalibrierung?.etf?.["3"], s = PRUEF?.strategie?.zusammen?.etf;
   const wetter = `
     <div class="karte" id="w-breite" tabindex="0" role="button"><div class="karte-kopf"><span data-e="u_breite">Marktbreite</span><span>${b ? datumDe(b.datum) : ""}</span></div>
@@ -3042,9 +3048,9 @@ function zeigeUebersicht(){
       <div class="d">${w.score == null ? `${fmt(w.jahre_daten,1)} J. Daten` : `4W ${de == null ? "–" : (de > 0 ? "+" : "") + fmt(de,0)} · Ø ${fmt(w.cagr20,1," %")}/J.`}</div>${w.mp != null ? `<div class="d" title="Marktphase: ${MP_KURZ[w.mp]}">Trend ${MP_PFEIL[w.mp]} ${MP_KURZ[w.mp]}</div>` : ""}</button>`; };
   // Heute auffällig (nur beschreibend)
   const mitD = sonder.filter(w => wert(w, "delta") != null).sort((a, b) => Math.abs(wert(b, "delta")) - Math.abs(wert(a, "delta"))).slice(0, 5);
-  const neuGuenstig = ALLE.filter(w => w.score >= 80 && w.score_vor4w != null && w.score_vor4w < 80 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
+  const neuGuenstig = ALLE.filter(w => w.score >= 80 && w.score_vor4w != null && w.score_vor4w < 80 && (UEBERSICHT_WERT(w) || (!SONDERGRUPPE(w) && w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
     .sort((a, b) => b.score - a.score).slice(0, 6);
-  const neuTeuer = ALLE.filter(w => w.score != null && w.score <= 15 && w.score_vor4w != null && w.score_vor4w > 15 && (SONDERGRUPPE(w) || (w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
+  const neuTeuer = ALLE.filter(w => w.score != null && w.score <= 15 && w.score_vor4w != null && w.score_vor4w > 15 && (UEBERSICHT_WERT(w) || (!SONDERGRUPPE(w) && w.qualitaet && (w.umsatz_usd || 0) >= 1e7)))
     .sort((a, b) => a.score - b.score).slice(0, 6);
   const afZeile = (w, rechts) => `<div class="af-zeile" data-id="${w.id}" tabindex="0" role="button"><div class="af-n">${w.f?.falle ? '<span class="falle-mark" title="Fallen-Warnung: Geschäft schwach">⚠</span> ' : ""}${esc(kurzname(w))}<span class="klein">${esc(w.symbol)} · ${w.gruppe === "Nasdaq" ? "Aktie" : w.gruppe}</span></div>${rechts}${pille(w.score)}</div>`;
   const afKarte = (titel, liste, rechts, leer) => `<div class="karte"><div class="karte-kopf"><span>${titel}</span></div>${liste.length ? liste.map(w => afZeile(w, rechts(w))).join("") : `<p class="klein">${leer}</p>`}</div>`;
@@ -3530,7 +3536,7 @@ function bogenKlein(s, name){
 function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel, Merken, Einfach/Profi – und der Ampel-Halbkreis
   const de = (w.score != null && w.score_vor4w != null) ? w.score - w.score_vor4w : null;
   return `<section class="karte ot-instr" id="ot-instr"${w.score != null ? ` style="--zf:${AF()[stufe(w.score)]}"` : ""}>
-      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span><span class="ot-art">${w.gruppe === "ETF" ? "ETF (Fonds)" : w.gruppe === "Krypto" ? "Kryptowährung" : w.gruppe === "Rohstoffe" ? "Rohstoff" : "Aktie"}</span>
+      <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span><span class="ot-art">${istHebel(w) ? hebelArt(w) : w.gruppe === "ETF" ? "ETF (Fonds)" : w.gruppe === "Krypto" ? "Kryptowährung" : w.gruppe === "Rohstoffe" ? "Rohstoff" : "Aktie"}</span>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
       <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
@@ -3547,7 +3553,7 @@ const SCHILD = {   // Schild-Zeichen der Fallen-Karte
   aus: `<path d="M24 4 41 10v13c0 10.5-7.2 18.3-17 21C14.2 41.3 7 33.5 7 23V10z" stroke-dasharray="3.5 3.5"/><path d="M17 24h14"/>`,
 };
 function fallenKarte(w){
-  const f = w.f, sc = w.score, art = {ETF:"ein ETF", Krypto:"eine Kryptowährung", Rohstoffe:"ein Rohstoff"}[w.gruppe];
+  const f = w.f, sc = w.score, art = istHebel(w) && w.hebel?.art === "ETC" ? "ein ETC" : {ETF:"ein ETF", Krypto:"eine Kryptowährung", Rohstoffe:"ein Rohstoff"}[w.gruppe];
   const stand = f?.stand ? `Zahlen der US-Börsenaufsicht SEC bis ${datumDe(f.stand)}` : "";
   const zahlen = f ? [f.d_gewinn != null ? `Gewinn ${vz(f.d_gewinn,0," %")}` : f.verlust ? "macht Verlust" : "", f.d_umsatz != null ? `Umsatz ${vz(f.d_umsatz,0," %")}` : ""].filter(Boolean).join(" · ") : "";
   let z, farbe, titel, kurz, text, fuss = stand;
@@ -4157,11 +4163,11 @@ const ART_ZEICHEN = {
   rohstoff:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 21 7v10l-9 5-9-5V7l9-5Z"/><path d="M12 22V12M3 7l9 5 9-5"/></svg>`,
   krypto:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 7.5h3.8a2.2 2.2 0 0 1 0 4.5H9.5zM9.5 12h4.4a2.2 2.2 0 0 1 0 4.5H9.5zM11.5 6v1.5M11.5 16.5V18"/></svg>`};
 function steckbrief(w){   // Was ist das? Art mit Zeichen, Branche, Land, Kürzel, ISIN, WKN – nur was in den Daten steht (nichts geraten); Antippen kopiert
-  const art = w.gruppe === "ETF" ? ["etf", "ETF (Fonds)"] : w.gruppe === "Krypto" ? ["krypto", "Kryptowährung"] : w.gruppe === "Rohstoffe" ? ["rohstoff", "Rohstoff"] : ["aktie", "Aktie" + (["Nasdaq","NYSE"].includes(w.gruppe) ? " · " + w.gruppe : "")];
+  const art = istHebel(w) ? ["etf", hebelArt(w)] : w.gruppe === "ETF" ? ["etf", "ETF (Fonds)"] : w.gruppe === "Krypto" ? ["krypto", "Kryptowährung"] : w.gruppe === "Rohstoffe" ? ["rohstoff", "Rohstoff"] : ["aktie", "Aktie" + (["Nasdaq","NYSE"].includes(w.gruppe) ? " · " + w.gruppe : "")];
   const kopie = (l, v, zusatz) => `<button class="st-chip" data-kopie="${esc(v)}" title="Antippen kopiert ${l}">${l} <b>${esc(v)}</b>${zusatz || ""}</button>`;
   const C = [`<span class="st-chip art">${ART_ZEICHEN[art[0]]}${esc(art[1])}</span>`];
   const br = w.branche_kurz || w.branche;   // branche_kurz = Branche der Firma (amtliche Einstufung); branche gruppiert sonst nur die Heatmap
-  if (br && br !== art[1] && br !== w.gruppe) C.push(`<span class="st-chip">${SONDERGRUPPE(w) ? "Art" : "Branche"} <b>${esc(br)}</b></span>`);
+  if (br && br !== art[1] && br !== w.gruppe && !istHebel(w)) C.push(`<span class="st-chip">${SONDERGRUPPE(w) ? "Art" : "Branche"} <b>${esc(br)}</b></span>`);
   if (w.sitz) C.push(`<span class="st-chip">Sitz <b>${esc(w.sitz)}</b></span>`);
   else if (w.land && !["Nasdaq","NYSE"].includes(w.gruppe)) C.push(`<span class="st-chip">Land <b>${esc(w.land)}</b></span>`);
   if (w.symbol) C.push(kopie("Kürzel", w.symbol));
@@ -6773,12 +6779,17 @@ function tabKennzahlen(w){
   const seg = w.segmente.map(s => `ab ${s.ab.slice(0,4)}: ${umlaut(s.art)} (${s.symbol})`).join(" → ");
   const krypto = w.gruppe === "Krypto";
   const hinweise = [];
+  if (istHebel(w)) { const b = esc(w.hebel?.basis || "des Basiswerts");
+    hinweise.push(`<b>Achtung, Hebel-Produkt (2-fach, täglich):</b> Dieses Papier soll an jedem einzelnen Tag das Doppelte der Tagesveränderung von ${b} bringen – nach oben wie nach unten. Über Wochen und Jahre ist das nicht das Doppelte: Schwankt der Markt hin und her, verliert das Papier an Wert, auch wenn ${b} am Ende wieder dort steht, wo es vorher stand. Nach einem starken Einbruch braucht es viel mehr als die doppelte Erholung, um wieder auf den alten Stand zu kommen. Die Ampel misst hier nur, wo der Kurs dieses Papiers gemessen an seiner eigenen Geschichte steht – sie sagt nichts darüber, ob sich der Hebel lohnt. Keine Empfehlung, keine Anlageberatung.`
+      + (w.hebel?.art === "ETC" ? " Rechtlich ein ETC: eine besicherte Schuldverschreibung, kein Fonds." : "")
+      + (w.hebel && w.hebel.eu === false ? " <b>US-Produkt:</b> für Privatanleger in der EU meist nicht kaufbar (es fehlt das vorgeschriebene Basisinformationsblatt)." : "")
+      + (w.hebel?.xetra ? ` In Deutschland auf Xetra unter dem Kürzel ${esc(w.hebel.xetra)}.` : "")); }
   if (w.gruppe === "Rohstoffe") hinweise.push(w.branche === "Future"
     ? "<b>Rohstoff (Endlos-Future):</b> Der Kurs ist der jeweils vorderste Terminkontrakt. Beim Wechsel auf den nächsten Kontrakt springt die Reihe, und wer einen Rohstoff über Futures oder ETCs hält, zahlt Rollkosten (z. B. hat der Öl-ETF USO deutlich schlechter abgeschnitten als der Ölpreis). Die Ø Rendite hier ist also die Preisentwicklung, nicht die Rendite eines Anlegers. Außer Gold haben Rohstoffe langfristig kaum einen echten Aufwärtstrend; Trendkanal, Ø Rendite und „Kurs höher“-Quoten sind deshalb weniger aussagekräftig als bei Aktienindizes."
     : w.branche === "Rohstoff-ETC" ? "<b>Rohstoff-ETC:</b> ein Wertpapier, das Rohstoff-Futures nachbildet (hier Nickel, Börse London, in US-Dollar). Es enthält Rollkosten und Gebühren und liegt damit näher an der Anlegerrendite als ein reiner Future-Kurs. Rohstoffe haben langfristig kaum einen echten Aufwärtstrend; Trendkanal und Ø Rendite sind weniger aussagekräftig."
     : "<b>Rohstoff-Korb (ETF):</b> enthält Rollkosten und Gebühren, ist also näher an der Anlegerrendite als die Einzel-Futures. Rohstoffe haben (außer Gold) langfristig kaum einen echten Aufwärtstrend; Trendkanal und Ø Rendite sind weniger aussagekräftig.");
   if (w.score == null) hinweise.push(w.jung
-    ? `<b>Noch keine Ampel:</b> erst ${w.neu ? `${w.handelstage ?? "wenige"} Handelstage` : `${w.wochen} Wochen`} an der Börse – dafür ist die Kursgeschichte noch zu kurz. Deshalb keine Einstufung und keine Vergleichsfälle.`
+    ? `<b>Noch keine Ampel:</b> erst ${w.neu ? `${w.handelstage ?? "wenige"} ${krypto ? "Tage" : "Handelstage"}` : `${w.wochen} Wochen`} ${krypto ? "Kurse in unserer Datenquelle" : "an der Börse"} – dafür ist die Kursgeschichte noch zu kurz. Deshalb keine Einstufung und keine Vergleichsfälle.`
     : `<b>Noch keine Ampel:</b> Die Ampel braucht mindestens 5 Jahre Vorlauf, hier gibt es erst ${fmt(w.jahre_daten,1)} Jahre Daten. Deshalb keine Einstufung und keine Vergleichsfälle.`);
   else if ((w.jahre_daten||0) < 10) hinweise.push(`<b>Kurze Historie:</b> nur ${fmt(w.jahre_daten,1)} Jahre Daten. Ampel und Vergleichsfälle beruhen auf sehr wenigen Phasen und sind entsprechend unsicher.`);
   if (krypto && !w.pi) hinweise.push("Pi Cycle Bottom/Top ist auf Bitcoin geeicht und wird für diesen Coin nicht gezeigt (nicht geprüft).");

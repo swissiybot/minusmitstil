@@ -89,42 +89,45 @@ ETFS = ETFS + THEMEN_ETFS
 HEBEL_BRANCHE = "Hebel 2x"
 
 
-def _H(i, kuerzel, name, isin, wkn, basis, art="ETF", eu=True, xetra=None, ab=None):
-    return {"id": i, "name": name, "etf": kuerzel, "index": None, "index_tr": None, "branche": HEBEL_BRANCHE, "isin": isin, "wkn": wkn,
+def _H(i, kuerzel, anbieter, produkt, isin, wkn, basis, art="ETF", eu=True, xetra=None, ab=None):
+    """Anzeigename „Basiswert 2x (Anbieter)“: In der schmalen Liste muss der Anfang des Namens unterscheiden (nicht 13-mal
+    „ProShares Ultra …“); der volle Produktname steht in „produkt“ und in der Kurzbeschreibung."""
+    return {"id": i, "name": f"{basis} 2x ({anbieter})", "produkt": produkt, "etf": kuerzel, "index": None, "index_tr": None,
+            "branche": HEBEL_BRANCHE, "isin": isin, "wkn": wkn,
             "hebel": {"fach": 2, "art": art, "eu": eu, "basis": basis} | ({"xetra": xetra} if xetra else {})} | ({"ab": ab} if ab else {})
 
 
 HEBEL_ETFS = [
     # in Europa handelbar (UCITS-ETFs und ETCs), Kurse in Euro
-    _H("LQQ", "LQQ.PA", "Amundi Nasdaq-100 Daily (2x) Leveraged", "FR0010342592", "A0LC12", "Nasdaq-100", xetra="L8I7", ab="2015-01-02"),
-    _H("18MF", "18MF.DE", "Amundi MSCI USA Daily (2x) Leveraged", "FR0010755611", "A0X8ZS", "MSCI USA", ab="2013-01-02"),
-    _H("DBPG", "XS2L.MI", "Xtrackers S&P 500 2x Leveraged Daily Swap", "LU0411078552", "DBX0B5", "S&P 500", xetra="DBPG"),
-    _H("LVWC", "LVWC.DE", "Amundi MSCI World (2x) Leveraged", "FR0014010HV4", "ETF888", "MSCI World"),   # erst seit 10/2025: noch ohne Ampel
-    _H("DBPE", "DBPE.DE", "Xtrackers LevDAX Daily Swap", "LU0411075376", "DBX0BZ", "DAX"),
-    _H("LYY8", "LYY8.DE", "Amundi LevDax Daily (2x) leveraged", "LU0252634307", "LYX0AD", "DAX"),
-    _H("DEL2", "DEL2.DE", "L&G DAX Daily 2x Long", "IE00B4QNHH68", "A0X895", "DAX"),
-    _H("LVE", "LVE.PA", "Amundi EURO STOXX 50 Daily (2x) Leveraged", "FR0010468983", "LYX0BZ", "Euro Stoxx 50", xetra="LYMZ"),
-    _H("LVC", "LVC.PA", "Amundi CAC 40 Daily (2x) Leveraged", "FR0010592014", "LYX0C6", "CAC 40"),
-    _H("LEVMIB", "LEVMIB.MI", "Amundi FTSE MIB Daily (2x) Leveraged", "FR0010446658", "A0NEUQ", "FTSE MIB"),
-    _H("IBEXA", "IBEXA.MC", "Amundi IBEX 35 Doble Apalancado Diario (2x)", "FR0011042753", "LYX0M1", "IBEX 35"),
-    _H("LBUL", "LBUL.MI", "WisdomTree Gold 2x Daily Leveraged", "JE00B2NFTL95", "A0V6Z0", "Gold", art="ETC", xetra="4RT8", ab="2011-07-19"),
-    _H("LSIL", "LSIL.MI", "WisdomTree Silver 2x Daily Leveraged", "JE00B2NFTS64", "A0V5BA", "Silber", art="ETC", xetra="4RUE", ab="2011-07-19"),
-    _H("LOIL", "LOIL.MI", "WisdomTree WTI Crude Oil 2x Daily Leveraged", "JE00BDD9Q840", "A2BC41", "Rohöl WTI", art="ETC", xetra="4RT6", ab="2011-07-19"),
-    _H("LCOP", "LCOP.MI", "WisdomTree Copper 2x Daily Leveraged", "JE00B2NFTF36", "A0V6ZW", "Kupfer", art="ETC", xetra="4RT3", ab="2011-07-19"),
+    _H("LQQ", "LQQ.PA", "Amundi", "Amundi Nasdaq-100 Daily (2x) Leveraged UCITS ETF", "FR0010342592", "A0LC12", "Nasdaq-100", xetra="L8I7", ab="2015-01-02"),
+    _H("18MF", "18MF.DE", "Amundi", "Amundi MSCI USA Daily (2x) Leveraged UCITS ETF", "FR0010755611", "A0X8ZS", "MSCI USA", ab="2013-01-02"),
+    _H("DBPG", "XS2L.MI", "Xtrackers", "Xtrackers S&P 500 2x Leveraged Daily Swap UCITS ETF", "LU0411078552", "DBX0B5", "S&P 500", xetra="DBPG"),
+    _H("LVWC", "LVWC.DE", "Amundi", "Amundi MSCI World (2x) Leveraged UCITS ETF", "FR0014010HV4", "ETF888", "MSCI World"),   # erst seit 10/2025: noch ohne Ampel
+    _H("DBPE", "DBPE.DE", "Xtrackers LevDAX", "Xtrackers LevDAX Daily Swap UCITS ETF", "LU0411075376", "DBX0BZ", "DAX"),
+    _H("LYY8", "LYY8.DE", "Amundi LevDAX", "Amundi LevDax Daily (2x) leveraged UCITS ETF", "LU0252634307", "LYX0AD", "DAX"),
+    _H("DEL2", "DEL2.DE", "L&G", "L&G DAX Daily 2x Long UCITS ETF", "IE00B4QNHH68", "A0X895", "DAX"),
+    _H("LVE", "LVE.PA", "Amundi", "Amundi EURO STOXX 50 Daily (2x) Leveraged UCITS ETF", "FR0010468983", "LYX0BZ", "Euro Stoxx 50", xetra="LYMZ"),
+    _H("LVC", "LVC.PA", "Amundi", "Amundi CAC 40 Daily (2x) Leveraged UCITS ETF", "FR0010592014", "LYX0C6", "CAC 40"),
+    _H("LEVMIB", "LEVMIB.MI", "Amundi", "Amundi FTSE MIB Daily (2x) Leveraged UCITS ETF", "FR0010446658", "A0NEUQ", "FTSE MIB"),
+    _H("IBEXA", "IBEXA.MC", "Amundi", "Amundi IBEX 35 Doble Apalancado Diario (2x) UCITS ETF", "FR0011042753", "LYX0M1", "IBEX 35"),
+    _H("LBUL", "LBUL.MI", "WisdomTree", "WisdomTree Gold 2x Daily Leveraged", "JE00B2NFTL95", "A0V6Z0", "Gold", art="ETC", xetra="4RT8", ab="2011-07-19"),
+    _H("LSIL", "LSIL.MI", "WisdomTree", "WisdomTree Silver 2x Daily Leveraged", "JE00B2NFTS64", "A0V5BA", "Silber", art="ETC", xetra="4RUE", ab="2011-07-19"),
+    _H("LOIL", "LOIL.MI", "WisdomTree", "WisdomTree WTI Crude Oil 2x Daily Leveraged", "JE00BDD9Q840", "A2BC41", "Rohöl WTI", art="ETC", xetra="4RT6", ab="2011-07-19"),
+    _H("LCOP", "LCOP.MI", "WisdomTree", "WisdomTree Copper 2x Daily Leveraged", "JE00B2NFTF36", "A0V6ZW", "Kupfer", art="ETC", xetra="4RT3", ab="2011-07-19"),
     # USA (NYSE Arca, Kurse in Dollar) – für Privatanleger in der EU meist nicht kaufbar
-    _H("SSO", "SSO", "ProShares Ultra S&P500", "US74347R1077", None, "S&P 500", eu=False),
-    _H("QLD", "QLD", "ProShares Ultra QQQ", "US74347R2067", None, "Nasdaq-100", eu=False),
-    _H("DDM", "DDM", "ProShares Ultra Dow30", "US74347R3057", None, "Dow Jones", eu=False),
-    _H("UWM", "UWM", "ProShares Ultra Russell2000", "US74347R8429", None, "Russell 2000", eu=False),
-    _H("MVV", "MVV", "ProShares Ultra MidCap400", "US74347R4048", None, "S&P MidCap 400", eu=False),
-    _H("SPUU", "SPUU", "Direxion Daily S&P 500 Bull 2X", "US25459Y1652", None, "S&P 500", eu=False),
-    _H("ROM", "ROM", "ProShares Ultra Technology", "US74347R6936", None, "US-Technologieaktien", eu=False),
-    _H("UYG", "UYG", "ProShares Ultra Financials", "US74347X6334", None, "US-Finanzaktien", eu=False),
-    _H("DIG", "DIG", "ProShares Ultra Energy", "US74347R7199", None, "US-Energieaktien", eu=False),
-    _H("UGL", "UGL", "ProShares Ultra Gold", "US74347W6012", None, "Gold", eu=False),
-    _H("AGQ", "AGQ", "ProShares Ultra Silver", "US74347W3530", None, "Silber", eu=False),
-    _H("UCO", "UCO", "ProShares Ultra Bloomberg Crude Oil", "US74347Y8883", None, "Rohöl WTI", eu=False),
-    _H("UBT", "UBT", "ProShares Ultra 20+ Year Treasury", "US74347R1721", None, "US-Staatsanleihen 20+ Jahre", eu=False),
+    _H("SSO", "SSO", "ProShares Ultra, USA", "ProShares Ultra S&P500", "US74347R1077", None, "S&P 500", eu=False),
+    _H("QLD", "QLD", "ProShares Ultra, USA", "ProShares Ultra QQQ", "US74347R2067", None, "Nasdaq-100", eu=False),
+    _H("DDM", "DDM", "ProShares Ultra, USA", "ProShares Ultra Dow30", "US74347R3057", None, "Dow Jones", eu=False),
+    _H("UWM", "UWM", "ProShares Ultra, USA", "ProShares Ultra Russell2000", "US74347R8429", None, "Russell 2000", eu=False),
+    _H("MVV", "MVV", "ProShares Ultra, USA", "ProShares Ultra MidCap400", "US74347R4048", None, "S&P MidCap 400", eu=False),
+    _H("SPUU", "SPUU", "Direxion, USA", "Direxion Daily S&P 500 Bull 2X Shares", "US25459Y1652", None, "S&P 500", eu=False),
+    _H("ROM", "ROM", "ProShares Ultra, USA", "ProShares Ultra Technology", "US74347R6936", None, "US-Technologieaktien", eu=False),
+    _H("UYG", "UYG", "ProShares Ultra, USA", "ProShares Ultra Financials", "US74347X6334", None, "US-Finanzaktien", eu=False),
+    _H("DIG", "DIG", "ProShares Ultra, USA", "ProShares Ultra Energy", "US74347R7199", None, "US-Energieaktien", eu=False),
+    _H("UGL", "UGL", "ProShares Ultra, USA", "ProShares Ultra Gold", "US74347W6012", None, "Gold", eu=False),
+    _H("AGQ", "AGQ", "ProShares Ultra, USA", "ProShares Ultra Silver", "US74347W3530", None, "Silber", eu=False),
+    _H("UCO", "UCO", "ProShares Ultra, USA", "ProShares Ultra Bloomberg Crude Oil", "US74347Y8883", None, "Rohöl WTI", eu=False),
+    _H("UBT", "UBT", "ProShares Ultra, USA", "ProShares Ultra 20+ Year Treasury", "US74347R1721", None, "US-Staatsanleihen 20+ Jahre", eu=False),
 ]
 ETFS = ETFS + HEBEL_ETFS
 

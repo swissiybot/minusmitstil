@@ -163,7 +163,7 @@ def hebel_text(e: dict) -> str:
     platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra"}.get(e["etf"][-3:] if "." in e["etf"] else "", "New York (NYSE Arca)")
     was = ("Besicherte Schuldverschreibung (ETC, kein Fonds)" if h["art"] == "ETC" else "Börsengehandelter Fonds (ETF)" if h["eu"] else "US-ETF")
     text = (f"{was} mit täglichem 2-fachem Hebel auf {h['basis']}: Ziel ist das Doppelte der Veränderung an EINEM Tag – über Wochen und Jahre "
-            f"ist das nicht das Doppelte. Kein Knock-out. Voller Name: {e['name']}. Kurse hier von der Börse {platz}")
+            f"ist das nicht das Doppelte. Kein Knock-out. Voller Name: {e['produkt']}. Kurse hier von der Börse {platz}")
     text += f"; auf Xetra dieselben Anteile unter dem Kürzel {h['xetra']}." if h.get("xetra") else "."
     if not h["eu"]:
         text += " Für Privatanleger in der EU meist nicht kaufbar (es fehlt das vorgeschriebene EU-Basisinformationsblatt)."
