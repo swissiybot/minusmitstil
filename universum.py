@@ -4,7 +4,7 @@ Krypto: die fünf Kernwerte plus die feste Top-200-Liste listen/krypto.csv (kryp
 Hebel 2x: feste, geprüfte Liste in einstellungen.HEBEL_ETFS (Gruppe ETF, Art „Hebel 2x“).
 
 Ergebnis: daten/universum.csv mit Spalten
-    id, symbol, name, gruppe, land, branche
+    id, symbol, name, gruppe, land, branche, ftse (1 = steht in der Vanguard-Liste des FTSE All-World)
 """
 import io
 import sys
@@ -90,30 +90,72 @@ def _yahoo_symbol(ticker: str, land: str) -> str | None:
 
 
 def ftse_all_world() -> pd.DataFrame:
-    """Liest die heruntergeladene Vanguard-Bestandsliste (Excel/CSV) aus daten/eingang/."""
+    """Liest die von Hand heruntergeladene Vanguard-Bestandsliste (Excel/CSV) aus daten/eingang/.
+
+    Erwartet: eine Datei *.xlsx, *.xls oder *.csv direkt in daten/eingang/ (Name egal; bei mehreren gilt die alphabetisch
+    letzte). Irgendwo steht eine Kopfzeile mit der Spalte „Ticker“; dazu eine Namensspalte („Holding name“ oder „Name“) und
+    eine Länderspalte („Country“, „Land“ oder „Region“) mit Zwei-Buchstaben-Codes (US, GB, JP …) – daraus wird die
+    Yahoo-Endung (ENDUNG). Zeilen mit unbekanntem Land fallen weg (auch „CN“: solange nicht an der echten Datei geprüft ist,
+    ob dort A-Aktien oder Hongkong-Kürzel stehen, wird nichts geraten). Optional eine Branchenspalte („Sector“, „Sektor“).
+    STAND 24.11.2026: noch nie mit einer echten Vanguard-Datei gelaufen – beim ersten Mal die Ausgabe (Anzahl, Länder ohne
+    Endung, daten/ohne_daten.txt nach dem Kursabruf) prüfen. Online wirkt die Datei nicht: daten/eingang/ ist in .gitignore
+    (Vanguard-Datei nicht weitergeben) und liegt nicht im Zwischenspeicher der Online-Läufe.
+    Eine unlesbare Datei wird mit Warnung übersprungen (sie darf nicht die ganze Werteliste einfrieren)."""
+    leer = pd.DataFrame(columns=["id", "symbol", "name", "gruppe", "land", "branche"])
     dateien = sorted(glob.glob(str(E.EINGANG / "*.xls*")) + glob.glob(str(E.EINGANG / "*.csv")))
     if not dateien:
         print("Hinweis: keine Vanguard-Liste in daten/eingang/ - FTSE All-World wird uebersprungen.")
-        return pd.DataFrame(columns=["id", "symbol", "name", "gruppe", "land", "branche"])
+        return leer
     datei = dateien[-1]
-    roh = pd.read_csv(datei, header=None) if datei.endswith(".csv") else pd.read_excel(datei, header=None)
+    if len(dateien) > 1:
+        print(f"Hinweis: {len(dateien)} Dateien in daten/eingang/ – verwendet wird {datei}")
+    try:
+        return _ftse_lesen(datei)
+    except Exception as ex:
+        print(f"WARNUNG: Vanguard-Liste {datei} nicht lesbar ({ex.__class__.__name__}: {ex}) – FTSE All-World wird übersprungen.", file=sys.stderr)
+        return leer
+
+
+def _ftse_tabelle(datei: str) -> pd.DataFrame:
+    """Rohtabelle ohne Kopf. CSV: Trennzeichen ausprobieren (Komma, Semikolon, Tabulator), Vorspann-Zeilen dürfen kürzer sein."""
+    if not datei.lower().endswith(".csv"):
+        return pd.read_excel(datei, header=None)
+    for sep in (",", ";", "\t"):
+        try:
+            roh = pd.read_csv(datei, header=None, sep=sep, names=range(40), dtype=str, engine="python", encoding="utf-8-sig")
+        except Exception:
+            continue
+        if roh.apply(lambda r: r.astype(str).str.fullmatch(r"\s*Ticker\s*", case=False).any(), axis=1).any():
+            return roh.dropna(axis=1, how="all")
+    raise ValueError("keine Kopfzeile mit der Spalte „Ticker“ gefunden")
+
+
+def _ftse_lesen(datei: str) -> pd.DataFrame:
+    roh = _ftse_tabelle(datei)
     # Kopfzeile suchen (Zeile, in der "Ticker" steht)
-    kopf = next(i for i, r in roh.iterrows() if r.astype(str).str.contains("Ticker", case=False).any())
-    df = roh.iloc[kopf + 1:].copy()
-    df.columns = [str(c).strip() for c in roh.iloc[kopf]]
+    kopf = next((i for i, r in roh.iterrows() if r.astype(str).str.contains("Ticker", case=False).any()), None)
+    if kopf is None:
+        raise ValueError("keine Kopfzeile mit der Spalte „Ticker“ gefunden")
+    df = roh.loc[roh.index > kopf].copy()
+    df.columns = [str(c).strip() for c in roh.loc[kopf]]
     spalte = lambda *namen: next((c for c in df.columns if any(n.lower() in c.lower() for n in namen)), None)
     c_tick, c_name, c_land = spalte("Ticker"), spalte("Holding name", "Name"), spalte("Country", "Land", "Region")
     c_branche = spalte("Sector", "Sektor", "Industry")
-    df = df[df[c_tick].notna()]
-    land = df[c_land].astype(str).str.strip().str.upper() if c_land else "US"
+    if c_name is None:
+        raise ValueError(f"keine Namensspalte gefunden (Spalten: {list(df.columns)})")
+    df = df[df[c_tick].notna() & (df[c_tick].astype(str).str.strip() != "")]
+    land = df[c_land].astype(str).str.strip().str.upper() if c_land else pd.Series("US", index=df.index)
     sym = [_yahoo_symbol(t, l) for t, l in zip(df[c_tick], land)]
     out = pd.DataFrame({
-        "id": sym, "symbol": sym, "name": df[c_name].astype(str).str.strip(),
+        "id": sym, "symbol": sym, "name": df[c_name].astype(str).str.strip().values,
         "gruppe": "FTSE All-World", "land": list(land),
-        "branche": df[c_branche].astype(str) if c_branche else "",
+        "branche": df[c_branche].astype(str).values if c_branche else "",
     })
-    out = out[out["symbol"].notna()]
-    print(f"FTSE All-World aus {datei}: {len(out)} Werte")
+    ohne = out[out["symbol"].isna()]
+    out = out[out["symbol"].notna()].drop_duplicates("symbol")
+    print(f"FTSE All-World aus {datei}: {len(out)} Werte" + (f"; {len(ohne)} Zeilen ohne Yahoo-Endung (Länder: {ohne['land'].value_counts().head(12).to_dict()})" if len(ohne) else ""))
+    if not c_land:
+        print("Hinweis: keine Länderspalte gefunden – alle Kürzel als US-Kürzel behandelt (bitte prüfen).")
     return out
 
 
@@ -165,8 +207,11 @@ def main():
         kennungen_eindeutig(alt).to_csv(ziel, index=False)
         return 0
     df = pd.concat(teile, ignore_index=True)
-    # Doppelte (z. B. Apple in Nasdaq und FTSE) zusammenfassen, Gruppen merken
-    df["gruppe"] = df.groupby("symbol")["gruppe"].transform(lambda g: " + ".join(dict.fromkeys(g)))
+    # Doppelte (z. B. Apple in Nasdaq und FTSE All-World) zusammenfassen. Die Gruppe bleibt die der ersten Fundstelle
+    # (Nasdaq, NYSE, Welt …): Viele Stellen vergleichen die Gruppe genau (Beschreibung und ISIN, $/€-Umschalter,
+    # TradingView-Kürzel) – eine zusammengesetzte Gruppe „Nasdaq + FTSE All-World“ hätte dort rund 1.500 vorhandene Werte
+    # verschlechtert. Die Zugehörigkeit zum FTSE All-World steht stattdessen in der eigenen Spalte „ftse“ (1 oder leer).
+    df["ftse"] = df.groupby("symbol")["gruppe"].transform(lambda g: "1" if "FTSE All-World" in set(g) else "")
     df = df.drop_duplicates("symbol", keep="first")
     df = kennungen_eindeutig(df)
     df.to_csv(ziel, index=False)

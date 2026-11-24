@@ -927,6 +927,8 @@ def werte_eines(z: dict):
 def zusatzdaten(z: dict, zeile: dict) -> dict:
     """Felder fuer die Titelseite aus eigenen Dateien (Wunsch Marc 23.11.2026); fehlt eine Quelle, fehlt das Feld."""
     out = {}
+    if str(z.get("ftse") or "") not in ("", "0", "0.0"):
+        out["ftse"] = True   # steht in der Vanguard-Liste des FTSE All-World (universum.py)
     if z["gruppe"] == "Krypto":   # Rang in der festen Top-200-Liste; „kern“ = die fünf Werte, die Übersicht und Alarme wie bisher zeigen
         k = _krypto().get(z["id"]) or {}
         if k.get("rang"):

@@ -103,6 +103,21 @@ Wunsch Marc: „2x … ohne Knockout, z. B. Amundi NASDAQ 100 ETF 2x“. Neue, f
 - **Nicht aufgenommen:** L&G FTSE 100 Leveraged (Daily 2x) – bei Yahoo nur in Pence in London; ProShares Ultra Semiconductors (Kürzel `USD`, Verwechslungsgefahr mit der Währung).
 - **Behandlung im Tool:** Ampel wie bei jedem Wert (Kurs gemessen an der eigenen Geschichte). Hebel-Produkte bleiben aus der Prüfung „ETFs / Indizes“, der Trendstudie, der Gegenprobe der Vorhersage und den Sparplan-Tabellen heraus; kein „ETF-Inhalt“ (Swap-ETFs halten einen Ersatzkorb); Sparplan-Vergleich vorsichtig **ohne** Teilfreistellung (steuerliche Einstufung nicht geprüft); Alarme gesammelt wie Aktien.
 
+### Mehr Titel: FTSE All-World vorbereitet (24.11.2026)
+Wunsch Marc: „noch mehr von den wichtigeren Aktien, z. B. FTSE All-World 4000“. Die Vanguard-Seite wird **nie per Skript abgerufen** – die Bestandsliste lädt Marc von Hand. Stand 24.11.2026: Es liegt noch keine Datei vor; `ftse_all_world()` in `universum.py` ist **noch nie mit einer echten Vanguard-Datei gelaufen** (nur die Einlese-Mechanik ist mit einer selbst gebauten Testtabelle geprüft).
+
+**Anleitung für Marc:**
+1. Auf der Vanguard-Seite (vanguard.de, Bereich für Privatanleger) den Fonds „FTSE All-World UCITS ETF“ öffnen (VWRL ausschüttend oder VWCE thesaurierend – der Bestand ist derselbe), dort zu den Portfoliodaten bzw. Beständen gehen und die **vollständige Bestandsliste als Excel-Datei** herunterladen (der Knopf hieß zuletzt sinngemäß „Bestände herunterladen“ / „Download Fund Holdings Data“ – nicht nachgeprüft, weil die Seite nicht automatisch abgerufen werden darf).
+2. Die Datei **unverändert** in den Ordner `daten/eingang/` des Projekts legen (`/home/marc/Schreibtisch/aktien-kaufplan/daten/eingang/`). Der Name ist egal, sinnvoll ist `vanguard-ftse-all-world-JJJJ-MM.xlsx`. Es darf keine andere `.xlsx`-, `.xls`- oder `.csv`-Datei direkt in diesem Ordner liegen (bei mehreren nimmt das Skript die alphabetisch letzte).
+3. Bescheid geben – dann wird zuerst am PC geprüft, ob die Spalten passen, bevor irgendetwas online geht.
+
+**Was das Skript erwartet:** eine Kopfzeile mit der Spalte „Ticker“, eine Namensspalte („Holding name“ oder „Name“) und eine Länderspalte („Country“, „Land“ oder „Region“) mit Zwei-Buchstaben-Codes (US, GB, JP …); optional eine Branchenspalte. Aus Kürzel und Land wird das Yahoo-Kürzel (`ENDUNG`: 45 Länder, z. B. DE → `.DE`, JP → `.T`, HK → vierstellig + `.HK`). Zeilen mit unbekanntem Land fallen weg und werden gezählt; China (`CN`) wird bewusst nicht zugeordnet, solange nicht an der echten Datei geklärt ist, ob dort A-Aktien oder Hongkong-Kürzel stehen. Kürzel, die Yahoo nicht kennt, landen nach dem Kursabruf in `daten/ohne_daten.txt`.
+
+**Offen, vor dem ersten echten Lauf zu klären:**
+- **Online wirkt die Datei heute nicht.** `daten/eingang/` steht in `.gitignore` („Datei von Vanguard, nicht weitergeben“) und gehört nicht zum Zwischenspeicher der Online-Läufe; das Repo ist öffentlich. Für die Online-Seite braucht es eine Entscheidung, z. B. eine daraus abgeleitete reine Kürzel-Liste (Yahoo-Kürzel, Name, Land – ohne Gewichte und Werte) einzuchecken. Das ist noch nicht gebaut.
+- **Laufzeit und Größe:** Der FTSE All-World hat rund 4.000 Titel; ein großer Teil ist über Nasdaq, NYSE und „Welt“ schon da, es kämen aber grob 2.000 Werte dazu. Das wären online etwa 20 Minuten mehr je Lauf und rund 240 MB mehr auf der Seite (heute 717 MB, GitHub Pages erlaubt 1 GB) – das passt nur mit einer Verschlankung des Exports.
+- **Behoben am 24.11.2026:** Eine unlesbare Datei fror bisher die ganze Werteliste auf dem alten Stand ein (jetzt Warnung und weiter ohne FTSE). Doppelte Werte bekamen die Gruppe „Nasdaq + FTSE All-World“ – damit hätten rund 1.500 vorhandene Werte Beschreibung, ISIN, $/€-Umschalter und TradingView-Kürzel verloren (diese Stellen vergleichen die Gruppe genau). Jetzt bleibt die Gruppe, die Zugehörigkeit steht in der Spalte `ftse` der Werteliste und als Feld `ftse` in den Daten. Einen Filter „im FTSE All-World“ gibt es in der Oberfläche noch nicht.
+
 ### Ordnung, Ruhe und Verständlichkeit im Terminal (24.11.2026 mittags)
 Marc nach der sechsten Gestaltungsrunde: „Sortiere es so, wie es visuell für Menschen am besten ist. Alles muss geordnet, passend und stimmig wirken“ – und: verständlich für einen Laien. Kein neuer Effekt, sondern Rangfolge, Reihenfolge und Wörter; nur `web/index.html` (Stil-Schicht „Ordnung und Ruhe“ am Ende des Stylesheets), keine Rechnung berührt (Rückprobe 360 Fälle: alle Geldbeträge gleich). Wo dieser Abschnitt dem folgenden widerspricht, gilt dieser.
 - **Eine Rangfolge des Leuchtens:** nur der Halbkreis mit Nadel leuchtet; sparsam dazu die aktive Listenzeile, der Zustand der Fallen-Warnung und der Lichtpunkt am letzten Kurs. Alles andere zeigt Farbe ohne Schein. Die Bedienung trägt ein eigenes Blau (`--akzent`), damit sie nicht mit der Stufe „günstig“ (Cyan) verwechselt wird; Karten-Etiketten tragen keine Stufenfarben mehr.
@@ -242,7 +257,7 @@ Windows: am einfachsten über WSL (Ubuntu) mit denselben Befehlen.
 
 Täglich aktualisieren: `./aktualisieren.sh` von Hand oder per Cronjob / systemd-Timer, z. B. morgens um 07:00.
 
-Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF (Excel, „Download Fund Holdings Data“ auf der Vanguard-Seite) nach `daten/eingang/` legen.
+Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF von Hand laden und nach `daten/eingang/` legen – Anleitung und Stand im Abschnitt „Mehr Titel: FTSE All-World vorbereitet“.
 
 ## Daten und Lizenzen
 - Kurse: Yahoo Finance über [yfinance](https://github.com/ranaroussi/yfinance) – nur für den privaten Gebrauch, werden **nicht** mitgeliefert, sondern bei jedem selbst geladen.
