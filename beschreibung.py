@@ -29,7 +29,7 @@ import requests
 import einstellungen as E
 
 ZIEL = E.DATEN / "beschreibung.json"
-VERSION = 6   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200, 5: Hebel 2x, 6: Hebel 2x auf 62 Produkte)
+VERSION = 7   # bei neuen Feldern oder geänderten Kennungen erhöhen: dann wird sofort neu gebaut, nicht erst nach 7 Tagen (4: Krypto Top 200, 5: Hebel 2x, 6: Hebel 2x auf 62 Produkte, 7: Hebel-Texte mit Nachbau-Hinweis)
 WIKIDATA = "https://query.wikidata.org/sparql"
 KOPF = {"User-Agent": "minusmitstil-kaufplan/1.0 (Lernprojekt, GitHub swissiybot/minusmitstil)", "Accept": "application/sparql-results+json"}
 BOERSE = {"Q82059": "Nasdaq", "Q13677": "NYSE"}
@@ -160,15 +160,23 @@ LAND_KURZ = {"Vereinigte Staaten": "USA", "Volksrepublik China": "China", "Repub
 def hebel_text(e: dict) -> str:
     """Kurzbeschreibung eines Hebel-Produkts aus der geprüften Liste (einstellungen.HEBEL_ETFS) – keine Empfehlung."""
     h = e["hebel"]
-    platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra"}.get(e["etf"][-3:] if "." in e["etf"] else "", "in den USA (NYSE Arca oder Nasdaq)")
-    was = ("Besicherte Schuldverschreibung (ETC, kein Fonds)" if h["art"] == "ETC" else "Börsengehandelter Fonds (ETF)" if h["eu"] else "US-ETF")
+    platz = {".PA": "Paris", ".MI": "Mailand", ".MC": "Madrid", ".DE": "Xetra", ".AS": "Amsterdam"}.get(e["etf"][-3:] if "." in e["etf"] else "", "in den USA (NYSE Arca oder Nasdaq)")
+    was = ("Besicherte Schuldverschreibung (ETC, kein Fonds)" if h["art"] == "ETC" else
+           "Börsengehandelte Schuldverschreibung (ETP, kein Fonds: Ausfallrisiko des Anbieters)" if h["art"] == "ETP" else
+           "Börsengehandelter Fonds (ETF)" if h["eu"] else "US-ETF")
     text = (f"{was} mit täglichem 2-fachem Hebel auf {h['basis']}: Ziel ist das Doppelte der Veränderung an EINEM Tag – über Wochen und Jahre "
             f"ist das nicht das Doppelte. Kein Knock-out. Voller Name: {e['produkt']}. Kurse hier von der Börse {platz}")
     text += f"; auf Xetra dieselben Anteile unter dem Kürzel {h['xetra']}." if h.get("xetra") else "."
     if not h["eu"]:
         text += " Für Privatanleger in der EU meist nicht kaufbar (es fehlt das vorgeschriebene EU-Basisinformationsblatt)."
+    if h.get("einzel"):
+        text += (" Einzelwert-Risiko: Das Produkt hängt an EINER Aktie – fällt sie an einem Tag um 50 % oder mehr, ist der Einsatz"
+                 " praktisch verloren; schon wenige schwache Tage hintereinander kosten überproportional.")
     if e.get("ab"):
         text += f" Kurse vor dem {'.'.join(reversed(e['ab'].split('-')))} bleiben weg: Sie sind bei Yahoo fehlerhaft."
+    if (e.get("nachbau") or {}).get("aktiv"):
+        text += (" Die Zeit vor dem ersten echten Kurs ist NACHGEBAUT (aus den Tageskursen des Basiswerts: täglich das Doppelte, abzüglich"
+                 " Zins und laufender Kosten) – das sind keine echten Kurse; im Chart ist der Abschnitt gekennzeichnet.")
     return text
 
 

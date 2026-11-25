@@ -160,8 +160,8 @@ def _ftse_lesen(datei: str) -> pd.DataFrame:
 
 
 def etfs_und_bitcoin() -> pd.DataFrame:
-    # Hebel-Produkte (einstellungen.HEBEL_ETFS): Gruppe ETF, Art „Hebel 2x“; ETCs heißen auch so
-    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + (" (ETC)" if (e.get("hebel") or {}).get("art") == "ETC" else " (ETF)"),
+    # Hebel-Produkte (einstellungen.HEBEL_ETFS): Gruppe ETF, Art „Hebel 2x“; ETCs und ETPs heißen auch so
+    zeilen = [{"id": e["id"], "symbol": e["etf"], "name": e["name"] + f" ({(e.get('hebel') or {}).get('art') or 'ETF'})",
                "gruppe": "ETF", "land": "", "branche": e.get("branche", "Index")} for e in E.ETFS]
     for k in E.KRYPTO:
         zeilen.append({"id": k["id"], "symbol": k["symbol"], "name": k["name"], "gruppe": "Krypto", "land": "", "branche": "Krypto"})
