@@ -5278,38 +5278,30 @@ function zonenFlaechen(ch, serie, c, f){
     if (!sichtbar || !worte.length || gr.width < 560) return;   // schmaler Chart (Handy): keine Wörter im Bild – die Zeile „Kaufzonen heute“ darüber erklärt die farbigen Schilder
     x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "left"; x.textBaseline = "middle";
     let zuletzt = -99;
-    // Regel (Marc 25.11.2026, nach mehreren Anläufen): JEDES WORT STEHT IN SEINER ZONE. Alle Wörter beginnen links bündig untereinander,
-    // so weit links wie möglich, und wandern beim Zoomen und Verschieben mit. Die vier inneren Wörter (teuer, neutral, günstig, sehr
-    // günstig) sitzen genau in der Mitte ihres Bands, gemessen unter der Wortmitte. „sehr teuer“ steht über seiner Linie, „Ausverkauf“
-    // unter seiner – im mittleren Abstand der anderen Wörter, aber nie auf oder jenseits der Linie. Kein Wort wird weggelassen.
-    // Ist ein Band am linken Rand zu schmal für sein Wort, rückt die ganze Spalte so weit nach rechts, bis alle Wörter in ihre Zone passen.
-    const HOCH = 17, oben = 11, brMax = Math.max(...worte.map(w => x.measureText(w[0]).width));
-    const start = Math.min(...worte.map(w => w[2][0][0]));
-    const spalte = x0 => {   // [[Zone, y], …] und wie viele innere Wörter nicht in ihr Band passen
-      const xl = x0, xr = x0 + brMax + 12, xm = (xl + xr) / 2;
-      const band = pkt => { let m = null, enge = Infinity;   // Band unter der Wortmitte und engste Stelle unter dem ganzen Wort
-        for (const q of pkt) { if (q[0] < xl - 4) continue; if (q[0] > xr + 4) break; enge = Math.min(enge, Math.min(q[2], gr.height) - Math.max(q[1], 0)); if (!m && q[0] >= xm) m = q; }
-        return m ? {a: m[1], b: m[2], enge} : null; };
-      const zeilen = worte.map(([name, fa, pkt, fi]) => { const q = band(pkt); return q ? {name, fa, fi, ...q} : null; }).filter(Boolean).sort((p, q) => p.fi - q.fi);
-      const innen = zeilen.filter(z => z.fi >= 1 && z.fi <= 4); if (!innen.length) return null;
-      innen.forEach(z => { z.y = (z.a + z.b) / 2; });
-      const n = innen.length, schritt = n > 1 ? Math.max(HOCH + 1, (innen[n - 1].y - innen[0].y) / (n - 1)) : HOCH + 6;
-      const alle = innen.map(z => [z, z.y]);
-      const o = zeilen.find(z => z.fi === 0), u = zeilen.find(z => z.fi === 5);
-      if (o && innen[0].fi === 1) alle.unshift([o, Math.max(oben, Math.min(innen[0].y - schritt, o.b - HOCH / 2 - 3))]);                  // über der Linie „sehr teuer“
-      if (u && innen[n - 1].fi === 4) alle.push([u, Math.min(gr.height - 24, Math.max(innen[n - 1].y + schritt, u.a + HOCH / 2 + 3))]);   // unter der Linie „Ausverkauf“
-      let eng = innen.filter(z => z.enge < HOCH + 1).length;
-      for (let i = 1; i < alle.length; i++) if (alle[i][1] - alle[i - 1][1] < HOCH) eng++;   // zwei Schilder dürfen sich nicht überdecken
-      if (alle.some(([, y]) => y < oben - 1 || y > gr.height - 22)) eng++;
-      return {alle, eng};
-    };
-    let beste = null, x0 = Math.max(6, start + 6);
-    for (let xx = x0; xx + brMax + 12 < gr.width * .75; xx += 10) { const sp = spalte(xx); if (!sp) continue;
-      if (!beste || sp.eng < beste.eng) { beste = sp; x0 = xx; } if (!sp.eng) break; }
-    if (!beste) return;
-    beste.alle.forEach(([z, ym]) => { const br = x.measureText(z.name).width;
+    // Regel (Marc 25.11.2026, endgültig): Die Wörter stehen IMMER links bündig am Anfang des Charts untereinander und wandern beim
+    // Zoomen und Verschieben mit. Jedes Wort steht IN seiner Zone: die vier inneren (teuer, neutral, günstig, sehr günstig) genau in
+    // der Mitte ihres Bands, gemessen unter der Wortmitte; „sehr teuer“ direkt über seiner Linie, „Ausverkauf“ direkt unter seiner.
+    // Passt ein Wort an dieser Stelle nicht in seine Zone (Band schmaler als die Schrift) oder würde es ein anderes überdecken, wird es
+    // dort nicht gezeigt („nur anzeigen, wo es geht“). Beginnen die Bereiche erst später im Bild, beginnt die Spalte dort.
+    const HOCH = 17, brMax = Math.max(...worte.map(w => x.measureText(w[0]).width));
+    const start = Math.min(...worte.map(w => w[2][0][0])), x0 = Math.max(6, start + 6), xr = x0 + brMax + 12, xm = (x0 + xr) / 2;
+    const band = pkt => { let m = null, enge = Infinity;   // Band unter der Wortmitte und engste Stelle unter dem ganzen Wort
+      for (const q of pkt) { if (q[0] < x0 - 4) continue; if (q[0] > xr + 4) break; enge = Math.min(enge, q[2] - q[1]); if (!m && q[0] >= xm) m = q; }
+      return m && m[0] - xm < 60 ? {a: m[1], b: m[2], enge} : null; };
+    const belegt = [];
+    [...worte].sort((p, q) => (p[3] === 0 || p[3] === 5 ? 1 : 0) - (q[3] === 0 || q[3] === 5 ? 1 : 0)).forEach(([name, fa, pkt, fi]) => {   // erst die inneren Wörter
+      const q = band(pkt); if (!q) return;
+      let ym;
+      if (fi === 0) ym = q.b - HOCH / 2 - 3;            // über der Linie „sehr teuer“
+      else if (fi === 5) ym = q.a + HOCH / 2 + 3;       // unter der Linie „Ausverkauf“
+      else { if (q.enge < HOCH + 1) return; ym = (q.a + q.b) / 2; }
+      if (ym < HOCH / 2 + 2 || ym > gr.height - 22 - HOCH / 2) return;      // ganz unten liegen die Bänder der Kauf-/Verkaufsqualität
+      if (belegt.some(y => Math.abs(y - ym) < HOCH + 1)) return;
+      belegt.push(ym);
+      const br = x.measureText(name).width;
       x.fillStyle = f.panel + "e6"; x.beginPath(); if (x.roundRect) x.roundRect(x0, ym - 8.5, br + 12, 17, 5); else x.rect(x0, ym - 8.5, br + 12, 17); x.fill();
-      x.fillStyle = z.fi === 2 ? (document.documentElement.dataset.theme === "light" ? "#b38f00" : "#ffe81a") : z.fa; x.fillText(z.name, x0 + 6, ym + .5); });
+      x.fillStyle = fi === 2 ? (document.documentElement.dataset.theme === "light" ? "#b38f00" : "#ffe81a") : fa; x.fillText(name, x0 + 6, ym + .5);
+    });
   };
   serie.attachPrimitive({
     attached: p => { neu = p.requestUpdate; }, detached: () => { neu = null; }, updateAllViews(){},
