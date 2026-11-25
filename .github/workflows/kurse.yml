@@ -1,0 +1,144 @@
+# Schlanker Kurs-Lauf: holt nur die aktuellen Kurse (kurse_jetzt.py) und legt sie in das zuletzt veröffentlichte Paket.
+# Wofür: frischer Kurs, Abstand zur 200-Wochen-Linie und Ampel „von jetzt“ alle 20 Minuten (Wunsch Marc 25.11.2026) –
+# die aufwendige Auswertung bleibt beim vollen Lauf „Dashboard aktualisieren“.
+# Eigener Ablauf statt Erweiterung des Schnellwegs (seite.yml): Er braucht einen Zeitplan, Python und Yahoo; der Schnellweg soll
+# auch dann in anderthalb Minuten durchlaufen, wenn Yahoo sperrt. Beide teilen sich die Paket-Auswahl (paket_wahl.py).
+#
+# Regeln, damit sich die drei Veröffentlicher nicht in die Quere kommen (ausführlich im README, Abschnitt „Kurse alle 20 Minuten“):
+#  1. Grundlage ist immer das Paket mit der NEUESTEN AUSWERTUNG (paket_wahl.py, Marke stand-…), nicht das jüngst hochgeladene.
+#  2. Vor dem Hochladen wird erneut geprüft; ist inzwischen eine neuere Auswertung da, veröffentlicht dieser Lauf nicht.
+#  3. Alle Veröffentlichungen laufen in derselben Gruppe „veroeffentlichen“ nacheinander.
+name: Kurse auffrischen (schlanker Lauf)
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Zeiten in UTC. GitHub startet Zeitpläne oft verspätet und lässt bei hoher Last einzelne aus – die Seite zeigt die echte Uhrzeit der Kurse.
+    - cron: "5,25,45 7-21 * * 1-5"            # Mo–Fr 8 bis 23 Uhr deutscher Zeit (Europa und USA handeln): alle 20 Minuten
+    - cron: "35 22,23,0,1,2,3,4,5,6 * * 1-5"  # werktags nachts: stündlich (Krypto, Asien)
+    - cron: "35 * * * 0,6"                    # Wochenende: stündlich (Krypto)
+
+permissions:
+  contents: read
+  actions: read      # Artefakt-Liste lesen, Paket herunterladen
+  pages: write
+  id-token: write
+
+concurrency:
+  group: veroeffentlichen     # dieselbe Gruppe wie der Schnellweg und der Veröffentlichungs-Schritt des vollen Laufs
+  cancel-in-progress: false
+
+env:
+  TZ: Europe/Berlin
+
+jobs:
+  kurse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.veroeffentlichen.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Pakete installieren
+        run: pip install -r requirements.txt
+
+      - name: Paket mit der neuesten Auswertung wählen
+        id: wahl
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python paket_wahl.py
+
+      - name: Paket holen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh run download "${{ steps.wahl.outputs.lauf }}" --name github-pages --dir paket
+          mkdir site
+          tar -xf paket/artifact.tar -C site
+          rm -rf paket
+          test -f site/daten/rangliste.json && test -f site/daten/statisch.json && test -d site/daten/werte
+          echo "Übernommen: $(ls site/daten/werte | wc -l) Werte, $(du -sh site | cut -f1)"
+
+      - name: Aktuelle Kurse (Yahoo, Sammelabrufe)
+        id: kurse
+        run: |
+          set +e
+          python kurse_jetzt.py --site site
+          code=$?
+          set -e
+          # 0 = neue Datei · 2 = kein einziger Kurs · 3 = nichts Neues (Yahoo sperrt): dann nichts veröffentlichen, der alte Stand bleibt online
+          if [ "$code" = "0" ]; then echo "weiter=ja" >> "$GITHUB_OUTPUT";
+          elif [ "$code" = "2" ] || [ "$code" = "3" ]; then echo "weiter=nein" >> "$GITHUB_OUTPUT"; echo "::warning::Keine neuen Kurse von Yahoo – es wird nichts veröffentlicht, der bisherige Stand bleibt";
+          else exit "$code"; fi
+
+      - name: Neueste Seite übernehmen
+        if: steps.kurse.outputs.weiter == 'ja'
+        continue-on-error: true   # klappt das nicht, bleibt die Seite aus dem Paket
+        run: |
+          git fetch --depth 1 origin main
+          git show FETCH_HEAD:web/index.html > site/index.html.neu && mv site/index.html.neu site/index.html
+          rm -rf site/lib.neu && mkdir site/lib.neu && git archive FETCH_HEAD web/lib | tar -x --strip-components=2 -C site/lib.neu && rm -rf site/lib && mv site/lib.neu site/lib
+
+      - name: Erneut prüfen – ist inzwischen eine neuere Auswertung da?
+        id: pruefung
+        if: steps.kurse.outputs.weiter == 'ja'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          python paket_wahl.py --pruefe "${{ steps.wahl.outputs.stand }}" "${{ steps.wahl.outputs.hochgeladen }}"
+          code=$?
+          set -e
+          if [ "$code" = "0" ]; then echo "frei=ja" >> "$GITHUB_OUTPUT";
+          elif [ "$code" = "10" ]; then echo "frei=nein" >> "$GITHUB_OUTPUT"; echo "::notice::Neuere Auswertung vorhanden – dieser Lauf veröffentlicht nicht (der volle Lauf bringt eigene frische Kurse mit)";
+          else exit "$code"; fi
+          echo "marke=$(python paket_wahl.py --marke site)" >> "$GITHUB_OUTPUT"
+
+      - name: Bericht
+        if: always()
+        run: |
+          {
+            echo "## Schlanker Kurs-Lauf"
+            if [ -f site/daten/kurse_jetzt.json ]; then
+              python -c "import json;d=json.load(open('site/daten/kurse_jetzt.json'));z=d['zahl'];print(f\"Kurse {d['stand']}: {z['geliefert']} von {z['gesamt']} geliefert, {z['von_heute']} von heute, {z['behalten']} vom vorigen Abruf behalten\" + (' – Yahoo sperrte, unvollständig' if z['gesperrt'] else '') + f\"; Auswertung {d['basis']}\")"
+            else
+              echo "Keine Kurse."
+            fi
+            echo "Veröffentlicht: ${{ steps.kurse.outputs.weiter == 'ja' && steps.pruefung.outputs.frei == 'ja' && 'ja' || 'nein' }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Marke zuerst: Ein Paket zählt für die Auswahl erst mit beidem, und ohne Marke gälte es als „alt“.
+      - name: Stand der Auswertung als Marke hochladen
+        if: steps.pruefung.outputs.frei == 'ja'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pruefung.outputs.marke }}
+          path: site/daten/statisch.json
+          retention-days: 1
+
+      - uses: actions/configure-pages@v5
+        if: steps.pruefung.outputs.frei == 'ja'
+
+      - uses: actions/upload-pages-artifact@v4
+        if: steps.pruefung.outputs.frei == 'ja'
+        with:
+          path: site
+          retention-days: 1   # Pakete nur einen Tag aufbewahren (rund 270 MB je Lauf)
+
+      - name: Kurz warten, bis GitHub das Paket kennt
+        if: steps.pruefung.outputs.frei == 'ja'
+        run: sleep 20
+
+      - name: Veröffentlichen
+        id: veroeffentlichen
+        if: steps.pruefung.outputs.frei == 'ja'
+        uses: actions/deploy-pages@v4
