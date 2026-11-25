@@ -138,7 +138,7 @@ HEBEL_ETFS = [
     _H("2CAR", "2CAR.DE", "WisdomTree", "WisdomTree STOXX Europe Automobiles 2x Daily Leveraged", "XS2427363895", "A3GWVR", "Europa Autoaktien", art="ETP"),
     _H("2FLY", "2FLY.DE", "WisdomTree", "WisdomTree STOXX Europe Travel & Leisure 2x Daily Leveraged", "XS2427363036", "A3GWVS", "Europa Reise- und Freizeitaktien", art="ETP"),
     _H("LNIK", "LNIK.MI", "WisdomTree", "WisdomTree Nickel 2x Daily Leveraged", "JE00BDD9QB77", "A2BC83", "Nickel", art="ETC", xetra="4RUD", ab="2022-03-25"),   # davor Fehlkurse und die Handelsaussetzung für Nickel im März 2022
-    _H("SC2X", "SC2X.DE", "Xtrackers/Scalable", "Scalable MSCI AC World (2x) Leveraged Daily Swap Xtrackers UCITS ETF 1C", "LU3386643970", "DBX2SC", "MSCI ACWI (Welt mit Schwellenländern)"),   # erst seit 28.07.2026: noch ohne Ampel
+    _H("SC2X", "SC2X.DE", "Xtrackers/Scalable", "Scalable MSCI AC World (2x) Leveraged Daily Swap Xtrackers UCITS ETF 1C", "LU3386643970", "DBX2SC", "MSCI AC World"),   # erst seit 28.07.2026: noch ohne Ampel
     # USA (NYSE Arca oder Nasdaq, Kurse in Dollar) – für Privatanleger in der EU meist nicht kaufbar
     _H("SSO", "SSO", "ProShares Ultra, USA", "ProShares Ultra S&P500", "US74347R1077", None, "S&P 500", eu=False),
     _H("QLD", "QLD", "ProShares Ultra, USA", "ProShares Ultra QQQ", "US74347R2067", None, "Nasdaq-100", eu=False),
