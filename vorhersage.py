@@ -20,6 +20,15 @@ Stand der Studie: „Kurs in 1 bzw. 3 Jahren höher“ sagt kein geprüfter Rech
 gebündelte Häufigkeit; die Ampel bringt als Zusatz nichts. Welche Modelle gelten und was die Gegenprobe ergibt,
 steht mit allen Zahlen in web/daten/vorhersage.json und wird laufend neu bestimmt. Die Ampel-Formel bleibt unberührt.
 
+SPANNEN (25.11.2026, Wunsch Marc: „85 von 100, sicher ist nur 70 bis 95“): Zu jeder der drei Zahlen steht eine
+90-%-Spanne (Felder s1, s3, sr = [unten, oben]) für die Häufigkeit, mit der eine solche Vorhersage auf lange Sicht
+eintrifft. Sie kommt aus der Prüfung ohne Zukunftswissen: je Gruppe und Höhe der Vorhersage die Abweichung
+„eingetreten − vorhergesagt“ und ihre Unsicherheit aus der Streichprobe über Blöcke ganzer Kalenderjahre mit
+t-Verteilung (überlappende Zeiträume zählen also nicht als unabhängig; wenige Blöcke = breite Spanne). Nachweis:
+dieselbe Formel, nur aus früheren Jahren gerechnet, gegen die Häufigkeit späterer Abschnitte (Feld „deck“ je Gruppe).
+Gruppen ohne Prüfung (Krypto) bekommen die Spanne aus der Schwankung ihrer bisherigen Häufigkeit, mindestens aber
+die Unsicherheit der unsichersten geprüften Gruppe – ungeprüft (gruppen_heute[Gruppe]["sp"][Ziel]["art"] = "geschichte").
+
 Datenbasis und Grenzen (stehen auch in der Anzeige): nur HEUTE gelistete Werte – verschwundene Firmen fehlen, die
 Häufigkeiten sind eher zu hoch. Aktien mit Kurssprüngen über Faktor 4,5 in einer Woche (meist Datenfehler) zählen
 nicht für Gruppe und Prüfung. Bei ETFs zählt die Vorgeschichte aus Kursindizes ohne Dividenden nur zum Aufwärmen
@@ -47,6 +56,11 @@ MIN_PRUEF = 500                  # Gruppe gilt als geprüft ab so vielen Vorhers
 MIN_TITEL = 5                    # … aus mindestens so vielen Werten
 ALT_TAGE = 7
 SIMS, BLOCK, AKTIEN_SIM = 200, 26, 100           # Gegenprobe: gemeinsame Zufallsverläufe je Gruppe, Blocklänge in Wochen, Stichprobe Aktien
+SP_STUFEN = 5                    # Spannen: höchstens so viele Stufen der Vorhersage-Höhe je Gruppe (mindestens 5 Werte je Stufe)
+SP_Q = 0.95                      # Spannen: je Seite 5 % außerhalb = 90-%-Spanne
+SP_VOR = 3                       # Deckungsprobe: Spanne erst ab so vielen Blöcken Vorwissen prüfen
+SP_FELD = {"a1": "s1", "a3": "s3", "r1": "sr"}
+FASSUNG = 3                      # Aufbau von daten/vorhersage_pruefung.json (3: mit Spannen)
 PRUEF_DATEI = E.DATEN / "vorhersage_pruefung.json"
 AUS_DATEI = E.WEB_DATEN / "vorhersage.json"
 ZINS = None
@@ -257,6 +271,112 @@ def skill(se_m, se_ref, jahr, block):
     return [round(punkt * 100, 2), round((punkt - tq * se) * 100, 2), round((punkt + tq * se) * 100, 2), round(t_verteilung(punkt / se, k - 1) * 100, 1)]
 
 
+# ----------------------------------------------------------------- Spannen zu den Vorhersage-Zahlen
+asq = lambda p: np.arcsin(np.sqrt(np.clip(p, 0.0, 1.0)))             # Arkussinus-Wurzel: gleicht die Streuung von Anteilen an, bleibt bei 0 und 100 endlich
+
+
+def _streichprobe(n, sp, sy, block: int):
+    """n, sp, sy je Kalenderjahr: Zahl der Vorhersagen, Summe der Vorhersagen, Summe der eingetretenen Fälle.
+    Rückgabe: Abweichung „eingetreten − vorhergesagt“ (Arkussinus-Wurzel-Skala), ihre Streuung von Block zu Block
+    (Streichprobe über Blöcke von mindestens `block` Kalenderjahren) und die Zahl der Blöcke – oder None bei zu wenig Daten."""
+    k = len(n) // block
+    ab = lambda n_, p_, y_: float(asq(y_ / n_) - asq(p_ / n_))
+    if k < 2 or n.sum() < 100:
+        return None
+    th = []
+    for b in np.array_split(np.arange(len(n)), k):
+        rest = n.sum() - n[b].sum()
+        if rest < 30:
+            return None
+        th.append(ab(rest, sp.sum() - sp[b].sum(), sy.sum() - sy[b].sum()))
+    th = np.array(th)
+    return ab(n.sum(), sp.sum(), sy.sum()), math.sqrt((k - 1) * float(((th - th.mean()) ** 2).sum())), k
+
+
+def _stufen_statistik(N, SP, SY, block: int):
+    """Je Stufe der Vorhersage-Höhe (Spalten): Abweichung der Stufe; Streuung = die größere aus Stufe und ganzer Gruppe
+    (eine einzelne Stufe schätzt sie in kleinen Gruppen und frühen Jahren zu unruhig). Stufen ohne genug Daten: Gruppe."""
+    ges = _streichprobe(N.sum(1), SP.sum(1), SY.sum(1), block)
+    if ges is None:
+        return None
+    aus = []
+    for b in range(N.shape[1]):
+        e = _streichprobe(N[:, b], SP[:, b], SY[:, b], block)
+        aus.append(ges if e is None else (e[0], max(e[1], ges[1]), ges[2]))
+    return aus
+
+
+def _grenzen(p: float, d: float, halb: float):
+    f = lambda x: float(np.sin(np.clip(asq(p) + d + x, 0.0, math.pi / 2)) ** 2)
+    return f(-halb), f(halb)
+
+
+def spannen_pruefung(p, y, jahr, block: int, warte: int, titel: int):
+    """Grundlage der Spannen für eine Gruppe aus der Prüfung ohne Zukunftswissen.
+    Stufen = gleich große Teile der Vorhersagen nach ihrer Höhe. Je Stufe: mittlere Vorhersage `x`, Abweichung `d`,
+    Streuung zwischen Blöcken `s`; `k` Blöcke. Spanne für die Häufigkeit auf lange Sicht: x + d ± t(k−1) · s / √k.
+    `deck`: Deckungsprobe ohne Zukunftswissen – dieselbe Formel nur aus den Jahren, deren Ergebnis damals feststand
+    (mindestens SP_VOR Blöcke), gegen die eingetretene Häufigkeit der folgenden 1, 2, 3, 4 Blöcke; für einen endlichen
+    Abschnitt kommt dessen eigene Schwankung dazu: ± t · s · √(1/k + Blocklänge/Abschnitt). Je Abschnittslänge:
+    [Jahre, Treffer, Vergleiche, Startjahre]. Die Vergleiche überlappen und sind nicht unabhängig."""
+    nb = int(np.clip(titel // 5, 1, SP_STUFEN))
+    kanten = np.quantile(p, np.arange(1, nb) / nb) if nb > 1 else np.zeros(0)
+    st = np.searchsorted(kanten, p, "right"); j0 = int(jahr.min()); nj = int(jahr.max()) - j0 + 1
+    N, SP, SY = np.zeros((nj, nb)), np.zeros((nj, nb)), np.zeros((nj, nb))
+    np.add.at(N, (jahr - j0, st), 1.0); np.add.at(SP, (jahr - j0, st), p); np.add.at(SY, (jahr - j0, st), y)
+    stat = _stufen_statistik(N, SP, SY, block)
+    if stat is None:
+        return None
+    k = stat[0][2]; tq = t_grenze(SP_Q, k - 1); x, d, s, kal = [], [], [], []
+    for b in range(nb):
+        if N[:, b].sum() < 1:
+            continue
+        pm, f = SP[:, b].sum() / N[:, b].sum(), SY[:, b].sum() / N[:, b].sum()
+        lo, hi = _grenzen(pm, stat[b][0], tq * stat[b][1] / math.sqrt(k))
+        x.append(round(float(pm), 4)); d.append(round(stat[b][0], 4)); s.append(round(stat[b][1], 4))
+        kal.append([round(pm * 100), round(f * 100), math.floor(lo * 100 + 1e-9), math.ceil(hi * 100 - 1e-9)])
+    deck = []
+    for m in (1, 2, 3, 4):
+        L = m * block; treffer = n = 0; starts = set()
+        for a in range(nj - L + 1):
+            bis = a - warte + 1                                       # Jahre vor `bis`: Ergebnis stand zu Beginn des Abschnitts fest
+            if bis < SP_VOR * block:
+                continue
+            vor = _stufen_statistik(N[:bis], SP[:bis], SY[:bis], block)
+            if vor is None:
+                continue
+            for b in range(nb):
+                nf = N[a:a + L, b].sum()
+                if nf < 30:
+                    continue
+                dv, sv, kv = vor[b]
+                ab = float(asq(SY[a:a + L, b].sum() / nf) - asq(SP[a:a + L, b].sum() / nf))
+                n += 1; treffer += abs(ab - dv) <= t_grenze(SP_Q, kv - 1) * sv * math.sqrt(1 / kv + block / L); starts.add(a)
+        deck.append([L, int(treffer), int(n), len(starts)])
+    return {"b": block, "k": int(k), "x": x, "d": d, "s": s, "kal": kal, "deck": deck}
+
+
+def spannen_geschichte(y, jahr, pg: float, block: int):
+    """Ersatz für Gruppen ohne Prüfung: Schwankung der bisherigen Häufigkeit der Gruppe zwischen Blöcken von Kalenderjahren.
+    Kein Vergleich mit späteren Ergebnissen – die Spanne ist ungeprüft (heute() weitet sie auf die unsicherste geprüfte Gruppe)."""
+    if not len(y):
+        return None
+    j0 = int(jahr.min()); n = np.bincount(jahr - j0).astype(float); sy = np.bincount(jahr - j0, weights=y)
+    e = _streichprobe(n, pg * n, sy, block)
+    return None if e is None else {"b": block, "k": int(e[2]), "x": [round(pg, 4)], "d": [0.0], "s": [round(e[1], 4)]}
+
+
+def spanne(zahl: int, sp) -> list:
+    """90-%-Spanne [unten, oben] in „von 100“ zu einer Vorhersage; zwischen den Stufen gleitend, außerhalb wie die Randstufe.
+    Ohne Grundlage (weniger als zwei Blöcke Geschichte): 0 bis 100."""
+    if not sp or not sp.get("x"):
+        return [0, 100]
+    p = zahl / 100
+    d, s = float(np.interp(p, sp["x"], sp["d"])), float(np.interp(p, sp["x"], sp["s"]))
+    lo, hi = _grenzen(p, d, t_grenze(SP_Q, sp["k"] - 1) * s / math.sqrt(sp["k"]))
+    return [min(zahl, math.floor(lo * 100 + 1e-9)), max(zahl, math.ceil(hi * 100 - 1e-9))]
+
+
 def auswerten(V: dict) -> dict:
     """Je Gruppe: gewählte Bündelung, Modell-Entscheidung, Skill-Zahlen und Trefferprobe."""
     block = 6 if V["h"] == 156 else 3                                 # Jahre je Block: mindestens das Doppelte des Vorhersage-Zeitraums
@@ -278,7 +398,8 @@ def auswerten(V: dict) -> dict:
                            "quote": round(float(y[ma].mean()) * 100, 1), "prior": prior, "modell": modell,
                            "brier": round(float(bs[sp]), 4), "merk": merk, "ampel": amp, "nach": nach,
                            "koef": V["koef"].get(g) if modell == "nachjustiert" else None,
-                           "eigen": sk(5, 0), "gruppe": sk(5, 4), "kal": kal}
+                           "eigen": sk(5, 0), "gruppe": sk(5, 4), "kal": kal,
+                           "sp": spannen_pruefung(P[ma, sp], y[ma], j, block, int(math.ceil(V["h"] / 52)) + 1, int(len(np.unique(V["tid"][ma]))))}
     return aus
 
 
@@ -397,6 +518,7 @@ def heute(D: dict, pruefung: dict) -> dict:
     gruppen_heute = {}
     for ziel in ZIELE:
         h, y, kenn = ziel_daten(D, ziel)
+        s_gepr = max((max(v["sp"]["s"]) for v in pruefung.get(ziel, {}).values() if isinstance(v, dict) and v.get("sp")), default=0.0)
         for g, name in enumerate(GRUPPEN):
             alle = np.flatnonzero(kenn & (grp == g))
             if not len(alle):
@@ -417,10 +539,17 @@ def heute(D: dict, pruefung: dict) -> dict:
                 if len(L) >= 2000 and len(Z):
                     p[tid[Z]] = anpassen(D, y, L, Z, p0); mit[tid[Z]] = True
             gruppen_heute.setdefault(name, {"titel_lang": int(((D["g_je"] == g) & D["lang_je"]).sum())})[ziel] = round(pg * 100, 1)
+            sp = pr.get("sp") if pr else None; art = "pruefung"       # Spanne: aus der Prüfung, sonst aus der Schwankung der bisherigen Häufigkeit
+            if not sp:
+                sp = spannen_geschichte(y[pool_], D["jahr"][pool_], pg, 6 if h == 156 else 3); art = "geschichte" if sp else "keine"
+                if sp:                                                # ungeprüft: mindestens so unsicher wie die unsicherste geprüfte Gruppe
+                    sp["s"] = [max(sp["s"][0], s_gepr)]
+            gruppen_heute[name].setdefault("sp", {})[ziel] = {"art": art, "k": sp["k"] if sp else 0, "b": sp["b"] if sp else (6 if h == 156 else 3)}
             for k in np.flatnonzero(D["g_je"] == g):
                 e = werte[D["ids"][k]]
                 e[ziel] = int(round(float(np.clip(p[k], .02, .98)) * 100))
                 e["e" + ziel] = int(round(k_i[k] / n_i[k] * 100)) if n_i[k] >= 12 else None      # eigene Häufigkeit, ungebündelt (ab 12 Monats-Fällen)
+                e[SP_FELD[ziel]] = spanne(e[ziel], sp)
                 if ziel == "r1":
                     e["m"] = bool(mit[k])
     return {"werte": werte, "gruppen_heute": gruppen_heute}
@@ -430,16 +559,18 @@ def pruefung_holen(zeilen, pool, neu: bool):
     if not neu and PRUEF_DATEI.exists() and time.time() - PRUEF_DATEI.stat().st_mtime < ALT_TAGE * 86400:
         try:
             pr = json.loads(PRUEF_DATEI.read_text())
-            if pr.get("fassung") == 2:
+            if pr.get("fassung") == FASSUNG:
                 return pr, None
         except Exception:
             pass
     t0 = time.time()
     D = daten_bauen(zeilen, True, pool)
-    pr = {"fassung": 2, "stand": time.strftime("%Y-%m-%d"), "titel": int(D["lang_je"].sum()), "sprung_titel": int(D["spr_je"].sum())}
+    pr = {"fassung": FASSUNG, "stand": time.strftime("%Y-%m-%d"), "titel": int(D["lang_je"].sum()), "sprung_titel": int(D["spr_je"].sum())}
     for ziel in ZIELE:
         pr[ziel] = auswerten(pruefe_ziel(D, ziel))
         print(f"  Prüfung {ziel}: " + ", ".join(f"{g} {v['modell']} (Bündelung {v['prior']}, Merkmale {v['merk'][0]:+.2f} % [{v['merk'][1]} … {v['merk'][2]}] sicher {v['merk'][3]} %, Ampel {v['ampel'][0]:+.2f} % [{v['ampel'][1]} … {v['ampel'][2]}])" for g, v in pr[ziel].items()) + f"  ({time.time() - t0:.0f} s)", flush=True)
+        print("  Spannen, Deckungsprobe (Jahre: Treffer/Vergleiche): " + "; ".join(
+            f"{g} k={v['sp']['k']} " + ", ".join(f"{L}: {t}/{n}" for L, t, n, _ in v["sp"]["deck"] if n) if v.get("sp") else f"{g} –" for g, v in pr[ziel].items()), flush=True)
     pr["zufall"] = gegenprobe(zeilen, D)
     print(f"  Gegenprobe mit Zufallsverläufen fertig ({time.time() - t0:.0f} s)", flush=True)
     PRUEF_DATEI.write_text(json.dumps(pr, ensure_ascii=False))

@@ -283,6 +283,52 @@ Die in den Abschnitten oben genannten Rangkorrelationen von 0,2 bis 0,3 entstehe
 
 **Unabhängige Gegenprüfung und Grenzen** (Bericht `ampelstudie/pruef_bericht.md` im Notizordner). Bestätigt: kein Zukunftswissen in Ampel, Merkmalen und Zielgrößen (Abschneide-Test an 90 Werten, 0 Abweichungen), saubere Trennung von Lern- und Prüfjahren. Eingearbeitet: strengere Unsicherheit, Gegenprobe auf Gruppenebene mit festem Startwert, Ausschluss von Kurssprüngen und Kursindex-Vorgeschichte, Ergebnisdatum bei Wochenlücken. Bleibt: Grundlage sind heute gelistete Werte – verschwundene Firmen fehlen, die Häufigkeiten sind eher zu hoch (und das begünstigt „günstig gekauft, später mehr“); die Form der Ampel wurde an denselben Kursen ausgewählt; Rohstoff-Futures ohne Rollbereinigung; Währungswechsel in zwei ETF-Vorgeschichten (EWJ, VWRL). Hohe Vorhersagen lagen bei Aktien zu hoch (3 Jahre: 78 vorhergesagt → 67 eingetreten); Nachjustieren machte es in der Prüfung ungenauer.
 
+### Spannen zu den Vorhersage-Zahlen (25.11.2026)
+Marc: „85 von 100, sicher ist nur 70 bis 95.“ `vorhersage.py` schreibt zu `a1`, `a3` und `r1` je Wert die Felder `s1`, `s3`, `sr` = [unten, oben] (ganze Zahlen „von 100“, unten ≤ Zahl ≤ oben). Die bisherigen Felder und Zahlen sind unverändert (Vergleich vorher/nachher an allen 2.792 Werten der PC-Daten: 0 Abweichungen).
+
+**Bedeutung.** Von 100 Vorhersagen dieser Höhe in dieser Gruppe treffen *auf lange Sicht* mit 90 % Sicherheit zwischen „unten“ und „oben“ ein. Die Spanne sagt, wie genau die Zahl selbst bekannt ist – nicht, wie ein einzelner Abschnitt ausgeht: In 3 Jahren steckt nur dreimal ein unabhängiges 1-Jahres-Ergebnis, deshalb läge die Häufigkeit eines einzelnen 3-Jahres-Abschnitts selbst bei exakt richtigen 75 von 100 irgendwo zwischen rund 33 und 100. Eine solche Abschnitts-Spanne wäre bei jeder Zahl fast gleich breit und trüge keine Aussage.
+
+**Verfahren** (aus der vorhandenen Prüfung ohne Zukunftswissen, keine Formel, die überlappende Zeiträume als unabhängig zählt): Die geprüften Vorhersagen einer Gruppe werden nach ihrer Höhe in gleich große Stufen geteilt (5 bei Aktien, 3 bei den 15 Rohstoffen, 2 bei den 14 Index-ETFs – mindestens 5 Werte je Stufe). Je Stufe: Abweichung „eingetreten − vorhergesagt“; ihre Unsicherheit aus der Streichprobe über Blöcke ganzer Kalenderjahre (3 Jahre bei den 1-Jahres-Zahlen, 6 Jahre bei der 3-Jahres-Zahl) mit t-Verteilung, wie bei allen Prüfzahlen oben. Als Streuung zwischen den Blöcken gilt die größere aus Stufe und ganzer Gruppe. Gerechnet auf der Arkussinus-Wurzel-Skala (bleibt bei 0 und 100 endlich, Spannen enden von selbst bei 0 und 100). Spanne = Vorhersage + Abweichung ± t(Blöcke − 1) · Streuung / √Blöcke, zwischen den Stufen gleitend; liegt die Zahl selbst außerhalb, wird die Spanne bis zur Zahl verlängert (Beispiel Apple: hohe Vorhersagen bei Aktien trafen seltener ein als vorhergesagt, die Spanne liegt fast ganz unter der Zahl). Wenige Blöcke machen die Spanne von selbst breit: 13 Blöcke bei Aktien (1 Jahr), 9 bei Index-ETFs, 5 bei Rohstoffen; bei 3 Jahren 6 / 3 / 2 – mit 2 Blöcken bleibt nur „0 bis 100“. Gruppen ohne Prüfung (Krypto) bekommen die Schwankung ihrer bisherigen Häufigkeit zwischen solchen Blöcken, mindestens aber die Unsicherheit der unsichersten geprüften Gruppe; das ist ungeprüft (`gruppen_heute[Gruppe].sp[Ziel].art` = `geschichte` statt `pruefung`; `keine` = unter zwei Blöcke Geschichte, Spanne 0–100).
+
+**Beispiele (PC-Daten, 25.11.2026; Zahl und Spanne):**
+
+| Wert | Kurs in 1 Jahr höher | Kurs in 3 Jahren höher | Rückschlag ab 20 % in 12 Monaten |
+|---|---|---|---|
+| Nasdaq-100 (QQQ) | 77 (55–89) | 85 (66–100) | 16 (7–34) |
+| S&P 500 (SPY) | 80 (59–91) | 85 (66–100) | 14 (6–32) |
+| Apple | 65 (53–66) | 73 (51–77) | 37 (33–47) |
+| Lifeway Foods (kleine Aktie) | 57 (50–63) | 64 (51–78) | 49 (45–57) |
+| Gold | 57 (28–71) | 71 (0–100) | 11 (5–19) |
+| Bitcoin (ungeprüft) | 72 (41–95) | 98 (0–100) | 44 (19–71) |
+
+Übliche Breite (Median): Aktien 13 / 30 / 10 Punkte, Index-ETFs 33 / 34 / 27, Rohstoffe 43 / 100 / 19.
+
+**Nachweis Deckung.** Die Häufigkeit „auf lange Sicht“ lässt sich nicht direkt nachmessen (dafür fehlen Jahrzehnte). Geprüft ist dieselbe Formel ohne Zukunftswissen: Spanne nur aus den Jahren, deren Ergebnis damals feststand (mindestens 3 Blöcke), verglichen mit der eingetretenen Häufigkeit der folgenden 3, 6, 9 und 12 Jahre (3-Jahres-Zahl: 6 und 12 Jahre); für einen endlichen Abschnitt kommt dessen eigene Schwankung dazu (± t · Streuung · √(1/Blöcke + Blocklänge/Abschnitt)). Ziel: rund 90 von 100.
+
+| Gruppe | 1 Jahr höher | 3 Jahre höher | Rückschlag |
+|---|---|---|---|
+| Aktien (1.265) | 455 von 490 = 93 % | 73 von 80 = 91 % | 479 von 490 = 98 % |
+| Index-ETFs (14) | 76 von 81 = 94 % | nicht prüfbar (3 Blöcke) | 76 von 76 = 100 % |
+| Rohstoffe (15) | 11 von 12 = 92 % | nicht prüfbar (2 Blöcke) | 21 von 21 = 100 % |
+| Krypto | nicht prüfbar | nicht prüfbar | nicht prüfbar |
+
+Die Vergleiche überlappen und sind nicht unabhängig: Bei Aktien stehen dahinter 29 Startjahre (rund 10 getrennte 3-Jahres-Abschnitte), bei der 3-Jahres-Zahl 11 Startjahre (rund 2 getrennte Abschnitte), bei Index-ETFs 15, bei Rohstoffen 5 Startjahre. „93 %“ heißt also „passt zu 90“, nicht „auf den Punkt gemessen“; beim Rückschlag sind die Spannen eher zu breit. Gegenlauf auf einer größeren Kurssammlung (1.862 lange Werte, davon 1.832 Aktien mit NYSE): Aktien 94 % / 93 % / 97 %. Stand je Lauf in `ziele[Ziel][Gruppe].sp` (`kal`: je Stufe vorhergesagt, eingetreten, unten, oben; `deck`: je Abschnittslänge Jahre, Treffer, Vergleiche, Startjahre).
+
+**Grenzen.** (1) Die Spanne gilt für „100 Vorhersagen dieser Höhe in der Gruppe“, nicht für einen Wert allein. (2) Geprüft sind nur Werte mit mindestens 10 Jahren Kursen ohne Kurssprünge; jüngere Werte und Werte mit Kennzeichen `q` bekommen die Spanne ihrer Gruppe ungeprüft. (3) Verschwundene Firmen fehlen weiterhin – die Zahlen sind eher zu hoch, und das steckt nicht in der Spanne. (4) Angenommen ist, dass sich künftige Abschnitte von den bisherigen nicht stärker unterscheiden als diese untereinander. (5) Die Zahl der Stufen und die Regel „größere Streuung“ wurden mit Blick auf dieselbe Deckungsprobe festgelegt (nur mit der Streuung der Gruppe: Aktien 86–94 % bei 1 Jahr, 78–82 % bei 3 Jahren). (6) Auf dem PC gerechnet, kein Online-Lauf.
+
+**Laufzeit.** Die Spannen kosten in der wöchentlichen Prüfung rund 4 Sekunden (ein Rechenkern), im täglichen Lauf unter 0,1 Sekunden; `vorhersage.json` wächst um rund 40 Byte je Wert (PC: 261 → 372 KB). Der Zwischenstand `daten/vorhersage_pruefung.json` hat die neue Fassung 3: Der erste Lauf nach dem Hochladen rechnet die Prüfung deshalb einmal neu (wie sonst einmal pro Woche).
+
+### Bewertung je Aktie geprüft (25.11.2026)
+Frage: Macht die Bewertung einer Aktie (Gewinnrendite = Gewinn der letzten 12 Monate / Börsenwert, Kurs-Umsatz-Verhältnis; absolut und gemessen an der eigenen Geschichte der Aktie; je Woche nur mit Zahlen, die damals als bekannt galten) die drei Vorhersagen genauer als das heutige Modell? **Ergebnis: nicht belegt – mit den Geschäftszahlen auf dem PC nicht prüfbar. Nichts eingebaut, `vorhersage.py` rechnet die Zahlen wie bisher.**
+
+Grund ist die Abdeckung: `daten/sec/fakten.parquet` enthält auf dem PC nur die Zeiträume 2024 bis 2026. Eine Bewertung gibt es für 1.520 Aktien (968 der 1.265 langen Aktien der Prüfung), die erste in der Woche zum 4.10.2024; Wochen mit Bewertung bei den langen Aktien: 2024 732, 2025 38.229, 2026 45.483; nur 70 Firmen haben 2 Jahre Bewertung für den Vergleich mit der eigenen Geschichte. Für die Prüfung ohne Zukunftswissen muss das Ergebnis der Lernfälle vor dem 1.1. des Prüfjahrs feststehen – bei 1 Jahr Vorlauf gibt es dafür kein einziges Prüfjahr, bei 3 Jahren keinen einzigen Fall. Verbesserung in Prozent, Spanne und Sicherheit lassen sich deshalb für keine der drei Vorhersagen angeben.
+
+Was sich rechnen lässt, ist eine Momentaufnahme ohne Beweiswert (im selben Zeitraum gelernt und geprüft, ein einziger Zeitabschnitt 25.10.2024–21.11.2025, 6.762 Fälle, 738 Firmen): Zusatz der Bewertung über eine reine Verschiebung hinaus bei „1 Jahr höher“ +0,24 % – vertauschte Bewertungen erreichen im Mittel +0,21 % und in 35 von 100 Durchgängen mindestens den echten Wert; bei „Rückschlag“ +0,01 % (vertauscht +0,20 %, 97 von 100). Auch hier kein Hinweis auf einen Vorteil.
+
+Das Skript `studien/bewertung_je_aktie.py` liegt lauffähig bereit (Anleitung im Kopf, Zahlen in `studien/bewertung_je_aktie_ergebnis.json`): gleiche Prüfung wie `vorhersage.py` (dieselben 319.027 bzw. 284.772 Fälle und Brier-Werte 0,2431 / 0,2314 / 0,2320 des heutigen Modells), Streichprobe über Blöcke von 3 bzw. 6 Kalenderjahren mit t-Verteilung, Schwelle 95 %, Gegenprobe mit vertauschten Bewertungen (jede Aktie bekommt die Bewertungs-Geschichte einer anderen). Der eingebaute Selbsttest (`--selbsttest`, erfundene Merkmale, nur zur Kontrolle der Rechnung) bestätigt: reines Rauschen −0,03 % (Sicherheit 36 %, nicht belegt), ein eingebautes Signal +9,5 % (belegt, von keiner Vertauschung erreicht). Mit Geschäftszahlen ab 2009 (so lädt `fundamente.py` ohne `FUND_AB`; ob der Online-Zwischenspeicher sie vollständig hat, ist ungeprüft) gäbe es rund 15 Prüfjahre: 5 Blöcke für die 1-Jahres-Zahlen, 2 für die 3-Jahres-Zahl – letztere bliebe auch dann dünn.
+
+Grenzen der Studie: Die Datei der Börsenaufsicht enthält kein Veröffentlichungsdatum – eine Zahl gilt 90 Tage nach Ende ihres Zeitraums als bekannt (`fundamente.LAG_TAGE`); gemeldet ist je Zeitraum der zuletzt eingereichte Wert (spätere Korrekturen eingeschlossen); nur heute gelistete Firmen mit US-Bilanz in Dollar und Aktienzahl.
+
 ### Kopf der Titelseite: Steckbrief und Zahlenleiste (23.11.2026 spät)
 Unter dem Namen stehen Schilder: Art des Werts mit Zeichen (Aktie · Börse, ETF, Rohstoff, Kryptowährung), Branche bzw. Art (wenn in den Daten), Land (nur wenn es das Land der Firma ist), Kürzel, ISIN und WKN – nur was in den Daten steht, nichts geraten; Antippen kopiert. Die Zahlenleiste zeigt zusätzlich KGV, Gewinn bzw. Verlust, Umsatz (mit Veränderung zum Vorjahr) und die Ausschüttungsrendite. Offen: Branche je Aktie (Werteliste liefert sie bisher nur für ETFs und Rohstoffe) und WKN (nur für wenige Werte vorhanden).
 
@@ -354,7 +400,8 @@ Optional FTSE All-World: Bestandsliste des Vanguard FTSE All-World ETF von Hand 
 | `welt_pruefen.py` | Von Hand: prüft die weniger bekannten Auslandsaktien gegen die Yahoo-Suche (ISIN muss das Kürzel nennen) und schreibt `listen/welt_geprueft.csv` und `listen/welt_abgelehnt.csv` |
 | `umfeld.py` | FRED-Reihen (Zinskurve T10Y2Y, 3-Monats-Zins TB3MS); Marktumfeld (Marktbreite, VIX, Zinskurve) |
 | `pruefung.py` | Walk-forward-Prüfung und Kalibrierung der Ampel-Wahrscheinlichkeit |
-| `vorhersage.py` | Genauestes geprüftes Modell je Gruppe (Studie 23.11.2026): Prüfung ohne Zukunftswissen (wöchentlich), Gegenprobe mit Zufallsverläufen, Vorhersage je Wert → `web/daten/vorhersage.json` |
+| `vorhersage.py` | Genauestes geprüftes Modell je Gruppe (Studie 23.11.2026): Prüfung ohne Zukunftswissen (wöchentlich), Gegenprobe mit Zufallsverläufen, Vorhersage je Wert mit 90-%-Spanne (`s1`, `s3`, `sr`) → `web/daten/vorhersage.json` |
+| `studien/bewertung_je_aktie.py` | Studie von Hand (25.11.2026): Bewertung je Aktie als Zusatz zur Vorhersage – gleiche Prüfung wie `vorhersage.py`, läuft nie im Online-Lauf |
 | `strategie.py` | Sparplan gegen Staffelkäufe 60/75/90 (+ Teilverkauf ≤ 15), mit Kosten, Abgeltungssteuer, Zins |
 | `montecarlo.py` | Block-Bootstrap echter Wochenrenditen: Kegel und „Wird Kurs X in 12 Monaten erreicht?“ |
 | `tagebuch_pruefung.py` | Nachprüfung des Signal-Tagebuchs nach 1/3/5 Jahren (liest nur) |
