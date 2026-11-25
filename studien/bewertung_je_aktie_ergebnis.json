@@ -1,0 +1,86 @@
+{
+ "stand": "2026-11-25",
+ "vertauschungen": 200,
+ "abdeckung": {
+  "firmen_mit_bewertung": 1520,
+  "firmen_mit_bewertung_lang": 968,
+  "aktien_lang": 1265,
+  "wochen_mit_bewertung": 132221,
+  "erste_woche": "2024-10-04",
+  "letzte_woche": "2026-11-20",
+  "wochen_je_kalenderjahr": {
+   "2024": 732,
+   "2025": 38229,
+   "2026": 45483
+  },
+  "firmen_ab_2_jahren_bewertung": 70
+ },
+ "ziele": {
+  "a1": {
+   "name": "Kurs in 1 Jahr höher",
+   "heutiges_modell": {
+    "faelle": 319027,
+    "brier": 0.2431,
+    "mit_bewertung": 8903
+   },
+   "saetze": {
+    "absolut": null,
+    "eigene Geschichte": null,
+    "beides": null
+   },
+   "urteil": "nicht prüfbar",
+   "grund": "zu wenige Jahre mit Geschäftszahlen: keine Prüfung ohne Zukunftswissen über mindestens 4 Kalenderjahre möglich",
+   "momentaufnahme": {
+    "faelle": 6762,
+    "firmen": 738,
+    "von": "2024-10-25",
+    "bis": "2025-11-21",
+    "zusatz_im_selben_zeitraum": 0.24,
+    "vertauscht_mittel": 0.21,
+    "vertauscht_erreicht_das": "35 von 100",
+    "hinweis": "im selben Zeitraum gelernt und geprüft, ein einziger Zeitabschnitt (alle Aktien teilen dieselbe Börsenphase) – kein Beleg"
+   }
+  },
+  "a3": {
+   "name": "Kurs in 3 Jahren höher",
+   "heutiges_modell": {
+    "faelle": 284772,
+    "brier": 0.2314,
+    "mit_bewertung": 0
+   },
+   "saetze": {
+    "absolut": null,
+    "eigene Geschichte": null,
+    "beides": null
+   },
+   "urteil": "nicht prüfbar",
+   "grund": "zu wenige Jahre mit Geschäftszahlen: keine Prüfung ohne Zukunftswissen über mindestens 4 Kalenderjahre möglich",
+   "momentaufnahme": null
+  },
+  "r1": {
+   "name": "Rückschlag ab 20 % in 12 Monaten",
+   "heutiges_modell": {
+    "faelle": 319027,
+    "brier": 0.232,
+    "mit_bewertung": 8903
+   },
+   "saetze": {
+    "absolut": null,
+    "eigene Geschichte": null,
+    "beides": null
+   },
+   "urteil": "nicht prüfbar",
+   "grund": "zu wenige Jahre mit Geschäftszahlen: keine Prüfung ohne Zukunftswissen über mindestens 4 Kalenderjahre möglich",
+   "momentaufnahme": {
+    "faelle": 6762,
+    "firmen": 738,
+    "von": "2024-10-25",
+    "bis": "2025-11-21",
+    "zusatz_im_selben_zeitraum": 0.01,
+    "vertauscht_mittel": 0.2,
+    "vertauscht_erreicht_das": "97 von 100",
+    "hinweis": "im selben Zeitraum gelernt und geprüft, ein einziger Zeitabschnitt (alle Aktien teilen dieselbe Börsenphase) – kein Beleg"
+   }
+  }
+ }
+}
