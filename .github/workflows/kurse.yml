@@ -20,13 +20,9 @@ on:
 
 permissions:
   contents: read
-  actions: read      # Artefakt-Liste lesen, Paket herunterladen
+  actions: write     # Artefakt-Liste lesen, Paket herunterladen; den nächsten Abruf anstoßen (Job „weiter“)
   pages: write
   id-token: write
-
-concurrency:
-  group: veroeffentlichen     # dieselbe Gruppe wie der Schnellweg und der Veröffentlichungs-Schritt des vollen Laufs
-  cancel-in-progress: false
 
 env:
   TZ: Europe/Berlin
@@ -35,6 +31,9 @@ jobs:
   kurse:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    concurrency:
+      group: veroeffentlichen     # dieselbe Gruppe wie der Schnellweg und der Veröffentlichungs-Schritt des vollen Laufs
+      cancel-in-progress: false
     environment:
       name: github-pages
       url: ${{ steps.veroeffentlichen.outputs.page_url }}
@@ -142,3 +141,33 @@ jobs:
         id: veroeffentlichen
         if: steps.pruefung.outputs.frei == 'ja'
         uses: actions/deploy-pages@v4
+
+  # Kette (25.11.2026): Der Zeitplan von GitHub hat diesen Lauf am ersten Abend eine Stunde lang kein einziges Mal gestartet und
+  # auch beim vollen Lauf Termine ausgelassen. Deshalb stößt jeder Lauf den nächsten selbst an: warten bis 20 Minuten (nachts und
+  # am Wochenende 60 Minuten) nach dem eigenen Start, dann denselben Ablauf neu starten. Der Zeitplan oben bleibt als Neustart,
+  # falls die Kette einmal reißt. Damit nie zwei Ketten nebeneinander laufen, gibt ein Lauf auf, sobald ein jüngerer Lauf
+  # desselben Ablaufs unterwegs ist – der jüngere führt die Kette weiter.
+  # Anhalten: in den Einstellungen des Repos die Variable KURSE_KETTE auf „aus“ setzen.
+  weiter:
+    needs: kurse
+    if: ${{ always() && vars.KURSE_KETTE != 'aus' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    steps:
+      - name: Warten, dann den nächsten Abruf anstoßen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          LAUF: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          start=$(date -u -d "$(gh run view "$LAUF" --json createdAt -q .createdAt)" +%s)
+          tag=$(date -u -d "@$start" +%u); stunde=$(date -u -d "@$start" +%-H)
+          if [ "$tag" -le 5 ] && [ "$stunde" -ge 7 ] && [ "$stunde" -le 21 ]; then abstand=1200; else abstand=3600; fi
+          warten=$(( start + abstand - $(date -u +%s) ))
+          if [ "$warten" -gt 0 ]; then echo "Warte $warten Sekunden"; sleep "$warten"; fi
+          juenger=$(gh run list --workflow kurse.yml --limit 20 --json databaseId,status \
+            -q "[.[] | select(.databaseId > $LAUF and .status != \"completed\")] | length")
+          if [ "$juenger" != "0" ]; then echo "Ein jüngerer Lauf ist unterwegs – der führt die Kette weiter."; exit 0; fi
+          gh workflow run kurse.yml --ref main
+          echo "Nächsten Abruf angestoßen."
