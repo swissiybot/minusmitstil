@@ -5291,11 +5291,18 @@ function zonenFlaechen(ch, serie, c, f){
       const zeilen = worte.map(([name, fa, pkt, fi]) => { const q = band(pkt); return q ? {name, fa, fi, a: q[1], b: q[2]} : null; }).filter(Boolean).sort((p, q) => p.fi - q.fi);
       const innen = zeilen.filter(z => z.fi >= 1 && z.fi <= 4);
       if (!innen.length) return [];
-      innen.forEach(z => { z.y = (Math.max(z.a, 2) + Math.min(z.b, gr.height - 30)) / 2; });
-      for (let i = 1; i < innen.length; i++) innen[i].y = Math.max(innen[i].y, innen[i - 1].y + ZEILE);          // nach unten auseinanderrücken
-      const zuTief = innen[innen.length - 1].y - unten; if (zuTief > 0) innen.forEach(z => { z.y -= zuTief; });
-      const zuHoch = oben + ZEILE - innen[0].y; if (zuHoch > 0 && zuTief <= 0) innen.forEach(z => { z.y += zuHoch; });
-      const schritt = innen.length > 1 ? Math.max(ZEILE, (innen[innen.length - 1].y - innen[0].y) / (innen.length - 1)) : ZEILE + 4;
+      // Alle Wörter haben untereinander EXAKT denselben Abstand (Marc 25.11.2026: „jedes wort im gleichen abstand vertikal“). Der Abstand
+      // ist der mittlere Abstand der Bandmitten (mindestens eine Zeile); der Block liegt so, dass die Wörter im Mittel auf ihrer Bandmitte sitzen.
+      const mitten = innen.map(z => (Math.max(z.a, 2) + Math.min(z.b, gr.height - 30)) / 2), n = innen.length;
+      const schritt = n > 1 ? Math.max(ZEILE, (mitten[n - 1] - mitten[0]) / (n - 1)) : ZEILE + 4;
+      let mitte = mitten.reduce((p, q) => p + q, 0) / n;
+      const erstes = () => mitte - (n - 1) / 2 * schritt, letztes = () => mitte + (n - 1) / 2 * schritt;
+      // Kein Wort fällt weg (Marc 25.11.2026): Der ganze Block samt „sehr teuer“ oben und „Ausverkauf“ unten wird ins Bild geschoben.
+      const hatO = zeilen.some(z => z.fi === 0) && innen[0].fi === 1, hatU = zeilen.some(z => z.fi === 5) && innen[n - 1].fi === 4;
+      const grenzeU = gr.height - 34 - (hatU ? schritt : 0), grenzeO = oben + (hatO ? schritt : 0);
+      if (letztes() > grenzeU) mitte -= letztes() - grenzeU;
+      if (erstes() < grenzeO) mitte += grenzeO - erstes();
+      innen.forEach((z, i) => { z.y = mitte + (i - (n - 1) / 2) * schritt; });
       const o = zeilen.find(z => z.fi === 0), u = zeilen.find(z => z.fi === 5), alle = innen.map(z => [z, z.y]);
       if (o && innen[0].fi === 1) alle.unshift([o, innen[0].y - schritt]);
       if (u && innen[innen.length - 1].fi === 4) alle.push([u, innen[innen.length - 1].y + schritt]);
