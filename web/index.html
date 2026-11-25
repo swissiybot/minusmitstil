@@ -5287,7 +5287,7 @@ function zonenFlaechen(ch, serie, c, f){
       if (belegt.some(([l, r, y]) => Math.abs(y - ym) < 18 && xl < r + 6 && xl + br + 12 > l - 6)) return;   // nie zwei Schilder übereinander
       belegt.push([xl, xl + br + 12, ym]);
       x.fillStyle = f.panel + "e6"; x.beginPath(); if (x.roundRect) x.roundRect(xl, ym - 8.5, br + 12, 17, 5); else x.rect(xl, ym - 8.5, br + 12, 17); x.fill();
-      x.fillStyle = fi === 2 ? (f.text || "#8a9ab4") : fa; /* „neutral“ in ruhigem Grau: nicht zu verwechseln mit der gelben 200-Wochen-Linie */ x.fillText(name, xl + 6, ym + .5); zuletzt = ym;
+      x.fillStyle = fi === 2 ? (document.documentElement.dataset.theme === "light" ? "#b38f00" : "#ffe81a") : fa; /* „neutral“ in kräftigem Ampel-Gelb (Wunsch Marc 25.11.2026), im hellen Schema dunkler, damit es lesbar bleibt */ x.fillText(name, xl + 6, ym + .5); zuletzt = ym;
     });
   };
   serie.attachPrimitive({
