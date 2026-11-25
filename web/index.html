@@ -1838,6 +1838,37 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
   .sekt h2{font-size:18px}
 }
 .ot-anker-satz,.ot-vor4{text-decoration:none;font-size:11.5px}
+/* ---- O7 Gliederung und Verständlichkeit (25.11.2026) */
+/* Reiterleiste über der Liste: weiche Ränder, Pfeile und schmaler Schieberegler beim Darüberfahren */
+.reiter-huelle{position:relative;flex-shrink:0;border-bottom:1px solid var(--line)}
+.reiter-huelle .reiter-liste{position:relative;border-bottom:0;--rl:0px;--rr:0px;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 var(--rl),#000 calc(100% - var(--rr)),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 var(--rl),#000 calc(100% - var(--rr)),transparent 100%)}
+.reiter-huelle.links-mehr .reiter-liste{--rl:36px}
+.reiter-huelle.rechts-mehr .reiter-liste{--rr:36px}
+.reiter-huelle.laeuft-ueber .reiter-liste{padding-bottom:5px}
+.rh-pfeil{position:absolute;top:7px;bottom:10px;width:24px;z-index:2;display:grid;place-items:center;padding:0 0 2px;border:1px solid var(--line2);border-radius:8px;background:var(--panel2);color:var(--text);font-size:17px;line-height:1;opacity:0;pointer-events:none;transition:opacity var(--tempo,.15s) var(--ruck,ease)}
+.rh-pfeil[hidden]{display:none}
+.rh-links{left:4px}
+.rh-rechts{right:4px}
+.rh-pfeil:hover{border-color:var(--akzent);color:var(--akzent)}
+.rh-spur{position:absolute;left:8px;right:8px;bottom:1px;height:4px;border-radius:4px;background:color-mix(in srgb,var(--text) 9%,transparent);opacity:0;pointer-events:none;transition:opacity var(--tempo,.15s) var(--ruck,ease)}
+.rh-spur i{position:absolute;top:0;bottom:0;min-width:24px;border-radius:4px;background:color-mix(in srgb,var(--text) 42%,transparent);cursor:grab;touch-action:none}
+.rh-spur i:hover,.rh-spur.zieht i{background:var(--akzent)}
+.rh-spur.zieht i{cursor:grabbing}
+@media (hover:hover){
+  .reiter-huelle:hover .rh-pfeil,.reiter-huelle:focus-within .rh-pfeil{opacity:1;pointer-events:auto}
+  .reiter-huelle.laeuft-ueber:hover .rh-spur,.reiter-huelle.laeuft-ueber:focus-within .rh-spur,.rh-spur.zieht{opacity:1;pointer-events:auto}
+}
+/* Schalter „nur in Europa handelbar“ */
+.filter-aktien[hidden]{display:none}
+.filter-hebel{padding-top:0}
+.filter-aktien label.schalter{gap:8px;padding:0 12px 0 4px;cursor:pointer}
+.filter-aktien label.schalter input[type=checkbox],.filter-aktien label.schalter input[type=checkbox]:checked{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none;box-shadow:none}
+.schalter i{position:relative;flex:none;width:32px;height:20px;border-radius:999px;background:color-mix(in srgb,var(--text) 16%,transparent);transition:background var(--tempo,.15s) var(--ruck,ease)}
+.schalter i::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;background:var(--text2);transition:transform var(--tempo,.15s) var(--ruck,ease),background var(--tempo,.15s) var(--ruck,ease)}
+.schalter input:checked+i{background:var(--akzent)}
+.schalter input:checked+i::after{transform:translateX(12px);background:var(--auf-akzent,#fff)}
+</style>
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -1870,7 +1901,12 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 <div id="warnband" hidden></div>
 <div id="layout">
   <aside id="liste-bereich" aria-label="Werteliste">
-    <div class="reiter-liste" role="tablist" id="listen-reiter"></div>
+    <div class="reiter-huelle" id="reiter-huelle">
+      <button type="button" class="rh-pfeil rh-links" id="rh-links" aria-label="Reiter nach links schieben" tabindex="-1" hidden>‹</button>
+      <div class="reiter-liste" role="tablist" id="listen-reiter"></div>
+      <button type="button" class="rh-pfeil rh-rechts" id="rh-rechts" aria-label="Reiter nach rechts schieben" tabindex="-1" hidden>›</button>
+      <div class="rh-spur" id="rh-spur" aria-hidden="true"><i id="rh-griff"></i></div>
+    </div>
     <div class="listen-werkzeug">
       <input type="search" id="listen-filter" placeholder="Liste filtern …" aria-label="Liste filtern">
       <select id="sortierung" aria-label="Sortierung">
@@ -1885,6 +1921,9 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
       <label><input id="nurq" type="checkbox" checked><span data-e="f_stabil" tabindex="0">nur stabiler Aufwärtstrend</span></label>
       <label><input id="nurf" type="checkbox"><span data-e="f_nurf" tabindex="0">ohne Fallen-Warnung</span></label>
       <label><span data-e="f_umsatz" tabindex="0">Umsatz/Tag</span><select id="minu"><option value="0">egal</option><option value="1e6">ab 1 Mio $</option><option value="1e7" selected>ab 10 Mio $</option><option value="1e8">ab 100 Mio $</option></select></label>
+    </div>
+    <div class="filter-aktien filter-hebel" id="filter-hebel" hidden>
+      <label class="schalter"><input id="hebel-eu" type="checkbox" role="switch" checked><i aria-hidden="true"></i><span data-e="f_hebel_eu" tabindex="0">nur in Europa handelbar</span></label>
     </div>
     <div class="listen-hinweis" id="listen-hinweis" role="note" hidden></div>
     <div class="liste-kopf" id="liste-kopf">
@@ -2177,6 +2216,7 @@ const ERKLAERUNG = {
   vom_hoch: {titel:"Abstand zum Allzeithoch", text:"Wie weit der Kurs unter seinem bisher höchsten Wochenschluss liegt. −30 % heißt: 30 % unter dem Hoch. Ein großer Abstand kann günstig sein, aber auch ein Zeichen, dass das Geschäft dauerhaft schlechter läuft (bei Einzelaktien besonders)."},
   w4: {titel:"Änderung in 4 Wochen", text:"Um wie viele Punkte sich die Ampel in den letzten 4 Wochen verändert hat. Plus heißt: der Wert ist günstiger geworden, meist weil der Kurs gefallen ist. Minus heißt: teurer geworden, meist weil der Kurs gestiegen ist."},
   f_minj: {titel:"min. Jahre", text:"Zeigt nur Werte mit mindestens so vielen Jahren Kursdaten. Je länger die Historie, desto mehr Vergleichsphasen hat die Ampel. Unter 10 Jahren sind die Quoten sehr unsicher."},
+  f_hebel_eu: {titel:"Nur in Europa handelbar", text:"An: Die Liste zeigt nur Hebel-Produkte, die an einer europäischen Börse gehandelt werden (zum Beispiel Xetra, Paris, London, Mailand). Aus: Es erscheinen auch die US-Produkte. Die sind hier meist länger am Markt und haben deshalb mehr Kursgeschichte, lassen sich als Privatanleger in der EU aber in der Regel nicht kaufen. Die Wahl merkt sich dieser Browser. Keine Empfehlung."},
   f_stabil: {titel:"Nur stabiler Aufwärtstrend", text:"Zeigt nur Aktien mit Ø Rendite über 20 Jahre über 3 %, Trendgüte R² mindestens 0,6 und mindestens 10 Jahren Daten. Achtung: Dieser Filter nutzt den ganzen Kursverlauf bis heute, er kennt also die Zukunft der Vergangenheit. ETFs, Krypto und Rohstoffe sind ausgenommen."},
   f_umsatz: {titel:"min. Umsatz pro Tag", text:"Durchschnittlicher Handelsumsatz der letzten 3 Monate in US-Dollar. Kleine, wenig gehandelte Aktien haben große Kurssprünge und hohe Handelskosten. ETFs, Krypto und Rohstoffe sind ausgenommen."},
   f_gruppe: {titel:"Gruppe", text:"Nasdaq: alle an der Nasdaq gelisteten Aktien. ETF: große Index-ETFs mit Index-Historie davor. Krypto: die größten Kryptowerte nach Marktwert (feste Liste, ohne Stablecoins). Hebel 2x: ETFs und ETCs mit täglichem 2-fachem Hebel, ohne Knock-out. Rohstoffe: Endlos-Futures und ein Rohstoff-Korb. FTSE All-World erscheint, sobald die Vanguard-Liste da ist."},
@@ -2565,22 +2605,57 @@ const LISTEN_HINWEIS = {
   krypto: "„Sehr günstig“ heißt hier nur: weit unter dem eigenen Durchschnitt. Bei kleinen Münzen ist das oft ein Zeichen von Schwäche – kein Kaufsignal.",
   hebel: "Hebel-Produkte: täglich 2-fach, ohne Knock-out. Auf Dauer ist das nicht das Doppelte – sie können auch verlieren, wenn der Markt am Ende gleich steht.",
 };
-const hebelArt = w => w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : "Hebel-ETF 2x";
+// hebel.einzel (25.11.2026): Hebel auf eine einzelne Aktie – eigenes Wort für die Art und ein Satz mehr im Warnhinweis. Fehlt das Feld, bleibt alles wie bisher.
+const hebelArt = w => w.hebel?.einzel ? "Hebel-ETP 2x auf eine Aktie" : w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : "Hebel-ETF 2x";
+// Schalter „nur in Europa handelbar“ im Reiter „Hebel 2x“ (Wunsch Marc 25.11.2026): standardmäßig an, die Wahl wird gemerkt.
+// Tragen die Daten das Feld hebel.eu bei keinem Wert (alter Export), bleibt der Schalter unsichtbar und es wird nicht gefiltert.
+let HEBEL_EU = lade("hebel_eu", true) !== false;
+const hebelEuBekannt = () => ALLE.some(w => istHebel(w) && typeof w.hebel?.eu === "boolean");
+const hebelEuFilter = () => HEBEL_EU && hebelEuBekannt();
 const UEBERSICHT_WERT = w => SONDERGRUPPE(w) && !istHebel(w) && (w.gruppe !== "Krypto" || !!w.kern || w.rang == null);
 // EMA-Band (Ribbon): Länge und Farbe, kurz = grün, lang = rot
 const EMA_BAND = [[20,"#43a047"],[25,"#7cb342"],[30,"#c0ca33"],[35,"#fdd835"],[40,"#ffb300"],[45,"#fb8c00"],[50,"#f4511e"],[55,"#e53935"]];
 const istIndexEtf = w => w.gruppe === "ETF" && (!w.branche || w.branche === "Index");   // breite Index-ETFs (ohne Themen-/Branchen-ETFs)
 function imReiter(w, r){
   return r === "uebersicht" ? UEBERSICHT_WERT(w) : r === "etf" ? w.gruppe === "ETF" && !istHebel(w) : r === "krypto" ? w.gruppe === "Krypto"
-    : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "hebel" ? istHebel(w) : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
+    : r === "rohstoffe" ? w.gruppe === "Rohstoffe" : r === "hebel" ? istHebel(w) && (!hebelEuFilter() || w.hebel?.eu === true) : r === "aktien" ? !SONDERGRUPPE(w) : FAV.has(w.id);
 }
 function reiterZahlen(){
   $("#listen-reiter").innerHTML = LISTEN_REITER.map(([k, t]) => `<button role="tab" data-r="${k}" aria-selected="${k === LISTE_REITER}">${t}<span class="zahl">${
     k === "aktien" ? "" : ALLE.filter(w => imReiter(w, k)).length || ""}</span></button>`).join("");
   $$("#listen-reiter button").forEach(b => b.onclick = () => { LISTE_REITER = b.dataset.r; sichere("liste_reiter", LISTE_REITER); reiterZahlen(); listeNeu(); $("#liste").scrollTop = 0;
-    $('#listen-reiter [aria-selected="true"]')?.scrollIntoView({block:"nearest", inline:"nearest"});   // gewählter Reiter bleibt sichtbar (die Leiste ist breiter als die Spalte)
     if (LISTE_REITER === "uebersicht" && !istHandy()) zeigeUebersicht(); });
+  reiterSichtbar(); reiterLeisteStand();   // gewählter Reiter bleibt sichtbar (die Leiste ist breiter als die Spalte)
 }
+// Reiterleiste über der Liste (25.11.2026): Sie ist breiter als die Spalte. Statt rechts abgeschnitten zu enden, läuft sie an den Rändern weich aus;
+// beim Darüberfahren erscheinen Pfeile und ein schmaler Schieberegler, das Mausrad schiebt seitwärts. Am Handy wird wie gewohnt gewischt.
+function reiterSichtbar(){
+  const l = $("#listen-reiter"), b = l?.querySelector('[aria-selected="true"]'); if (!b || !l.clientWidth) return;
+  const rand = 34, a = b.offsetLeft - rand, e = b.offsetLeft + b.offsetWidth + rand;
+  if (a < l.scrollLeft) l.scrollLeft = Math.max(0, a); else if (e > l.scrollLeft + l.clientWidth) l.scrollLeft = e - l.clientWidth;
+}
+function reiterLeisteStand(){
+  const h = $("#reiter-huelle"), l = $("#listen-reiter"); if (!h || !l) return;
+  const max = l.scrollWidth - l.clientWidth, x = l.scrollLeft, ueber = max > 2, li = ueber && x > 2, re = ueber && x < max - 2;
+  h.classList.toggle("laeuft-ueber", ueber); h.classList.toggle("links-mehr", li); h.classList.toggle("rechts-mehr", re);
+  $("#rh-links").hidden = !li; $("#rh-rechts").hidden = !re;
+  if (ueber) { const g = $("#rh-griff"); g.style.width = (l.clientWidth / l.scrollWidth * 100) + "%"; g.style.left = (x / l.scrollWidth * 100) + "%"; }
+}
+function reiterLeisteInit(){
+  const l = $("#listen-reiter"), spur = $("#rh-spur"), griff = $("#rh-griff"); if (!l || !spur) return;
+  l.addEventListener("scroll", reiterLeisteStand, {passive:true});
+  new ResizeObserver(() => { reiterSichtbar(); reiterLeisteStand(); }).observe(l);
+  const schieb = r => l.scrollBy({left: r * Math.max(90, l.clientWidth * .6), behavior:"smooth"});
+  $("#rh-links").onclick = () => schieb(-1); $("#rh-rechts").onclick = () => schieb(1);
+  l.addEventListener("wheel", ev => { if (l.scrollWidth <= l.clientWidth + 2 || Math.abs(ev.deltaY) <= Math.abs(ev.deltaX)) return; l.scrollLeft += ev.deltaY; ev.preventDefault(); }, {passive:false});
+  let zug = null;   // Schieberegler ziehen
+  griff.addEventListener("pointerdown", ev => { zug = {x:ev.clientX, start:l.scrollLeft}; griff.setPointerCapture(ev.pointerId); spur.classList.add("zieht"); ev.preventDefault(); });
+  griff.addEventListener("pointermove", ev => { if (zug) l.scrollLeft = zug.start + (ev.clientX - zug.x) * l.scrollWidth / Math.max(1, spur.clientWidth); });
+  const los = () => { zug = null; spur.classList.remove("zieht"); };
+  griff.addEventListener("pointerup", los); griff.addEventListener("pointercancel", los);
+  spur.addEventListener("pointerdown", ev => { if (ev.target !== spur) return; const r = spur.getBoundingClientRect(); l.scrollLeft = (ev.clientX - r.left) / r.width * l.scrollWidth - l.clientWidth / 2; });
+}
+reiterLeisteInit();
 function gefiltert(){
   const q = norm($("#listen-filter").value), r = LISTE_REITER, aktien = r === "aktien";
   const mj = +$("#minj").value || 0, nq = $("#nurq").checked, mu = +$("#minu").value, nf = $("#nurf").checked;
@@ -2590,6 +2665,7 @@ function gefiltert(){
 }
 function listeNeu(){
   $("#filter-aktien").hidden = LISTE_REITER !== "aktien";
+  { const fh = $("#filter-hebel"); if (fh) { fh.hidden = LISTE_REITER !== "hebel" || !hebelEuBekannt(); $("#hebel-eu").checked = HEBEL_EU; } }
   const k = SORT.k, dir = SORT.k === "score_auf" ? 1 : SORT.dir;
   GEFILTERT = gefiltert().sort((a, b) => {
     const x = wert(a, k), y = wert(b, k);
@@ -2599,7 +2675,8 @@ function listeNeu(){
   $("#liste-innen").style.height = GEFILTERT.length * ZEILE_H + "px";
   const alleImReiter = ALLE.filter(w => imReiter(w, LISTE_REITER)).length;
   $("#anzahl").textContent = LISTE_REITER === "meine" && !FAV.size ? "Noch keine Favoriten – im Detail eines Werts auf „Merken“ tippen."
-    : `${GEFILTERT.length.toLocaleString("de-DE")} von ${alleImReiter.toLocaleString("de-DE")} Werten` + (LISTE_REITER === "aktien" ? " (nach Filter)" : "");
+    : `${GEFILTERT.length.toLocaleString("de-DE")} von ${alleImReiter.toLocaleString("de-DE")} Werten` + (LISTE_REITER === "aktien" ? " (nach Filter)" : "")
+      + (LISTE_REITER === "hebel" && hebelEuFilter() ? ` · nur Europa (alle: ${ALLE.filter(istHebel).length.toLocaleString("de-DE")})` : "");
   { const lh = $("#listen-hinweis"), lt = LISTEN_HINWEIS[LISTE_REITER]; if (lh) { lh.hidden = !lt; lh.textContent = lt || ""; } }
   $$("#liste-kopf button").forEach(b => b.classList.toggle("an", b.dataset.s === (k === "score_auf" ? "score" : k)));
   FOKUS_I = GEFILTERT.findIndex(w => w.id === AKTIV);
@@ -2657,6 +2734,7 @@ $("#liste").addEventListener("keydown", ev => {   // Pfeiltasten wandern durch d
 });
 $("#listen-filter").addEventListener("input", () => listeNeu());
 ["#minj","#nurq","#nurf","#minu"].forEach(s => $(s).addEventListener("input", listeNeu));
+$("#hebel-eu").addEventListener("change", ev => { HEBEL_EU = ev.target.checked; sichere("hebel_eu", HEBEL_EU); reiterZahlen(); listeNeu(); $("#liste").scrollTop = 0; });
 $("#sortierung").addEventListener("change", ev => { const k = ev.target.value; SORT = {k, dir: (k === "name" || k === "rueck") ? 1 : -1}; listeNeu(); });
 $$("#liste-kopf button").forEach(b => b.addEventListener("click", () => {
   const k = b.dataset.s; SORT = {k, dir: SORT.k === k ? -SORT.dir : (k === "name" || k === "rueck" ? 1 : -1)};
@@ -2895,6 +2973,16 @@ function quadrate(werte, x, y, w, h){   // „Squarified Treemap“: Kacheln mö
   if (reihe.length) legen(reihe);
   return out;
 }
+// Heatmap (Wunsch Marc 25.11.2026: „2 mal Google macht keinen Sinn“): Hat eine Firma zwei Aktiengattungen an der Börse (Alphabet: GOOGL und GOOG,
+// Fox: FOXA und FOX, News Corp: NWSA und NWS), zeigt die Heatmap nur die meistgehandelte. Regel: gleicher Firmenname, nachdem ein Zusatz wie
+// „- Class A/B/C …“ entfernt ist → es bleibt die Gattung mit dem höheren Handelsumsatz (umsatz_usd). Gilt nur für Aktien und nur hier;
+// Liste und Suche zeigen weiter alle Gattungen.
+const firmenSchluessel = w => String(w.name || "").toLowerCase().replace(/\s*[-–]?\s*\(?\bclass [a-c]\b.*$/, "").replace(/[\s.,]+$/, "");
+function eineGattung(liste){
+  const beste = new Map();
+  for (const w of liste) { if (SONDERGRUPPE(w)) continue; const k = firmenSchluessel(w), b = beste.get(k); if (!b || (w.umsatz_usd || 0) > (b.umsatz_usd || 0)) beste.set(k, w); }
+  return liste.filter(w => SONDERGRUPPE(w) || beste.get(firmenSchluessel(w)) === w);
+}
 function zeigeKarte(opt = {}){
   const ziel = opt.ziel || null;   // ziel gesetzt: Heatmap eingebettet (Übersicht), sonst eigene Seite
   if (!ziel) { seiteAnfang("karte"); hashSetzen("seite=karte"); }
@@ -2908,7 +2996,8 @@ function zeigeKarte(opt = {}){
   // Nur Nasdaq-100 (Mitglieder laut Wikipedia-Liste), Index-ETFs, Krypto und Rohstoffe
   // „Index-ETFs“ = nur die breiten Index-ETFs (Themen-, Branchen-, Anleihen-ETFs aus der Welt-Erweiterung bleiben draußen)
   const titelOk = w => KARTE.titel === "alle" ? (w.n100 || (UEBERSICHT_WERT(w) && (w.gruppe !== "ETF" || istIndexEtf(w)))) : KARTE.titel === "n100" ? !!w.n100 : KARTE.titel === "ETF" ? istIndexEtf(w) : KARTE.titel === "Hebel" ? istHebel(w) : w.gruppe === KARTE.titel;
-  const werte = [...ALLE, ...HEATMAP_EXTRA].filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
+  const werteAlle = [...ALLE, ...HEATMAP_EXTRA].filter(w => titelOk(w) && (perfModus ? w.perf?.[PI[KARTE.farbe]] != null : KARTE.farbe === "mp" ? w.mp != null : w.score != null));
+  const werte = eineGattung(werteAlle), doppelt = werteAlle.length - werte.length;
   const aktien = werte.filter(istAktie), mitMw = aktien.filter(w => w.f?.mw > 0).length, nachMw = mitMw >= aktien.length * 0.5 && mitMw > 0;
   const mitBranche = aktien.filter(w => w.branche).length;
   const stand = werte.reduce((a, w) => w.datum > a ? w.datum : a, "");
@@ -2943,7 +3032,7 @@ function zeigeKarte(opt = {}){
       <canvas id="karte-cv" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer" role="img" aria-label="Heatmap aller gewählten Titel"></canvas>
       <div id="karte-tip" class="karte-tip" hidden></div>
     </div>
-    <div class="fussnote">Kursveränderung Schluss gegen Schluss (Tag: letzter Handelstag, Krypto auch am Wochenende), ohne Dividenden bei Indizes und Rohstoffen. Nasdaq-100-Mitglieder und Branchen (ICB): Wikipedia „List of NASDAQ-100 companies“ (CC BY-SA). Ampel = Lage gemessen an der eigenen Geschichte. Keine Anlageberatung. ${STAND_TEXT}</div>`;
+    <div class="fussnote">Kursveränderung Schluss gegen Schluss (Tag: letzter Handelstag, Krypto auch am Wochenende), ohne Dividenden bei Indizes und Rohstoffen. Nasdaq-100-Mitglieder und Branchen (ICB): Wikipedia „List of NASDAQ-100 companies“ (CC BY-SA). Ampel = Lage gemessen an der eigenen Geschichte.${doppelt ? ` Von Firmen mit zwei Aktiengattungen (zum Beispiel Alphabet: GOOGL und GOOG) steht hier nur die meistgehandelte – ${doppelt === 1 ? "eine Gattung ist" : doppelt + " Gattungen sind"} deshalb ausgeblendet; Liste und Suche zeigen alle.` : ""} Keine Anlageberatung. ${STAND_TEXT}</div>`;
   wurzel.querySelectorAll("[data-k]").forEach(b => b.onclick = () => { KARTE[b.dataset.k] = b.dataset.v; sichere("karte", KARTE); zeigeKarte(opt); });
   const groesse = w => istAktie(w) ? Math.max(nachMw && w.f?.mw > 0 ? w.f.mw * 1e6 : (w.umsatz_usd || 0) * 250, 1) : 1;
   // Gruppen: Aktien nach Branche / Ampel-Zone, die anderen nach ihrer Gruppe; bei „Alle“ feste Flächenanteile
@@ -3553,7 +3642,7 @@ function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel
       <div class="wk-titel"><h1>${esc(kurzname(w))}</h1><span class="ot-sym" title="Kürzel">${esc(w.symbol)}</span><span class="ot-art">${istHebel(w) ? hebelArt(w) : w.gruppe === "ETF" ? "ETF (Fonds)" : w.gruppe === "Krypto" ? "Kryptowährung" : w.gruppe === "Rohstoffe" ? "Rohstoff" : "Aktie"}</span>
         <button class="stern" id="stern" aria-pressed="${FAV.has(id)}" data-e="favorit"><span aria-hidden="true">★</span> ${FAV.has(id) ? "Gemerkt" : "Merken"}</button>
         <div class="segment modus-wahl" id="modus-wahl" role="group" aria-label="Ansicht" data-e="modus"><button data-m="einfach" aria-pressed="${MODUS === "einfach"}">Einfach</button><button data-m="profi" aria-pressed="${MODUS === "profi"}">Profi</button></div></div>
-      ${istHebel(w) ? `<div class="ot-hebel" role="note" data-e="hebel_warn" tabindex="0"><b>⚠ Hebel-Produkt (2-fach, täglich):</b> bewegt sich an jedem Tag doppelt so stark wie sein Basiswert${w.hebel?.basis ? " (" + esc(w.hebel.basis) + ")" : ""} – nach oben und nach unten. Auf Dauer ist das nicht das Doppelte; es kann auch verlieren, wenn der Basiswert am Ende wieder gleich steht.${w.hebel && w.hebel.eu === false ? " US-Produkt: in der EU für Privatanleger meist nicht kaufbar." : ""}</div>` : ""}
+      ${istHebel(w) ? `<div class="ot-hebel" role="note" data-e="hebel_warn" tabindex="0"><b>⚠ Hebel-Produkt (2-fach, täglich):</b> bewegt sich an jedem Tag doppelt so stark wie sein Basiswert${w.hebel?.basis ? " (" + esc(w.hebel.basis) + ")" : ""} – nach oben und nach unten. Auf Dauer ist das nicht das Doppelte; es kann auch verlieren, wenn der Basiswert am Ende wieder gleich steht.${w.hebel?.einzel ? " <b>Hebel auf eine einzelne Aktie:</b> Dazu kommt das Risiko einer einzelnen Firma – eine schlechte Nachricht trifft doppelt, und keine andere Firma gleicht das aus." : ""}${w.hebel && w.hebel.eu === false ? " US-Produkt: in der EU für Privatanleger meist nicht kaufbar." : ""}</div>` : ""}
       <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
       <div class="ot-unter">${w.score == null ? (w.jung ? "Für eine Ampel braucht es mehr Kursgeschichte." : "Für diesen Wert gibt es noch keine Ampel.")
         : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">Vor 4 Wochen stand die Ampel bei <b>${fmt(w.score_vor4w,0)}</b>${de == null || Math.round(de) === 0 ? "" : de > 0 ? " – seither günstiger geworden" : " – seither teurer geworden"}.</span>` : ""}${w.ampel_art === "anker200s" ? `<span class="ot-anker-satz" data-e="l_200w" tabindex="0">70er Ankerlinie: Bei Ampel 70 steht der Kurs genau auf seinem Durchschnitt der letzten 200 Wochen.</span>` : ""}`}</div>
