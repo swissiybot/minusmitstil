@@ -5225,7 +5225,7 @@ function phasenKarte(c){
 const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deckkraft hex, Name]
   [null,   "kz15", 0, "17", "historisch sehr teuer"],
   ["kz15", "kz40", 1, "10", "teuer"],
-  ["kz40", "kz60", 2, "0b", "neutral"],
+  ["kz40", "kz60", 2, "17", "neutral"],   // Fläche in kräftigem Gelb und etwas deckender, damit man sie erkennt (Marc 25.11.2026)
   ["kz60", "kz80", 3, "10", "günstig"],
   ["kz80", "kz90", 4, "17", "historisch sehr günstig"],
   ["kz90", null,   5, "20", "Ausverkauf"]];
@@ -5247,7 +5247,7 @@ function zonenFlaechen(ch, serie, c, f){
     const marken = [];
     BEW_ZONEN.forEach(([ob, un, fi, deck, name]) => {
       if ((ob && !c[ob]) || (un && !c[un])) return;
-      x.fillStyle = farbe(fi) + deck;
+      x.fillStyle = (fi === 2 ? "#ffe81a" : farbe(fi)) + deck;
       let lauf = [], letzte = null, erste = null, platz = null;
       const fuellen = () => { if (lauf.length > 1) { x.beginPath();
           lauf.forEach(([px, yo], j) => j ? x.lineTo(px, yo) : x.moveTo(px, yo));
