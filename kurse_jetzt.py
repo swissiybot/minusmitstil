@@ -248,27 +248,33 @@ def main(argv=None) -> int:
 
     lokal = dt.datetime.now()
     stand = lokal.strftime("%Y-%m-%d %H:%M") if geliefert else alt.get("stand")
+
+    # Feiner Tagesverlauf (Zugabe: scheitert er, bleiben die Kurse trotzdem). Die Seite erfaehrt aus der Liste "heute",
+    # fuer welche Werte es eine Datei gibt – so fragt sie nie nach einer Datei, die fehlt.
+    if not arg.ohne_heute and not gesperrt:
+        t2 = time.time()
+        try:
+            n, von = heute_laden(site, [w for w in rl if auswahl_heute(w)], stand)
+            print(f"Feiner Tagesverlauf: {n} von {von} Werten in {time.time() - t2:.0f} s", flush=True)
+        except Exception as ex:
+            print(f"Feiner Tagesverlauf nicht geladen: {ex.__class__.__name__}: {ex}", flush=True)
+    ordner = site / "daten" / "heute"
+    mit_verlauf = sorted(w["id"] for w in rl if (ordner / f"{dateiname(w['id'])}.json").exists()) if ordner.is_dir() else []
+
     out = {
         "stand": stand, "zeitzone": time.strftime("%Z"), "stand_unix": int(jetzt) if geliefert else alt.get("stand_unix"),
         "basis": basis,   # Auswertung, zu der Ampel & Co. gerechnet sind (statisch.json: erstellt) – die Seite nutzt die Datei nur bei gleichem Stand
-        "quelle": "Yahoo Finance (Kurse je nach Boerse bis 15 Minuten verzoegert)",
+        "quelle": "Yahoo Finance, je nach Börse bis 15 Minuten verzögert",
         "felder": FELDER,
         "zahl": {"gesamt": len(rl), "geliefert": geliefert, "von_heute": von_heute, "behalten": uebernommen, "ampel_neu": gerechnet,
                  "weggelassen": gruende, "gesperrt": gesperrt, "sekunden": round(time.time() - t0)},
+        "heute": mit_verlauf,
         "w": neu,
     }
     tmp = ziel.with_suffix(".tmp")
     tmp.write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False))
     tmp.replace(ziel)   # erst fertig schreiben, dann umbenennen: nie eine halbe Datei
     print(f"Ampel aus dem frischen Kurs: {gerechnet} Werte in {t_lage:.0f} s; Datei {ziel.stat().st_size / 1e6:.2f} MB", flush=True)
-
-    if not arg.ohne_heute and not gesperrt:
-        t2 = time.time()
-        try:
-            n, von = heute_laden(site, [w for w in rl if auswahl_heute(w)], stand)
-            print(f"Feiner Tagesverlauf: {n} von {von} Werten in {time.time() - t2:.0f} s", flush=True)
-        except Exception as ex:   # der Verlauf ist Zugabe: scheitert er, bleiben die Kurse trotzdem
-            print(f"Feiner Tagesverlauf nicht geladen: {ex.__class__.__name__}: {ex}", flush=True)
     print(f"Fertig in {time.time() - t0:.0f} s")
     return 0
 

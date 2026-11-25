@@ -1932,6 +1932,12 @@ textarea.feld{background:var(--glas-leicht);color:var(--text)}
 }
 /* Schlagzeile in der Nachkauf-Karte: vom Kartentitel abgesetzt */
 .nk-karte .nk-gross{padding-left:10px;border-left:3px solid var(--akzent)}
+/* Frische Kurse (25.11.2026): Satz unter dem Ampel-Halbkreis, Kurzwort in der Kopfzeile auf schmalen Schirmen */
+.ot-kj{flex:0 0 100%;color:var(--text2);font-size:11.5px}
+.ot-kj b{font-family:var(--f-zahl);color:var(--text)}
+.plakette .kj-kurz{display:none}
+.chart-leiste [data-heute]{font-family:var(--f-zahl);font-size:11.5px}
+@media (max-width:1240px){.plakette .kj-kurz{display:inline}}
 </style>
 </head>
 <body data-ansicht="haupt">
@@ -2128,7 +2134,7 @@ function exportLaden(id){
 }
 async function apiWert(id){
   if (!STATISCH) { const r = await fetch("api/wert?id=" + encodeURIComponent(id)); return r.ok ? r.json() : null; }
-  const d = await exportLaden(id); return d ? {info:d.info, chart:d.chart} : null;
+  const d = await exportLaden(id); if (d) kjWert(d); return d ? {info:d.info, chart:d.chart} : null;
 }
 async function apiPruefung(id){
   if (!STATISCH) return holeJson("api/pruefung?id=" + encodeURIComponent(id));
@@ -2493,7 +2499,7 @@ let STAND_TEXT = "";
 function datenstand(stand){
   const kurseBis = ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop();
   const de = s => s ? s.split(" ")[0].split("-").reverse().join(".") + (s.includes(" ") ? " " + s.split(" ")[1] : "") : "–";
-  STAND_TEXT = `Kurse bis ${de(kurseBis)} · berechnet ${de(stand)}${STAT_INFO?.zeitzone ? " " + STAT_INFO.zeitzone : ""} · ${ALLE.length.toLocaleString("de-DE")} Werte.`
+  STAND_TEXT = kjStandText(stand) + `Kurse bis ${de(kurseBis)} · berechnet ${de(stand)}${STAT_INFO?.zeitzone ? " " + STAT_INFO.zeitzone : ""} · ${ALLE.length.toLocaleString("de-DE")} Werte.`
     + (STATISCH ? " Online-Fassung: wird mehrmals täglich aktualisiert, keine Echtzeitkurse." : " Lokale Fassung: die Auswertung läuft täglich, Details rechnet der Server beim Anklicken.");
   let warn = "";
   if (STATISCH) {
@@ -2505,7 +2511,7 @@ function datenstand(stand){
   if (alter > 4) warn = (warn ? warn + " " : "") + `Achtung: Kursdaten sind ${Math.floor(alter)} Tage alt.`;
   const p = $("#stand");
   p.classList.toggle("alt", !!warn);
-  p.querySelector("span").innerHTML = `<span class="lang">Stand </span>${de(stand).slice(0,5)}${stand && stand.includes(" ") ? " " + stand.split(" ")[1] : ""}${STATISCH ? '<span class="lang"> · online</span>' : '<span class="lang"> · lokal</span>'}`;
+  p.querySelector("span").innerHTML = KJ ? kjPlakette(stand) : `<span class="lang">Stand </span>${de(stand).slice(0,5)}${stand && stand.includes(" ") ? " " + stand.split(" ")[1] : ""}${STATISCH ? '<span class="lang"> · online</span>' : '<span class="lang"> · lokal</span>'}`;
   const wb = $("#warnband"); wb.hidden = !warn; wb.textContent = warn;
 }
 
@@ -2937,7 +2943,7 @@ async function start(){
   const r = await fetch("daten/rangliste.json", {cache:"no-store"});
   const d = await r.json();
   [UMFELD, PRUEF, TAGEBUCH, BEWERTUNG] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
-  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; suchIndex(); datenstand(d.stand); STAND_ROH = d.stand;
+  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; await kurseJetztLaden(); suchIndex(); datenstand(d.stand); STAND_ROH = d.stand;
   Object.assign(ERKLAERUNG, ERKLAERUNG_NEU, ERKLAERUNG_DEPOT, ERKLAERUNG_TITEL);
   reiterZahlen(); listeNeu(); leseKern(); leseInit();
   route();
@@ -2959,20 +2965,21 @@ async function neuerStandPruefen(){
   NACHLADEN_LAEUFT = true;
   try {
     let info = null;
-    if (STATISCH) { info = await holeJson("daten/statisch.json"); if (!info || info.erstellt === STAT_INFO?.erstellt) return; }
+    if (STATISCH) { info = await holeJson("daten/statisch.json"); if (!info || info.erstellt === STAT_INFO?.erstellt) { if (info && await kurseJetztLaden()) kjZeigen(); return; } }
     const d = await holeJson("daten/rangliste.json");
     if (!d?.werte?.length || d.stand === STAND_ROH) return;
     const [umfeld, pruef, tagebuch, bewertung] = await Promise.all(["daten/umfeld.json","daten/pruefung.json","daten/tagebuch_pruefung.json","daten/bewertung.json"].map(holeJson));
-    NEU_WARTET = {d, info, umfeld, pruef, tagebuch, bewertung};
+    const kj = STATISCH ? await holeJson("daten/kurse_jetzt.json") : null;
+    NEU_WARTET = {d, info, umfeld, pruef, tagebuch, bewertung, kj};
     neuenStandZeigen();
   } finally { NACHLADEN_LAEUFT = false; }
 }
 function neuenStandZeigen(){
   if (!NEU_WARTET) return;
   if (!seiteRuhig()) { setTimeout(neuenStandZeigen, 5000); return; }
-  const {d, info, umfeld, pruef, tagebuch, bewertung} = NEU_WARTET; NEU_WARTET = null;
+  const {d, info, umfeld, pruef, tagebuch, bewertung, kj} = NEU_WARTET; NEU_WARTET = null;
   if (info) STAT_INFO = info;
-  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; STAND_ROH = d.stand;
+  ALLE = d.werte; HEATMAP_EXTRA = d.heatmap_extra || []; STAND_ROH = d.stand; kjSetzen(kj);
   UMFELD = umfeld || UMFELD; PRUEF = pruef || PRUEF; TAGEBUCH = tagebuch || TAGEBUCH; BEWERTUNG = bewertung || BEWERTUNG;
   WERT_CACHE.clear(); TAG_CACHE.clear(); FX = undefined; ISIN_SEC_LAEDT = null; VH = undefined; INFL = undefined;   // Einzelseiten, Tageskerzen, Wechselkurs, junge Werte, Vorhersage und Inflation beim nächsten Zugriff frisch holen
   suchIndex(); datenstand(d.stand); reiterZahlen(); listeNeu(); leseKern();
@@ -2981,6 +2988,199 @@ function neuenStandZeigen(){
   depotAktuell();
   const pl = $("#stand"); pl.classList.add("neu"); setTimeout(() => pl.classList.remove("neu"), 6000);
 }
+// ------------------------------------------------------------ Frische Kurse zwischen den Auswertungen (Wunsch Marc 25.11.2026: „viel öfter Kurse“)
+// Ein schlanker Lauf (kurse_jetzt.py, etwa alle 20 Minuten) legt daten/kurse_jetzt.json neben die Auswertung: je Wert Kurs, Tageswerte,
+// Zeitpunkt – und, wo sich der Kurs geändert hat, Ampel, Abstand zur 200-Wochen-Linie und Ränge, dort mit derselben Funktion gerechnet
+// wie im vollen Lauf. Die Seite rechnet hier NICHTS an der Ampel: Sie setzt die gelieferten Werte nur in die Daten des Werts ein
+// (Liste, Titelseite, Chart nutzen sie dann von selbst) und merkt sich die Werte der Auswertung, um sie zurücksetzen zu können.
+// Fehlt die Datei oder gehört sie zu einer anderen Auswertung (basis ≠ statisch.json: erstellt), bleibt alles wie bisher.
+let KJ = null;
+const KJ_GEMERKT = ["kurs", "datum", "score", "zone", "zu200w", "dd", "rang_ueber", "rang_unter", "grund", "linie200", "perf", "kz", "nk", "kv"];
+const kjSchluessel = () => KJ ? KJ.stand_unix + "|" + KJ.basis : "";
+function kjEintrag(id){
+  const a = KJ?.w?.[id]; if (!a) return null;
+  const o = {}; KJ.felder.forEach((f, i) => { o[f] = a[i] ?? null; });
+  return o.k > 0 && o.t > 0 ? o : null;
+}
+const kjZone = s => s == null ? "keine Daten" : s >= 80 ? "historisch sehr guenstig" : s >= 60 ? "guenstig" : s > 40 ? "neutral" : s > 15 ? "teuer" : "historisch sehr teuer";   // Wortlaut wie analyse.zone
+function kjGrund(w, alt){   // Begründungssatz der Rangliste mit den neuen Zahlen (Wortlaut wie analyse.py)
+  if (!alt || w.zu200w == null) return alt;
+  const teile = alt.split(" · ");
+  if (/200-Wochen-Linie/.test(teile[0])) {
+    let g = `${fmt(Math.abs(w.zu200w), 0)} % ${w.zu200w >= 0 ? "über" : "unter"} der 200-Wochen-Linie`;
+    if (w.rang_ueber != null) g += ` – weiter darüber als in ${fmt(w.rang_ueber, 0)} % der früheren Wochen über der Linie`;
+    else if (w.rang_unter != null) g += ` – tiefer als in ${fmt(100 - w.rang_unter, 0)} % der früheren Wochen unter der Linie`;
+    teile[0] = g;
+  }
+  const i = teile.findIndex(t => / % unter dem Allzeithoch$/.test(t));
+  if (i >= 0 && w.dd != null) teile[i] = `${fmt(Math.abs(w.dd), 0)} % unter dem Allzeithoch`;
+  return teile.join(" · ");
+}
+function kjAnwenden(w){   // frischen Kurs in einen Wert einsetzen (Eintrag der Rangliste oder info der Einzelseite); mehrfach aufrufbar
+  if (!w || w.kurs == null && !w._kj0) return w;
+  if (w._kjStand === kjSchluessel()) return w;
+  if (w._kj0) { Object.assign(w, w._kj0); delete w._kj0; delete w.kj; }
+  w._kjStand = kjSchluessel();
+  const e = kjEintrag(w.id); if (!e) return w;
+  const tag = new Date((e.t + (e.off || 0)) * 1000).toISOString().slice(0, 10);
+  if (w.datum && tag < w.datum) return w;
+  w._kj0 = Object.fromEntries(KJ_GEMERKT.filter(k => k in w).map(k => [k, w[k]]));
+  w.kj = {t:e.t, tag, o:e.o, h:e.h, l:e.l, v:e.v, li:e.li, ampelNeu:e.a != null, lageNeu:e.a != null || e.z != null, kursAlt:w.kurs, scoreAlt:w.score, datumAlt:w.datum};
+  w.kurs = e.k; w.datum = tag;
+  if (e.v > 0 && Array.isArray(w.perf)) w.perf = [Math.round((e.k / e.v - 1) * 10000) / 100, ...w.perf.slice(1)];
+  if (e.z != null) w.zu200w = e.z;
+  if (e.li != null) w.linie200 = e.li;
+  if (e.dd != null) w.dd = e.dd;
+  if (e.a != null) {
+    w.score = e.a; w.zone = kjZone(e.a); w.rang_ueber = e.ru; w.rang_unter = e.rn;
+    if (w.kz) w.kz = {...w.kz, jetzt:e.a};
+  }
+  if (w.kj.lageNeu) {
+    w.grund = kjGrund(w, w._kj0.grund);
+    if (w.kv && w.zu200w != null) w.kv = {...w.kv, heute_abstand:Math.round(w.zu200w)};
+  }
+  if (w.nk?.preis) w.nk = {...w.nk, abstand:Math.round((w.nk.preis / e.k - 1) * 1000) / 10, jetzt:!!(w.score != null && w.nk.ab != null && w.score >= w.nk.ab)};
+  return w;
+}
+// Chart: die laufende Kerze mit dem frischen Kurs fortschreiben – Hoch und Tief nur erweitern, nichts erfinden. art "W" = Wochenkerzen
+// (Kerze heißt nach dem Freitag ihrer Woche), "D" = Tageskerzen. Liegt der Kurs schon in einer neuen Woche bzw. an einem neuen Tag,
+// kommt eine neue Kerze dazu; Linien, für die es dort noch keinen Wert gibt (Kaufzonen der neuen Woche), bleiben an der Stelle leer.
+function kjChart(c, w, art){
+  if (!c?.t?.length || !c.c) return;
+  const schl = kjSchluessel() + "|" + (w?.kj?.t || "");
+  if (c._kjStand === schl) return;
+  const z = c._kj0;
+  if (z) {
+    const len = c.t.length;
+    if (len > z.n) for (const k of Object.keys(c)) if (Array.isArray(c[k]) && k !== "marken" && c[k].length === len) c[k].length = z.n;
+    for (const [k, v] of Object.entries(z.alt)) c[k][z.n - 1] = v;
+    delete c._kj0;
+  }
+  c._kjStand = schl;
+  const j = w?.kj; if (!j) { if (z) ["wma100", "wma300", "wma400"].forEach(k => delete c[k]); return; }
+  const n = c.t.length, i = n - 1, tTag = Date.parse(j.tag + "T00:00:00Z") / 1000;
+  const freitag = t => t + ((5 - new Date(t * 1000).getUTCDay() + 7) % 7) * 86400;
+  const ziel = art === "W" ? freitag(tTag) : tTag;
+  if (ziel < c.t[i]) return;
+  const k = w.kurs, hoch = Math.max(j.h ?? k, k), tief = Math.min(j.l ?? k, k);
+  c._kj0 = {n, alt:Object.fromEntries(["o", "h", "l", "c", "sma200w", "score"].filter(f => Array.isArray(c[f]) && c[f].length === n).map(f => [f, c[f][i]]))};
+  ["wma100", "wma300", "wma400"].forEach(f => delete c[f]);
+  if (ziel === c.t[i]) {
+    if (art === "D" && j.o != null && c.o) c.o[i] = j.o;
+    if (c.h) c.h[i] = Math.max(c.h[i] ?? hoch, hoch);
+    if (c.l) c.l[i] = Math.min(c.l[i] ?? tief, tief);
+    c.c[i] = k;
+  } else {
+    const gleicheWoche = art === "D" && freitag(c.t[i]) === freitag(tTag);
+    for (const f of Object.keys(c)) if (Array.isArray(c[f]) && f !== "marken" && c[f].length === n) c[f].push(gleicheWoche ? c[f][i] : null);
+    c.t[n] = ziel; c.c[n] = k;
+    if (c.o) c.o[n] = j.o ?? k;
+    if (c.h) c.h[n] = hoch;
+    if (c.l) c.l[n] = tief;
+  }
+  const m = c.t.length - 1;
+  if (j.ampelNeu && c.score) c.score[m] = w.score;
+  if (j.li != null && c.sma200w) c.sma200w[m] = j.li;
+}
+function kjWert(d){ if (!d?.info) return; kjAnwenden(d.info); if (d.chart) kjChart(d.chart, d.info, "W"); }
+function kjSetzen(d){   // neue Datei übernehmen; true, wenn sich etwas geändert hat
+  const neu = d && d.w && Array.isArray(d.felder) && d.stand_unix && d.basis === STAT_INFO?.erstellt ? d : null;
+  const vorher = kjSchluessel();
+  KJ = neu;
+  [...ALLE, ...HEATMAP_EXTRA].forEach(kjAnwenden);
+  return kjSchluessel() !== vorher;
+}
+async function kurseJetztLaden(){ return STATISCH ? kjSetzen(await holeJson("daten/kurse_jetzt.json")) : false; }
+function kjZeigen(){   // neue Kurse anzeigen, sobald gerade niemand tippt oder schiebt (wie beim neuen Datenstand); die Blätterposition bleibt
+  if (NEU_WARTET) return;
+  if (!seiteRuhig()) { setTimeout(kjZeigen, 5000); return; }
+  datenstand(STAND_ROH); listeNeu(); leseKern();
+  const haupt = $("#haupt"), oben = haupt.scrollTop, zurueck = () => { haupt.scrollTop = oben; };
+  route(); zurueck(); setTimeout(zurueck, 400); setTimeout(zurueck, 1500);
+  depotAktuell();
+  const pl = $("#stand"); pl.classList.add("neu"); setTimeout(() => pl.classList.remove("neu"), 6000);
+}
+// Uhrzeit für die Anzeige: heute nur die Uhrzeit, sonst mit Datum. s = "JJJJ-MM-TT HH:MM" (Zeit des Servers, Europe/Berlin) oder Unix-Sekunden
+function kjUhr(s){
+  if (s == null) return "–";
+  const zwei = x => String(x).padStart(2, "0"), jetzt = new Date(), heute = `${jetzt.getFullYear()}-${zwei(jetzt.getMonth() + 1)}-${zwei(jetzt.getDate())}`;
+  if (typeof s === "number") { const d = new Date(s * 1000); s = `${d.getFullYear()}-${zwei(d.getMonth() + 1)}-${zwei(d.getDate())} ${zwei(d.getHours())}:${zwei(d.getMinutes())}`; }
+  const [tag, uhr] = s.split(" ");
+  return tag === heute ? (uhr || "heute") : `${tag.slice(8, 10)}.${tag.slice(5, 7)}.${uhr ? " " + uhr : ""}`;
+}
+function kjPlakette(stand){   // Kopfzeile: zwei Zeiten – von wann die Kurse sind und von wann die Auswertung
+  return `Kurse ${kjUhr(KJ.stand)} · <span class="lang">Auswertung </span><span class="kj-kurz">Ausw. </span>${kjUhr(stand)}`;
+}
+function kjStandText(stand){
+  if (!KJ) return "";
+  const z = KJ.zahl || {}, n = x => (x ?? 0).toLocaleString("de-DE");
+  return `Zwei Zeiten: Die KURSE sind von ${kjUhr(KJ.stand)} Uhr (${KJ.quelle || "Yahoo Finance"}; ${n(z.geliefert)} von ${n(z.gesamt)} Werten geliefert, davon ${n(z.von_heute)} mit Kurs von heute${z.gesperrt ? " – die Quelle hat diesmal gedrosselt, ein Teil ist älter" : ""}). Daraus neu: Kurs, Veränderung zum Vortag, Abstand zur 200-Wochen-Linie und Ampel. Die AUSWERTUNG (Trefferquoten, Vorhersage, Kaufzonen, Prüfungen) ist von ${kjUhr(stand)} Uhr. Neue Kurse kommen etwa alle 20 Minuten, nachts und am Wochenende stündlich; GitHub startet die Läufe nicht pünktlich. `;
+}
+function kjSatz(w){   // Titelseite: von wann der Kurs ist und was daraus neu gerechnet wurde
+  const j = w?.kj; if (!j) return "";
+  const neu = j.ampelNeu && w.score != null ? ` – Ampel und Abstand zur 200-Wochen-Linie daraus neu gerechnet${j.scoreAlt != null && Math.round(j.scoreAlt) !== Math.round(w.score) ? ` (in der Auswertung von ${kjUhr(STAND_ROH)} Uhr: Ampel <b>${fmt(j.scoreAlt, 0)}</b>)` : ""}` : "";
+  return `<span class="ot-kj" data-e="kurse_jetzt" tabindex="0">Kurs von <b>${kjUhr(j.t)}</b> Uhr${neu}.</span>`;
+}
+ERKLAERUNG.kurse_jetzt = {titel:"Kurse von jetzt", text:"Zwischen den großen Auswertungen holt ein schlanker Lauf etwa alle 20 Minuten nur die aktuellen Kurse (Yahoo Finance, je nach Börse bis 15 Minuten verzögert; nachts und am Wochenende stündlich). Daraus neu: Kurs, Veränderung zum Vortag, Abstand zur 200-Wochen-Linie, Abstand zum Allzeithoch und die Ampel. Die Ampel wird dabei nicht geschätzt, sondern mit derselben Formel nachgerechnet wie in der Auswertung – auf den Wochenkursen der Seite, die auf vier Stellen gerundet sind (Abweichung im Mittel 0,03 Ampel-Punkte, selten über 0,5). Alles andere – Trefferquoten, Vorhersage, Kaufzonen, Prüfungen – stammt aus der letzten Auswertung. Liefert die Quelle für einen Wert keinen neueren Kurs, bleibt der Stand der Auswertung stehen. GitHub startet die Läufe nicht pünktlich; die Uhrzeit zeigt, von wann der Kurs wirklich ist."};
+// ------------------------------------------------------------ Ansicht „Heute“: feiner Verlauf der letzten Handelstage (15-Minuten-Kerzen)
+// Nur für Werte, für die der schlanke Kurs-Lauf eine Datei daten/heute/<id>.json geschrieben hat (Liste KJ.heute: Übersichtswerte und
+// Hebel-Produkte); für alle anderen gibt es den Knopf nicht. Die Ansicht ist eine eigene Zeitebene „H“ des eigenen Charts, sie wird
+// nicht gemerkt: Beim nächsten Wert steht wieder die gewohnte Zeitebene.
+let HEUTE_VOR = "W", HEUTE_ID = null;
+const HEUTE_CACHE = new Map();
+const heuteDa = id => STATISCH && Array.isArray(KJ?.heute) && KJ.heute.includes(id);
+const tUhr = t => new Date(t * 1000).toLocaleString("de-DE", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit", timeZone:"UTC"}) + " Uhr";
+async function heuteDaten(id){
+  const schl = id + "|" + (KJ?.stand_unix || "");
+  if (!HEUTE_CACHE.has(schl)) { if (HEUTE_CACHE.size > 20) HEUTE_CACHE.clear(); HEUTE_CACHE.set(schl, holeJson("daten/heute/" + encodeURIComponent(dateiId(id)) + ".json")); }
+  const d = await HEUTE_CACHE.get(schl);
+  if (!d?.t?.length || d.c?.length !== d.t.length) { HEUTE_CACHE.delete(schl); return null; }
+  return d;
+}
+function heuteChart(d, w){   // Spalten wie die Wochen- und Tagesdaten; Linien der Auswertung (200-Wochen-Linie, Kaufzonen) mit ihrem Wert von heute
+  const lokal = t => t - new Date(t * 1000).getTimezoneOffset() * 60;   // Zeitachse in der Uhrzeit des Geräts
+  const idx = []; let zuletzt = -Infinity;
+  d.t.forEach((t, i) => { const x = lokal(t); if (x > zuletzt) { idx.push(i); zuletzt = x; } });
+  const n = idx.length, voll = v => new Array(n).fill(v ?? null), sp = a => idx.map(i => a?.[i] ?? null);
+  const letzter = k => { const a = CDATA?.[k]; if (!Array.isArray(a)) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return a[i]; return null; };
+  const out = {t:idx.map(i => lokal(d.t[i])), o:sp(d.o), h:sp(d.h), l:sp(d.l), c:sp(d.c), sma200w:voll(w.linie200), score:voll(w.score), marken:[], heute:true};
+  for (const k of ["80", "60", "40", "15"]) if (CDATA?.["kz" + k]) out["kz" + k] = voll(w.kz?.[k] ?? letzter("kz" + k));
+  if (CDATA?.kz90) out.kz90 = voll(letzter("kz90"));
+  return out;
+}
+function heuteKnopf(){
+  const an = INTERVALL === "H", b = $("#chart-karte [data-heute]");
+  if (b) b.setAttribute("aria-pressed", String(an));
+  $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(!an && x.dataset.z === ZEITRAUM)));
+}
+async function heuteZeichnen(id){   // true = gezeichnet (oder der Wert wurde inzwischen gewechselt), false = keine Daten
+  if (!heuteDa(id)) return false;
+  if (WAEHRUNG === "EUR" && FX === undefined) { await fxLaden(); if (AKTIV !== id) return true; }
+  const d = await heuteDaten(id);
+  if (AKTIV !== id || INTERVALL !== "H") return true;
+  if (!d || !$("#chart") || !INFO) return false;
+  let cd = heuteChart(d, INFO); if (cd.t.length < 2) return false;
+  if (euroAktiv()) cd = inEuro(cd);
+  hauptChartWeg(); CD = cd; KEGEL_D = null;
+  zeichne(cd, INFO);
+  [HAUPT, ZWEI].forEach(ch => { try { ch?.applyOptions({timeScale:{timeVisible:true, secondsVisible:false}}); } catch(e){} });
+  const t = cd.t, letzte = t[t.length - 1], tag = Math.floor(letzte / 86400);
+  let von = letzte; for (let i = t.length - 1; i >= 0 && Math.floor(t[i] / 86400) === tag; i--) von = t[i];
+  von = Math.min(von, t[Math.max(0, t.length - 27)]);   // früh am Handelstag: mindestens die letzten 27 Kerzen (rund ein Handelstag) zeigen
+  const ch = HAUPT;
+  setTimeout(() => { if (HAUPT === ch && INTERVALL === "H") { try { ch.timeScale().setVisibleRange({from:von, to:letzte}); } catch(e) { ch.timeScale().fitContent(); } } }, 90);
+  meldung(`Feiner Verlauf: 15-Minuten-Kerzen der letzten Handelstage, Uhrzeit Ihres Geräts (Yahoo Finance, je nach Börse bis 15 Minuten verzögert; Stand ${kjUhr(d.stand)} Uhr). 200-Wochen-Linie, Kaufzonen und Ampel stehen mit ihrem Wert von heute dabei.${euroAktiv() ? " In Euro mit dem letzten bekannten Wechselkurs." : ""}`);
+  return true;
+}
+function heuteAus(){ if (INTERVALL !== "H") return; INTERVALL = HEUTE_VOR; meldung(""); heuteKnopf(); eigenNeu(); }
+function heuteAn(){
+  if (INTERVALL === "H") { heuteAus(); return; }
+  if (!AKTIV || !heuteDa(AKTIV) || CHARTQUELLE === "tv") return;
+  HEUTE_VOR = INTRADAY.includes(INTERVALL) ? "W" : INTERVALL; HEUTE_ID = AKTIV; INTERVALL = "H";
+  $$("#chart-karte [data-iv]").forEach(x => x.setAttribute("aria-pressed", "false"));
+  heuteKnopf(); eigenNeu();
+}
+ERKLAERUNG.heute_ansicht = {titel:"Heute", text:"Zeigt den feinen Verlauf der letzten Handelstage in 15-Minuten-Kerzen, zuerst den jüngsten Handelstag (nach links schieben für die Tage davor). Die Kurse stammen von Yahoo Finance und sind je nach Börse bis zu 15 Minuten verzögert; aufgefrischt werden sie etwa alle 20 Minuten. Diesen Verlauf gibt es für die ETFs, Rohstoffe, die fünf großen Kryptowährungen und die Hebel-Produkte. Die gelbe 200-Wochen-Linie, die Kaufzonen und die Ampel stehen mit ihrem heutigen Wert dabei – an der Ampel selbst ändert diese Ansicht nichts. Ein Klick auf 1J, 3J … führt zurück zum gewohnten Chart."};
 let _eigenerHash = "";
 const hashSetzen = h => { _eigenerHash = "#" + h; if (location.hash !== _eigenerHash) location.hash = h; };
 function route(){
@@ -3751,7 +3951,7 @@ function instrumentKarte(w, id){   // oberste Karte des Terminals: Name, Kürzel
       ${istHebel(w) ? `<div class="ot-hebel" role="note" data-e="hebel_warn" tabindex="0"><b>⚠ Hebel-Produkt (2-fach, täglich):</b> bewegt sich an jedem Tag doppelt so stark wie sein Basiswert${w.hebel?.basis ? " (" + esc(w.hebel.basis) + ")" : ""} – nach oben und nach unten. Auf Dauer ist das nicht das Doppelte; es kann auch verlieren, wenn der Basiswert am Ende wieder gleich steht.${w.hebel?.einzel ? " <b>Hebel auf eine einzelne Aktie:</b> Dazu kommt das Risiko einer einzelnen Firma – eine schlechte Nachricht trifft doppelt, und keine andere Firma gleicht das aus." : ""}${w.hebel && w.hebel.eu === false ? " US-Produkt: in der EU für Privatanleger meist nicht kaufbar." : ""}</div>` : ""}
       <div class="ot-gauge" data-e="gauge" tabindex="0">${halbkreis(w)}</div>
       <div class="ot-unter">${w.score == null ? (w.jung ? "Für eine Ampel braucht es mehr Kursgeschichte." : "Für diesen Wert gibt es noch keine Ampel.")
-        : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">Vor 4 Wochen stand die Ampel bei <b>${fmt(w.score_vor4w,0)}</b>${de == null || Math.round(de) === 0 ? "" : de > 0 ? " – seither günstiger geworden" : " – seither teurer geworden"}.</span>` : ""}${w.ampel_art === "anker200s" ? `<span class="ot-anker-satz" data-e="l_200w" tabindex="0">70er Ankerlinie: Bei Ampel 70 steht der Kurs genau auf seinem Durchschnitt der letzten 200 Wochen.</span>` : ""}`}</div>
+        : `<span>Gemessen an der eigenen Geschichte${w.ampel_seit ? ` seit ${w.ampel_seit}` : ""} – nicht an anderen Werten.</span>${w.score_vor4w != null ? `<span class="ot-vor4" data-e="w4" tabindex="0">Vor 4 Wochen stand die Ampel bei <b>${fmt(w.score_vor4w,0)}</b>${de == null || Math.round(de) === 0 ? "" : de > 0 ? " – seither günstiger geworden" : " – seither teurer geworden"}.</span>` : ""}${w.ampel_art === "anker200s" ? `<span class="ot-anker-satz" data-e="l_200w" tabindex="0">70er Ankerlinie: Bei Ampel 70 steht der Kurs genau auf seinem Durchschnitt der letzten 200 Wochen.</span>` : ""}`}${kjSatz(w)}</div>
     </section>`;
 }
 // ------------------------------------------------------------ Rechte Spalte des Terminals (24.11.2026): vier kompakte Karten – nur Werte, die das Tool ohnehin rechnet
@@ -4704,7 +4904,7 @@ async function zeige(id, opt={}){
       <section class="karte chart-karte ${CHIPS.ampel ? "" : "ohne-ampel"}" id="chart-karte">
       <div class="sekt sekt-in" id="s-chart"><span class="nr"></span><h2>Chart</h2><p>${nachbauSatz(c, w) || (eigen ? "Der Kurs mit seiner 200-Wochen-Linie, darunter die Ampel im Verlauf" : "Der Verlauf der Ampel")}</p></div>
       <div class="chart-leiste">
-        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${ZEITRAUM === k}">${t}</button>`).join("")}</div>
+        ${eigen ? `<div class="segment" role="group" aria-label="Zeitraum" data-e="zeitraum">${heuteDa(id) ? `<button data-heute aria-pressed="${INTERVALL === "H"}" data-e="heute_ansicht">Heute</button>` : ""}${[["1","1J"],["3","3J"],["5","5J"],["10","10J"],["alle","Alles"]].map(([k,t]) => `<button data-z="${k}" aria-pressed="${INTERVALL !== "H" && ZEITRAUM === k}">${t}</button>`).join("")}</div>
         <div class="segment ot-chartart" role="group" aria-label="Darstellung" data-e="chartart"><button data-ca="kerzen" aria-pressed="${CHARTART === "kerzen"}">Kerzen</button><button data-ca="linie" aria-pressed="${CHARTART === "linie"}">Linie</button></div>` : ""}
         <button type="button" class="werkzeug nur-profi ot-mehr" id="chart-mehr" aria-expanded="${CHART_MEHR}" aria-controls="chart-werkzeug" data-e="chart_mehr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2.2"/><circle cx="10" cy="17" r="2.2"/></svg><span>Weitere Linien &amp; Werkzeuge</span></button>
         <div class="ot-chips-haupt" role="group" aria-label="Die wichtigsten Linien"><span class="chip-titel">Im Chart</span>${chips.filter(x => CHIPS_EINFACH.includes(x[0])).map(chipKnopf).join("")}</div>
@@ -4777,7 +4977,8 @@ async function zeige(id, opt={}){
     <div class="fussnote">Historische Statistik, keine Anlageberatung. Vergangene Kurse garantieren nichts. ${eigen ? "Kurse: Yahoo Finance (Monats-, Wochen- und Tageskerzen, Tag: letzte 15 Jahre)." : ""}</div>`;
   $("#stern").onclick = () => favUmschalten(id);
   $$("#vertiefung .reiter button").forEach(b => b.onclick = () => reiter(b.dataset.r));
-  $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  $$("#chart-karte [data-z]").forEach(b => b.onclick = () => { zeitraumSetzen(b.dataset.z); heuteAus(); $$("#chart-karte [data-z]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
+  if ($("#chart-karte [data-heute]")) $("#chart-karte [data-heute]").onclick = () => heuteAn();
   $$("#chart-karte [data-sk]").forEach(b => b.onclick = () => { SKALA = +b.dataset.sk; sichere("skala", SKALA); HAUPT?.priceScale("right").applyOptions({mode:SKALA}); trendkanalAktualisieren(); $$("#chart-karte [data-sk]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); });
   $$("#chart-karte [data-q]").forEach(b => b.onclick = () => chartQuelle(b.dataset.q));
   $$("#chart-karte [data-ca]").forEach(b => b.onclick = () => { CHARTART = b.dataset.ca; sichere("chartart", CHARTART); $$("#chart-karte [data-ca]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); eigenNeu(); });
@@ -4787,6 +4988,7 @@ async function zeige(id, opt={}){
   LINEAL = {an:false, a:null, b:null, fertig:false};
   $$("#chart-karte .chip").forEach(b => b.onclick = () => chipUmschalten(b.dataset.chip, b));
   if ($("#chart-mehr")) $("#chart-mehr").onclick = () => { CHART_MEHR = !CHART_MEHR; sichere("chart_mehr", CHART_MEHR); $("#chart-werkzeug").hidden = !CHART_MEHR; $("#chart-mehr").setAttribute("aria-expanded", String(CHART_MEHR)); };
+  if (INTERVALL === "H" && !(eigen && HEUTE_ID === id && heuteDa(id))) INTERVALL = HEUTE_VOR;
   if (!w.tv && INTRADAY.includes(INTERVALL)) INTERVALL = "W";
   if (eigen) eigenNeu(); else zeichneOnline(w, c);
   if ((CHARTQUELLE === "tv" || INTRADAY.includes(INTERVALL)) && w.tv) chartQuelle("tv");
@@ -4826,7 +5028,7 @@ function chartQuelle(q){
   tv.hidden = q !== "tv"; $("#chart").style.visibility = q === "tv" ? "hidden" : ""; $("#fk").hidden = q === "tv";
   $("#tv-hinweis").hidden = q !== "tv";
   $("#tv-hinweis").innerHTML = tvHinweis();
-  $$("#chart-karte .chip, #chart-karte [data-z], #chart-karte [data-sk], #chart-karte [data-ca]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
+  $$("#chart-karte .chip, #chart-karte [data-z], #chart-karte [data-heute], #chart-karte [data-sk], #chart-karte [data-ca]").forEach(b => { if (!["ampel", "mayer"].includes(b.dataset.chip)) b.disabled = q === "tv"; });
   if (q === "tv" && $("#ot-hud")) $("#ot-hud").hidden = true;
 }
 
@@ -4881,7 +5083,7 @@ async function waehrungSetzen(wg){
 }
 async function intervallSetzen(iv){
   INTERVALL = iv; sichere("intervall", iv); meldung("");
-  $$("#chart-karte [data-iv]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.iv === iv)));
+  $$("#chart-karte [data-iv]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.iv === iv))); heuteKnopf();
   if (INTRADAY.includes(iv)) { if (INFO?.tv) chartQuelle("tv"); return; }
   if (CHARTQUELLE === "tv") { chartQuelle("tv"); return; }
   await eigenNeu();
@@ -4924,6 +5126,7 @@ async function tagesDaten(id){
   if (!TAG_CACHE.has(id)) TAG_CACHE.set(id, STATISCH ? holeJson("daten/tage/" + encodeURIComponent(dateiId(id)) + ".json") : holeJson("api/tag?id=" + encodeURIComponent(id)));
   const d = await TAG_CACHE.get(id);
   if (!d || d.fehler || !d.t?.length) { TAG_CACHE.delete(id); return null; }
+  if (INFO?.id === id) kjChart(d, INFO, "D");   // laufende Tageskerze mit dem frischen Kurs fortschreiben
   if (!d.marken) {   // Wochen-Markierung auf den letzten Handelstag dieser Woche legen
     const t = d.t;
     d.marken = markenAuf(CDATA.marken, wt => { let lo = 0, hi = t.length - 1, r = -1; while (lo <= hi) { const m = (lo + hi) >> 1; if (t[m] <= wt) { r = m; lo = m + 1; } else hi = m - 1; } return r >= 0 && wt - t[r] < 8 * 86400 ? t[r] : null; });
@@ -4958,6 +5161,7 @@ function hauptChartWeg(){
   KERZEN = null; HAUPT = null; ZWEI = null; SERIEN = {}; KEGEL = []; LIMITLINIEN = [];
 }
 async function eigenNeu(){
+  if (INTERVALL === "H") { if (await heuteZeichnen(AKTIV)) return; INTERVALL = HEUTE_VOR; heuteKnopf(); }
   const id = AKTIV, iv = INTRADAY.includes(INTERVALL) ? "W" : INTERVALL;
   if (WAEHRUNG === "EUR" && FX === undefined) { await fxLaden(); if (AKTIV !== id) return; }
   const eur = euroAktiv(), basis = eur ? inEuro(CDATA) : CDATA;
@@ -5403,7 +5607,7 @@ function hudZeigen(c, p){
   } else {
     const nk = c.c[i] >= 100 ? 2 : 4, sc = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null, l2 = c.sma200w?.[i];
     const ab = l2 > 0 && c.c[i] != null ? (c.c[i] / l2 - 1) * 100 : null;
-    hud.innerHTML = `<div class="hud-t">${tDe(c.t[i])}${i === li ? " · letzter Kurs" : ""}</div><div class="hud-g">${zeile("Kurs", fmt(c.c[i], nk))}
+    hud.innerHTML = `<div class="hud-t">${c.heute ? tUhr(c.t[i]) : tDe(c.t[i])}${i === li ? " · letzter Kurs" : ""}</div><div class="hud-g">${zeile("Kurs", fmt(c.c[i], nk))}
       ${zeile("Abstand", ab == null ? "–" : `<i style="color:var(--gelb)">${vz(ab, Math.abs(ab) < 10 ? 1 : 0, " %")}</i> <small>zur 200W-Linie</small>`)}
       ${zeile("Ampel", sc == null ? "–" : `<i style="color:${farbe(sc)}">${fmt(sc,0)} · ${STATUS_KURZ[stufe(sc)]}</i>${vorl ? " <small>vorläufig</small>" : ""}`)}</div>`;
     hud.style.setProperty("--hf", sc == null ? "var(--akzent)" : farbe(sc));
@@ -5537,7 +5741,7 @@ function zeichne(c, w){
     }
     const nk = c.c[i] >= 100 ? 2 : 4, v = i > 0 && c.c[i-1] ? (c.c[i] / c.c[i-1] - 1) * 100 : null;
     const sc_ = c.score[i] ?? c.score_v?.[i], vorl = c.score[i] == null && c.score_v?.[i] != null;
-    fk.innerHTML = `<div class="r"><b>${tDe(c.t[i])}</b><span class="fk-ohl" title="Eröffnungskurs">E ${fmt(c.o[i],nk)}</span><span class="fk-ohl" title="höchster Kurs">H ${fmt(c.h[i],nk)}</span><span class="fk-ohl" title="tiefster Kurs">T ${fmt(c.l[i],nk)}</span><span title="Schlusskurs"><span class="fk-s">S</span><span class="fk-kurs">Kurs</span> <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span><span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span> <small>${({D:"zum Vortag", M:"zum Vormonat"})[INTERVALL] || "zur Vorwoche"}</small></span>` : ""}</div>
+    fk.innerHTML = `<div class="r"><b>${c.heute ? tUhr(c.t[i]) : tDe(c.t[i])}</b><span class="fk-ohl" title="Eröffnungskurs">E ${fmt(c.o[i],nk)}</span><span class="fk-ohl" title="höchster Kurs">H ${fmt(c.h[i],nk)}</span><span class="fk-ohl" title="tiefster Kurs">T ${fmt(c.l[i],nk)}</span><span title="Schlusskurs"><span class="fk-s">S</span><span class="fk-kurs">Kurs</span> <b>${fmt(c.c[i],nk)}</b></span>${v != null ? `<span><span class="${v >= 0 ? "pos" : "neg"}">${vz(v,1," %")}</span> <small>${({D:"zum Vortag", M:"zum Vormonat", H:"zur Kerze davor"})[INTERVALL] || "zur Vorwoche"}</small></span>` : ""}</div>
       <div class="r">${CHIPS.w200 && c.sma200w[i] != null ? `<span><i class="sw" style="background:var(--gelb)"></i>200-Wochen-Linie ${fmt(c.sma200w[i],nk)}</span>` : ""}
       <span class="fk-ampel" style="${sc_ == null ? "" : `background:${farbe(sc_)}${vorl ? ";opacity:.7" : ""}`}" ${vorl ? 'title="Vorläufige Ampel: erst wenige Jahre eigene Kursgeschichte, deshalb weniger verlässlich"' : ""}>Ampel ${sc_ == null ? "–" : `<b>${fmt(sc_,0)}</b> · ${zonenWort(sc_)}${vorl ? " (vorläufig)" : ""}`}</span>
       ${c.score[i] != null && rangZuZeit(c.t[i]) ? `<span class="fk-rang">${rangText(rangZuZeit(c.t[i]))}</span>` : ""}
@@ -7116,7 +7320,7 @@ async function ladeKegel(wochen, jahre, preise, erst=false, kegel=wochen){
   return m;
 }
 function kegelZeichnen(){
-  if (!HAUPT || !KEGEL_M) return;
+  if (!HAUPT || !KEGEL_M || INTERVALL === "H") return;
   const f = F(), m = KEGEL_D = kegelAnzeige(KEGEL_M);
   KEGEL.forEach(s => { try { if (s._weg) s._weg(); else HAUPT.removeSeries(s); } catch(e){} }); KEGEL = [];
   const fx = fxFaktor(), daten = k => m.t.map((t,i) => ({time:t, value:m.kegel[k][i] * fx}));
