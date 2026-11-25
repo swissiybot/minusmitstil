@@ -3580,8 +3580,8 @@ async function vorhersageInit(id, w){
   const kachel = (k, titel, farbe) => { const x = gepr ? e[k] : e["e" + k]; if (x == null) return "";
     const sp = spanne(k);
     if (gepr) einzeln.push(`<b>${titel}:</b> ${e["e" + k] != null ? `nur ${name} für sich ${e["e" + k]} von 100` : `eigene Geschichte zu kurz`}, alle ${G[1]} zusammen ${fmt(gh[k],0)} von 100.${!muenze(k) && probe(k, x) ? ` ${probe(k, x)}.` : ""}`);
-    return `<div class="vh-z" style="--vf:${farbe}"><div class="l">${titel}</div><div class="w">${x} <small>von 100</small></div>
-      ${sp ? (sp[1] - sp[0] >= 90 ? `<div class="vh-sp">keine sichere Aussage möglich <b>(${sp[0]} bis ${sp[1]})</b></div>` : `<div class="vh-sp">sicher ist nur <b>${sp[0]} bis ${sp[1]}</b></div>`) : ""}
+    return `<div class="vh-z" style="--vf:${farbe}"><div class="l">${titel}</div><div class="w">${x} <small>%</small></div>
+      ${sp ? (sp[1] - sp[0] >= 90 ? `<div class="vh-sp">keine sichere Aussage möglich <b>(${sp[0]} % bis ${sp[1]} %)</b></div>` : `<div class="vh-sp">sicher ist nur: <b>${sp[0]} % bis ${sp[1]} %</b></div>`) : ""}
       <div class="b${sp ? " mit-spanne" : ""}">${sp ? `<em style="left:${sp[0]}%;width:${Math.max(1, sp[1] - sp[0])}%"></em><u style="left:${x}%"></u>` : `<i style="width:${x}%"></i>`}</div>
       <div class="u">${!gepr ? `So oft kam es bisher bei ${name} (${fmt(e.j,0)} Jahre).` : `${WAS[k]}${muenze(k) ? `<br><b class="neg">⚠ In der Prüfung nicht besser als ein Münzwurf</b>` : ""}`}</div></div>`; };
   const genauer = a => `${fmt(Math.abs(a[0]), Math.abs(a[0]) < 1 ? 2 : 1)} % ${a[0] < 0 ? "ungenauer" : "genauer"}${a[1] != null ? ` (Spanne ${vz(a[1], Math.abs(a[1]) < 1 ? 2 : 1)} bis ${vz(a[2], Math.abs(a[2]) < 1 ? 2 : 1)})` : ""}`;
