@@ -98,12 +98,12 @@ ETFS = ETFS + THEMEN_ETFS
 HEBEL_BRANCHE = "Hebel 2x"
 
 
-def _H(i, kuerzel, anbieter, produkt, isin, wkn, basis, art="ETF", eu=True, xetra=None, ab=None):
+def _H(i, kuerzel, anbieter, produkt, isin, wkn, basis, art="ETF", eu=True, xetra=None, ab=None, einzel=False):
     """Anzeigename „Basiswert 2x (Anbieter)“: In der schmalen Liste muss der Anfang des Namens unterscheiden (nicht 13-mal
     „ProShares Ultra …“); der volle Produktname steht in „produkt“ und in der Kurzbeschreibung."""
     return {"id": i, "name": f"{basis} 2x ({anbieter})", "produkt": produkt, "etf": kuerzel, "index": None, "index_tr": None,
             "branche": HEBEL_BRANCHE, "isin": isin, "wkn": wkn,
-            "hebel": {"fach": 2, "art": art, "eu": eu, "basis": basis} | ({"xetra": xetra} if xetra else {})} | ({"ab": ab} if ab else {})
+            "hebel": {"fach": 2, "art": art, "eu": eu, "basis": basis} | ({"xetra": xetra} if xetra else {}) | ({"einzel": True} if einzel else {})} | ({"ab": ab} if ab else {})
 
 
 HEBEL_ETFS = [
@@ -130,6 +130,15 @@ HEBEL_ETFS = [
     _H("LCFE", "LCFE.MI", "WisdomTree", "WisdomTree Coffee 2x Daily Leveraged", "JE00B2NFTD12", "A0V5V4", "Kaffee", art="ETC", xetra="4RT2", ab="2015-01-02"),
     _H("LSUG", "LSUG.MI", "WisdomTree", "WisdomTree Sugar 2x Daily Leveraged", "JE00B2NFTW01", "A0V5V2", "Zucker", art="ETC", xetra="4RUH", ab="2015-01-02"),
     _H("LCOC", "LCOC.MI", "WisdomTree", "WisdomTree Cocoa 2x Daily Leveraged", "JE00B2NFV803", "A0V607", "Kakao", art="ETC", xetra="4RUP", ab="2015-01-02"),
+    # Ausbau 25.11.2026 (Wunsch Marc: „nur Werte die in Europa handelbar sind aber mehr davon“, nie Knock-out): fünf weitere, alle
+    # mit Euro-Kursen. ISIN, WKN und Kürzel aus der Xetra-Liste „alle handelbaren Instrumente“ der Deutschen Börse (Nickel: dazu
+    # Borsa Italiana), Name, Kosten und „täglich gehebelt“ von justETF; Yahoo liefert unter dem Kürzel genau dieses Produkt in Euro.
+    # ETP = börsengehandelte Schuldverschreibung (kein Fonds). „einzel“ = hängt an EINER Aktie (neu erlaubt, Hinweis im Kurztext).
+    _H("2MUE", "2MUE.DE", "Leverage Shares", "Leverage Shares 2x Micron Technology ETP Securities", "IE00BKT66K01", "A3GUFU", "Micron Technology", art="ETP", einzel=True),
+    _H("2CAR", "2CAR.DE", "WisdomTree", "WisdomTree STOXX Europe Automobiles 2x Daily Leveraged", "XS2427363895", "A3GWVR", "Europa Autoaktien", art="ETP"),
+    _H("2FLY", "2FLY.DE", "WisdomTree", "WisdomTree STOXX Europe Travel & Leisure 2x Daily Leveraged", "XS2427363036", "A3GWVS", "Europa Reise- und Freizeitaktien", art="ETP"),
+    _H("LNIK", "LNIK.MI", "WisdomTree", "WisdomTree Nickel 2x Daily Leveraged", "JE00BDD9QB77", "A2BC83", "Nickel", art="ETC", xetra="4RUD", ab="2022-03-25"),   # davor Fehlkurse und die Handelsaussetzung für Nickel im März 2022
+    _H("SC2X", "SC2X.DE", "Xtrackers/Scalable", "Scalable MSCI AC World (2x) Leveraged Daily Swap Xtrackers UCITS ETF 1C", "LU3386643970", "DBX2SC", "MSCI AC World"),   # erst seit 28.07.2026: noch ohne Ampel
     # USA (NYSE Arca oder Nasdaq, Kurse in Dollar) – für Privatanleger in der EU meist nicht kaufbar
     _H("SSO", "SSO", "ProShares Ultra, USA", "ProShares Ultra S&P500", "US74347R1077", None, "S&P 500", eu=False),
     _H("QLD", "QLD", "ProShares Ultra, USA", "ProShares Ultra QQQ", "US74347R2067", None, "Nasdaq-100", eu=False),
@@ -174,6 +183,99 @@ HEBEL_ETFS = [
     _H("BITU", "BITU", "ProShares Ultra, USA", "ProShares Ultra Bitcoin ETF", "US74349Y7040", None, "Bitcoin", eu=False),
     _H("ETHT", "ETHT", "ProShares Ultra, USA", "ProShares Ultra Ether ETF", "US74349Y5713", None, "Ether", eu=False),
 ]
+
+# Nachgebaute Vorgeschichte und Vergleich mit dem Basiswert (hebel_nachbau.py, Wunsch Marc 25.11.2026).
+# _N(Kette, Hebel-Währung, laufende Kosten % p. a., Name des Basiswerts, aktiv, vgl)
+#   Kette: Glieder (Yahoo-Kürzel, Währung[, Kurse erst ab]) vom ältesten zum jüngsten; alle mit wiederangelegten Erträgen
+#   aktiv: Prüfung nach den festen Grenzen bestanden -> die Zeit vor dem ersten echten Kurs wird nachgebaut
+#   vgl:   Basiswert liegt sauber vor -> Karte „Hebel-Produkt gegen Basiswert“ (info.hebel_vgl)
+# Kosten: europäische Produkte laut justETF (Gesamtkostenquote), US-Produkte laut Yahoo/Morningstar – abgerufen am 25.11.2026.
+# Prüfzahlen je Produkt: python hebel_nachbau.py (Tabelle in der README).
+#   marke: europäischer ETF auf denselben Index (gleiche Handelszeit wie das Produkt) – nur für Prüfung und Anschluss
+def _N(kette, hebel_in, kosten, name, aktiv=False, vgl=False, marke=None):
+    return {"kette": kette, "hebel_in": hebel_in, "kosten": kosten, "name": name, "aktiv": aktiv, "vgl": vgl} | ({"marke": marke} if marke else {})
+
+
+_SP500 = [("^SP500TR", "USD"), ("SPY", "USD")]
+NACHBAU = {
+    # Europa, Index-Produkte
+    "LQQ": _N([("QQQ", "USD")], "USD", 0.60, "Nasdaq-100 (ETF Invesco QQQ, mit Erträgen)", marke=("SXRV.DE", "EUR", "2010-11-02"), aktiv=True, vgl=True),
+    "18MF": _N([("SPY", "USD")], "EUR", 0.50, "S&P 500 als Ersatz für den MSCI USA (ETF SPDR S&P 500, mit Erträgen)", marke=("SXR4.DE", "EUR", "2010-11-03"), vgl=True),
+    "DBPG": _N(_SP500, "USD", 0.60, "S&P 500 (ETF SPDR S&P 500 mit Erträgen, davor S&P 500 Total Return)", marke=("CSSPX.MI", "EUR"), vgl=True),
+    "LVWC": _N([("EUNL.DE", "EUR")], "USD", 0.60, "MSCI World (ETF iShares Core MSCI World auf Xetra, mit Erträgen)", vgl=True),
+    "DBPE": _N([("^GDAXI", "EUR")], "EUR", 0.35, "DAX (Performance-Index, mit Dividenden)", aktiv=True, vgl=True),
+    "LYY8": _N([("^GDAXI", "EUR")], "EUR", 0.35, "DAX (Performance-Index, mit Dividenden)", aktiv=True, vgl=True),
+    "DEL2": _N([("^GDAXI", "EUR")], "EUR", 0.40, "DAX (Performance-Index, mit Dividenden)", vgl=True),
+    "LVE": _N([("EXW1.DE", "EUR")], "EUR", 0.40, "Euro Stoxx 50 (ETF iShares Core EURO STOXX 50, mit Ausschüttungen)"),
+    "LVC": _N([("CAC.PA", "EUR")], "EUR", 0.40, "CAC 40 (ETF Amundi CAC 40, mit Ausschüttungen)", vgl=True),
+    "LEVMIB": _N([("ETFMIB.MI", "EUR")], "EUR", 0.60, "FTSE MIB (ETF Amundi FTSE MIB, mit Ausschüttungen)"),
+    "IBEXA": _N([("LYXIB.MC", "EUR")], "EUR", 0.40, "IBEX 35 (ETF Amundi IBEX 35, mit Ausschüttungen)"),
+    # Europa, ETCs: ungehebeltes Gegenstück desselben Anbieters in Mailand (gleiche Handelszeit), davor der Future in Dollar
+    "LBUL": _N([("GC=F", "USD"), ("PHAU.MI", "EUR")], "USD", 0.98, "Gold (ETC WisdomTree Physical Gold in Mailand, davor Gold-Future)"),
+    "LSIL": _N([("SI=F", "USD"), ("PHAG.MI", "EUR")], "USD", 0.98, "Silber (ETC WisdomTree Physical Silver in Mailand, davor Silber-Future)"),
+    "LPLA.MI": _N([("PL=F", "USD"), ("PHPT.MI", "EUR")], "USD", 0.98, "Platin (ETC WisdomTree Physical Platinum in Mailand, davor Platin-Future)"),
+    "LOIL": _N([("CRUD.MI", "EUR", "2009-01-05")], "USD", 0.98, "Rohöl WTI (ETC WisdomTree WTI Crude Oil in Mailand)"),
+    "LCOP": _N([("COPA.MI", "EUR", "2008-09-23")], "USD", 0.98, "Kupfer (ETC WisdomTree Copper in Mailand)", vgl=True),
+    "LNGA": _N([("NGAS.MI", "EUR", "2013-01-03")], "USD", 0.98, "Erdgas (ETC WisdomTree Natural Gas in Mailand)"),
+    "LWEA": _N([("WEAT.MI", "EUR", "2013-01-03")], "USD", 0.98, "Weizen (ETC WisdomTree Wheat in Mailand)", vgl=True),
+    "LCOR": _N([("CORN.MI", "EUR", "2013-01-03")], "USD", 0.98, "Mais (ETC WisdomTree Corn in Mailand)", aktiv=True, vgl=True),
+    "LCFE": _N([("COFF.MI", "EUR", "2013-01-03")], "USD", 0.98, "Kaffee (ETC WisdomTree Coffee in Mailand)", aktiv=True, vgl=True),
+    # Nickel: Prüfung ab 03/2022 bestanden, trotzdem KEIN Nachbau – in der Handelsaussetzung im März 2022 fiel das echte Produkt
+    # auf 26 % seines Werts, die Rechnung aus dem ungehebelten ETC nur auf 41 %: Der Nachbau zeigte genau diese Zeit falsch.
+    "LNIK": _N([("NICK.MI", "EUR")], "USD", 0.98, "Nickel (ETC WisdomTree Nickel in Mailand)", vgl=True),
+    "2CAR": _N([("EXV5.DE", "EUR")], "EUR", 0.80, "Europa Autoaktien (ETF iShares STOXX Europe 600 Automobiles & Parts, mit Ausschüttungen)"),
+    "2FLY": _N([("EXV9.DE", "EUR")], "EUR", 0.80, "Europa Reise- und Freizeitaktien (ETF iShares STOXX Europe 600 Travel & Leisure, mit Ausschüttungen)"),
+    "2MUE": _N([("MU", "USD")], "USD", 0.75, "Micron Technology (Aktie in New York, mit Dividenden)", marke=("MTE.DE", "EUR")),
+    "LSUG": _N([("SUGA.MI", "EUR")], "USD", 0.98, "Zucker (ETC WisdomTree Sugar in Mailand)", vgl=True),
+    # USA: Basis = US-ETF auf denselben Index (gleiche Handelszeit, Dollar)
+    "SSO": _N(_SP500, "USD", 0.84, "S&P 500 (SPDR S&P 500 mit Erträgen, davor S&P 500 Total Return)", aktiv=True, vgl=True),
+    "SPUU": _N(_SP500, "USD", 0.60, "S&P 500 (SPDR S&P 500 mit Erträgen, davor S&P 500 Total Return)", vgl=True),
+    "QLD": _N([("QQQ", "USD")], "USD", 0.89, "Nasdaq-100 (ETF Invesco QQQ, mit Erträgen)", aktiv=True, vgl=True),
+    "DDM": _N([("DIA", "USD")], "USD", 0.95, "Dow Jones (ETF SPDR Dow Jones, mit Erträgen)", vgl=True),
+    "UWM": _N([("IWM", "USD")], "USD", 0.95, "Russell 2000 (ETF iShares Russell 2000, mit Erträgen)", aktiv=True, vgl=True),
+    "MVV": _N([("MDY", "USD")], "USD", 0.95, "S&P MidCap 400 (ETF SPDR S&P MidCap 400, mit Erträgen)", aktiv=True, vgl=True),
+    "SAA": _N([("IJR", "USD")], "USD", 0.95, "S&P SmallCap 600 (ETF iShares Core S&P Small-Cap, mit Erträgen)", vgl=True),
+    "EZJ": _N([("EWJ", "USD")], "USD", 1.18, "MSCI Japan (ETF iShares MSCI Japan, mit Erträgen)", vgl=True),
+    "UPV": _N([("VGK", "USD")], "USD", 0.95, "FTSE Europa (ETF Vanguard FTSE Europe, mit Erträgen)", vgl=True),
+    "UBR": _N([("EWZ", "USD")], "USD", 0.95, "MSCI Brasilien (ETF iShares MSCI Brazil, mit Erträgen)", vgl=True),
+    "CHAU": _N([("ASHR", "USD")], "USD", 1.19, "China A-Aktien CSI 300 (ETF Xtrackers CSI 300 China A, mit Erträgen)"),
+    "CWEB": _N([("KWEB", "USD")], "USD", 1.27, "China-Internetaktien (ETF KraneShares CSI China Internet, mit Erträgen)", vgl=True),
+    "ROM": _N([("IYW", "USD")], "USD", 0.93, "US-Technologieaktien (ETF iShares U.S. Technology, mit Erträgen)"),
+    "UYG": _N([("IYF", "USD")], "USD", 0.93, "US-Finanzaktien (ETF iShares U.S. Financials, mit Erträgen)"),
+    "DIG": _N([("IYE", "USD")], "USD", 0.95, "US-Energieaktien (ETF iShares U.S. Energy, mit Erträgen)", vgl=True),
+    "RXL": _N([("IYH", "USD")], "USD", 0.95, "US-Gesundheitsaktien (ETF iShares U.S. Healthcare, mit Erträgen)", aktiv=True, vgl=True),
+    "URE": _N([("IYR", "USD")], "USD", 0.95, "US-Immobilienaktien (ETF iShares U.S. Real Estate, mit Erträgen)"),
+    "UPW": _N([("IDU", "USD")], "USD", 0.95, "US-Versorgeraktien (ETF iShares U.S. Utilities, mit Erträgen)", vgl=True),
+    "UYM": _N([("IYM", "USD")], "USD", 0.95, "US-Grundstoffaktien (ETF iShares U.S. Basic Materials, mit Erträgen)"),
+    "UCC": _N([("IYC", "USD")], "USD", 0.95, "US-Konsumaktien zyklisch (ETF iShares U.S. Consumer Discretionary, mit Erträgen)"),
+    "UGE": _N([("IYK", "USD")], "USD", 0.95, "US-Basiskonsumaktien (ETF iShares U.S. Consumer Staples, mit Erträgen)"),
+    "USD_PROSHARES": _N([("SOXX", "USD")], "USD", 0.94, "US-Halbleiteraktien (ETF iShares Semiconductor, mit Erträgen)"),
+    "BIB": _N([("IBB", "USD")], "USD", 0.95, "Nasdaq Biotechnologie (ETF iShares Biotechnology, mit Erträgen)", vgl=True),
+    "LTL": _N([("XLC", "USD")], "USD", 0.95, "US-Kommunikationsaktien (ETF Communication Services Select Sector SPDR, mit Erträgen)"),
+    "SKYU": _N([("SKYY", "USD")], "USD", 0.95, "Cloud-Computing-Aktien (ETF First Trust Cloud Computing, mit Erträgen)", vgl=True),
+    "FNGG": _N([("FNGS", "USD")], "USD", 0.97, "NYSE FANG+ (ETN MicroSectors FANG+)"),
+    "QQQU": _N([("MAGS", "USD")], "USD", 0.98, "Magnificent 7 (ETF Roundhill Magnificent Seven)", vgl=True),
+    "URAA": _N([("URA", "USD")], "USD", 1.30, "Uran-Aktien (ETF Global X Uranium, mit Erträgen)"),
+    "UGL": _N([("GLD", "USD")], "USD", 1.19, "Gold (ETF SPDR Gold Shares)", vgl=True),
+    "AGQ": _N([("SLV", "USD")], "USD", 1.29, "Silber (ETF iShares Silver Trust)"),
+    "UCO": _N([("USO", "USD")], "USD", 1.47, "Rohöl WTI (ETF United States Oil Fund)"),
+    "BOIL": _N([("UNG", "USD")], "USD", 1.39, "Erdgas (ETF United States Natural Gas Fund)"),
+    "UBT": _N([("TLT", "USD")], "USD", 0.95, "US-Staatsanleihen 20+ Jahre (ETF iShares 20+ Year Treasury Bond, mit Erträgen)", aktiv=True, vgl=True),
+    "UST": _N([("IEF", "USD")], "USD", 0.95, "US-Staatsanleihen 7–10 Jahre (ETF iShares 7-10 Year Treasury Bond, mit Erträgen)", aktiv=True, vgl=True),
+    "UJB": _N([("HYG", "USD")], "USD", 0.95, "US-Hochzinsanleihen (ETF iShares iBoxx High Yield, mit Erträgen)"),
+    "ULE": _N([("FXE", "USD")], "USD", 0.98, "Euro gegen Dollar (ETF Invesco CurrencyShares Euro)", aktiv=True, vgl=True),
+    "YCL": _N([("FXY", "USD")], "USD", 0.98, "Yen gegen Dollar (ETF Invesco CurrencyShares Japanese Yen)", aktiv=True, vgl=True),
+    "BITU": _N([("BTC-USD", "USD")], "USD", 0.95, "Bitcoin (Kurs in Dollar)"),
+    "ETHT": _N([("ETH-USD", "USD")], "USD", 0.96, "Ether (Kurs in Dollar)"),
+}
+NACHBAU_OHNE = {   # ohne Rezept: warum
+    "LCOC": "kein sauberer Basiswert: der ungehebelte ETC WisdomTree Cocoa (COCO.MI) hat bei Yahoo 164 Fehlkurse",
+    "AIBU": "kein ETF auf denselben Index (Solactive US AI & Big Data) gefunden",
+    "SC2X": "erst seit 28.07.2026 an der Börse: zu wenig gemeinsame Zeit für eine Prüfung",
+}
+for _e in HEBEL_ETFS:
+    if _e["id"] in NACHBAU:
+        _e["nachbau"] = NACHBAU[_e["id"]]
 ETFS = ETFS + HEBEL_ETFS
 
 # Kryptowaehrungen (Yahoo, Kurse in USD). Pi Cycle und MVRV sind nur fuer Bitcoin geeicht und werden nur dort berechnet.

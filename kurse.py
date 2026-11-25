@@ -122,6 +122,8 @@ def alle_symbole() -> list[str]:
     for e in E.ETFS:  # Index-Vorlaeufe
         s += [x for x in (e.get("index"), e.get("index_tr"), e.get("vorlauf_etf")) if x]
     s += ["^VIX"]  # fuer Stufe 2 (Marktumfeld)
+    import hebel_nachbau
+    s += hebel_nachbau.symbole()   # Basiswerte der Hebel-Produkte (nachgebaute Vorgeschichte, Vergleich mit dem Basiswert)
     return list(dict.fromkeys(s))
 
 

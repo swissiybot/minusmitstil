@@ -40,6 +40,7 @@ QUELLEN_TEXT = {
     "vorlauf_etf": ("aehnlicher ETF als Vorlauf", True),
     "etf": ("ETF", True),
     "hebel": ("Hebel-Produkt (täglich 2-fach, Kosten des Hebels im Kurs enthalten)", True),
+    "nachbau": ("nachgebaut aus dem Basiswert (2-fach täglich, Kosten abgezogen)", True),   # hebel_nachbau.py: keine echten Kurse
     "etc": ("ETC (Wertpapier auf Rohstoff-Futures, Rollkosten enthalten)", False),
     "aktie": ("Aktie", True),
     "krypto": ("Krypto", False),
@@ -77,6 +78,18 @@ def verketten(etf: dict):
             vor[c] = vor[c] * f
         akt = pd.concat([vor, akt])
         segmente.insert(0, (vor.index[0], art, sym))
+    if akt is not None and etf.get("nachbau"):
+        # Hebel-Produkt: geprüfte, nachgebaute Vorgeschichte vor den ersten echten Kurs hängen (hebel_nachbau.py). Die Ampel-Formel
+        # bleibt, sie bekommt nur mehr Geschichte. Scheitert der Nachbau (Daten fehlen, frische Prüfung grob daneben), bleibt alles wie ohne.
+        import hebel_nachbau
+        try:
+            nb = hebel_nachbau.vorhaengen(etf, akt)
+        except Exception as ex:
+            print(f"Nachbau nicht möglich ({etf['id']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
+            nb = None
+        if nb:
+            akt = nb[0]
+            segmente.insert(0, (nb[1], "nachbau", nb[2]))
     return akt, segmente
 
 
@@ -879,6 +892,8 @@ def tageschart(info: dict, chart: dict, roh: dict) -> dict | None:
         **{k: rund(woche(chart[k])) for k in ("kz80", "kz60", "kz40", "kz15") if k in chart},
         **{k: rund(woche(chart[k])) for k in ("kq", "vq") if k in chart},
     }
+    if chart.get("nachbau_bis"):
+        out["nachbau_bis"] = chart["nachbau_bis"]   # Hebel-Produkt: Tage bis hierhin sind nachgebaut (nur Schlusskurs, Kerze = Strich)
     if info.get("gruppe") == "Krypto":
         out["mayer"] = rund((voll / voll.rolling(200).mean()).reindex(t.index).values, 3)
     if info.get("pi"):
@@ -920,6 +935,20 @@ def werte_eines(z: dict):
         except Exception as ex:            # brandneue Werte mit lückenhaften Kursen dürfen den Lauf (und die Regelprüfung) nicht stoppen
             print(f"Junger Wert nicht darstellbar ({z['symbol']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
             erg = None
+    if erg is not None and z["gruppe"] == "ETF" and _etfs()[z["id"]].get("nachbau"):
+        # nachgebaute Vorgeschichte kennzeichnen (Rangliste: nachbau_bis; Chart: nachbau_bis) und Vergleich mit dem Basiswert
+        import hebel_nachbau
+        etf = _etfs()[z["id"]]
+        nb = hebel_nachbau.INFO.get(z["id"]) or {}
+        if nb.get("nachbau_bis") and seg and seg[0][1] == "nachbau":
+            erg[0]["nachbau_bis"] = erg[1]["nachbau_bis"] = nb["nachbau_bis"]   # letzter nachgebauter Tag; danach echte Kurse
+            erg[0]["nachbau_abw_pa"] = (nb.get("pruefung") or {}).get("abw_pa")   # Nachbau minus echt in Prozentpunkten pro Jahr (gemeinsame Zeit)
+        try:
+            vgl = hebel_nachbau.vergleich(etf, tag)
+            if vgl:
+                erg[0]["hebel_vgl"] = vgl
+        except Exception as ex:
+            print(f"Vergleich mit dem Basiswert nicht möglich ({z['id']}): {ex.__class__.__name__}: {ex}", file=sys.stderr)
     if erg is not None:
         erg[0].update(beschreibung_fuer(z["id"]))   # ISIN, WKN, Kurzbeschreibung
         erg[0].update(zusatzdaten(z, erg[0]))      # Dividenden, ETF-Inhalt und Kosten (nur echte Quellen)
@@ -1207,7 +1236,8 @@ def main(argv):
                             s2.fallen.add(z["symbol"], f, erg[2]["w"], erg[2]["score"])
                     except Exception as ex:
                         print(f"Geschäftszahlen-Fehler bei {z['symbol']}: {ex.__class__.__name__}: {ex}", file=sys.stderr)
-                zeilen.append(erg[0] | ({"div": dividenden.kurz(erg[0]["div"])} if erg[0].get("div") else {}))   # Rangliste ohne Jahresliste
+                zeilen.append({k: v for k, v in erg[0].items() if k != "hebel_vgl"}   # Rangliste ohne Jahresliste und ohne den Vergleich mit dem Basiswert (steht in werte/<id>.json)
+                              | ({"div": dividenden.kurz(erg[0]["div"])} if erg[0].get("div") else {}))
                 if s2 is not None and not erg[0].get("jung"):
                     try:
                         s2.add(z, erg[0], erg[2])

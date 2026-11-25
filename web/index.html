@@ -2669,7 +2669,7 @@ const LISTEN_HINWEIS = {
   hebel: "Hebel-Produkte: täglich 2-fach, ohne Knock-out. Auf Dauer ist das nicht das Doppelte – sie können auch verlieren, wenn der Markt am Ende gleich steht.",
 };
 // hebel.einzel (25.11.2026): Hebel auf eine einzelne Aktie – eigenes Wort für die Art und ein Satz mehr im Warnhinweis. Fehlt das Feld, bleibt alles wie bisher.
-const hebelArt = w => w.hebel?.einzel ? "Hebel-ETP 2x auf eine Aktie" : w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : "Hebel-ETF 2x";
+const hebelArt = w => w.hebel?.einzel ? "Hebel-ETP 2x auf eine Aktie" : w.hebel?.art === "ETC" ? "Hebel-ETC 2x" : w.hebel?.art === "ETP" ? "Hebel-ETP 2x" : "Hebel-ETF 2x";
 // Schalter „nur in Europa handelbar“ im Reiter „Hebel 2x“ (Wunsch Marc 25.11.2026): standardmäßig an, die Wahl wird gemerkt.
 // Tragen die Daten das Feld hebel.eu bei keinem Wert (alter Export), bleibt der Schalter unsichtbar und es wird nicht gefiltert.
 let HEBEL_EU = lade("hebel_eu", true) !== false;

@@ -155,7 +155,9 @@ def schreiben(breite: Breite | None, anzahl_aktien: int = 0):
 
 
 if __name__ == "__main__":
-    ok = [r for r in FRED_REIHEN if fred_laden(r)]
-    fehlt = [r for r in FRED_REIHEN if r not in ok]
+    import hebel_nachbau   # Tagesgeldzinsen für die nachgebaute Vorgeschichte der Hebel-Produkte
+    alle = {**FRED_REIHEN, **hebel_nachbau.FRED_REIHEN}
+    ok = [r for r in alle if fred_laden(r)]
+    fehlt = [r for r in alle if r not in ok]
     print(f"FRED: {len(ok)} Reihen aktuell" + (f", fehlen: {', '.join(fehlt)}" if fehlt else ""))
     sys.exit(0)   # Netzfehler sollen den Tageslauf nicht stoppen

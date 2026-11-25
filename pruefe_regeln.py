@@ -17,6 +17,11 @@ Geprueft wird mit echten Daten an einer festen Stichprobe (alle ETFs, Krypto, Ro
   9. Dividenden: nicht negativ, Jahre lückenlos bis zum laufenden Jahr, Rendite 0–25 % = Summe 12 Monate / Kurs,
      Rangliste = Kopfzeile.  10. ETF-Inhalt: Kosten 0–5 %, Gewichte der Top-Positionen zusammen höchstens 100 %,
      Branchen zusammen etwa 100 %.
+ 11. Hebel-Produkte mit nachgebauter Vorgeschichte (hebel_nachbau.py): Nachbau nur bei den fest freigegebenen Produkten;
+     nachbau_bis liegt vor dem ersten echten Kurs und steht gleich in Kopfzeile, Chart und Rangliste; Anschluss ohne Sprung
+     (letzter nachgebauter Tag gegen ersten echten Kurs höchstens 25 %); nachgebaute Tage haben nur einen Schlusskurs (> 0);
+     die frische Prüfung gegen echte Kurse liegt innerhalb der Alarmgrenzen. Vergleich mit dem Basiswert in sich stimmig
+     (Endwert passt zur Jahresrendite, größter Verlust zwischen −100 und 0 %, Nachbau-Datum im Zeitraum).
 Dazu Rechenproben mit kuenstlichen Kursreihen (konstanter Kurs = an der Linie = 70, Absturz tiefer als je zuvor = 100,
 Kurs knapp unter/ueber der Kaufzone 80).
 
@@ -59,6 +64,15 @@ def kuenstlich():
     kurz = c4[:-1]
     werte = [A.anker_ampel(np.concatenate([kurz, [kurz[-1] * f]]), A.WARMUP)[0][-1] for f in (0.5, 0.8, 1.0, 1.2, 1.6)]
     pruef(all(werte[i] >= werte[i + 1] - 1e-9 for i in range(len(werte) - 1)), f"Probe: Ampel steigt mit dem Kurs ({werte})")
+    # Nachbau der Hebel-Produkte: Basiswert +1 % am Tag ohne Zins und Kosten -> +2 %; unveränderter Basiswert -> nur Zins und Kosten gehen ab
+    import pandas as pd
+    import hebel_nachbau as H
+    tage = pd.date_range("2020-01-01", periods=4, freq="D")
+    null = pd.Series(0.0, index=tage)
+    f1 = H.faktoren(pd.Series([100, 101, 101, 99.99], index=tage), null, 0.0)
+    pruef(np.allclose(f1.values, [1, 1.02, 1.02, 1.02 * 0.98]), f"Probe Nachbau 2-fach täglich: {f1.values}")
+    f2 = H.faktoren(pd.Series(100.0, index=tage), pd.Series(3.6, index=tage), 0.73)
+    pruef(np.allclose(f2.values, np.cumprod([1] + [1 - 0.036 / 360 - 0.0073 / 365] * 3)), f"Probe Nachbau Zins und Kosten: {f2.values}")
 
 
 def stufe_passt(zone, score) -> bool:
@@ -128,7 +142,52 @@ def ein_wert(z: dict, rl: dict):
         v = [x for x in chart.get(k, []) if x is not None]
         pruef(all(0 <= x <= 100 for x in v), f"{wid}: {'Kauf' if k == 'kq' else 'Verkaufs'}qualität außerhalb 0–100")
     zusatz_pruefen(wid, zeile, rl.get((wid, z["gruppe"])) or {})
+    nachbau_pruefen(wid, z, zeile, chart, roh, rl.get((wid, z["gruppe"])) or {})
     return True
+
+
+def nachbau_pruefen(wid: str, z: dict, zeile: dict, chart: dict, roh: dict, rz: dict):
+    """11. Nachgebaute Vorgeschichte der Hebel-Produkte und Vergleich mit dem Basiswert."""
+    import pandas as pd
+    import hebel_nachbau as H
+    etf = A._etfs().get(wid) if z["gruppe"] == "ETF" else None
+    rezept = (etf or {}).get("nachbau")
+    seg = zeile.get("segmente") or []
+    hat = bool(seg) and seg[0]["art"] == A.QUELLEN_TEXT["nachbau"][0]
+    pruef(not any(s["art"] == A.QUELLEN_TEXT["nachbau"][0] for s in seg[1:]), f"{wid}: Nachbau-Abschnitt nicht am Anfang der Reihe")
+    if not hat:
+        pruef("nachbau_bis" not in zeile and "nachbau_bis" not in chart, f"{wid}: nachbau_bis ohne nachgebauten Abschnitt")
+    else:
+        pruef(bool(rezept and rezept.get("aktiv")), f"{wid}: nachgebaute Vorgeschichte ohne Freigabe in einstellungen.NACHBAU")
+        nb = zeile.get("nachbau_bis")
+        pruef(bool(nb) and chart.get("nachbau_bis") == nb, f"{wid}: nachbau_bis fehlt oder Kopfzeile ≠ Chart ({nb} / {chart.get('nachbau_bis')})")
+        if rz:
+            pruef(rz.get("nachbau_bis") == nb, f"{wid}: nachbau_bis in der Rangliste ({rz.get('nachbau_bis')}) ≠ Kopfzeile ({nb})")
+        if nb and len(seg) > 1:
+            pruef(nb < seg[1]["ab"], f"{wid}: nachbau_bis {nb} liegt nicht vor dem ersten echten Kurs {seg[1]['ab']}")
+            tag = roh["tag"]
+            vor, echt = tag[tag.index <= pd.Timestamp(nb)], tag[tag.index >= pd.Timestamp(seg[1]["ab"])]
+            pruef(len(vor) > 0 and len(echt) > 0 and vor.index[-1] == pd.Timestamp(nb) and echt.index[0] == pd.Timestamp(seg[1]["ab"]),
+                  f"{wid}: Nachbau und echte Kurse überlappen oder haben eine Lücke im Datum")
+            if len(vor) and len(echt):
+                sprung = float(echt["Close"].iloc[0]) / float(vor["Close"].iloc[-1]) - 1
+                pruef(abs(sprung) <= 0.25, f"{wid}: Sprung am Anschluss Nachbau → echte Kurse ({sprung * 100:.1f} %)")
+                pruef(bool((vor["Close"] > 0).all()) and bool((vor[["Open", "High", "Low"]].values == vor[["Close"]].values).all()),
+                      f"{wid}: nachgebaute Tage mit Kurs ≤ 0 oder mit Tagesspanne")
+        p = (H.INFO.get(wid) or {}).get("pruefung") or {}
+        pruef(p.get("abw_pa") is not None and abs(p["abw_pa"]) <= H.ALARM["abw_pa"] and (p.get("korr_w") or 0) >= H.ALARM["korr_w"],
+              f"{wid}: Nachbau trotz frischer Prüfung außerhalb der Alarmgrenzen ({p})")
+        pruef(zeile.get("nachbau_abw_pa") == p.get("abw_pa"), f"{wid}: nachbau_abw_pa ≠ frische Prüfung")
+    v = zeile.get("hebel_vgl")
+    if v:
+        pruef(bool(rezept and rezept.get("vgl")), f"{wid}: Vergleich mit dem Basiswert ohne Freigabe")
+        pruef(v["jahre"] > 0 and v["von"] < v["bis"], f"{wid}: Vergleich mit dem Basiswert: Zeitraum unplausibel")
+        for seite in ("hebel", "basis"):
+            pruef(-100 <= v[f"{seite}_tief"] <= 0, f"{wid}: Vergleich: größter Verlust ({seite}) {v[f'{seite}_tief']} % außerhalb −100 bis 0")
+            soll = 10000 * (1 + v[f"{seite}_pa"] / 100) ** v["jahre"]
+            pruef(v["jahre"] < 1.5 or math.isclose(v[f"{seite}_end"], soll, rel_tol=0.05 + 0.006 * v["jahre"]), f"{wid}: Vergleich: Endwert ({seite}) {v[f'{seite}_end']} passt nicht zu {v[f'{seite}_pa']} % pro Jahr über {v['jahre']} Jahre")
+        pruef(v.get("nachbau_bis") is None or (v["von"] <= v["nachbau_bis"] < v["bis"] and v["nachbau_bis"] == zeile.get("nachbau_bis")), f"{wid}: Vergleich: nachbau_bis passt nicht")
+        pruef((v.get("nachbau_bis") is None) == (v.get("nachbau_abw_pa") is None), f"{wid}: Vergleich: nachbau_abw_pa ohne nachbau_bis (oder umgekehrt)")
 
 
 def zusatz_pruefen(wid: str, zeile: dict, rz: dict):
