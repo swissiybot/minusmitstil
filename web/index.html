@@ -5250,7 +5250,7 @@ function zonenFlaechen(ch, serie, c, f){
     BEW_ZONEN.forEach(([ob, un, fi, deck, name]) => {
       if ((ob && !c[ob]) || (un && !c[un])) return;
       x.fillStyle = (fi === 2 ? "#ffe81a" : farbe(fi)) + deck;
-      let lauf = [], letzte = null, erste = null, platz = null;
+      let lauf = [], letzte = null, erste = null; const pkt = [];
       const fuellen = () => { if (lauf.length > 1) { x.beginPath();
           lauf.forEach(([px, yo], j) => j ? x.lineTo(px, yo) : x.moveTo(px, yo));
           for (let j = lauf.length - 1; j >= 0; j--) x.lineTo(lauf[j][0], lauf[j][2]);
@@ -5260,10 +5260,10 @@ function zonenFlaechen(ch, serie, c, f){
         if (yo === undefined || yu === undefined || yo === null && yu === null || px == null) { fuellen(); continue; }
         const a = yo ?? -2, b = yu ?? gr.height + 2;
         lauf.push([px, a, b]); letzte = [px, a, b]; if (!erste && px >= 0) erste = [px, a, b];
-        if (!platz && px >= 0 && Math.min(b, gr.height) - Math.max(a, 0) >= 24) platz = [px, a, b];   // erste Stelle, an der das Band hoch genug für sein Wort ist
+        if (px >= 0 && i >= ersteZone) pkt.push([px, a, b]);
       }
       fuellen();
-      if (platz) marken.push([name.replace("historisch ", ""), farbe(fi), platz, fi]);
+      if (pkt.length) marken.push([name.replace("historisch ", ""), farbe(fi), pkt, fi]);
     });
     worte = marken;
   };
@@ -5276,20 +5276,31 @@ function zonenFlaechen(ch, serie, c, f){
     if (!sichtbar || !worte.length || gr.width < 560) return;   // schmaler Chart (Handy): keine Wörter im Bild – die Zeile „Kaufzonen heute“ darüber erklärt die farbigen Schilder
     x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "left"; x.textBaseline = "middle";
     let zuletzt = -99;
-    // Jedes Wort sitzt direkt an SEINER Linie und beginnt dort, wo die Linie im Bild beginnt (Marc 25.11.2026: „das sieht aus, als würden
-    // die in der Luft hängen“): die teuren Zonen knapp über ihrer unteren Grenzlinie, die günstigen knapp unter ihrer oberen, in der Farbe
-    // der Linie. „neutral“ liegt zwischen der orangen und der türkisen Linie und ist weiß (vorher gelb wie die 200-Wochen-Linie).
-    const lage = ([, , [, a, b], fi]) => fi === 0 ? b - 11 : fi === 5 ? a + 11 : (a + b) / 2;   /* Wörter genau in der Mitte ihres Bands (Marc 25.11.2026); nur die beiden Rand-Zonen ohne zweite Linie sitzen an ihrer Linie */
+    // Jedes Wort steht genau in der Mitte seines Bands (Marc 25.11.2026: „mehr mittig … so dass es wirklich genau passt“) – gemessen
+    // unter der Mitte des Worts, damit es auch bei schrägen Linien stimmt. Es beginnt an der ersten Stelle von links, an der das Band
+    // über die ganze Wortbreite hoch genug ist. Die beiden Rand-Zonen (sehr teuer, Ausverkauf) haben nur eine Linie und sitzen an ihr.
+    // „neutral“ in kräftigem Ampel-Gelb. Nie zwei Schilder übereinander.
     const belegt = [];   // schon gezeichnete Schilder: [x links, x rechts, y]
-    [...worte].sort((p, q) => lage(p) - lage(q)).forEach(w => {
-      const [name, fa, [px, a, b], fi] = w;
-      const ym = lage(w); if (ym < 10 || ym > gr.height - 28) return;   // ganz unten liegen die Bänder der Kauf-/Verkaufsqualität
-      const br = x.measureText(name).width, xl = Math.max(ym > gr.height - 46 ? 82 : 6, px + 6);   // unten links steht das Zeichen der Chart-Bibliothek
-      if (xl + br + 12 > gr.width - 4) return;
-      if (belegt.some(([l, r, y]) => Math.abs(y - ym) < 18 && xl < r + 6 && xl + br + 12 > l - 6)) return;   // nie zwei Schilder übereinander
-      belegt.push([xl, xl + br + 12, ym]);
+    const stelle = (pkt, fi, br) => {
+      for (let j = 0; j < pkt.length; j += 2) {
+        const xl = Math.max(6, pkt[j][0] + 6), xr = xl + br + 12; if (xr > gr.width - 4) return null;
+        let eng = false, mitte = null, k = j;
+        for (; k < pkt.length && pkt[k][0] <= xr; k++) { const o = Math.max(pkt[k][1], 0), u = Math.min(pkt[k][2], gr.height);
+          if (u - o < 20) { eng = true; break; } if (mitte == null && pkt[k][0] >= (xl + xr) / 2) mitte = pkt[k]; }
+        if (eng) { j = k; continue; }
+        const m = mitte || pkt[Math.min(k, pkt.length - 1)], ym = fi === 0 ? m[2] - 11 : fi === 5 ? m[1] + 11 : (Math.max(m[1], 0) + Math.min(m[2], gr.height)) / 2;
+        if (ym < 10 || ym > gr.height - 28) continue;   // ganz unten liegen die Bänder der Kauf-/Verkaufsqualität
+        if (ym > gr.height - 46 && xl < 82) continue;   // unten links steht das Zeichen der Chart-Bibliothek
+        if (belegt.some(([l, r, y]) => Math.abs(y - ym) < 18 && xl < r + 6 && xr > l - 6)) continue;
+        return [xl, xr, ym];
+      }
+      return null;
+    };
+    worte.forEach(([name, fa, pkt, fi]) => {
+      const br = x.measureText(name).width, st = stelle(pkt, fi, br); if (!st) return;
+      const [xl, xr, ym] = st; belegt.push(st);
       x.fillStyle = f.panel + "e6"; x.beginPath(); if (x.roundRect) x.roundRect(xl, ym - 8.5, br + 12, 17, 5); else x.rect(xl, ym - 8.5, br + 12, 17); x.fill();
-      x.fillStyle = fi === 2 ? (document.documentElement.dataset.theme === "light" ? "#b38f00" : "#ffe81a") : fa; /* „neutral“ in kräftigem Ampel-Gelb (Wunsch Marc 25.11.2026), im hellen Schema dunkler, damit es lesbar bleibt */ x.fillText(name, xl + 6, ym + .5); zuletzt = ym;
+      x.fillStyle = fi === 2 ? (document.documentElement.dataset.theme === "light" ? "#b38f00" : "#ffe81a") : fa; x.fillText(name, xl + 6, ym + .5);
     });
   };
   serie.attachPrimitive({
