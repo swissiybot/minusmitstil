@@ -5236,26 +5236,14 @@ function zonenFlaechen(ch, serie, c, f){
   // Erste Woche mit einer Kaufzonen-Grenze: Davor gibt es noch keine Ampel (zu wenig Geschichte für die 200-Wochen-Linie und den Vergleich).
   // Diese Zeit wird dezent grau hinterlegt und beschriftet, damit die farblose Fläche nicht wie ein Fehler wirkt (Marc 25.11.2026).
   let ersteZone = -1; for (let i = 0; i < c.t.length && ersteZone < 0; i++) if (["kz90", "kz80", "kz60", "kz40", "kz15"].some(k => c[k]?.[i] != null)) ersteZone = i;
-  // Marc 25.11.2026: „ich will immer ne Ampel“ – die Farbbereiche sollen über den ganzen Chart gehen. Für die Zeit vor der ersten
-  // berechneten Woche gibt es keine echte Ampel (zu wenig Geschichte). Dort werden die Bereiche deshalb GESCHÄTZT und so beschriftet:
-  // Abstand jeder Grenze zur Durchschnittslinie wie in der ersten berechneten Woche; als Linie die 200-Wochen-Linie, und solange es
-  // die noch nicht gibt, der Durchschnitt aller bisherigen Wochen (ab 26 Wochen). Nur Anzeige: Ampel, Rechnungen und die echten
-  // Grenzlinien bleiben unverändert; die geschätzte Zeit ist blasser und hat keine Grenzlinien.
-  const G = {};   // Grenzreihen samt geschätztem Anfang
-  if (ersteZone > 0 && c.sma200w?.[ersteZone] > 0) {
-    const basis = []; let summe = 0;
-    for (let i = 0; i < ersteZone; i++) { summe += c.c[i] ?? 0; basis.push(c.sma200w?.[i] ?? (i >= 25 && c.c[i] != null ? summe / (i + 1) : null)); }
-    for (const k of ["kz90", "kz80", "kz60", "kz40", "kz15"]) { if (!c[k] || c[k][ersteZone] == null) continue;
-      const verh = c[k][ersteZone] / c.sma200w[ersteZone]; G[k] = c[k].slice(); for (let i = 0; i < ersteZone; i++) if (G[k][i] == null && basis[i] != null) G[k][i] = basis[i] * verh; }
-  }
   const zeichnen = ({context:x, mediaSize:gr}) => {
     if (!sichtbar) return;
     const ts = ch.timeScale(), lr = ts.getVisibleLogicalRange(); if (!lr) return;
     ohneAmpelBis = null;
     if (ersteZone > 0) { const p0 = ts.logicalToCoordinate(0), p1 = ts.logicalToCoordinate(ersteZone);
-      if (p1 != null && p1 > 0) ohneAmpelBis = [Math.max(0, p0 ?? 0), p1]; }
+      if (p1 != null && p1 > 0) { const l = Math.max(0, p0 ?? 0); x.save(); x.globalAlpha = .09; x.fillStyle = f.text || "#8a94a6"; x.fillRect(l, 0, p1 - l, gr.height); x.restore(); ohneAmpelBis = [l, p1]; } }
     const von = Math.max(0, Math.floor(lr.from) - 1), bis = Math.min(c.t.length - 1, Math.ceil(lr.to) + 1);
-    const y = (k, i) => { if (k === null) return null; const v = (G[k] || c[k])?.[i]; return v == null ? undefined : serie.priceToCoordinate(v); };
+    const y = (k, i) => { if (k === null) return null; const v = c[k]?.[i]; return v == null ? undefined : serie.priceToCoordinate(v); };
     const marken = [];
     BEW_ZONEN.forEach(([ob, un, fi, deck, name]) => {
       if ((ob && !c[ob]) || (un && !c[un])) return;
@@ -5270,17 +5258,16 @@ function zonenFlaechen(ch, serie, c, f){
         if (yo === undefined || yu === undefined || yo === null && yu === null || px == null) { fuellen(); continue; }
         const a = yo ?? -2, b = yu ?? gr.height + 2;
         lauf.push([px, a, b]); letzte = [px, a, b]; if (!erste && px >= 0) erste = [px, a, b];
-        if (!platz && px >= 0 && i >= ersteZone && Math.min(b, gr.height) - Math.max(a, 0) >= 24) platz = [px, a, b];   // erste Stelle, an der das Band hoch genug für sein Wort ist
+        if (!platz && px >= 0 && Math.min(b, gr.height) - Math.max(a, 0) >= 24) platz = [px, a, b];   // erste Stelle, an der das Band hoch genug für sein Wort ist
       }
       fuellen();
       if (platz) marken.push([name.replace("historisch ", ""), farbe(fi), platz, fi]);
     });
     worte = marken;
-    if (ohneAmpelBis) { x.save(); x.globalAlpha = .18; x.fillStyle = f.bg || f.panel; x.fillRect(ohneAmpelBis[0], 0, ohneAmpelBis[1] - ohneAmpelBis[0], gr.height); x.restore(); }
   };
   const beschriften = ({context:x, mediaSize:gr}) => {
-    if (sichtbar && ohneAmpelBis && ohneAmpelBis[1] - ohneAmpelBis[0] >= 70) {   // Hinweis in der Zeit ohne Ampel, oben in der Fläche
-      const breit = ohneAmpelBis[1] - ohneAmpelBis[0] >= 250, t = breit ? "Bereiche hier geschätzt: zu wenig Geschichte" : "geschätzt";
+    if (sichtbar && ohneAmpelBis && ohneAmpelBis[1] - ohneAmpelBis[0] >= 105) {   // Hinweis in der Zeit ohne Ampel, oben in der Fläche
+      const breit = ohneAmpelBis[1] - ohneAmpelBis[0] >= 250, t = breit ? "Noch keine Ampel: zu wenig Geschichte" : "Noch keine Ampel";
       x.save(); x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.globalAlpha = .9;
       x.fillStyle = f.text || "#8a94a6"; x.fillText(t, (ohneAmpelBis[0] + ohneAmpelBis[1]) / 2, 14); x.restore();
     }   // Namen der Zonen: links am Anfang der Fläche, kurzes Wort auf ruhigem Grund, zuoberst – der Kurs überdeckt sie nie
