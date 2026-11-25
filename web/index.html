@@ -5232,10 +5232,16 @@ const BEW_ZONEN = [   // [obere Grenze, untere Grenze (null = Rand), Farbe, Deck
 function zonenFlaechen(ch, serie, c, f){
   if (!c.kz80 && !c.kz15) return;
   const farbe = i => i === 5 ? f.gut : AF()[i];
-  let sichtbar = CHIPS.kaufzonen, neu = null, worte = [];
+  let sichtbar = CHIPS.kaufzonen, neu = null, worte = [], ohneAmpelBis = null;
+  // Erste Woche mit einer Kaufzonen-Grenze: Davor gibt es noch keine Ampel (zu wenig Geschichte für die 200-Wochen-Linie und den Vergleich).
+  // Diese Zeit wird dezent grau hinterlegt und beschriftet, damit die farblose Fläche nicht wie ein Fehler wirkt (Marc 25.11.2026).
+  let ersteZone = -1; for (let i = 0; i < c.t.length && ersteZone < 0; i++) if (["kz90", "kz80", "kz60", "kz40", "kz15"].some(k => c[k]?.[i] != null)) ersteZone = i;
   const zeichnen = ({context:x, mediaSize:gr}) => {
     if (!sichtbar) return;
     const ts = ch.timeScale(), lr = ts.getVisibleLogicalRange(); if (!lr) return;
+    ohneAmpelBis = null;
+    if (ersteZone > 0) { const p0 = ts.logicalToCoordinate(0), p1 = ts.logicalToCoordinate(ersteZone);
+      if (p1 != null && p1 > 0) { const l = Math.max(0, p0 ?? 0); x.save(); x.globalAlpha = .09; x.fillStyle = f.text || "#8a94a6"; x.fillRect(l, 0, p1 - l, gr.height); x.restore(); ohneAmpelBis = [l, p1]; } }
     const von = Math.max(0, Math.floor(lr.from) - 1), bis = Math.min(c.t.length - 1, Math.ceil(lr.to) + 1);
     const y = (k, i) => { if (k === null) return null; const v = c[k]?.[i]; return v == null ? undefined : serie.priceToCoordinate(v); };
     const marken = [];
@@ -5259,7 +5265,12 @@ function zonenFlaechen(ch, serie, c, f){
     });
     worte = marken;
   };
-  const beschriften = ({context:x, mediaSize:gr}) => {   // Namen der Zonen: links am Anfang der Fläche, kurzes Wort auf ruhigem Grund, zuoberst – der Kurs überdeckt sie nie
+  const beschriften = ({context:x, mediaSize:gr}) => {
+    if (sichtbar && ohneAmpelBis && ohneAmpelBis[1] - ohneAmpelBis[0] >= 105) {   // Hinweis in der Zeit ohne Ampel, oben in der Fläche
+      const breit = ohneAmpelBis[1] - ohneAmpelBis[0] >= 250, t = breit ? "Noch keine Ampel: zu wenig Geschichte" : "Noch keine Ampel";
+      x.save(); x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "center"; x.textBaseline = "middle"; x.globalAlpha = .9;
+      x.fillStyle = f.text || "#8a94a6"; x.fillText(t, (ohneAmpelBis[0] + ohneAmpelBis[1]) / 2, 14); x.restore();
+    }   // Namen der Zonen: links am Anfang der Fläche, kurzes Wort auf ruhigem Grund, zuoberst – der Kurs überdeckt sie nie
     if (!sichtbar || !worte.length || gr.width < 560) return;   // schmaler Chart (Handy): keine Wörter im Bild – die Zeile „Kaufzonen heute“ darüber erklärt die farbigen Schilder
     x.font = "600 10.5px system-ui, sans-serif"; x.textAlign = "left"; x.textBaseline = "middle";
     let zuletzt = -99;
