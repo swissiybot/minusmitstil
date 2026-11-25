@@ -3577,13 +3577,13 @@ async function vorhersageInit(id, w){
   const einzeln = [];   // Vergleichszahlen und Gegenkontrolle je Kachel: stehen unter „Mehr dazu“
   const belegt = a => !!a && a[3] != null && a[0] > 0 && a[3] >= 95;      // Vorteil mit höchstens 5 % Irrtumswahrscheinlichkeit
   const muenze = k => { const z = Z(k); return !!z && z.brier >= 0.25; }, schwach = gepr && (muenze("a1") || muenze("a3")), duenn = gepr && z3.titel < 30;
-  const kachel = (k, titel, farbe) => { const x = gepr ? e[k] : e["e" + k]; if (x == null) return "";
+  const kachel = (k, titel, farbe, frage) => { const x = gepr ? e[k] : e["e" + k]; if (x == null) return "";
     const sp = spanne(k);
     if (gepr) einzeln.push(`<b>${titel}:</b> ${e["e" + k] != null ? `nur ${name} für sich ${e["e" + k]} von 100` : `eigene Geschichte zu kurz`}, alle ${G[1]} zusammen ${fmt(gh[k],0)} von 100.${!muenze(k) && probe(k, x) ? ` ${probe(k, x)}.` : ""}`);
-    return `<div class="vh-z" style="--vf:${farbe}"><div class="l">${titel}</div><div class="w">${x} <small>%</small></div>
-      ${sp ? (sp[1] - sp[0] >= 90 ? `<div class="vh-sp">keine sichere Aussage möglich <b>(${sp[0]} % bis ${sp[1]} %)</b></div>` : `<div class="vh-sp">sicher ist nur: <b>${sp[0]} % bis ${sp[1]} %</b></div>`) : ""}
+    return `<div class="vh-z" style="--vf:${farbe}"><div class="l">${frage || titel}</div><div class="w"><small>Wahrscheinlichkeit</small> ${x} %</div>
+      ${sp ? (sp[1] - sp[0] >= 90 ? `<div class="vh-sp">sehr ungenau: irgendwo zwischen <b>${sp[0]} % und ${sp[1]} %</b></div>` : `<div class="vh-sp">ungenau: irgendwo zwischen <b>${sp[0]} % und ${sp[1]} %</b></div>`) : ""}
       <div class="b${sp ? " mit-spanne" : ""}">${sp ? `<em style="left:${sp[0]}%;width:${Math.max(1, sp[1] - sp[0])}%"></em><u style="left:${x}%"></u>` : `<i style="width:${x}%"></i>`}</div>
-      <div class="u">${!gepr ? `So oft kam es bisher bei ${name} (${fmt(e.j,0)} Jahre).` : `${WAS[k]}${muenze(k) ? `<br><b class="neg">⚠ In der Prüfung nicht besser als ein Münzwurf</b>` : ""}`}</div></div>`; };
+      <div class="u">${!gepr ? `So oft kam es bisher bei ${name} (${fmt(e.j,0)} Jahre).` : `Geschätzt aus der Vergangenheit, keine Zusage.${muenze(k) ? `<br><b class="neg">⚠ In der Prüfung nicht besser als ein Münzwurf</b>` : ""}`}</div></div>`; };
   const genauer = a => `${fmt(Math.abs(a[0]), Math.abs(a[0]) < 1 ? 2 : 1)} % ${a[0] < 0 ? "ungenauer" : "genauer"}${a[1] != null ? ` (Spanne ${vz(a[1], Math.abs(a[1]) < 1 ? 2 : 1)} bis ${vz(a[2], Math.abs(a[2]) < 1 ? 2 : 1)})` : ""}`;
   const von100 = p => p == null ? "–" : p < 0.01 ? "weniger als 1" : fmt(p * 100, 0);
   let satz, mehr = "", dazu = "";
@@ -3615,7 +3615,8 @@ async function vorhersageInit(id, w){
   } else {
     satz = `Für ${G[1]} gibt es nur ${gh.titel_lang === 1 ? "einen Wert" : (gh.titel_lang ?? 0) + " Werte"} mit über 10 Jahren Geschichte. Eine Prüfung ohne Zukunftswissen ist damit nicht möglich. <b>Die Zahlen zeigen nur, wie es bisher war</b> – für die Zukunft sind sie kaum belastbar, gerade wenn die frühen Jahre außergewöhnlich waren.`;
   }
-  const kacheln = kachel("a1", "In 1 Jahr höher", "var(--akzent)") + kachel("a3", "In 3 Jahren höher", "var(--akzent)") + kachel("r1", "Rückschlag in 12 Monaten", "var(--teuer)");
+  const kacheln = kachel("a1", "In 1 Jahr höher", "var(--akzent)", "Steht der Kurs in 1 Jahr höher?") + kachel("a3", "In 3 Jahren höher", "var(--akzent)", "Steht der Kurs in 3 Jahren höher?")
+    + kachel("r1", "Rückschlag in 12 Monaten", "var(--teuer)", "Fällt der Kurs binnen 12 Monaten um 20 % oder mehr?");
   if (!kacheln) return;
   const mitSpanne = ["a1", "a3", "r1"].some(k => spanne(k));
   if (einzeln.length) dazu += `<p>${einzeln.join("<br>")}</p>`;
