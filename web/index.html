@@ -5279,7 +5279,7 @@ function zonenFlaechen(ch, serie, c, f){
     // Jedes Wort sitzt direkt an SEINER Linie und beginnt dort, wo die Linie im Bild beginnt (Marc 25.11.2026: „das sieht aus, als würden
     // die in der Luft hängen“): die teuren Zonen knapp über ihrer unteren Grenzlinie, die günstigen knapp unter ihrer oberen, in der Farbe
     // der Linie. „neutral“ liegt zwischen der orangen und der türkisen Linie und ist weiß (vorher gelb wie die 200-Wochen-Linie).
-    const lage = ([, , [, a, b], fi]) => fi <= 1 ? b - 11 : fi === 2 ? (a + b) / 2 : a + 11;
+    const lage = ([, , [, a, b], fi]) => fi === 0 ? b - 11 : fi === 5 ? a + 11 : (a + b) / 2;   /* Wörter genau in der Mitte ihres Bands (Marc 25.11.2026); nur die beiden Rand-Zonen ohne zweite Linie sitzen an ihrer Linie */
     const belegt = [];   // schon gezeichnete Schilder: [x links, x rechts, y]
     [...worte].sort((p, q) => lage(p) - lage(q)).forEach(w => {
       const [name, fa, [px, a, b], fi] = w;
