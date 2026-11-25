@@ -1,7 +1,8 @@
 # Schnellweg: nur die Seite (web/index.html und web/lib) neu veröffentlichen – mit den Daten des letzten erfolgreichen Laufs.
 # Wofür: Änderungen an Aussehen und Text sind so nach wenigen Minuten online statt nach einer Stunde (Wunsch Marc 25.11.2026).
 # Nicht geeignet für Änderungen an der Rechnung oder an den Werten: Die brauchen weiter den vollen Lauf „Dashboard aktualisieren“.
-# Ablauf: letztes veröffentlichtes Paket (höchstens einen Tag alt) herunterladen, Seite und Bibliothek ersetzen, wieder veröffentlichen.
+# Ablauf: Paket mit der neuesten Auswertung (höchstens einen Tag alt, Auswahl in paket_wahl.py) herunterladen, Seite und Bibliothek
+# ersetzen, wieder veröffentlichen. Die frischen Kurse des schlanken Laufs (kurse.yml) liegen im Paket und bleiben erhalten.
 name: Nur die Seite veröffentlichen (Schnellweg)
 
 on:
@@ -14,7 +15,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: seite-schnellweg
+  group: veroeffentlichen     # dieselbe Gruppe wie der schlanke Kurs-Lauf und der Veröffentlichungs-Schritt des vollen Laufs: nie zwei zugleich
   cancel-in-progress: false
 
 jobs:
@@ -27,20 +28,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Letztes veröffentlichtes Paket holen
+      - name: Paket mit der neuesten Auswertung wählen
+        id: wahl
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 paket_wahl.py
+
+      - name: Paket holen
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          # jüngster erfolgreicher Lauf (voller Lauf oder Schnellweg), dessen Paket „github-pages“ noch vorhanden ist
-          lauf=""
-          for id in $( { gh run list --workflow dashboard.yml --status success --limit 6 --json databaseId,createdAt --jq '.[] | "\(.createdAt) \(.databaseId)"';
-                         gh run list --workflow seite.yml --status success --limit 6 --json databaseId,createdAt --jq '.[] | "\(.createdAt) \(.databaseId)"' || true; } | sort -r | awk '{print $2}' ); do
-            if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${id}/artifacts" --jq '.artifacts[] | select(.name == "github-pages" and .expired == false) | .id' | grep -q .; then lauf="$id"; break; fi
-          done
-          if [ -z "$lauf" ]; then echo "::error::Kein veröffentlichtes Paket der letzten Läufe mehr vorhanden – bitte den vollen Lauf starten"; exit 1; fi
-          echo "Paket aus Lauf $lauf"
-          gh run download "$lauf" --name github-pages --dir paket
+          gh run download "${{ steps.wahl.outputs.lauf }}" --name github-pages --dir paket
           mkdir site
           tar -xf paket/artifact.tar -C site
           rm -rf paket
@@ -57,11 +56,27 @@ jobs:
             echo "Seite ersetzt (Stand $(git rev-parse --short HEAD)); Daten unverändert: $(python3 -c "import json;print(json.load(open('site/daten/statisch.json')).get('erstellt'))")"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Erneut prüfen – ist inzwischen eine neuere Auswertung da? (dann bricht der Lauf hier ab; die neue Auswertung bringt die neueste Seite selbst mit)
+        id: pruefung
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 paket_wahl.py --pruefe "${{ steps.wahl.outputs.stand }}" "${{ steps.wahl.outputs.hochgeladen }}"
+          echo "marke=$(python3 paket_wahl.py --marke site)" >> "$GITHUB_OUTPUT"
+
+      - name: Stand der Auswertung als Marke hochladen (vor dem Paket, siehe paket_wahl.py)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pruefung.outputs.marke }}
+          path: site/daten/statisch.json
+          retention-days: 1
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site
+          retention-days: 1
 
       - name: Kurz warten, bis GitHub das Paket kennt
         run: sleep 20

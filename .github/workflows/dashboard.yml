@@ -27,8 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120   # mit der wöchentlichen Prüfung der Vorhersage (rund 15 Minuten) reichten 90 nicht: Lauf 45194809323 brach beim Veröffentlichen ab
     environment:
-      name: github-pages
-      url: ${{ steps.veroeffentlichen.outputs.page_url }}
+      name: github-pages   # wie bisher (Einstellungen der Umgebung gelten für den ganzen Lauf); veröffentlicht wird im zweiten Job
     steps:
       - uses: actions/checkout@v5
 
@@ -242,6 +241,16 @@ jobs:
             echo "Kein neuer Tagebuch-Eintrag."
           fi
 
+      - name: Aktuelle Kurse dazulegen (kurse_jetzt.json und feiner Tagesverlauf – damit der volle Lauf die frischen Kurse nicht zurückdreht)
+        continue-on-error: true   # ohne die Datei zeigt die Seite einfach den Stand der Auswertung
+        timeout-minutes: 8
+        run: |
+          # Der Kursdownload dieses Laufs liegt schon rund 40 Minuten zurück. Darum kurz vor dem Veröffentlichen die Kurse noch einmal
+          # schlank holen. Als Rückfall (Yahoo sperrt gerade) die zuletzt veröffentlichte Datei: Ihre Kurse bleiben stehen, soweit sie
+          # nicht älter sind als die neue Auswertung; Ampel und Abstände werden zur neuen Auswertung neu gerechnet.
+          curl -sfL --max-time 30 "https://${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}/daten/kurse_jetzt.json" -o site/daten/kurse_jetzt.json || rm -f site/daten/kurse_jetzt.json
+          python kurse_jetzt.py --site site || echo "::warning::Aktuelle Kurse nicht geholt (Rückgabe $?) – die Seite zeigt die Kurse der Auswertung"
+
       - name: Neueste Seite übernehmen (falls während des Laufs eine neue hochgeladen wurde)
         continue-on-error: true   # klappt das nicht, wird die Seite vom Beginn des Laufs veröffentlicht
         run: |
@@ -252,12 +261,47 @@ jobs:
           rm -rf site/lib.neu && mkdir site/lib.neu && git archive FETCH_HEAD web/lib | tar -x --strip-components=2 -C site/lib.neu && rm -rf site/lib && mv site/lib.neu site/lib
           echo "Seite auf Stand $(git rev-parse --short FETCH_HEAD)"
 
+      - name: Name der Marke (Stand der Auswertung, siehe paket_wahl.py)
+        id: marke
+        run: echo "marke=$(python paket_wahl.py --marke site)" >> "$GITHUB_OUTPUT"
+
+      # Marke zuerst: Für die Auswahl des „letzten Pakets“ (schlanker Kurs-Lauf, Schnellweg) zählt ein Paket erst mit beidem.
+      - name: Stand der Auswertung als Marke hochladen
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.marke.outputs.marke }}
+          path: site/daten/statisch.json
+          retention-days: 1
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v4
         with:
           path: site    # reduzierte Online-Fassung ohne Kursreihen (export.py)
+          retention-days: 1
 
+      - name: Ausfall-Alarm (Online-Lauf gescheitert)
+        if: failure()
+        env:
+          NTFY_THEMA: ${{ secrets.NTFY_THEMA }}
+        run: python3 alarm.py --ausfall "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+
+  # Veröffentlichen als eigener, kurzer Job (so wie in GitHubs Vorlage für Pages): Nur er steht in der gemeinsamen Gruppe
+  # „veroeffentlichen“ mit dem schlanken Kurs-Lauf und dem Schnellweg – der lange Job oben blockiert die beiden nicht.
+  # Wird dieser Job einmal verdrängt oder scheitert er, geht nichts verloren: Paket und Marke sind hochgeladen, der nächste
+  # schlanke Kurs-Lauf nimmt sie als Grundlage (neueste Auswertung) und veröffentlicht sie mit.
+  veroeffentlichen:
+    needs: bauen
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    concurrency:
+      group: veroeffentlichen
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.veroeffentlichen.outputs.page_url }}
+    steps:
       - name: Kurz warten, bis GitHub das Paket kennt
         run: sleep 20   # sonst findet deploy-pages das eben hochgeladene Artefakt manchmal noch nicht (Lauf 44932143003)
 
@@ -265,7 +309,10 @@ jobs:
         id: veroeffentlichen
         uses: actions/deploy-pages@v4
 
-      - name: Ausfall-Alarm (Online-Lauf gescheitert)
+      - uses: actions/checkout@v5
+        if: failure()
+
+      - name: Ausfall-Alarm (Veröffentlichen gescheitert)
         if: failure()
         env:
           NTFY_THEMA: ${{ secrets.NTFY_THEMA }}
