@@ -1,0 +1,71 @@
+# Schnellweg: nur die Seite (web/index.html und web/lib) neu veröffentlichen – mit den Daten des letzten erfolgreichen Laufs.
+# Wofür: Änderungen an Aussehen und Text sind so nach wenigen Minuten online statt nach einer Stunde (Wunsch Marc 25.11.2026).
+# Nicht geeignet für Änderungen an der Rechnung oder an den Werten: Die brauchen weiter den vollen Lauf „Dashboard aktualisieren“.
+# Ablauf: letztes veröffentlichtes Paket (höchstens einen Tag alt) herunterladen, Seite und Bibliothek ersetzen, wieder veröffentlichen.
+name: Nur die Seite veröffentlichen (Schnellweg)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read      # Paket des letzten Laufs herunterladen
+  pages: write
+  id-token: write
+
+concurrency:
+  group: seite-schnellweg
+  cancel-in-progress: false
+
+jobs:
+  seite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.veroeffentlichen.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Letztes veröffentlichtes Paket holen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # jüngster erfolgreicher Lauf (voller Lauf oder Schnellweg), dessen Paket „github-pages“ noch vorhanden ist
+          lauf=""
+          for id in $( { gh run list --workflow dashboard.yml --status success --limit 6 --json databaseId,createdAt --jq '.[] | "\(.createdAt) \(.databaseId)"';
+                         gh run list --workflow seite.yml --status success --limit 6 --json databaseId,createdAt --jq '.[] | "\(.createdAt) \(.databaseId)"' || true; } | sort -r | awk '{print $2}' ); do
+            if gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${id}/artifacts" --jq '.artifacts[] | select(.name == "github-pages" and .expired == false) | .id' | grep -q .; then lauf="$id"; break; fi
+          done
+          if [ -z "$lauf" ]; then echo "::error::Kein veröffentlichtes Paket der letzten Läufe mehr vorhanden – bitte den vollen Lauf starten"; exit 1; fi
+          echo "Paket aus Lauf $lauf"
+          gh run download "$lauf" --name github-pages --dir paket
+          mkdir site
+          tar -xf paket/artifact.tar -C site
+          rm -rf paket
+          test -f site/daten/rangliste.json && test -d site/daten/werte
+          echo "Übernommen: $(ls site/daten/werte | wc -l) Werte, $(du -sh site | cut -f1)"
+
+      - name: Seite und Bibliothek ersetzen
+        run: |
+          set -euo pipefail
+          cp web/index.html site/index.html
+          rm -rf site/lib && cp -r web/lib site/lib
+          {
+            echo "## Schnellweg"
+            echo "Seite ersetzt (Stand $(git rev-parse --short HEAD)); Daten unverändert: $(python3 -c "import json;print(json.load(open('site/daten/statisch.json')).get('erstellt'))")"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site
+
+      - name: Kurz warten, bis GitHub das Paket kennt
+        run: sleep 20
+
+      - name: Veröffentlichen
+        id: veroeffentlichen
+        uses: actions/deploy-pages@v4

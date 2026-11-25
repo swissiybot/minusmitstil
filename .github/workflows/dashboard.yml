@@ -242,6 +242,16 @@ jobs:
             echo "Kein neuer Tagebuch-Eintrag."
           fi
 
+      - name: Neueste Seite übernehmen (falls während des Laufs eine neue hochgeladen wurde)
+        continue-on-error: true   # klappt das nicht, wird die Seite vom Beginn des Laufs veröffentlicht
+        run: |
+          # Der Lauf dauert rund eine Stunde. Wurde in der Zeit die Seite geändert (z. B. über den Schnellweg), würde er sonst
+          # die ältere Fassung darüberlegen. Nur site/ wird angefasst – der Arbeitsstand von git bleibt unberührt.
+          git fetch --depth 1 origin main
+          git show FETCH_HEAD:web/index.html > site/index.html.neu && mv site/index.html.neu site/index.html
+          rm -rf site/lib.neu && mkdir site/lib.neu && git archive FETCH_HEAD web/lib | tar -x --strip-components=2 -C site/lib.neu && rm -rf site/lib && mv site/lib.neu site/lib
+          echo "Seite auf Stand $(git rev-parse --short FETCH_HEAD)"
+
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v4
