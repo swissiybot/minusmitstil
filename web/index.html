@@ -3143,7 +3143,11 @@ function heuteChart(d, w){   // Spalten wie die Wochen- und Tagesdaten; Linien d
   d.t.forEach((t, i) => { const x = lokal(t); if (x > zuletzt) { idx.push(i); zuletzt = x; } });
   const n = idx.length, voll = v => new Array(n).fill(v ?? null), sp = a => idx.map(i => a?.[i] ?? null);
   const letzter = k => { const a = CDATA?.[k]; if (!Array.isArray(a)) return null; for (let i = a.length - 1; i >= 0; i--) if (a[i] != null) return a[i]; return null; };
-  const out = {t:idx.map(i => lokal(d.t[i])), o:sp(d.o), h:sp(d.h), l:sp(d.l), c:sp(d.c), sma200w:voll(w.linie200), score:voll(w.score), marken:[], heute:true};
+  const out = {t:idx.map(i => lokal(d.t[i])), o:sp(d.o), h:sp(d.h), l:sp(d.l), c:sp(d.c), score:voll(w.score), marken:[], heute:true};
+  // Die 200-Wochen-Linie nur einzeichnen, wenn sie in der Nähe der Kurse dieser Tage liegt – sonst drückt sie die Kerzen zu einem Strich zusammen
+  const hoch = Math.max(...out.h.filter(x => x != null)), tief = Math.min(...out.l.filter(x => x != null)), spanne = hoch - tief;
+  out.linieNah = w.linie200 != null && w.linie200 <= hoch + spanne && w.linie200 >= tief - spanne;
+  out.sma200w = voll(out.linieNah ? w.linie200 : null);
   for (const k of ["80", "60", "40", "15"]) if (CDATA?.["kz" + k]) out["kz" + k] = voll(w.kz?.[k] ?? letzter("kz" + k));
   if (CDATA?.kz90) out.kz90 = voll(letzter("kz90"));
   return out;
@@ -3169,7 +3173,7 @@ async function heuteZeichnen(id){   // true = gezeichnet (oder der Wert wurde in
   von = Math.min(von, t[Math.max(0, t.length - 27)]);   // früh am Handelstag: mindestens die letzten 27 Kerzen (rund ein Handelstag) zeigen
   const ch = HAUPT;
   setTimeout(() => { if (HAUPT === ch && INTERVALL === "H") { try { ch.timeScale().setVisibleRange({from:von, to:letzte}); } catch(e) { ch.timeScale().fitContent(); } } }, 90);
-  meldung(`Feiner Verlauf: 15-Minuten-Kerzen der letzten Handelstage, Uhrzeit Ihres Geräts (Yahoo Finance, je nach Börse bis 15 Minuten verzögert; Stand ${kjUhr(d.stand)} Uhr). 200-Wochen-Linie, Kaufzonen und Ampel stehen mit ihrem Wert von heute dabei.${euroAktiv() ? " In Euro mit dem letzten bekannten Wechselkurs." : ""}`);
+  meldung(`Feiner Verlauf: 15-Minuten-Kerzen der letzten Handelstage, Uhrzeit Ihres Geräts (Yahoo Finance, je nach Börse bis 15 Minuten verzögert; Stand ${kjUhr(d.stand)} Uhr). Kaufzonen und Ampel stehen mit ihrem Wert von heute dabei${cd.linieNah || INFO.linie200 == null ? ", ebenso die 200-Wochen-Linie" : `; die 200-Wochen-Linie (${fmt(INFO.linie200 * fxFaktor(), INFO.linie200 >= 100 ? 0 : 2)}) liegt außerhalb dieses Ausschnitts`}.${euroAktiv() ? " In Euro mit dem letzten bekannten Wechselkurs." : ""}`);
   return true;
 }
 function heuteAus(){ if (INTERVALL !== "H") return; INTERVALL = HEUTE_VOR; meldung(""); heuteKnopf(); eigenNeu(); }
