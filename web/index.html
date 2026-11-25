@@ -3563,11 +3563,23 @@ let VH = undefined;
 async function vorhersageLaden(){ if (VH === undefined) VH = (await holeJson("daten/vorhersage.json")) || null; return VH; }
 const VH_GRUPPE = {"Index-ETF":["breiten Index-ETFs","Index-ETFs","Index-ETFs"], "ETF":["ETFs","ETFs","ETFs"], "Rohstoff":["Rohstoffen","Rohstoffe","Rohstoffen"], "Krypto":["Krypto-Werten","Krypto-Werte","Krypto-Werten"], "Aktie":["Aktien","Aktien","Aktien"]};
 const vhZahl = x => `<span class="zahl">${x}</span>`;
-async function vorhersageInit(id, w){
+function eigeneHaeufigkeit(c){   // aus den Wochenkursen des Werts: Anteil der Wochen, nach denen der Kurs 1 bzw. 3 Jahre später höher stand / binnen 12 Monaten 20 % fiel
+  const k = c?.c, t = c?.t; if (!k || !t || k.length < 157) return null;   // mindestens 3 Jahre
+  const dauer = (new Date(typeof t[t.length - 1] === "number" ? t[t.length - 1] * 1000 : t[t.length - 1]) - new Date(typeof t[0] === "number" ? t[0] * 1000 : t[0])) / 31557600000;
+  if (!(dauer > 2.9)) return null;
+  const jeJahr = Math.round((k.length - 1) / dauer); if (jeJahr < 45 || jeJahr > 56) return null;   // nur Wochenkurse
+  const quote = (schritt, test) => { let n = 0, ja = 0; for (let i = 0; i + schritt < k.length; i++) { if (!(k[i] > 0)) continue; const r = test(i); if (r == null) continue; n++; if (r) ja++; } return n >= 52 ? Math.round(ja / n * 100) : null; };
+  const a1 = quote(jeJahr, i => k[i + jeJahr] > 0 ? k[i + jeJahr] > k[i] : null), a3 = quote(3 * jeJahr, i => k[i + 3 * jeJahr] > 0 ? k[i + 3 * jeJahr] > k[i] : null);
+  const r1 = quote(jeJahr, i => { let tief = Infinity; for (let j = i + 1; j <= i + jeJahr; j++) if (k[j] > 0 && k[j] < tief) tief = k[j]; return tief === Infinity ? null : tief <= k[i] * 0.8; });
+  if (a1 == null) return null;
+  return {g:"eigen", j:dauer, a1, ea1:a1, a3, ea3:a3, r1, er1:r1, eigen:true};
+}
+async function vorhersageInit(id, w, c){
   if (!$("#vh")) return;
   const V = await vorhersageLaden(); const el = $("#vh");
   if (AKTIV !== id || !el || !V) return;
-  const e = V.werte?.[id]; if (!e || e.a1 == null) return;
+  let e = V.werte?.[id]; if (!e || e.a1 == null) e = eigeneHaeufigkeit(c);
+  if (!e) return;
   const g = e.g, G = VH_GRUPPE[g] || [g, g, g], name = esc(kurzname(w)), gh = V.gruppen_heute?.[g] || {}, Z = k => V.ziele?.[k]?.[g];
   const gepr = !!(Z("a1") && Z("a3")), z1 = Z("a1"), z3 = Z("a3"), zr = Z("r1"), ZF = V.zufall?.[g];
   const probe = (k, wert) => { const z = Z(k); if (!z?.kal?.length) return ""; const b = z.kal.reduce((p, q) => Math.abs(q[0] - wert) < Math.abs(p[0] - wert) ? q : p); return Math.abs(b[0] - wert) > 8 ? "" : `Hat es früher gestimmt? Sagte die Rechnung „${b[0]} von 100“, kam es in ${b[1]} von 100 Fällen so`; };
@@ -3614,6 +3626,8 @@ async function vorhersageInit(id, w){
       ${w6?.besser_zufall != null ? `<p><b>Warten auf günstig:</b> Bei ${w6.besser_sim} von 100 ${G[2]} brachte Warten, bis die Ampel günstig zeigt, mehr als jeden Monat zu kaufen. Auf den Zufallsverläufen gelingt das im Schnitt bei ${w6.besser_zufall} von 100 (üblich: ${w6.zufall_5} bis ${w6.zufall_95}). Der Zufall allein erreicht den echten Wert in ${von100(pw)} von 100 Durchläufen.</p>` : ""}
       <p>${fazit}</p></details>`;
     }
+  } else if (e.eigen) {
+    satz = `Für ${name} gibt es keine geprüfte Vorhersage. <b>Die Zahlen sind aus der eigenen Kursgeschichte dieses Werts gezählt</b> (${fmt(e.j,0)} Jahre${w.nachbau_bis ? `, davon die Zeit bis ${datumDe(w.nachbau_bis)} nachgebaut` : ""}) und zeigen nur, wie es bisher war – für die Zukunft sind sie kaum belastbar.`;
   } else {
     satz = `Für ${G[1]} gibt es nur ${gh.titel_lang === 1 ? "einen Wert" : (gh.titel_lang ?? 0) + " Werte"} mit über 10 Jahren Geschichte. Eine Prüfung ohne Zukunftswissen ist damit nicht möglich. <b>Die Zahlen zeigen nur, wie es bisher war</b> – für die Zukunft sind sie kaum belastbar, gerade wenn die frühen Jahre außergewöhnlich waren.`;
   }
@@ -4779,7 +4793,7 @@ async function zeige(id, opt={}){
   reiter(REITER);
   $("#haupt").dataset.modus = MODUS;
   $$("#modus-wahl button").forEach(b => b.onclick = () => modusSetzen(b.dataset.m));
-  zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w); vorhersageInit(id, w);
+  zeitachseInit(id, w, c); rechnerInit(id, w, c); positionInit(id, w); renditeEuroInit(id, w); vorhersageInit(id, w, c);
   abschnittNavInit(); fragenInit(); railInit();
   risikoVergleich(id, c);
   lohntSichCheck(id);
