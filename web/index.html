@@ -290,6 +290,8 @@ table{border-collapse:collapse;width:100%}
 .falle-box{background:color-mix(in srgb,var(--teuer) 13%,transparent);border:1px solid color-mix(in srgb,var(--teuer) 45%,transparent);border-radius:10px;padding:8px 10px;margin:4px 0 10px;font-size:13px;line-height:1.45}
 .falle-mark{color:var(--teuer);font-weight:700}
 .wtab tr.depot-zeile td{background:var(--panel2);white-space:normal;padding-top:10px}
+.wtab tr.cash-zeile td{background:color-mix(in srgb,var(--panel2) 55%,transparent);vertical-align:top}
+.wtab tr.cash-zeile td>.klein{max-width:520px}
 .tab-scroll{overflow-x:auto}
 .text{padding:0 14px 12px;color:var(--muted);font-size:12.5px;line-height:1.55}
 .merke{margin:12px 14px;padding:10px 12px;border-radius:10px;border:1px solid color-mix(in srgb,var(--gelb) 40%,transparent);background:color-mix(in srgb,var(--gelb) 9%,transparent);font-size:13px;color:var(--text)}
@@ -977,6 +979,9 @@ span[data-e],th[data-e]{text-decoration:underline dotted color-mix(in srgb,var(-
   .dp-tab td:nth-child(6){grid-column:2;grid-row:2}
   .dp-tab td:nth-child(7){position:absolute;top:9px;right:12px}
   .dp-tab td:nth-child(7) .linkknopf{padding:4px 6px;font-size:15px}
+  .dp-tab tr.cash-zeile td:nth-child(1){padding-right:0}
+  .dp-tab tr.cash-zeile td:nth-child(2){grid-column:1/-1}
+  .dp-tab tr.cash-zeile td:nth-child(3){display:none}
   .dp-tab .feld{width:100%!important;height:44px;font-size:17px;text-align:left!important}
   .dp-l{display:block;margin-bottom:4px;font-size:11.5px;font-weight:650;color:var(--muted)}
   .dp-anteil{display:inline-block;padding:3px 9px;border-radius:999px;background:var(--panel3);font-size:12px;font-weight:700;color:var(--text2);white-space:nowrap}
@@ -5998,11 +6003,16 @@ function isinListeLaden(){
 }
 const NAME_REST = /\b(inc|corp|corporation|co|company|ltd|limited|plc|ag|se|sa|nv|holdings?|group|the|registered|reg|shares?|shs|cl|class|[abch]|yc|o\.?n|dl|adrs?|sp|ord|ordinary|common|stock|cap|stk)\b\.?/gi;
 const nameKern = s => String(s || "").toLowerCase().replace(/\s+-\s+.*$/, "").replace(/\(.*?\)/g, " ").replace(/\b([a-z])\.(?=[a-z]\.)/g, "$1").replace(/\b([a-z]{2,4})\.(\s|$)/g, "$1 ").replace(/[-,.]*\d[\d,.]*/g, " ").replace(NAME_REST, " ").replace(/[^a-z0-9äöüß&]+/g, " ").replace(/\s+/g, " ").trim();
-const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], phasen:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:""};
+const DEPOT_STD = {sparrate:200, verteilung:"depot", dynamik:0, jahre:20, einmal:[], phasen:[], kfix:1, kproz:0, ter:0, steuer:true, pausch:1000, teilfrei:false, inflation:2, ziel:100000, rendite:"deckel", pfade:2000, nurDepot:"", cash:0, cashzins:0, einmalAus:"neu"};
 let DEPOT = null;   // {positionen:[{name, isin, kuerzel, wert, id, quelle, spar, depot}], e:{…Einstellungen}, zuordnungen:{Spaltenköpfe → Spalten}, merken:bool}
 const DEPOT_NAME_STD = "Depot 1";
 const depotName = p => p.depot || DEPOT_NAME_STD;
 const depotNamen = () => [...new Set(DEPOT.positionen.map(depotName))];
+// Cash (Wunsch Marc 26.11.2026): Bargeld auf dem Verrechnungs- oder Tagesgeldkonto. Ein Betrag für alle Depots zusammen (e.cash), dazu der Zins (e.cashzins).
+// e.cashTeile merkt sich, welcher Teil aus welchem PDF-Depot kam – damit ein neuer Auszug desselben Depots nur dessen Teil ersetzt. Bleibt im Browser.
+const depotCash = () => Math.max(0, +DEPOT?.e?.cash || 0);
+const cashTeileSumme = () => Object.values(DEPOT.e.cashTeile || {}).reduce((a, b) => a + (+b || 0), 0);
+const cashVonHand = () => Math.max(0, Math.round((depotCash() - cashTeileSumme()) * 100) / 100);   /* Teil des Cash, der nicht aus einem PDF stammt */
 function depotLaden(){
   const d = lade(DEPOT_SCHLUESSEL, null);
   DEPOT = d && Array.isArray(d.positionen) ? {...d, e:{...DEPOT_STD, ...(d.e || {}), ...(d.e?.rendite === "markt" ? {rendite:"deckel"} : {})}, zuordnungen:d.zuordnungen || {}, merken:true} : {positionen:[], e:{...DEPOT_STD}, zuordnungen:{}, merken:false};
@@ -6393,7 +6403,7 @@ function zeigeDepot(){
   depotFortschreiben(); if (FX === undefined && DEPOT.positionen.length) depotAktuell();   // Werte laufen mit dem Kurs mit; Wechselkurs einmal holen
   seiteAnfang("depot"); hashSetzen("seite=depot");
   const P = DEPOT.positionen, summe = depotSumme(), offen = P.filter(p => !p.id), offenWert = offen.reduce((a, p) => a + p.wert, 0);
-  const e = DEPOT.e;
+  const e = DEPOT.e, cash = depotCash(), gesamt = summe + cash, cashZins = Math.max(0, +e.cashzins || 0);
   $("#haupt").innerHTML = `
     <h1 class="seiten-titel">Mein Depot</h1>
     <p class="seiten-unter">Lade deine Vermögensübersicht, ordne die Positionen zu und sieh, wie sich das Depot mit oder ohne Sparplan entwickeln <b>könnte</b> – als Simulation aus der Vergangenheit, nicht als Vorhersage.</p>
@@ -6401,7 +6411,8 @@ function zeigeDepot(){
         <span class="klein">${P.some(q => q.basis) ? `mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : "Stand deines Imports"}</span></div>
       <div class="dp-k-zahlen"><div><b>${P.length}</b><span>Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""}</span></div>
         <div><b>${fmt(summe > 0 ? (summe - offenWert) / summe * 100 : 0, 0, " %")}</b><span>im Tool zugeordnet</span></div>
-        ${offen.length ? `<div><b class="neg">${geld(offenWert)} €</b><span>ohne Zuordnung</span></div>` : ""}</div></section>` : ""}
+        ${offen.length ? `<div><b class="neg">${geld(offenWert)} €</b><span>ohne Zuordnung</span></div>` : ""}
+        ${cash > 0 ? `<div><b>${geld(cash)} €</b><span>Cash (${fmt(cash / gesamt * 100, 0, " %")} vom Gesamtvermögen)</span></div><div><b>${geld(gesamt)} €</b><span>Gesamtvermögen: Wertpapiere + Cash</span></div>` : ""}</div></section>` : ""}
     <div class="kern" style="border-color:color-mix(in srgb,var(--guenstig) 45%,transparent)">
       <b>🔒 Datenschutz:</b> Deine Datei wird nur hier im Browser gelesen und <b>nie hochgeladen</b>. Es gibt keine Broker-Logins und keine Verbindung zu deinem Konto.
       Gespeichert wird nur, wenn du „In diesem Browser merken“ einschaltest – und „Depot vergessen“ löscht alles wieder.
@@ -6422,7 +6433,7 @@ function zeigeDepot(){
         <h2 style="margin:0;font-size:16px">Positionen</h2>
         <span class="klein">${P.length} Position${P.length === 1 ? "" : "en"}${depotNamen().length > 1 ? ` in ${depotNamen().length} Depots` : ""} · zusammen <b style="color:var(--text)">${geld(summe)} €</b>${P.some(p => p.basis) ? ` · Werte mit Kursen bis ${(ALLE.filter(w => w.gruppe !== "Krypto").map(w => w.datum).sort().pop() || "").split("-").reverse().join(".")} fortgeschrieben` : ""}${offen.length ? ` · <span class="neg">ohne Zuordnung: ${geld(offenWert)} € (${fmt(offenWert / summe * 100, 0, " %")})</span>` : ""}</span>
       </div>
-      ${P.length ? `<div class="tab-scroll"><table class="wtab dp-tab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>Anteil</th><th>${ek("d_zuordnung","Im Tool gerechnet als")}</th><th>${ek("d_nachkauf","Wann nachkaufen?")}</th><th>${ek("d_plan","Sparplan € / Monat")}</th><th></th></tr></thead><tbody>${
+      ${P.length ? `<div class="tab-scroll"><table class="wtab dp-tab" style="margin-top:8px"><thead><tr><th>Position</th><th>${ek("d_wert","Wert €")}</th><th>${cash > 0 ? ek("d_anteil","Anteil an den Wertpapieren") : "Anteil"}</th><th>${ek("d_zuordnung","Im Tool gerechnet als")}</th><th>${ek("d_nachkauf","Wann nachkaufen?")}</th><th>${ek("d_plan","Sparplan € / Monat")}</th><th></th></tr></thead><tbody>${
         depotNamen().map(dn => { const teil = P.map((p, i) => [p, i]).filter(([p]) => depotName(p) === dn), dsum = teil.reduce((a, [p]) => a + p.wert, 0);
           return `<tr class="depot-zeile"><td colspan="7" style="text-align:left"><b>${esc(dn)}</b> <span class="klein">· ${teil.length} Position${teil.length === 1 ? "" : "en"} · ${geld(dsum)} € (${fmt(dsum / summe * 100, 0, " %")})</span>
             <span style="margin-left:12px;white-space:nowrap"><button class="linkknopf" data-dn="${esc(dn)}">umbenennen</button> · <button class="linkknopf" data-dx="${esc(dn)}" style="color:var(--muted)">Depot entfernen</button></span></td></tr>` +
@@ -6434,13 +6445,29 @@ function zeigeDepot(){
               <div><button class="linkknopf" data-pz="${i}">${w ? "ändern" : "Ersatz wählen"}</button></div></td>
             <td style="text-align:left;white-space:normal;min-width:210px"><div class="dp-l">${ek("d_nachkauf","Wann nachkaufen?")}</div>${w ? nachkaufZelle(w, p) : `<span class="klein">–</span>`}</td>
             <td><div class="dp-l">${ek("d_plan","Sparplan € / Monat")}</div><input class="feld" style="width:80px;text-align:right" data-ps="${i}" value="${fmt(e.sparrate * (p.spar ?? 0) / 100, (e.sparrate * (p.spar ?? 0) / 100) % 1 ? 2 : 0)}" aria-label="Sparplan in Euro je Monat"><div class="klein">${fmt(p.spar ?? 0, 0)} %</div></td>
-            <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}</tbody></table></div>
+            <td><button class="linkknopf" data-pl="${i}" aria-label="Position entfernen" style="color:var(--muted)">✕</button></td></tr>`; }).join(""); }).join("")}${cash > 0 ? `
+          <tr class="cash-zeile"><td style="text-align:left;white-space:normal;min-width:180px"><b>${ek("d_cash","Cash")}</b><div class="klein">Bargeld auf dem Verrechnungs- oder Tagesgeldkonto${e.cashQuelle ? ` · ${esc(e.cashQuelle)}` : ""}</div></td>
+            <td><div class="dp-l">Betrag €</div><b>${fmt(cash, 2)} €</b><div class="klein">schwankt nicht · ${cashZins > 0 ? `Zins ${fmt(cashZins, 2, " %")} pro Jahr` : "ohne Zins gerechnet"}</div></td>
+            <td></td>
+            <td colspan="4" style="text-align:left;white-space:normal"><b>${fmt(cash / gesamt * 100, 1, " %")} vom Gesamtvermögen</b><div class="klein">Ändern: Felder „Cash“ unter der Tabelle.</div></td></tr>
+          <tr class="cash-zeile"><td style="text-align:left;white-space:normal"><b>${ek("d_gesamt","Gesamtvermögen")}</b><div class="klein">Wertpapiere + Cash</div></td>
+            <td><div class="dp-l">Betrag €</div><b>${fmt(gesamt, 2)} €</b></td>
+            <td></td>
+            <td colspan="4" style="text-align:left;white-space:normal">Wertpapiere ${geld(summe)} € (${fmt(summe / gesamt * 100, 1, " %")}) · Cash ${geld(cash)} € (${fmt(cash / gesamt * 100, 1, " %")})<div class="klein">Die Prozentzahlen bei den einzelnen Positionen beziehen sich auf die Wertpapiere allein (ohne Cash).</div></td></tr>` : ""}</tbody></table></div>
         ${P.some(p => p.id && p.ersatz) ? `<div class="merke" style="margin-top:0">${(() => { const e = P.filter(p => p.id && p.ersatz), ew = e.reduce((a, p) => a + p.wert, 0); return `${e.length} Position${e.length === 1 ? " ist" : "en sind"} nicht im Tool und werden mit einem <b>automatischen Ersatz</b> gerechnet (${fmt(ew / summe * 100, 0, " %")} des Depots), z. B. eine chinesische Aktie mit dem Schwellenländer-ETF. Das ist eine Annäherung: Eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ kannst du einen besseren Ersatz wählen.`; })()}</div>` : ""}
         ${offen.length ? `<div class="merke" style="margin-top:0">${offen.length} Position${offen.length === 1 ? " ist" : "en sind"} noch nicht zugeordnet (${fmt(offenWert / summe * 100, 0, " %")} des Depots). Wähle einen ähnlichen Wert als Ersatz (z. B. den passenden Index-ETF) – sonst rechnet die Simulation ohne diese Positionen.</div>` : ""}`
       : `<p class="text" style="padding-top:10px">Noch keine Positionen. Oben von Hand eintragen oder eine CSV-Datei aus deinem Depot laden.</p>`}
       <div style="padding:10px 14px 14px;display:flex;gap:10px 14px;align-items:center;flex-wrap:wrap">
         <button class="knopf leise" id="d-plan-plus">＋ Wert für künftige Käufe suchen</button>
         <span class="klein">Jede Aktie, jeder ETF, Rohstoff oder Krypto-Wert aus dem Tool – auch ohne Bestand. Danach in der Spalte „Sparplan € / Monat“ den Betrag eintragen.</span>
+      </div>
+      <div class="dp-block" id="d-cash-block">
+        <div class="klein" style="margin-bottom:6px"><b style="color:var(--text)">${ek("d_cash","Cash")}</b> – Bargeld auf dem Verrechnungs- oder Tagesgeldkonto. Ein Betrag für alle Depots zusammen. Es zählt zum Gesamtvermögen und läuft in der Prognose als eigener Topf ohne Schwankung mit.</div>
+        <div class="eingabe" style="padding:0">
+          ${feld("cash","Cash / Bargeld in €","d_cash",'min="0" step="100"')}
+          ${feld("cashzins","Zins aufs Cash in % pro Jahr","d_cashzins",'min="0" max="20" step="0.05"')}
+        </div>
+        <div class="klein" style="margin-top:6px">Zins: Trag den Zins ein, den dein Broker oder dein Tagesgeldkonto gerade zahlt. Das Tool kennt ihn nicht und nimmt nichts an – 0 heißt: ohne Zins gerechnet.${e.cashQuelle && cash > 0 ? ` Der Betrag ist ${esc(e.cashQuelle)} und lässt sich hier ändern.` : ""}</div>
       </div>
     </section>
     <div class="abstand"></div>
@@ -6481,7 +6508,9 @@ function zeigeDepot(){
       <div class="dp-block">
         <div class="klein" style="margin-bottom:6px">${ek("d_einmal","Einmalbeträge")} (z. B. Bonus in Jahr 3; negativ = Entnahme):</div>
         <div id="d-einmal">${e.einmal.map((x, i) => `<span class="grund-chips" style="display:inline-flex;margin:0 6px 6px 0"><span>Jahr ${x.jahr}: ${x.betrag > 0 ? "+" : ""}${geld(x.betrag)} € <button class="linkknopf" data-el="${i}" aria-label="Einmalbetrag entfernen" style="margin-left:6px;color:var(--muted)">✕</button></span></span>`).join("")}</div>
-        <div class="eingabe" style="padding:0"><label>Jahr<input id="d-ej" type="number" min="0" max="40" value="1" style="width:80px"></label><label>Betrag €<input id="d-eb" type="number" step="500" value="5000"></label><button class="knopf leise" id="d-eplus">hinzufügen</button></div>
+        <div class="eingabe" style="padding:0"><label>Jahr<input id="d-ej" type="number" min="0" max="40" value="1" style="width:80px"></label><label>Betrag €<input id="d-eb" type="number" step="500" value="5000"></label><button class="knopf leise" id="d-eplus">hinzufügen</button>
+          <label>${ek("d_einmalaus","Einmalzahlungen kommen aus")}<select data-e2="einmalAus" style="width:auto;max-width:100%"><option value="neu" ${e.einmalAus !== "cash" ? "selected" : ""}>neuem Geld (wie bisher)</option><option value="cash" ${e.einmalAus === "cash" ? "selected" : ""}>dem Cash</option></select></label></div>
+        ${e.einmalAus === "cash" && !(cash > 0) ? `<div class="klein" style="margin-top:6px">Es ist kein Cash eingetragen – die Einmalzahlungen kommen deshalb weiter aus neuem Geld.</div>` : ""}
       </div>
       <div class="dp-block">
         <div class="klein" style="margin-bottom:6px">${ek("d_phasen","Nur einige Jahre einzahlen oder die Sparrate später ändern")} – z. B. „ab Jahr 6: 0 €“ heißt: 5 Jahre einzahlen, danach läuft das Depot ohne neue Einzahlung weiter. Eine neue Rate wird im selben Verhältnis auf deine Werte verteilt.</div>
@@ -6511,14 +6540,21 @@ function zeigeDepot(){
   $$("#haupt [data-dx]").forEach(b => b.onclick = () => { const dn = b.dataset.dx, n = DEPOT.positionen.filter(p => depotName(p) === dn).length;
     if (!confirm(`Depot „${dn}“ mit ${n} Position${n === 1 ? "" : "en"} aus der Liste entfernen?`)) return;
     DEPOT.positionen = DEPOT.positionen.filter(p => depotName(p) !== dn); if (DEPOT.e.nurDepot === dn) DEPOT.e.nurDepot = "";
+    if (DEPOT.e.cashTeile?.[dn] != null) { DEPOT.e.cashTeile = {...DEPOT.e.cashTeile}; delete DEPOT.e.cashTeile[dn]; }   /* das Cash bleibt eingetragen und gilt ab jetzt als von Hand eingetragen */
     sparAnteileSetzen(); depotSichern(); DEPOT_ERG = null; zeigeDepot(); });
   $$("#haupt [data-dn]").forEach(b => b.onclick = () => { const alt = b.dataset.dn, neu = (prompt(`Neuer Name für „${alt}“:`, alt) || "").trim();
     if (!neu || neu === alt) return;
     DEPOT.positionen.forEach(p => { if (depotName(p) === alt) p.depot = neu; }); if (DEPOT.e.nurDepot === alt) DEPOT.e.nurDepot = neu;
+    if (DEPOT.e.cashTeile?.[alt] != null) { const ct = {...DEPOT.e.cashTeile}; ct[neu] = (+ct[neu] || 0) + (+ct[alt] || 0); delete ct[alt]; DEPOT.e.cashTeile = ct; }
     depotSichern(); zeigeDepot(); });
   $$("#haupt [data-e2]").forEach(inp => inp.onchange = () => {
     const k = inp.dataset.e2; DEPOT.e[k] = inp.type === "checkbox" ? inp.checked : inp.tagName === "SELECT" ? inp.value : (zahlDe(inp.value) || 0);
     if (k === "verteilung" && inp.value !== "eigen") { sparAnteileSetzen(inp.value); depotSichern(); zeigeDepot(); return; }
+    if (k === "cash" || k === "cashzins" || k === "einmalAus") {   // Cash: Übersicht und Risiko neu zeichnen, alte Prognose verwerfen
+      if (k !== "einmalAus") DEPOT.e[k] = Math.max(0, Math.round((+DEPOT.e[k] || 0) * 100) / 100);
+      if (k === "cash") { delete DEPOT.e.cashQuelle; DEPOT.e.cashTeile = {}; }   /* von Hand geändert: Betrag gilt als ganzer, selbst eingetragener Betrag */
+      depotSichern(); DEPOT_ERG = null; zeigeDepot(); return;
+    }
     depotSichern();
   });
   $$("#haupt [data-el]").forEach(b => b.onclick = () => { DEPOT.e.einmal.splice(+b.dataset.el, 1); depotSichern(); zeigeDepot(); });
@@ -6690,7 +6726,31 @@ function pdfPositionen(zeilen){
   }
   const passend = kand.find(v => posSumme > 0 && Math.abs(v / posSumme - 1) < 0.005);
   const summe = passend ?? (kand.length ? Math.max(...kand) : null);
-  return {positionen:[...pos.values()], summe};
+  return {positionen:[...pos.values()], summe, cash:pdfCash(zeilen, isinZeilen, vergeben, posSumme, summe)};
+}
+// Cash laut PDF – nur wenn eindeutig: eine kurze Zeile mit einem Cash-Wort und genau EINEM Euro-Betrag mit zwei Nachkommastellen, die zu keiner
+// Position gehört. Finden sich mehrere solche Zeilen mit verschiedenen Beträgen, oder ist der Betrag eine Summe der Wertpapiere, gilt: nichts übernehmen.
+const PDF_CASH_WORT = /(^|[^a-zäöüß])(cash|guthaben|verrechnungskonto|verrechnungskontos|kontostand|kontosaldo|barbestand|bargeld|barguthaben|liquidität)(?![a-zäöüß])/i;
+function pdfCash(zeilen, isinZeilen, vergeben, posSumme, summe){
+  const RAHMEN = /(sitz der gesellschaft|geschäftsführ|umsatzsteuer|\bhrb\b|amtsgericht|www\.|seite\s+\d+\s+von|erstellt am|vorstand|aufsichtsrat)/i;
+  const funde = [];
+  zeilen.forEach((z, i) => {
+    if (!PDF_CASH_WORT.test(z) || isinZeilen.has(i) || vergeben.has(i) || RAHMEN.test(z)) return;
+    if (/[A-Z]{2}[A-Z0-9]{9}\d/.test(z.replace(/\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?\b/g, " "))) return;   // Zeile mit Wertpapier-Kennung (eine IBAN zählt nicht dazu)
+    if (/(summe|gesamt|total|depotwert|brokerage|wertpapiere|stück|stk\.?|kurs|zinsen|zinssatz|dividende|limit|kredit|dispo)/i.test(z)) return;   // gemischte Zeilen sind nicht eindeutig
+    const ohne = z.replace(/\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){2,7}(?: ?[A-Z0-9]{1,3})?\b/g, " ").replace(/\b\d{1,2}\.\d{1,2}\.\d{2,4}\b/g, " ").replace(/-?\d+(?:,\d+)?\s*%/g, " ");
+    const zahlen = [...ohne.matchAll(PDF_ZAHL)];
+    if (zahlen.length !== 1 || (zahlen[0][0].split(",")[1] || "").length !== 2) return;   // genau ein Betrag, zwei Nachkommastellen
+    const v = zahlDe(zahlen[0][0]);
+    if (!(v > 0)) return;
+    if (ohne.replace(PDF_ZAHL, " ").replace(/[^A-Za-zÄÖÜäöüß]/g, "").length > 45) return;   // langer Fließtext: kein Kontostand
+    funde.push(v);
+  });
+  const versch = [...new Set(funde.map(v => Math.round(v * 100)))];
+  if (versch.length !== 1) return null;
+  const v = versch[0] / 100;
+  if ((posSumme > 0 && Math.abs(v / posSumme - 1) < 0.005) || (summe > 0 && Math.abs(v / summe - 1) < 0.005)) return null;   // sieht nach der Wertpapier-Summe aus
+  return v;
 }
 async function naechstePdf(){
   const ziel = $("#pdf-ergebnis"); if (!ziel) return;
@@ -6721,11 +6781,33 @@ async function naechstePdf(){
         <td><input class="feld" data-pv="${i}" value="${p.wert ? fmt(p.wert,2) : ""}" style="width:110px;text-align:right" aria-label="Wert in Euro"></td>
         <td class="klein">${p.wert ? (p.sicher ? '<span class="pos" title="Stück × Kurs passt zum Wert">✓</span>' : '<span title="größter Geldbetrag in der Zeile – bitte prüfen">?</span>') : '<span class="neg">Wert fehlt</span>'}</td></tr>`).join("")}</tbody></table></div>
     <p class="klein" id="pdf-summe"></p>
+    ${erg.cash > 0 ? `<div class="merke" id="pdf-cash" style="margin:8px 0">
+      <label style="display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center"><input type="checkbox" id="pdf-cash-an" checked> <b>Cash laut PDF:</b>
+        <input class="feld" id="pdf-cash-wert" value="${fmt(erg.cash, 2)}" style="width:120px;text-align:right" aria-label="Cash in Euro"> € <span>– wird mit übernommen, änderbar</span></label>
+      <div class="klein" id="pdf-cash-text" style="margin-top:6px"></div>
+      <label class="klein" id="pdf-cash-wahl" style="display:none;margin-top:6px">Schon von Hand eingetragen: <select id="pdf-cash-art" style="max-width:100%"><option value="ersetzen">ersetzen</option><option value="dazu">dazuzählen</option></select></label>
+    </div>` : `<p class="klein" id="pdf-cash-kein">Cash: In dieser PDF wurde kein eindeutiger Cash-Betrag erkannt – das Feld „Cash“ unter der Positionsliste bleibt, wie es ist.</p>`}
     <button class="knopf" id="pdf-uebernehmen">Positionen übernehmen</button> ${PDF_WARTESCHLANGE.length ? `<button class="knopf leise" id="pdf-weiter">Diese Datei überspringen</button>` : ""} <span class="klein" id="pdf-info"></span>`;
   const ersetzenText = () => { const n = $("#pdf-depot").value.trim(), vorhanden = DEPOT.positionen.filter(p => depotName(p) === n).length;
     $("#pdf-ersetzen").parentElement.style.visibility = vorhanden ? "visible" : "hidden";
     $("#pdf-ersetzen-text").textContent = vorhanden ? `vorhandenes Depot „${n}“ ersetzen (${vorhanden} Position${vorhanden === 1 ? "" : "en"}) – sonst dazulegen` : ""; };
-  $("#pdf-depot").oninput = ersetzenText; ersetzenText(); zeichnen();
+  // Cash aus dieser PDF: ersetzt nur den Teil, der schon aus demselben Depot kam; Cash anderer Depots bleibt; ein von Hand eingetragener Betrag wird nie still überschrieben
+  const cashPlan = () => {
+    const n = $("#pdf-depot").value.trim() || DEPOT_NAME_STD, c = Math.max(0, Math.round((zahlDe($("#pdf-cash-wert").value) || 0) * 100) / 100);
+    const bisher = depotCash(), teil = +(DEPOT.e.cashTeile || {})[n] || 0, hand = cashVonHand(), art = $("#pdf-cash-art").value;
+    let neu, text, wahl = false;
+    if (teil > 0) { neu = bisher - teil + c; text = `Ersetzt den bisherigen Cash-Betrag dieses Depots (${fmt(teil, 2)} €).`; }
+    else if (hand > 0) { wahl = true; neu = art === "dazu" ? bisher + c : bisher - hand + c;
+      text = art === "dazu" ? `Kommt zu den von Hand eingetragenen ${fmt(hand, 2)} € dazu.` : `Ersetzt die von Hand eingetragenen ${fmt(hand, 2)} €.`; }
+    else { neu = bisher + c; text = bisher > 0 ? `Kommt zum Cash der anderen Depots (${fmt(bisher, 2)} €) dazu.` : ""; }
+    neu = Math.max(0, Math.round(neu * 100) / 100);
+    return {n, c, neu, wahl, text:`${text} Cash insgesamt danach: ${fmt(neu, 2)} €. Der Betrag lässt sich danach unter der Positionsliste ändern.`.trim()};
+  };
+  const cashText = () => { if (!$("#pdf-cash")) return; const pl = cashPlan(), an = $("#pdf-cash-an").checked;
+    $("#pdf-cash-wahl").style.display = pl.wahl && an ? "block" : "none";
+    $("#pdf-cash-text").textContent = an ? pl.text : "Cash aus dieser PDF wird nicht übernommen."; };
+  if ($("#pdf-cash")) { $("#pdf-cash-an").onchange = cashText; $("#pdf-cash-wert").onchange = cashText; $("#pdf-cash-art").onchange = cashText; }
+  $("#pdf-depot").oninput = () => { ersetzenText(); cashText(); }; ersetzenText(); cashText(); zeichnen();
   $$("#pdf-ergebnis [data-pa]").forEach(c => c.onchange = () => { PDF_POS[+c.dataset.pa].an = c.checked; zeichnen(); });
   $$("#pdf-ergebnis [data-pn]").forEach(c => c.onchange = () => { PDF_POS[+c.dataset.pn].name = c.value.trim() || PDF_POS[+c.dataset.pn].isin; });
   $$("#pdf-ergebnis [data-pv]").forEach(c => c.onchange = () => { const v = zahlDe(c.value); const p = PDF_POS[+c.dataset.pv]; p.wert = v > 0 ? v : null; if (p.wert) { p.an = true; $(`#pdf-ergebnis [data-pa="${c.dataset.pv}"]`).checked = true; } zeichnen(); });
@@ -6734,6 +6816,8 @@ async function naechstePdf(){
     const depot = $("#pdf-depot").value.trim() || DEPOT_NAME_STD;
     const neu = PDF_POS.filter(p => p.an && p.wert > 0).map(p => { const pos = {name:p.name, isin:p.isin, kuerzel:"", wert:Math.round(p.wert * 100) / 100, depot, ...(p.anzahl > 0 ? {anzahl:p.anzahl} : {}), ...(pdfStand ? {stand:pdfStand} : {})}; return {...pos, ...zuordnen(pos)}; });
     if (!neu.length) { $("#pdf-info").textContent = "Keine Position mit Wert ausgewählt."; return; }
+    if ($("#pdf-cash") && $("#pdf-cash-an").checked) { const pl = cashPlan();
+      if (pl.c > 0) { DEPOT.e.cash = pl.neu; DEPOT.e.cashTeile = {...(DEPOT.e.cashTeile || {}), [pl.n]:pl.c}; DEPOT.e.cashQuelle = "aus PDF übernommen"; } }
     if ($("#pdf-ersetzen").checked) {
       const alt = DEPOT.positionen.filter(p => depotName(p) === depot);
       neu.forEach(n => { if (!n.id || n.ersatz) { const a = alt.find(x => x.id && x.quelle === "von dir gewählt" && x.isin === n.isin); if (a) { n.id = a.id; n.quelle = a.quelle; n.ersatz = false; } } });   // deine eigene Wahl geht vor dem automatischen Ersatz
@@ -6827,6 +6911,20 @@ async function depotRechnen(){
     const fächer = punkte.map(() => new Float64Array(PF)), real = new Float64Array(PF), endBrutto = new Float64Array(PF), endNetto = new Float64Array(PF), maxRueck = new Float64Array(PF);
     const eingezahltPunkte = new Float64Array(punkte.length);
     let eingezahltEnde = 0, kostenEnde = 0;
+    // Cash-Topf: schwankt nicht, also für alle Wege gleich – einmal vorab gerechnet. Zins wöchentlich so, dass übers Jahr genau der eingetragene Zins herauskommt.
+    // Einmalzahlungen „aus dem Cash“: Die Wertpapiere bekommen denselben Betrag wie bisher, nur sinkt dafür das Cash (höchstens bis 0, der Rest ist neues Geld).
+    const cashStart = Math.max(0, +e.cash || 0), cashZins = Math.max(0, +e.cashzins || 0), zinsW = Math.pow(1 + cashZins / 100, 1 / 52.18), ausCash = e.einmalAus === "cash" && cashStart > 0;
+    const cashPunkte = new Float64Array(punkte.length); let cashEnde = cashStart, cashZinsen = 0, cashEntnommen = 0, cashRest = 0;
+    if (cashStart > 0) {
+      cashPunkte[0] = cashStart;
+      for (let k = 0, pi = 1; k < W; k++) {
+        const z = cashEnde * (zinsW - 1); cashEnde += z; cashZinsen += z;
+        const em = einmalW.get(k) || 0;
+        if (ausCash && em > 0) { const nimm = Math.min(em, cashEnde); cashEnde -= nimm; cashEntnommen += nimm; cashRest += em - nimm; }
+        if (k + 1 === punkte[pi]) { cashPunkte[pi] = cashEnde; pi++; }
+      }
+    }
+    const gesNetto = cashStart > 0 ? new Float64Array(PF) : null, gesReal = cashStart > 0 ? new Float64Array(PF) : null;
     _seed = 20261121;
     const startWerte = gut.map(m => m.p.wert || 0), startSumme = startWerte.reduce((a, b) => a + b, 0);
     const anteilHeute = startSumme > 0 ? startWerte.map(x => x / startSumme) : sa;   // Einmalbeträge wie das heutige Depot
@@ -6865,6 +6963,10 @@ async function depotRechnen(){
       let steuer = 0;
       if (e.steuer) { const gewinn = (ende - basis) * (e.teilfrei ? 0.7 : 1); steuer = Math.max(0, gewinn - e.pausch) * 0.26375; }
       endBrutto[pf] = ende; endNetto[pf] = ende - steuer; real[pf] = (ende - steuer) * Math.exp(-inflW * W); maxRueck[pf] = rueck * 100;
+      if (gesNetto) {   // Summe mit Cash je Weg: dieselbe Steuerregel, Zinsen zählen zum Gewinn, Sparerpauschbetrag nur einmal, Verluste werden nicht verrechnet
+        const stG = e.steuer ? Math.max(0, Math.max(0, (ende - basis) * (e.teilfrei ? 0.7 : 1)) + cashZinsen - e.pausch) * 0.26375 : 0;
+        gesNetto[pf] = ende + cashEnde - stG; gesReal[pf] = gesNetto[pf] * Math.exp(-inflW * W);
+      }
       if (pf === 0) { eingezahltEnde = eingezahlt; kostenEnde = kosten; }
     }
     const q = (arr, p) => { const s = Float64Array.from(arr).sort(); return s[Math.min(s.length - 1, Math.max(0, Math.round(p / 100 * (s.length - 1))))]; };
@@ -6879,6 +6981,11 @@ async function depotRechnen(){
       modelle:gut.map(m => ({name:m.p.name, depots:m.p.depots, id:m.p.id, kurz:!!JUNG?.[m.p.id] && !m.neuErsatz, neu:!!m.neuErsatz, wochen:m.wochen, beta:m.beta, korr:m.korr, jahre:m.jahre, eigenPa:m.eigenPa, simPa:m.simPa, gedeckelt:m.gedeckelt})), ohne,
       offenWert:auswahl.filter(p => !p.id).reduce((a, p) => a + p.wert, 0), mVon:mWochen[0], e:{...e},
     };
+    if (gesNetto) { const einG = eingezahltEnde + cashStart - cashEntnommen;   /* was aus dem Cash in die Wertpapiere floss, zählt nur einmal */
+      DEPOT_ERG.cash = {start:cashStart, zins:cashZins, ende:cashEnde, zinsen:cashZinsen, punkte:Array.from(cashPunkte), aus:ausCash, entnommen:cashEntnommen, rest:cashRest,
+        netto:{q5:q(gesNetto, 5), q50:q(gesNetto, 50), q95:q(gesNetto, 95)}, real50:q(gesReal, 50), eingezahlt:einG,
+        verlust:ant(gesNetto, x => x < einG), ziel:e.ziel > 0 ? ant(gesReal, x => x >= e.ziel) : null, nurDepot:!!nur}; }
+    else if (e.einmalAus === "cash" && e.einmal.some(x => x.betrag > 0)) DEPOT_ERG.cashLeer = true;
     depotErgebnisZeigen(DEPOT_ERG);
     st.textContent = `fertig: ${PF.toLocaleString("de-DE")} Wege über ${e.jahre} Jahre`;
   } catch(ex) { st.innerHTML = `<span class="neg">${esc(ex.message)}</span>`; }
@@ -6886,26 +6993,42 @@ async function depotRechnen(){
 }
 function depotErgebnisZeigen(r){
   const el = $("#d-ergebnis"); if (!el) return;
-  const e = r.e;
+  const e = r.e, c = r.cash || null;
   el.innerHTML = `
     <h2 class="abschnitt-titel" style="margin-top:0">Prognose in ${r.jahre} Jahren${r.depotText ? ` · ${esc(r.depotText)}` : ""} <span class="klein">Simulation, ${r.pfade.toLocaleString("de-DE")} Wege</span></h2>
     <div class="raster">
       <section class="karte breit2"><div class="karte-kopf"><span data-e="d_faecher" tabindex="0">Depotwert über die Zeit</span>
           <div class="segment" role="group" aria-label="Skala" data-e="skala" style="text-transform:none;letter-spacing:0"><button data-dsk="0" aria-pressed="${DEPOT_SKALA === 0}">Linear</button><button data-dsk="1" aria-pressed="${DEPOT_SKALA === 1}">Log</button></div></div>
         <div id="d-chart" style="height:340px;margin:0 -6px"></div>
-        <div class="legende" style="padding:6px 0 0"><span><i style="background:var(--kegel);opacity:.35;height:9px"></i>90 % der Wege</span><span><i style="background:var(--kegel);opacity:.7;height:9px"></i>50 % der Wege</span><span><i style="background:var(--kegel)"></i>mittlerer Weg</span><span><i style="background:var(--muted)"></i>eingezahlt</span></div></section>
+        <div class="legende" style="padding:6px 0 0"><span><i style="background:var(--kegel);opacity:.35;height:9px"></i>90 % der Wege</span><span><i style="background:var(--kegel);opacity:.7;height:9px"></i>50 % der Wege</span><span><i style="background:var(--kegel)"></i>mittlerer Weg</span><span><i style="background:var(--muted)"></i>eingezahlt</span>${c ? `<span><i style="background:var(--cyan)"></i>Cash</span><span><i style="background:var(--gelb)"></i>Wertpapiere + Cash (mittlerer Weg)</span>` : ""}</div>
+        ${c ? `<p class="klein" style="margin:6px 0 0">Fächer und „eingezahlt“ zeigen die Wertpapiere allein. Das Cash schwankt nicht und ist als eigene Linie gezeichnet.</p>` : ""}</section>
       <section class="karte"><div class="karte-kopf"><span data-e="d_ende" tabindex="0">Am Ende (nach Steuer)</span><span>Median</span></div>
         <div class="gross-zahl">${geld(r.netto.q50)} €</div>
         <p>in heutiger Kaufkraft etwa <b>${geld(r.real50)} €</b> (Inflation ${fmt(e.inflation,1," %")})</p>
         <div class="kv"><span>90 % der Wege zwischen</span><b>${geld(r.netto.q5)} und ${geld(r.netto.q95)} €</b></div>
         <div class="kv"><span>eingezahlt (inkl. Depot heute)</span><b>${geld(r.eingezahltEnde)} €</b></div>
-        <div class="kv"><span>Kaufkosten gesamt</span><b>${geld(r.kostenEnde)} €</b></div></section>
+        <div class="kv"><span>Kaufkosten gesamt</span><b>${geld(r.kostenEnde)} €</b></div>
+        ${c ? `<p class="klein" style="margin-top:8px">Diese Karte zeigt die <b>Wertpapiere allein</b>. Die Summe mit Cash steht in der Karte „Mit Cash“.</p>` : ""}</section>
+      ${c ? `<section class="karte" id="d-cash-karte"><div class="karte-kopf"><span data-e="d_cash_ende" tabindex="0">Mit Cash: Gesamtvermögen am Ende</span><span>Median</span></div>
+        <div class="gross-zahl">${geld(c.netto.q50)} €</div>
+        <p>${e.steuer ? "nach Steuer" : "ohne Steuer"}, in heutiger Kaufkraft etwa <b>${geld(c.real50)} €</b> (Inflation ${fmt(e.inflation,1," %")})</p>
+        <div class="kv"><span>Wertpapiere (Median)</span><b>${geld(r.netto.q50)}&nbsp;€</b></div>
+        <div class="kv"><span>Cash am Ende${e.steuer ? " (vor Steuer)" : ""}</span><b>${geld(c.ende)}&nbsp;€</b></div>
+        <div class="kv"><span>Cash heute</span><b>${geld(c.start)}&nbsp;€</b></div>
+        <div class="kv"><span>Zinsen aufs Cash (${fmt(c.zins, 2, " %")} pro Jahr)</span><b>${geld(c.zinsen)}&nbsp;€</b></div>
+        ${c.aus ? `<div class="kv"><span>Einmalzahlungen aus dem Cash</span><b>${geld(c.entnommen)}&nbsp;€</b></div>` : ""}
+        <div class="kv"><span>Summe: 90 % der Wege zwischen</span><b>${geld(c.netto.q5)} und ${geld(c.netto.q95)}&nbsp;€</b></div>
+        <div class="kv"><span>eingezahlt (inkl. Depot und Cash heute)</span><b>${geld(c.eingezahlt)}&nbsp;€</b></div>
+        <div class="kv"><span>Summe am Ende weniger als eingezahlt</span><b>${fmt(c.verlust,0," %")}</b></div>
+        ${c.ziel != null ? `<div class="kv"><span>Ziel ${geld(e.ziel)} € mit Cash erreicht</span><b>${fmt(c.ziel,0," %")}</b></div>` : ""}
+        ${c.aus && c.rest > 0.005 ? `<p class="klein" style="margin-top:8px"><b>Das Cash reichte nicht für alle Einmalzahlungen:</b> ${geld(c.rest)} € davon kamen aus neuem Geld.</p>` : ""}
+        <p class="klein" style="margin-top:8px">Die Summe ist für jeden Weg einzeln gerechnet${e.steuer ? "; die Steuer auf die Zinsen ist darin abgezogen und der Sparerpauschbetrag zählt nur einmal. Deshalb ist sie nicht genau „Wertpapiere + Cash“" : ""}.${c.nurDepot ? " Das Cash ist ein Betrag für alle Depots und zählt hier ganz mit, auch wenn die Prognose nur ein Depot zeigt." : ""}</p></section>` : ""}
       <section class="karte"><div class="karte-kopf"><span data-e="d_wahrsch" tabindex="0">Wahrscheinlichkeiten</span><span>am Ende</span></div>
         <div class="kv"><span>weniger als eingezahlt</span><b class="${r.verlust > 10 ? "neg" : ""}">${fmt(r.verlust,0," %")}</b></div>
         ${r.ziel != null ? `<div class="kv"><span>Ziel ${geld(e.ziel)} € (heutige Kaufkraft) erreicht</span><b>${fmt(r.ziel,0," %")}</b></div>` : ""}
         <div class="kv"><span data-e="s_rueckgang">größter Rückgang unterwegs (typisch)</span><b class="neg">−${fmt(r.rueck50,0," %")}</b></div>
         <div class="kv"><span>größter Rückgang (schlechteste 5 %)</span><b class="neg">−${fmt(r.rueck95,0," %")}</b></div>
-        <p class="klein" style="margin-top:8px">Häufigkeiten unter den simulierten Wegen, keine Zusage.</p></section>
+        <p class="klein" style="margin-top:8px">Häufigkeiten unter den simulierten Wegen, keine Zusage.${c ? " Alle Zahlen dieser Karte gelten für die Wertpapiere allein. Das Cash schwankt nicht; auf das Gesamtvermögen bezogen fallen die Rückgänge in Prozent deshalb kleiner aus." : ""}</p></section>
     </div>
     <div class="abstand"></div>
     <section class="karte seite-karte"><h3>So wurde gerechnet</h3>
@@ -6920,6 +7043,8 @@ function depotErgebnisZeigen(r){
         ${r.modelle.some(m => m.kurz) ? `<br><b>Junge Aktien</b> (${r.modelle.filter(m => m.kurz).map(m => `${esc(m.name)}: ${m.wochen} Wochen`).join(", ")}): gerechnet mit ihren eigenen Kursen. Weil es nur wenige Wochen sind, ist die Schwankung unsicher geschätzt, das Beta vorsichtig Richtung Markt (1) gezogen und keine eigene Rendite über den Markt hinaus angenommen.` : ""}
         ${r.ohne.length ? `<br><b>Nicht gerechnet</b> (zu wenig gemeinsame Daten): ${r.ohne.map(esc).join(", ")}.` : ""}
         ${r.offenWert > 0 ? `<br><b>Ohne Zuordnung</b> und deshalb nicht enthalten: ${geld(r.offenWert)} €.` : ""}
+        ${c ? `<br><b>Cash:</b> ${geld(c.start)} € laufen als eigener Topf ohne Schwankung mit, verzinst mit ${fmt(c.zins, 2, " %")} pro Jahr (Zins wöchentlich gutgeschrieben, mit Zinseszins; der Zins bleibt die ganze Laufzeit gleich). ${e.steuer ? "Steuer wie bei den Wertpapieren: 26,375 % auf die Zinsen am Ende, die Zinsen zählen ohne Teilfreistellung; der Sparerpauschbetrag gilt für Wertpapiere und Cash zusammen nur einmal, Verluste der Wertpapiere werden nicht mit Zinsen verrechnet. In Wirklichkeit wird die Steuer auf Zinsen jedes Jahr fällig – das ist vereinfacht weggelassen." : "Ohne Steuer."} Die Inflation wird auf die Summe genauso angewendet wie auf die Wertpapiere. ${c.aus ? `Einmalzahlungen kommen aus dem Cash: ${geld(c.entnommen)} € gingen vom Cash in die Wertpapiere${c.rest > 0.005 ? `, weitere ${geld(c.rest)} € kamen aus neuem Geld, weil das Cash nicht reichte` : ""}. Entnahmen (negative Beträge) gehen wie bisher aus den Wertpapieren heraus und nicht ins Cash.` : "Einmalzahlungen kommen aus neuem Geld; das Cash bleibt unberührt."} Die Sparrate kommt immer aus neuem Geld.` : ""}
+        ${r.cashLeer ? `<br><b>Einmalzahlungen „aus dem Cash“:</b> Es war kein Cash eingetragen, deshalb kamen alle Einmalzahlungen aus neuem Geld.` : ""}
         <br>Das ist eine Simulation aus der Vergangenheit, keine Vorhersage und keine Anlageberatung. Renditen in der Währung der Werte (meist US-Dollar), ohne Wechselkurs.</div></section>`;
   const f = F(), cb = chartBasis(), ch = LightweightCharts.createChart($("#d-chart"), {...cb, rightPriceScale:{...cb.rightPriceScale, mode:DEPOT_SKALA, scaleMargins:{top:0.06, bottom:0}}, localization:{locale:"de-DE", priceFormatter:p => Math.round(p).toLocaleString("de-DE") + " €"}, handleScroll:false, handleScale:false});
   const daten = arr => r.t.map((t, i) => ({time:t, value:arr[i]}));
@@ -6927,6 +7052,10 @@ function depotErgebnisZeigen(r){
   flaeche(r.fächer[4], f.kegel + "40"); flaeche(r.fächer[3], f.kegel + "55"); flaeche(r.fächer[1], f.kegel + "40"); flaeche(r.fächer[0], f.bg);
   [[0, f.kegel + "aa", 1, 2], [4, f.kegel + "aa", 1, 2], [2, f.kegel, 2, 0]].forEach(([i, c, w, st]) => { const s = ch.addLineSeries({color:c, lineWidth:w, lineStyle:st, priceLineVisible:false, lastValueVisible:i === 2, crosshairMarkerVisible:false}); s.setData(daten(r.fächer[i])); });
   const ein = ch.addLineSeries({color:f.muted, lineWidth:1, lineStyle:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); ein.setData(daten(r.eingezahlt));
+  if (c) {   // Cash als eigene Linie, dazu der mittlere Weg von Wertpapieren + Cash
+    const cl = ch.addLineSeries({color:f.cyan, lineWidth:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); cl.setData(daten(c.punkte));
+    const gl = ch.addLineSeries({color:f.gelb, lineWidth:2, priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false}); gl.setData(daten(r.fächer[2].map((x, i) => x + c.punkte[i])));
+  }
   setTimeout(() => ch.timeScale().fitContent(), 30);
   charts.push(ch);
   $$("#d-ergebnis [data-dsk]").forEach(b => b.onclick = () => { DEPOT_SKALA = +b.dataset.dsk; sichere("depot_skala", DEPOT_SKALA); ch.priceScale("right").applyOptions({mode:DEPOT_SKALA});
@@ -7128,6 +7257,8 @@ function risikoZeigen(){
   const r = RISIKO_ERG && RISIKO_ERG.schl === schl ? RISIKO_ERG : null;
   let html = `<h2 style="margin:0;font-size:16px;padding:12px 14px 0">Risiko im Depot</h2>
     <p class="text" style="padding:4px 14px 0">Vier Blicke auf dein Depot: Steckt dieselbe Firma mehrfach drin? Laufen die Positionen im Gleichschritt? Was wäre in früheren Krisen passiert? Und ist etwas über seinen geplanten Anteil hinausgewachsen? Alles wird nur hier im Browser gerechnet.</p>`;
+  const cash = depotCash(), allesZugeordnet = Math.abs(summe - depotSumme()) < 0.005;
+  if (cash > 0) html += `<p class="text" id="d-risiko-cash" style="padding:6px 14px 0"><b>Mit Cash:</b> Alle Rechnungen in diesem Abschnitt beziehen sich auf deine Wertpapiere (${geld(summe)} €). Dein Cash (${geld(cash)} €) schwankt nicht und ist nicht eingerechnet. Auf das Gesamtvermögen (${geld(depotSumme() + cash)} €) bezogen sind Rückgänge in Prozent deshalb kleiner – der Verlust in Euro bleibt derselbe. „Anteil am Depot“ heißt hier: Anteil an den Wertpapieren.</p>`;
   if (!r) {
     html += `<p class="klein" style="padding:10px 14px">lädt Kursreihen und rechnet …</p>`;
     if (RISIKO_LAEUFT !== schl) { RISIKO_LAEUFT = schl;
@@ -7181,6 +7312,7 @@ function risikoZeigen(){
         <div class="karte-kopf"><span>${esc(S.titel)}</span><span>${datumDe(S.von)} – ${datumDe(S.bis)}</span></div>
         <div class="gross-zahl ${S.ende < 0 ? "neg" : ""}">${S.ende > 0 ? "+" : ""}${fmt(S.ende * 100, 0, " %")}</div>
         <p>also etwa <b>${S.euroEnde > 0 ? "+" : ""}${geld(S.euroEnde)} €</b> ${S.abgedeckt < 99.5 ? `(für ${fmt(S.abgedeckt, 0, " %")} des Depots)` : ""}</p>
+        ${cash > 0 && allesZugeordnet && S.abgedeckt >= 99.5 ? `<div class="kv"><span>aufs Gesamtvermögen mit Cash gerechnet</span><b class="${S.euroEnde < 0 ? "neg" : ""}">${S.euroEnde > 0 ? "+" : ""}${fmt(S.euroEnde / (summe + cash) * 100, 0, " %")}</b></div>` : ""}
         <div class="kv"><span>S&P 500 zum Vergleich</span><b>${fmt(S.spyR * 100, 0, " %")}</b></div>
         <div class="kv"><span>tiefster Stand</span><b class="neg">${fmt(S.tief * 100, 0, " %")}</b></div>
         <div class="kv"><span>alter Stand wieder erreicht</span><b>${S.zurueck ? `nach ${dauerWorte(monateZwischen(Date.parse(S.von) / 1000, S.zurueck))}` : S.tief >= 0 ? "nie darunter" : "noch nicht"}</b></div>
@@ -7221,6 +7353,12 @@ const ERKLAERUNG_DEPOT = {
   d_gleichlauf: {titel:"Fallen deine Positionen gemeinsam?", text:"Streuung schützt nur, wenn die Positionen sich unterschiedlich verhalten. Zwei Welt-ETFs zum Beispiel steigen und fallen fast immer zusammen – wer beide hat, ist kaum breiter aufgestellt als mit einem. Die farbigen Punkte zeigen: In den Wochen, in denen dein Depot verlor, wie viele von zehn Positionen verloren im Schnitt mit? Der Regler darunter fasst zusammen, wie ähnlich sich alle Positionen bewegen (Fachwort: Korrelation, von „gehen eigene Wege“ bis „bewegen sich wie eine“). Gerechnet aus den Wochenkursen der letzten 5 Jahre, größere Positionen zählen mehr. In echten Krisen fällt meist noch mehr gemeinsam als in normalen Zeiten."},
   d_stress: {titel:"Stresstest", text:"Dein heutiges Depot mit den heutigen Anteilen, zurückversetzt an das Hoch vor einer echten Krise und gehalten bis zum Tiefpunkt des S&P 500. Die Zahl zeigt den Verlust bis zum Tief, „alter Stand wieder erreicht“ die Zeit vom Hoch, bis das Depot wieder so viel wert war. Keine Vorhersage – die nächste Krise verläuft anders."},
   d_rebal: {titel:"Rebalancing", text:"Wenn eine Position stark steigt, wird sie ein immer größerer Teil des Depots – und das Risiko verschiebt sich, ohne dass du etwas getan hast. Rebalancing heißt: ab und zu zurück zu den geplanten Anteilen. Hinweis erscheint ab 5 Prozentpunkten oder einem Viertel über dem Ziel (z. B. 25 % statt 20 % oder 13 % statt 10 %). Die Ziele bleiben nur in diesem Browser (wenn „merken“ an ist)."},
+  d_cash: {titel:"Cash", text:"Bargeld, das auf dem Verrechnungskonto deines Brokers oder auf einem Tagesgeldkonto liegt – also Geld, das nicht in Wertpapieren steckt. Du trägst den Betrag selbst ein (ein Betrag für alle Depots zusammen); steht er eindeutig in einer PDF-Vermögensübersicht, schlägt der Import ihn vor. Das Cash zählt zum Gesamtvermögen, schwankt nicht mit der Börse und läuft in der Prognose als eigener Topf mit. In den Risiko-Rechnungen ist es nicht enthalten. Ohne Eintrag (0) wird kein Cash gerechnet. Bleibt wie alles andere nur in diesem Browser."},
+  d_cashzins: {titel:"Zins aufs Cash", text:"Der Zins in Prozent pro Jahr, den dein Broker oder dein Tagesgeldkonto auf das Cash zahlt. Das Tool kennt diesen Zins nicht und nimmt keinen an – du trägst deinen eigenen ein. 0 heißt: Das Cash bleibt in der Prognose gleich hoch. Gerechnet wird mit Zinseszins, und der Zins bleibt über die ganze Laufzeit gleich; in Wirklichkeit ändern Banken ihn immer wieder."},
+  d_gesamt: {titel:"Gesamtvermögen", text:"Wertpapiere plus Cash. Der Cash-Anteil in Prozent bezieht sich auf dieses Gesamtvermögen. Die Prozentzahlen bei den einzelnen Positionen beziehen sich dagegen auf die Wertpapiere allein – so wie bisher, damit Sparplan-Verteilung, Zielanteile und Risiko-Rechnungen dieselben Zahlen zeigen."},
+  d_anteil: {titel:"Anteil an den Wertpapieren", text:"Welcher Teil deiner Wertpapiere in dieser Position steckt – ohne Cash gerechnet. Der Anteil des Cash am Gesamtvermögen steht in der Zeile „Cash“."},
+  d_einmalaus: {titel:"Einmalzahlungen kommen aus", text:"„Neuem Geld“ (wie bisher): Der Betrag kommt von außen dazu, zum Beispiel ein Bonus. „Dem Cash“: Der Betrag wird zum Zeitpunkt der Zahlung vom Cash abgezogen und in die Wertpapiere gelegt – dein Gesamtvermögen wächst dadurch nicht, es wird nur umgeschichtet. Das Cash kann dabei höchstens auf 0 sinken; reicht es nicht, kommt der Rest aus neuem Geld, und das Ergebnis sagt, wie viel. Entnahmen (negative Beträge) gehen wie bisher aus den Wertpapieren heraus. Die monatliche Sparrate kommt immer aus neuem Geld."},
+  d_cash_ende: {titel:"Mit Cash: Gesamtvermögen am Ende", text:"Wertpapiere und Cash zusammen am Ende der Laufzeit. Die Wertpapiere schwanken wie in der Karte „Am Ende“, das Cash wächst nur mit dem eingetragenen Zins. Die Summe wird für jeden simulierten Weg einzeln gerechnet; gezeigt wird der mittlere Weg (Median). Mit Steuer: 26,375 % auch auf die Zinsen, am Ende in einem Betrag abgezogen; der Sparerpauschbetrag gilt für Wertpapiere und Cash zusammen nur einmal. Deshalb ist die Summe nicht genau die Zahl der Wertpapiere plus die Zahl des Cash. Die Umrechnung in heutige Kaufkraft ist dieselbe wie bei den Wertpapieren."},
   d_depotname: {titel:"Depot-Name", text:"Unter diesem Namen erscheinen die Positionen in der Liste, z. B. „Comdirect“ oder „Trade Republic“. Lädst du später eine neue Datei mit demselben Namen, kann sie das alte Depot ersetzen (für aktuelle Stände). Bleibt nur in diesem Browser."},
   d_nurdepot: {titel:"Prognose für", text:"Alle Depots zusammen oder nur eines. Liegt derselbe Wert in mehreren Depots, wird er für die Prognose zu einer Position zusammengefasst – sonst würden die Teile in der Simulation unabhängig voneinander schwanken und das Risiko wirkte kleiner, als es ist."},
   d_zuordnung: {titel:"Gerechnet mit", text:"Mit welchem Wert aus dem Tool die Position simuliert wird. Automatisch in dieser Reihenfolge: 1) ISIN großer Index-ETFs (gleicher Index), 2) ISIN einer US-Aktie oder eines US-ETFs im Tool (Liste aus den gemeinfreien SEC-Daten, wird online täglich erneuert), 3) exaktes Kürzel, 4) breiter Index im Fondsnamen, z. B. „MSCI World“ oder „Nasdaq 100“ (ohne Small Cap, Equal Weight, Hebel u. Ä.), 5) Firmenname, wenn genau ein Wert im Tool so heißt. 6) Alles andere bekommt einen automatischen Ersatz: Aktien nicht im Tool (z. B. NYSE wie Procter & Gamble, Hongkong wie BYD/Xiaomi) den breiten Markt ihres Landes nach ISIN-Ländercode (USA → S&P 500, China/Schwellenländer → MSCI EM, Japan, DAX, FTSE 100, Euro Stoxx 50), Fonds ohne passenden Index (z. B. Uran) den Welt-ETF MSCI ACWI, Gold-/Bitcoin-ETCs das Gold bzw. Bitcoin, junge Aktien unter 10 Jahren Kurse den Nasdaq-100. 4) bis 6) sind mit „bitte prüfen“ markiert. Ein Ersatz ist eine Annäherung – eine Einzelaktie schwankt meist viel stärker als ihr Markt. Unter „ändern“ wählst du jederzeit selbst; deine Wahl bleibt beim nächsten Import erhalten."},
@@ -7243,8 +7381,8 @@ const ERKLAERUNG_DEPOT = {
   d_steuer: {titel:"Abgeltungssteuer", text:"26,375 % (25 % plus Solidaritätszuschlag) auf den Gewinn beim gedachten Verkauf am Ende. Vereinfacht: keine Vorabpauschale, keine Kirchensteuer, keine Verrechnung mit anderen Gewinnen oder Verlusten."},
   d_pausch: {titel:"Sparerpauschbetrag", text:"Bis zu diesem Betrag bleiben Kapitalerträge steuerfrei: 1.000 € für Alleinstehende, 2.000 € für Verheiratete (Stand 2026). Hier vereinfacht einmal beim Verkauf am Ende abgezogen."},
   d_teilfrei: {titel:"Teilfreistellung", text:"Bei Aktienfonds und Aktien-ETFs (mind. 51 % Aktien) sind 30 % der Erträge steuerfrei. Für Einzelaktien, Krypto und Rohstoff-ETCs gilt das nicht."},
-  d_einmal: {titel:"Einmalbeträge", text:"Zusätzliche Einzahlungen (positiv) oder Entnahmen (negativ) in einem bestimmten Jahr, z. B. ein Bonus oder eine größere Anschaffung. Einzahlungen werden wie das heutige Depot verteilt."},
-  d_faecher: {titel:"Fächer", text:"Jede Linie ist ein Anteil der simulierten Wege: In der mittleren Linie liegt die Hälfte darüber, die Hälfte darunter. Die dunklere Fläche umfasst 50 %, die hellere 90 % der Wege. Gestrichelt: eingezahltes Geld. Vor Steuer."},
+  d_einmal: {titel:"Einmalbeträge", text:"Zusätzliche Einzahlungen (positiv) oder Entnahmen (negativ) in einem bestimmten Jahr, z. B. ein Bonus oder eine größere Anschaffung. Einzahlungen werden wie das heutige Depot verteilt. Mit der Auswahl daneben legst du fest, ob Einzahlungen aus neuem Geld kommen (wie bisher) oder aus dem Cash."},
+  d_faecher: {titel:"Fächer", text:"Jede Linie ist ein Anteil der simulierten Wege: In der mittleren Linie liegt die Hälfte darüber, die Hälfte darunter. Die dunklere Fläche umfasst 50 %, die hellere 90 % der Wege. Gestrichelt: eingezahltes Geld. Vor Steuer. Ist Cash eingetragen, zeigt der Fächer weiter die Wertpapiere allein; dazu kommen eine Linie für das Cash und eine für den mittleren Weg von Wertpapieren plus Cash."},
   d_ende: {titel:"Am Ende", text:"Typischer Depotwert am Ende der Laufzeit (Median der Wege) nach Kosten und, falls gewählt, nach Abgeltungssteuer beim gedachten Verkauf."},
   d_wahrsch: {titel:"Wahrscheinlichkeiten", text:"Anteil der simulierten Wege mit diesem Ergebnis. Verlust: am Ende nach Steuer weniger als heutiges Depot plus alle Einzahlungen. Größter Rückgang: stärkster Fall des Depots vom bisherigen Höchststand unterwegs."},
   d_beta: {titel:"Beta", text:"Wie stark die Position im Mittel mit dem Markt (S&P 500) mitging: 1 = gleich stark, 0,5 = halb so stark, 1,5 = stärker. Gold und Rohstoffe haben oft ein Beta nahe 0."},
