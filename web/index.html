@@ -6422,7 +6422,7 @@ function zeigeDepot(){
   depotFortschreiben(); if (FX === undefined && DEPOT.positionen.length) depotAktuell();   // Werte laufen mit dem Kurs mit; Wechselkurs einmal holen
   seiteAnfang("depot"); hashSetzen("seite=depot");
   const P = DEPOT.positionen, summe = depotSumme(), offen = P.filter(p => !p.id), offenWert = offen.reduce((a, p) => a + p.wert, 0);
-  const e = DEPOT.e, cash = depotCash(), gesamt = summe + cash, zinsInfo = cashZinsInfo(e), zinsOffen = cash > 0 && (zinsInfo.art === "ezb" || zinsInfo.art === "keiner");
+  const e = DEPOT.e, cash = depotCash(), gesamt = summe + cash, zinsInfo = cashZinsInfo(e), zinsOffen = cash > 0 && zinsInfo.art === "keiner";   /* der Ersatzwert der EZB gilt nicht als offen: Marc will nichts eintragen müssen (26.11.2026) */
   $("#haupt").innerHTML = `
     <h1 class="seiten-titel">Mein Depot</h1>
     <p class="seiten-unter">Lade deine Vermögensübersicht, ordne die Positionen zu und sieh, wie sich das Depot mit oder ohne Sparplan entwickeln <b>könnte</b> – als Simulation aus der Vergangenheit, nicht als Vorhersage.</p>
