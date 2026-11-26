@@ -30,6 +30,7 @@ VERKAUF_AB = 15
 VERKAUF_ANTEIL = 0.25
 WIEDER_FREI_AB = 40
 PAUSCHBETRAG = 1000.0
+PLAN_GANZ = 150          # plan_jahre fuer „ganze Geschichte“: so viele Jahre reicht keine Kursreihe zurueck
 TEILFREI_AKTIENFONDS = 0.30
 
 
@@ -142,8 +143,13 @@ class Depot:
 
 
 def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag=500.0, jahre=20,
-              kfix=1.0, kproz=0.0, fester_zins: float | None = None, reihe=True, pausch=0.0, teilfrei=0.0) -> dict | None:
-    """w = Wochenkerzen (Index Freitag), score = Ampel je Woche (gleich lang)."""
+              kfix=1.0, kproz=0.0, fester_zins: float | None = None, reihe=True, pausch=0.0, teilfrei=0.0,
+              plan_jahre: int | None = None) -> dict | None:
+    """w = Wochenkerzen (Index Freitag), score = Ampel je Woche (gleich lang).
+
+    plan_jahre: Nur fuer die Monatsliste „plan“ (Rechner im Browser). Ist der Wert groesser als jahre, beginnt die Liste entsprechend
+    frueher (PLAN_GANZ = ganze Geschichte mit gueltiger Ampel). Die Rechnung selbst (Depots, ergebnis, reihe, von, jahre, monate,
+    eingezahlt) bleibt bei „jahre“ und aendert sich dadurch nicht."""
     c = w["Close"].values.astype(float)
     o = w["Open"].values.astype(float)
     idx = w.index
@@ -180,16 +186,30 @@ def vergleich(w: pd.DataFrame, score: np.ndarray, zins: pd.Series | None, betrag
     # und der Zinssatz. Der Browser rechnet damit alle sechs Wege mit denselben Regeln für jeden Betrag, jede Dauer bis zur
     # exportierten Länge, eigene Kosten und einen festen Zins nach (strategieRechnen in web/index.html).
     plan = {"t": [], "k": [], "g60": [], "g75": [], "g80": [], "g90": [], "l15": [], "g40": [], "z": []}   # g = Ampel ≥ Grenze, l15 = ≤ 15, g40 = > 40 (wieder frei)
+
+    def plan_zeile(i, kurs, s, satz_i):
+        plan["t"].append(int((idx[i] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)))
+        plan["k"].append(float(f"{kurs:.9g}")); plan["z"].append(round(float(satz_i), 4))
+        for name, wahr in (("g60", s >= 60), ("g75", s >= 75), ("g80", s >= 80), ("g90", s >= 90), ("l15", s <= VERKAUF_AB), ("g40", s > WIEDER_FREI_AB)):
+            plan[name].append(int(wahr))
+
+    # Laengerer Plan (Wunsch Marc 26.11.2026: im Rechner so viele Jahre waehlen, wie die Kursgeschichte hergibt): die Monate VOR dem
+    # Rechenzeitraum kommen nur in die Liste – mit denselben Regeln (Monatsanfang, Ampel der Vorwoche gueltig, Kurs, Zins). Die Depots
+    # unten starten unveraendert bei tage[0].
+    if reihe and plan_jahre is not None and plan_jahre > jahre:
+        plan_ab = idx[-1] - pd.DateOffset(years=plan_jahre)
+        for i in neu_monat:
+            if i >= tage[0]:
+                break
+            if idx[i] >= plan_ab and i >= 1 and not math.isnan(score[i - 1]):
+                plan_zeile(i, o[i] if not math.isnan(o[i]) and o[i] > 0 else c[i - 1], score[i - 1], satz(idx[i]))
     for i in range(tage[0], n):
         if i in tage_set:
             kurs = o[i] if not math.isnan(o[i]) and o[i] > 0 else c[i - 1]
             s = score[i - 1]
             letzter_satz = satz(idx[i])
             if reihe:   # nur für die Einzelseite (export.py, server.py); die Massenprüfungen mit reihe=False brauchen den Plan nicht
-                plan["t"].append(int((idx[i] - pd.Timestamp("1970-01-01")) // pd.Timedelta(seconds=1)))
-                plan["k"].append(float(f"{kurs:.9g}")); plan["z"].append(round(float(letzter_satz), 4))
-                for name, wahr in (("g60", s >= 60), ("g75", s >= 75), ("g80", s >= 80), ("g90", s >= 90), ("l15", s <= VERKAUF_AB), ("g40", s > WIEDER_FREI_AB)):
-                    plan[name].append(int(wahr))
+                plan_zeile(i, kurs, s, letzter_satz)
             for d in depots.values():
                 d.jahr_setzen(idx[i].year)
             eingezahlt += betrag
