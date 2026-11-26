@@ -2363,6 +2363,7 @@ const ERKLAERUNG = {
   s_kosten: {titel:"Kosten", text:"Summe der Ordergebühren (fester Betrag plus Prozent je Order). Staffelkauf hat weniger, aber größere Orders."},
   s_bar: {titel:"Bargeld am Ende", text:"Anteil des Vermögens, der am Ende noch auf dem Tagesgeld auf eine hohe Ampel wartete. Ein hoher Anteil heißt: viel Geld lag lange ungenutzt."},
   s_zins: {titel:"Zins auf wartendes Geld", text:"„Echt“ nimmt den tatsächlichen US-Geldmarktzins 3 Monate (FRED TB3MS) des jeweiligen Monats, versteuert. Für Euro-Anleger lag der Tagesgeldzins oft niedriger; zum Vergleich lassen sich feste Sätze wählen."},
+  s_jahre: {titel:"Jahre (höchstens)", text:"Über wie viele Jahre zurück nachgerechnet wird. Du kannst so viele Jahre eintragen, wie du möchtest – gerechnet wird höchstens so weit, wie die Kurse dieses Werts mit gültiger Ampel zurückreichen (die Ampel braucht selbst einige Jahre Vorlauf). Bei einem Wert mit 10 Jahren Geschichte sind es also höchstens 10 Jahre, beim S&P 500 über 90. Trägst du mehr ein, als dieser Wert hergibt, rechnet das Tool mit seiner ganzen Geschichte und merkt sich deinen Wunsch für andere Werte. Nachgerechnet wird nur echte Vergangenheit, nichts wird dazuerfunden. Die Einstellung gilt auch für die Karte „Welcher Weg zu kaufen war am besten?“. Sehr lange Zeiträume enthalten Jahrzehnte, die mit heute wenig zu tun haben."},
   s_kfix: {titel:"Kosten je Order", text:"Fester Betrag und Prozentsatz, die bei jedem Kauf und Verkauf anfallen (z. B. 1 je Sparplan-Ausführung). Kosten erhöhen die Anschaffungskosten und mindern so auch die Steuer."},
   // --- Marktumfeld
   u_breite: {titel:"Marktbreite", text:"Anteil der Nasdaq-Aktien, die über ihrer 40-Wochen-Linie schließen. Unter 30 %: die meisten Aktien sind im Abwärtstrend; über 70 %: breiter Aufschwung. Beschreibt die Lage, kein Kaufsignal. Nur heute noch gelistete Aktien – frühere Jahre wirken zu gut."},
@@ -7645,7 +7646,7 @@ function tabStrategie(w){
     <div class="eingabe sv-eingabe">
       <label>Betrag je Monat<input id="st-betrag" type="number" value="${o0.betrag}" min="0" step="50"></label>
       <label>Einmalig zu Beginn<input id="st-einmal" type="number" value="${o0.einmal}" min="0" step="500"></label>
-      <label>Jahre (höchstens)<input id="st-jahre" type="number" value="${o0.jahre}" min="2" max="60"></label>
+      <label>${ek("s_jahre","Jahre (höchstens)")}<input id="st-jahre" type="number" value="${o0.jahre}" min="2" step="1"></label>
       <label>${ek("s_kfix","Kosten je Order fest")}<input id="st-kfix" type="number" step="0.5" value="${o0.kfix}" min="0"></label>
       <label>${ek("s_kfix","Kosten je Order %")}<input id="st-kproz" type="number" step="0.05" value="${+(o0.kproz * 100).toFixed(4)}" min="0"></label>
       <label>${ek("s_zins","Zins auf wartendes Geld")}<select id="st-zins">${[["echt", "echt (US-Geldmarkt)"], ["0", "0 %"], ["2", "fest 2 %"], ["3", "fest 3 %"]].map(([v, t]) => `<option value="${v}" ${String(o0.zins) === v ? "selected" : ""}>${t}</option>`).join("")}</select></label>
@@ -7708,15 +7709,20 @@ function tabStrategie(w){
     const P = s.plan, voll = !!(P?.t?.length && P.g75 && P.g90 && P.l15 && P.g40);
     if (voll) {   // eigene Eingaben: im Browser gerechnet (online wie lokal), gemeinsam mit der Kaufweg-Karte gemerkt
       const z = (sel, lo, hi) => Math.max(lo, Math.min(hi, +$(sel).value || 0)), hoechst = Math.max(2, Math.floor((P.ende_t - P.t[0]) / 86400 / 365.25 + 0.2));
-      const jahre = Math.round(z("#st-jahre", 2, 60)), zinsWahl = $("#st-zins").value;
-      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre:Math.min(jahre, hoechst), kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl, steuer:$("#st-steuer").checked};
-      sichere("kaufweg", KW); if (jahre > hoechst) $("#st-jahre").value = hoechst;
+      // Jahre: so viele, wie die Kursgeschichte dieses Werts hergibt (hoechst kommt aus dem Monatsplan). Gemerkt wird der Wunsch, nicht die
+      // Grenze dieses Werts – sonst würde ein Wert mit kurzer Geschichte die Dauer für alle anderen Werte verkürzen.
+      const feldJ = $("#st-jahre"), zinsWahl = $("#st-zins").value;
+      let jahre = Math.round(z("#st-jahre", 2, 200));
+      if (feldJ.dataset.wunsch && jahre === hoechst) jahre = +feldJ.dataset.wunsch;   /* Feld steht noch auf der Grenze dieses Werts: der frühere Wunsch gilt weiter */
+      KW = {betrag:z("#st-betrag", 0, 1e7), einmal:z("#st-einmal", 0, 1e9), jahre, kfix:z("#st-kfix", 0, 100), kproz:z("#st-kproz", 0, 5), zins:zinsWahl === "echt" ? "echt" : +zinsWahl, steuer:$("#st-steuer").checked};
+      sichere("kaufweg", KW); feldJ.max = hoechst; feldJ.title = `Für diesen Wert gehen höchstens ${hoechst} Jahre – so weit reichen seine Kurse mit gültiger Ampel zurück.`;
+      if (jahre > hoechst) { feldJ.value = hoechst; feldJ.dataset.wunsch = jahre; } else delete feldJ.dataset.wunsch;
       const o = kwOptionen();
       if (!(o.betrag > 0) && !(o.einmal > 0)) { $("#st-erg").innerHTML = '<div class="text">Bitte einen Betrag eintragen – monatlich, einmalig oder beides.</div>'; return; }
       const d = strategieRechnen(s, wd?.chart, o);
-      if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich."} Für diesen Wert reichen die Daten für höchstens ${hoechst} Jahre.</div>`; return; }
+      if (!d || d.fehler) { $("#st-erg").innerHTML = `<div class="text">${d?.fehler || "Kein Vergleich möglich."} Für diesen Wert reichen die Daten für höchstens ${hoechst} Jahre (so weit reichen seine Kurse mit gültiger Ampel zurück).</div>`; return; }
       zeigen(d, true);
-      $("#st-hinweis").firstChild.textContent = `Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit.${jahre > hoechst ? ` Für diesen Wert gehen höchstens ${hoechst} Jahre.` : ""} `;
+      $("#st-hinweis").firstChild.textContent = `Dieselben Beträge stehen oben in der Karte „Welcher Weg zu kaufen war am besten?“ – ändere sie hier oder dort, beide rechnen mit.${jahre > hoechst ? ` Für diesen Wert gehen höchstens ${hoechst} Jahre: So weit reichen seine Kurse mit gültiger Ampel zurück – nachgerechnet wird nur echte Vergangenheit. Dein Wunsch (${jahre} Jahre) bleibt für andere Werte gemerkt.` : ` Für diesen Wert gehen bis zu ${hoechst} Jahre.`} `;
       if ($("#check")) lohntSichCheck(id);   // Kaufweg-Karte rechnet mit denselben Werten mit
       return;
     }

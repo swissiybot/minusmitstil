@@ -143,7 +143,7 @@ def main():
             }
             if info["score"] is not None:
                 out["pruefung"] = pruefung.fuer_wert(w["Close"].values.astype(float), score, w.index.year.values)
-                out["strategie"] = strategie.vergleich(w, score, zins, pausch=strategie.PAUSCHBETRAG, teilfrei=strategie.teilfreistellung(info)) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
+                out["strategie"] = strategie.vergleich(w, score, zins, pausch=strategie.PAUSCHBETRAG, teilfrei=strategie.teilfreistellung(info), plan_jahre=strategie.PLAN_GANZ) or {"fehler": "zu wenig Monate mit gültiger Ampel"}
             groesse += schreiben(tmp / f"{dateiname(z['id'])}.json", out)
             if KURSE_OEFFENTLICH and (z["gruppe"] in ("ETF", "Krypto", "Rohstoffe") or info.get("jung")):   # junge Werte: Tageskerzen für den kurzen Verlauf
                 tc = analyse.tageschart(info, chart, roh)
