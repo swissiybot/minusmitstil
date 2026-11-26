@@ -64,6 +64,62 @@ def zins_monatlich() -> pd.Series | None:
     return s.resample("MS").last().ffill()
 
 
+# ----------------------------------------------------------------- EZB-Einlagenzins
+# Ersatz-Zins fuers Cash im Depot (Seite „Mein Depot“), wenn weder im PDF ein Zins steht noch einer eingetragen ist.
+# Offizielle, schluessellose Datenschnittstelle der EZB (https://data.ecb.europa.eu/help/api/data):
+# Reihe FM.D.U2.EUR.4F.KR.DFR.LEV = Einlagefazilitaet (Deposit Facility Rate), Stand je Tag, in % p.a.
+EZB_REIHE = "FM.D.U2.EUR.4F.KR.DFR.LEV"
+EZB_DATEI = "EZB_DFR.csv"
+EZB_URL = "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV?format=csvdata&lastNObservations=10"
+
+
+def ezb_einlage_laden() -> bool:
+    """Laedt die letzten Tageswerte des EZB-Einlagenzinses als kleine CSV. Faellt das Netz aus, bleibt die alte Datei stehen."""
+    FRED.mkdir(parents=True, exist_ok=True)   # liegt neben den FRED-Dateien (derselbe Ordner wird online zwischengespeichert)
+    ziel = FRED / EZB_DATEI
+    if ziel.exists() and time.time() - ziel.stat().st_mtime < 20 * 3600:
+        return True
+    for versuch in range(3):
+        try:
+            antwort = requests.get(EZB_URL, timeout=60, headers={"Accept": "text/csv"})
+            antwort.raise_for_status()
+            daten = antwort.content
+            df = pd.read_csv(io.BytesIO(daten))
+            if "TIME_PERIOD" not in df.columns or "OBS_VALUE" not in df.columns or df.empty:
+                raise ValueError(f"unerwartetes Format ({df.shape})")
+            tmp = ziel.with_suffix(".tmp")
+            tmp.write_bytes(daten)
+            tmp.replace(ziel)
+            return True
+        except Exception as ex:
+            print(f"  EZB Einlagenzins: {ex.__class__.__name__}: {ex} (Versuch {versuch + 1})")
+            time.sleep(10 * (versuch + 1))
+    return ziel.exists()
+
+
+def ezb_einlage() -> dict | None:
+    """Letzter Stand des EZB-Einlagenzinses aus der geladenen CSV: {wert (% p.a.), datum, quelle}. Fehlt die Datei oder ist sie unlesbar: None."""
+    f = FRED / EZB_DATEI
+    if not f.exists():
+        return None
+    try:
+        df = pd.read_csv(f)
+        df = df[["TIME_PERIOD", "OBS_VALUE"]].copy()
+        df["OBS_VALUE"] = pd.to_numeric(df["OBS_VALUE"], errors="coerce")
+        df["TIME_PERIOD"] = pd.to_datetime(df["TIME_PERIOD"], errors="coerce")
+        df = df.dropna().sort_values("TIME_PERIOD")
+        if df.empty:
+            return None
+        wert = float(df["OBS_VALUE"].iloc[-1])
+        if not -2 <= wert <= 15:   # unplausibel: lieber kein Feld als eine falsche Zahl
+            return None
+        return {"wert": round(wert, 2), "datum": df["TIME_PERIOD"].iloc[-1].strftime("%Y-%m-%d"),
+                "quelle": "EZB, Einlagefazilität (" + EZB_REIHE + ")"}
+    except Exception as ex:
+        print(f"  EZB Einlagenzins nicht lesbar: {ex.__class__.__name__}: {ex}")
+        return None
+
+
 # ----------------------------------------------------------------- Marktbreite
 class Breite:
     """Zaehlt je Woche, wie viele Aktien ueber ihrer 40-Wochen-Linie schliessen."""
@@ -149,6 +205,10 @@ def schreiben(breite: Breite | None, anzahl_aktien: int = 0):
     if zm is not None:
         out["zins3m"] = {"wert": round(float(zm.iloc[-1]), 2), "datum": zm.index[-1].strftime("%Y-%m"), "quelle": "FRED TB3MS"}
 
+    ez = ezb_einlage()   # Ersatz-Zins fuers Cash im Depot; fehlt die Datei, fehlt einfach das Feld
+    if ez:
+        out["ezb_einlage"] = ez
+
     tmp = E.WEB_DATEN / "umfeld.tmp"
     tmp.write_text(json.dumps(out, separators=(",", ":"), ensure_ascii=False))
     tmp.replace(E.WEB_DATEN / "umfeld.json")
@@ -160,4 +220,8 @@ if __name__ == "__main__":
     ok = [r for r in alle if fred_laden(r)]
     fehlt = [r for r in alle if r not in ok]
     print(f"FRED: {len(ok)} Reihen aktuell" + (f", fehlen: {', '.join(fehlt)}" if fehlt else ""))
+    try:
+        print("EZB-Einlagenzins: " + ("aktuell" if ezb_einlage_laden() else "fehlt (Netzfehler)"))
+    except Exception as ex:   # darf den Lauf nie stoppen
+        print(f"EZB-Einlagenzins: {ex.__class__.__name__}: {ex}")
     sys.exit(0)   # Netzfehler sollen den Tageslauf nicht stoppen
