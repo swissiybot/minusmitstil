@@ -5996,6 +5996,7 @@ function isinListeLaden(){
     JUNG = Object.fromEntries(((j && j.werte) || []).map(w => [w.id, {...w, jung:true, score:null}]));
     // offene Positionen (nicht von Hand gewählt) neu zuordnen
     let geaendert = false;
+    if (DEPOT) DEPOT.positionen.forEach(p => { if (p.quelle === "Kürzel" && kuerzelAusName(p)) { const nz = nameZuordnen(p.name); if (nz && nz.id !== p.id) { Object.assign(p, nz); delete p.basis; geaendert = true; } } });   /* früher falsch gelesene Handeinträge berichtigen */
     if (DEPOT) DEPOT.positionen.forEach(p => { if (!p.id || p.ersatz) { const z = zuordnen(p); if (z.id && (z.id !== p.id || z.quelle !== p.quelle)) { Object.assign(p, {ersatz:false, hinweis:""}, z); geaendert = true; } } });
     if (geaendert) { depotSichern(); DEPOT_ERG = null; if (SEITE === "depot") zeigeDepot(); }
   });
@@ -6118,6 +6119,15 @@ const zahlDe = s => {   // "1.234,56 €" / "1,234.56" / "1234.5" → Zahl
   return parseFloat(t);
 };
 const istIsin = s => /^[A-Z]{2}[A-Z0-9]{9}\d$/.test(String(s || "").trim().toUpperCase());
+function nameZuordnen(name){   // mehrere Wörter: als Name lesen (breiter Index oder genau ein passender Wert im Tool) – sonst null
+  name = String(name || "").trim(); if (!/\s/.test(name) || istIsin(name)) return null;
+  if (!INDEX_AUSNAHMEN.test(name)) for (const [re, id, q] of INDEX_NAMEN) if (re.test(name) && ALLE.some(w => w.id === id)) return {id, quelle:q + " – bitte prüfen"};
+  const worte = norm(name).split(" ").filter(x => x && !/^(etf|etc|etp|etn|fonds|fund|ucits|aktie|aktien|acc|dist)$/.test(x)); if (!worte.length) return null;
+  const mitHebel = /\b[23]x\b|hebel|lever|daily|ultra/i.test(name);   /* ein Hebel-Produkt nur, wenn der Name es verlangt */
+  const tr = ALLE.filter(w => mitHebel || !w.hebel).map(w => { const t = norm(w.name).split(" "); return worte.every(x => t.includes(x)) ? [w, t.length - worte.length] : null; }).filter(Boolean).sort((a, b) => a[1] - b[1]);
+  return tr.length && (tr.length === 1 || tr[0][1] < tr[1][1]) ? {id:tr[0][0].id, quelle:"Name – bitte prüfen"} : null;
+}
+const kuerzelAusName = p => !!p.kuerzel && /\s/.test(String(p.name || "").trim()) && String(p.name).trim().split(/\s+/)[0].toLowerCase() === String(p.kuerzel).toLowerCase();   /* Handeintrag: erstes Wort des Namens wurde als Kürzel genommen */
 function zuordnen(pos){   // ISIN-Tabelle (ETFs), ISIN-Liste (US-Aktien), Kürzel, Indexname im Fondsnamen, eindeutiger Firmenname; sonst offen
   const isin = String(pos.isin || "").trim().toUpperCase(), k = String(pos.kuerzel || "").trim().toUpperCase();
   const gibt = id => ALLE.some(w => w.id === id);
@@ -6614,6 +6624,7 @@ function depotImport(art){
       if (!(wert > 0)) return $("#dm-wert").focus();
       const pos = {name:name || isin, isin, kuerzel:istIsin(name) ? "" : name.split(/\s+/)[0], wert, depot:$("#dm-depot").value.trim() || DEPOT_NAME_STD};
       let z0 = zuordnen(pos);
+      if (z0.quelle === "Kürzel" && kuerzelAusName(pos)) { const nz = nameZuordnen(name); if (nz) z0 = nz; }   /* „msci world“ ist der Index, nicht die Aktie mit dem Kürzel MSCI */
       if (!z0.id && istIsin(name)) z0 = zuordnen({isin:name});
       for (const wort of name.split(/\s+/)) if (!z0.id && wort.length > 1) z0 = zuordnen({kuerzel:wort});   // jedes Wort als Kürzel
       if (!z0.id) {   // genau gleicher Name wie im Tool (z. B. „Bitcoin“, „Gold“)
